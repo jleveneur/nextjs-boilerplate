@@ -1,0 +1,24 @@
+# Ephemeral services for integration tests. Separate volume so `make db-reset`
+# on the dev stack cannot wipe a mid-run test database.
+#
+# Usage: `make db-up-test`
+
+name: repo-test
+
+services:
+  postgres:
+    image: postgres:18
+    ports:
+      - "55433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_test
+    tmpfs:
+      # PG 18 stores versioned data under /var/lib/postgresql, not .../data.
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app_test"]
+      interval: 1s
+      timeout: 3s
+      retries: 30

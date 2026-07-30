@@ -15,7 +15,15 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks check verify format format-check lint lint-fix \
-        typecheck spell knip layers test test-scripts changeset clean clean-all
+        typecheck spell knip layers test test-scripts test-integration \
+        changeset clean clean-all \
+        db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push
+
+# Do not `include .env` here: Make treats `//` as a comment, which truncates
+# URLs like APP_URL=http://…. Scripts load `.env` via Node `--env-file` instead.
+COMPOSE      := docker compose -f docker/compose.yaml
+COMPOSE_TEST := docker compose -f docker/compose.test.yaml
+ENV_FILE     := $(if $(wildcard .env),.env,.env.example)
 
 ## ----------------------------------------------------------------------------
 ## Help
@@ -83,6 +91,53 @@ test: ## Run unit tests
 
 test-scripts: ## Test the repo's own tooling scripts
 	pnpm test:scripts
+
+test-integration: ## Run integration tests (requires `make db-up-test`)
+	DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55433/app_test \
+		NODE_ENV=development APP_ENV=local APP_URL=http://localhost:3000 \
+		pnpm --filter @repo/db test:integration
+
+## ----------------------------------------------------------------------------
+## Database
+## ----------------------------------------------------------------------------
+
+db-up: ## Start local Postgres (docker/compose.yaml)
+	$(COMPOSE) up -d postgres
+	@$(MAKE) db-wait
+
+db-up-test: ## Start ephemeral Postgres for integration tests (port 55433)
+	$(COMPOSE_TEST) up -d postgres
+	@until $(COMPOSE_TEST) exec -T postgres pg_isready -U postgres -d app_test >/dev/null 2>&1; do \
+		sleep 0.5; \
+	done
+
+db-down: ## Stop local dependency containers
+	-$(COMPOSE) down
+	-$(COMPOSE_TEST) down
+
+db-wait: ## Block until local Postgres accepts connections
+	@until $(COMPOSE) exec -T postgres pg_isready -U postgres -d app >/dev/null 2>&1; do \
+		sleep 0.5; \
+	done
+
+db-migrate: ## Apply pending Drizzle migrations
+	pnpm --filter @repo/db exec tsx --env-file=$(CURDIR)/$(ENV_FILE) src/migrate.ts
+
+db-seed: ## Run reference + dev seeds
+	pnpm --filter @repo/db exec tsx --env-file=$(CURDIR)/$(ENV_FILE) src/seeds/run.ts reference
+	pnpm --filter @repo/db exec tsx --env-file=$(CURDIR)/$(ENV_FILE) src/seeds/run.ts dev
+
+db-reset: ## Drop the app database, migrate, and seed
+	$(COMPOSE) up -d postgres
+	@$(MAKE) db-wait
+	$(COMPOSE) exec -T postgres psql -U postgres -v ON_ERROR_STOP=1 -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'app' AND pid <> pg_backend_pid();"
+	$(COMPOSE) exec -T postgres psql -U postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS app;"
+	$(COMPOSE) exec -T postgres psql -U postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE app;"
+	@$(MAKE) db-migrate
+	@$(MAKE) db-seed
+
+db-push: ## Push schema without a migration (local iteration only)
+	pnpm --filter @repo/db exec drizzle-kit push
 
 ## ----------------------------------------------------------------------------
 ## Release

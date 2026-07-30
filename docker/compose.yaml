@@ -1,0 +1,31 @@
+# Local development dependencies. App images are not built here — see
+# docs/architecture/11-infrastructure-and-deployment.md.
+#
+# Usage: `make db-up` (or `docker compose -f docker/compose.yaml up -d`)
+
+name: repo
+
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    ports:
+      # Host 55432 avoids colliding with a system or other-project Postgres on 5432.
+      - "55432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    volumes:
+      # PG 18 images expect the mount at /var/lib/postgresql (versioned data
+      # dirs live underneath), not the old /var/lib/postgresql/data path.
+      - postgres_data:/var/lib/postgresql
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  postgres_data:

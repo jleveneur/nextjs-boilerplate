@@ -61,6 +61,13 @@ uuidv
 jsonb
 timestamptz
 pgvector
+pgcrypto
+pg_isready
+isready
+datname
+tmpfs
+onnotice
+upserts
 bullmq
 ioredis
 libvips

@@ -1,0 +1,9 @@
+{
+  "extends": "@repo/tsconfig/node.json",
+  "include": [
+    "src/**/*.ts",
+    "drizzle.config.ts",
+    "vitest.config.ts",
+    "vitest.integration.config.ts"
+  ]
+}

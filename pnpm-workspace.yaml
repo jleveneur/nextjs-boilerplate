@@ -15,6 +15,9 @@ allowBuilds:
   # postinstall — which links a binary into node_modules/.bin — is redundant.
   # Verified: `lefthook version` resolves correctly with the script declined.
   lefthook: false
+  # drizzle-kit depends on esbuild to bundle its CLI. Without the install
+  # script, the binary is missing and `drizzle-kit generate|migrate` fails.
+  esbuild: true
 
 # ---------------------------------------------------------------------------
 # Dependency catalog
@@ -56,6 +59,16 @@ catalog:
   # every external-input boundary. Catalogued once so the whole monorepo shares
   # one Zod major.
   zod: 4.4.3
+
+  # --- Data ----------------------------------------------------------------
+  # Pinned to ADR-0008 (drizzle-orm 0.45.x + drizzle-kit 0.31.x) until v1 GA.
+  drizzle-orm: 0.45.2
+  drizzle-kit: 0.31.10
+  # postgres.js — portable TCP driver; no vendor serverless driver in app code.
+  postgres: 3.4.9
+  # Script runner for migrate/seed entrypoints (Node strips types, but tsx
+  # resolves TypeScript path/extension quirks in workspace packages).
+  tsx: 4.23.1
 
   # --- Testing -------------------------------------------------------------
   # Pinned exactly, not caret-ranged: Vitest's type-testing mode is explicitly

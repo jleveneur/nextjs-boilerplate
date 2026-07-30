@@ -10,7 +10,15 @@
     {
       // Composition roots and process bootstraps legitimately write to stdout
       // before a logger exists, and scripts are not shipped code.
-      "files": ["scripts/**", "**/*.config.*", "**/src/index.ts", "**/instrumentation*.ts"],
+      "files": [
+        "scripts/**",
+        "**/*.config.*",
+        "**/src/index.ts",
+        "**/instrumentation*.ts",
+        // Package CLIs (migrate/seed) run before a logger exists.
+        "**/src/migrate.ts",
+        "**/src/seeds/run.ts"
+      ],
       "rules": {
         "no-console": "off"
       }

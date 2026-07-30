@@ -34,7 +34,7 @@ return db.query.projects.findFirst({ where: eq(projects.id, input.id) });
 
 ## Migrations
 
-- Generated into `packages/db/src/migrations/` and committed. Never edited after
+- Generated into `packages/db/migrations/` and committed. Never edited after
   merge — a migration that has run somewhere is immutable.
 - Never applied on application boot; they run as an explicit step.
 - Destructive changes use expand/contract across two releases: add the new shape,
