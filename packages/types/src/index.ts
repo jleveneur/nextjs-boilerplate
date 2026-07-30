@@ -1,3 +1,5 @@
+export type { Actor, OrganizationRole, Permission } from "./actor.ts";
+
 export type { Brand, Unbrand } from "./brand.ts";
 
 export type {
