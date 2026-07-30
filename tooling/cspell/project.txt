@@ -74,6 +74,8 @@ onnotice
 upserts
 bullmq
 ioredis
+msgpackr
+protobufjs
 libvips
 argon
 webauthn
