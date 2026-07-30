@@ -6,11 +6,12 @@
  * do not.
  */
 
-import type { AssetId, MemberId, OrganizationId, UserId } from "@repo/types";
+import type { AssetId, InvoiceId, MemberId, OrganizationId, UserId } from "@repo/types";
 import { generateUuidV7 } from "@repo/utils";
 
 import { asset } from "../schema/asset.sql.ts";
 import { user } from "../schema/auth.sql.ts";
+import { invoice, type InvoiceStatus } from "../schema/invoice.sql.ts";
 import { member, organization } from "../schema/organization.sql.ts";
 import type { DbExecutor } from "../with-transaction.ts";
 
@@ -34,6 +35,11 @@ function brandMemberId(id: string): MemberId {
 function brandAssetId(id: string): AssetId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- test factory brand constructor
   return id as AssetId;
+}
+
+function brandInvoiceId(id: string): InvoiceId {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- test factory brand constructor
+  return id as InvoiceId;
 }
 
 export function createFactories(db: DbExecutor) {
@@ -127,6 +133,34 @@ export function createFactories(db: DbExecutor) {
       }
 
       return { ...row, id: brandAssetId(row.id) };
+    },
+
+    async makeInvoice(input: {
+      organizationId: OrganizationId;
+      number?: string;
+      status?: InvoiceStatus;
+      amountMinor?: number;
+      currency?: string;
+      id?: string;
+    }) {
+      const id = input.id ?? generateUuidV7();
+      const [row] = await db
+        .insert(invoice)
+        .values({
+          id,
+          organizationId: input.organizationId,
+          number: input.number ?? `INV-${id.slice(0, 8)}`,
+          status: input.status ?? "open",
+          amountMinor: input.amountMinor ?? 1_00,
+          currency: input.currency ?? "USD",
+        })
+        .returning();
+
+      if (row === undefined) {
+        throw new Error("makeInvoice: insert returned no row");
+      }
+
+      return { ...row, id: brandInvoiceId(row.id) };
     },
   };
 }
