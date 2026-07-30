@@ -83,3 +83,4 @@ catalog:
   # Entries are added when the first package consumes them (Knip flags unused
   # catalog pins). See docs/architecture/13-dependency-review.md for rationale.
   pino: 10.3.1
+  ioredis: 5.11.1

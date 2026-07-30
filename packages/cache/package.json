@@ -1,0 +1,33 @@
+{
+  "name": "@repo/cache",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Redis cache with mandatory namespaced keys, TTL, and stampede protection.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
+  },
+  "dependencies": {
+    "ioredis": "catalog:",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "repo": {
+    "layer": 1,
+    "runtime": "node"
+  }
+}

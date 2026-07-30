@@ -42,6 +42,7 @@ testcontainers
 vitest
 playwright
 axe
+axllent
 mailpit
 mailpit's
 minio
