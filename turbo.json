@@ -40,7 +40,12 @@
 
     "test:unit": {
       "dependsOn": [],
-      "outputs": ["coverage/**"]
+      // No declared outputs. A coverage report is a diagnostic someone opens after
+      // a failure, not an artifact a later task consumes, and thresholds are
+      // enforced during the run — so a cache hit already means they held.
+      // Declaring "coverage/**" instead makes Turbo warn about every package with
+      // no runtime code to cover.
+      "outputs": []
     },
 
     // Integration and E2E need live services, so they are never part of the

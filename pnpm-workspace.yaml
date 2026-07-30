@@ -50,3 +50,9 @@ catalog:
   # --- Language & runtime types -------------------------------------------
   typescript: 7.0.2
   "@types/node": 24.13.3
+
+  # --- Testing -------------------------------------------------------------
+  # Pinned exactly, not caret-ranged: Vitest's type-testing mode is explicitly
+  # experimental and documented as not following SemVer, and it is what verifies
+  # the branded types in @repo/types.
+  vitest: 4.1.10

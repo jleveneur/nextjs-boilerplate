@@ -17,10 +17,15 @@
     },
     {
       // Tests may assert on promise rejections and construct partial fixtures.
-      "files": ["**/*.test.ts", "**/*.test.tsx", "**/e2e/**", "**/*.spec.ts"],
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.test-d.ts", "**/e2e/**", "**/*.spec.ts"],
       "rules": {
         "typescript/no-non-null-assertion": "off",
         "typescript/no-unsafe-assignment": "off",
+        // Building a fixture means writing a literal and narrowing it — `"u_01JQ"
+        // as UserId` is the branded-type escape hatch used as intended. In shipped
+        // code the same assertion is a bug waiting to happen, so the rule stays on
+        // everywhere else: production code narrows through a validator.
+        "typescript/no-unsafe-type-assertion": "off",
         "typescript/no-floating-promises": [
           "error",
           {

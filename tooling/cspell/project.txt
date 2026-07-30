@@ -207,3 +207,8 @@ unauditable
 unawaited
 unrepresentable
 relitigated
+
+# --- Identifiers exported by this repository or its dependencies ------------
+# Real API names, so they appear in prose and in code and cannot be reworded.
+unbrand # @repo/types: recovers the base type behind a Brand
+unstub # Vitest: unstubEnvs / unstubGlobals

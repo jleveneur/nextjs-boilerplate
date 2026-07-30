@@ -10,6 +10,13 @@
     ".": {
       "entry": ["scripts/*.ts", "*.config.ts"],
       "project": ["scripts/**/*.ts"]
+    },
+    "packages/*": {
+      // Knip infers test entry points from Vitest's `include`, which covers only
+      // runtime tests. Type assertions live in `*.test-d.ts` and are collected by
+      // `typecheck.include` instead, so they have to be named here or Knip reports
+      // every one of them as an unused file.
+      "entry": ["src/**/*.test-d.ts"]
     }
   },
 

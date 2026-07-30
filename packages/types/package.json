@@ -1,0 +1,25 @@
+{
+  "name": "@repo/types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Branded identifiers and utility types. Layer 0: no runtime code, no dependencies.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "repo": {
+    "layer": 0,
+    "runtime": "browser"
+  }
+}
