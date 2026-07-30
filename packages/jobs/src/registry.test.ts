@@ -5,6 +5,7 @@ import { JOB_NAMES, isJobName, parseJobPayload } from "./registry.ts";
 describe("job registry", () => {
   it("recognises registered names", () => {
     expect(isJobName(JOB_NAMES.emailSend)).toBe(true);
+    expect(isJobName(JOB_NAMES.invoiceVoidedNotify)).toBe(true);
     expect(isJobName("unknown.job")).toBe(false);
   });
 
@@ -28,5 +29,16 @@ describe("job registry", () => {
         idempotencyKey: "outbox-1",
       }),
     ).toThrow();
+  });
+
+  it("parses a valid invoice.voided.notify payload", () => {
+    const payload = parseJobPayload("invoice.voided.notify", {
+      invoiceId: "01900000-0000-7000-8000-000000000002",
+      organizationId: "01900000-0000-7000-8000-000000000001",
+      amountMinor: 1_00,
+      idempotencyKey: "outbox-2",
+    });
+
+    expect(payload.amountMinor).toBe(100);
   });
 });

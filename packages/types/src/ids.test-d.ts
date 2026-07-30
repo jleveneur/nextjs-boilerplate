@@ -8,7 +8,7 @@
 
 import { assertType, describe, expectTypeOf, it } from "vitest";
 
-import type { MemberId, OrganizationId, UserId } from "./ids.ts";
+import type { InvoiceId, MemberId, OrganizationId, UserId } from "./ids.ts";
 
 /** Stands in for the kind of signature that makes swapped arguments possible. */
 function addMember(_organizationId: OrganizationId, _userId: UserId): void {}
@@ -18,6 +18,7 @@ describe("entity identifiers", () => {
     expectTypeOf<UserId>().not.toExtend<OrganizationId>();
     expectTypeOf<OrganizationId>().not.toExtend<MemberId>();
     expectTypeOf<MemberId>().not.toExtend<UserId>();
+    expectTypeOf<InvoiceId>().not.toExtend<OrganizationId>();
   });
 
   it("reject a plain string", () => {

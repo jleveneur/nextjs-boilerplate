@@ -7,6 +7,7 @@ export type {
   AuditLogId,
   IdempotencyKey,
   InvitationId,
+  InvoiceId,
   MemberId,
   OrganizationId,
   OutboxId,

@@ -9,6 +9,7 @@
 import type {
   AssetId,
   InvitationId,
+  InvoiceId,
   MemberId,
   OrganizationId,
   OutboxId,
@@ -42,3 +43,4 @@ export const sessionIdSchema = uuidV7Id<SessionId>();
 export const invitationIdSchema = uuidV7Id<InvitationId>();
 export const assetIdSchema = uuidV7Id<AssetId>();
 export const outboxIdSchema = uuidV7Id<OutboxId>();
+export const invoiceIdSchema = uuidV7Id<InvoiceId>();

@@ -9,6 +9,7 @@ import { z } from "zod";
 
 export const JOB_NAMES = {
   emailSend: "email.send",
+  invoiceVoidedNotify: "invoice.voided.notify",
 } as const;
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
@@ -18,6 +19,13 @@ export const jobPayloadSchemas = {
     to: z.email(),
     subject: z.string().min(1),
     organizationId: z.uuid(),
+    /** Idempotency key derived by the producer (e.g. outbox row id). */
+    idempotencyKey: z.string().min(1),
+  }),
+  "invoice.voided.notify": z.object({
+    invoiceId: z.uuid(),
+    organizationId: z.uuid(),
+    amountMinor: z.number().int(),
     /** Idempotency key derived by the producer (e.g. outbox row id). */
     idempotencyKey: z.string().min(1),
   }),

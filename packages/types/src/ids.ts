@@ -31,6 +31,9 @@ export type InvitationId = Brand<string, "InvitationId">;
 /** A stored file. The ID is not the storage key — see `@repo/storage`. */
 export type AssetId = Brand<string, "AssetId">;
 
+/** A tenant-scoped invoice (billing vertical slice). */
+export type InvoiceId = Brand<string, "InvoiceId">;
+
 /** An audit log entry. */
 export type AuditLogId = Brand<string, "AuditLogId">;
 
