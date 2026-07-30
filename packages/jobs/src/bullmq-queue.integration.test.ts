@@ -32,6 +32,7 @@ describe("createBullMqJobQueue", () => {
           processed = { jobId: meta.jobId, to: payload.to };
           return Promise.resolve();
         },
+        "invoice.voided.notify": () => Promise.resolve(),
       },
     });
     await worker.waitUntilReady();

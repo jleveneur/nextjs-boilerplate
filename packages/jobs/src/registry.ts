@@ -38,7 +38,9 @@ export type JobPayloadMap = {
 export type JobPayload<N extends JobName> = JobPayloadMap[N];
 
 export function parseJobPayload<N extends JobName>(name: N, payload: unknown): JobPayload<N> {
-  return jobPayloadSchemas[name].parse(payload);
+  // Zod's indexed access widens to a union; re-narrow to the selected job.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return jobPayloadSchemas[name].parse(payload) as JobPayload<N>;
 }
 
 export function isJobName(value: string): value is JobName {

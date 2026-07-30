@@ -30,6 +30,9 @@
     "packages/auth": {
       // Referenced only via Vitest `resolve.alias` for `server-only`.
       "entry": ["vitest.server-only-stub.ts"]
+    },
+    "packages/core": {
+      "entry": ["vitest.server-only-stub.ts"]
     }
   },
 
