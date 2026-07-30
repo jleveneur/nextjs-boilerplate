@@ -168,6 +168,13 @@ db-push: ## Push schema without a migration (local iteration only)
 	pnpm --filter @repo/db exec drizzle-kit push
 
 ## ----------------------------------------------------------------------------
+## Email
+## ----------------------------------------------------------------------------
+
+email: ## Start the React Email preview server
+	pnpm --filter @repo/email email:dev
+
+## ----------------------------------------------------------------------------
 ## Release
 ## ----------------------------------------------------------------------------
 

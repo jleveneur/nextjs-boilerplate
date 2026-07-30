@@ -110,6 +110,7 @@ entitlements
 outbox
 presign
 presigned
+presigns
 subpath
 monorepo
 monorepos

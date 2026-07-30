@@ -57,7 +57,12 @@ export function defineLibraryConfig(options: LibraryConfigOptions): ViteUserConf
       // Tests live beside the code they cover, so a module and its test move
       // together and an untested module is visible in the file listing.
       include: ["src/**/*.test.{ts,tsx}"],
-      exclude: ["**/node_modules/**", "**/dist/**", "**/*.integration.test.ts"],
+      exclude: [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/*.integration.test.ts",
+        "**/*.integration.test.tsx",
+      ],
 
       // No implicit globals. `describe` and `expect` are imported like anything
       // else, so a test file's dependencies are visible and the same lint rules
