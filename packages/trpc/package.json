@@ -22,8 +22,7 @@
     "@repo/types": "workspace:*",
     "@trpc/server": "catalog:",
     "server-only": "0.0.1",
-    "superjson": "catalog:",
-    "zod": "catalog:"
+    "superjson": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",

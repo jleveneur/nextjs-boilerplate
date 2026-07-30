@@ -963,8 +963,8 @@
         }
       },
       "indexes": {
-        "uidx_invoice__organization_id_number": {
-          "name": "uidx_invoice__organization_id_number",
+        "uq_invoice__organization_id_number": {
+          "name": "uq_invoice__organization_id_number",
           "columns": [
             {
               "expression": "organization_id",

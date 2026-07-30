@@ -98,20 +98,20 @@ flowchart BT
 
 ### Selected concrete dependency lists
 
-| Package           | Depends on                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `@repo/utils`     | _(nothing internal)_                                                                       |
-| `@repo/types`     | _(nothing internal)_                                                                       |
-| `@repo/errors`    | `types`                                                                                    |
-| `@repo/contracts` | `types`, `utils`                                                                           |
-| `@repo/env`       | _(nothing internal)_ — Zod only                                                            |
-| `@repo/db`        | `env`, `types`, `utils`, `logger` ✗ — see note                                             |
-| `@repo/authz`     | `types`, `errors`                                                                          |
-| `@repo/auth`      | `types` — db schema + email/Redis callbacks are injected (same-layer ban)                  |
-| `@repo/core`      | all of layer 0 + `db`, `cache`, `storage`, `authz`, `logger`, `jobs`, `analytics`, `flags` |
-| `@repo/trpc`      | `core`, `auth`, `errors`, `contracts`, `logger`                                            |
-| `@repo/ui`        | `types`, `utils`, `i18n`                                                                   |
-| `apps/api`        | `core`, `auth`, `contracts`, `errors`, `env`, `logger`, `observability`, `payments`        |
+| Package           | Depends on                                                                                                      |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| `@repo/utils`     | _(nothing internal)_                                                                                            |
+| `@repo/types`     | _(nothing internal)_                                                                                            |
+| `@repo/errors`    | `types`                                                                                                         |
+| `@repo/contracts` | `types`, `utils`                                                                                                |
+| `@repo/env`       | _(nothing internal)_ — Zod only                                                                                 |
+| `@repo/db`        | `env`, `types`, `utils`, `logger` ✗ — see note                                                                  |
+| `@repo/authz`     | `types`, `errors`                                                                                               |
+| `@repo/auth`      | `types` — db schema + email/Redis callbacks are injected (same-layer ban)                                       |
+| `@repo/core`      | layer 0 + `db`, `authz`, `logger`, `jobs` (side-effect ports for mail/files/flags/analytics; adapters injected) |
+| `@repo/trpc`      | `core`, `auth`, `errors`, `contracts`, `logger`, `db`, `types`                                                  |
+| `@repo/ui`        | `types`, `utils`, `i18n`                                                                                        |
+| `apps/api`        | `core`, `auth`, `contracts`, `errors`, `env`, `logger`, `observability`, `payments`                             |
 
 > **Note on `db` → `logger`:** both are layer 1, so `@repo/db` may not import `@repo/logger`.
 > This is not pedantry — it is what keeps `@repo/db` usable in migration scripts and tests

@@ -29,7 +29,7 @@ export const invoice = pgTable(
     deletedAt: deletedAtColumn(),
   },
   (table) => [
-    uniqueIndex("uidx_invoice__organization_id_number").on(table.organizationId, table.number),
+    uniqueIndex("uq_invoice__organization_id_number").on(table.organizationId, table.number),
     index("idx_invoice__organization_id_created_at").on(table.organizationId, table.createdAt),
     index("idx_invoice__organization_id_status").on(table.organizationId, table.status),
   ],

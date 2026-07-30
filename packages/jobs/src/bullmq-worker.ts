@@ -42,6 +42,11 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
           await options.handlers[job.name](payload, meta);
           return;
         }
+        case "invoice.voided.notify": {
+          const payload = parseJobPayload(job.name, job.data);
+          await options.handlers[job.name](payload, meta);
+          return;
+        }
       }
     },
     {

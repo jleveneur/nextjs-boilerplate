@@ -11,6 +11,6 @@ CREATE TABLE "invoice" (
 );
 --> statement-breakpoint
 ALTER TABLE "invoice" ADD CONSTRAINT "invoice_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "uidx_invoice__organization_id_number" ON "invoice" USING btree ("organization_id","number");--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_invoice__organization_id_number" ON "invoice" USING btree ("organization_id","number");--> statement-breakpoint
 CREATE INDEX "idx_invoice__organization_id_created_at" ON "invoice" USING btree ("organization_id","created_at");--> statement-breakpoint
 CREATE INDEX "idx_invoice__organization_id_status" ON "invoice" USING btree ("organization_id","status");
