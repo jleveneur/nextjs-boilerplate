@@ -1,12 +1,25 @@
 import { can, PERMISSIONS } from "@repo/authz";
-import { user } from "@repo/db/schema";
+import * as dbSchema from "@repo/db/schema";
 import { setupDbIntegrationTests } from "@repo/db/testing";
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { createAuth, type Auth } from "./create-auth.ts";
-import { resolveActorFromApiKey, resolveActorFromSession } from "./resolve-actor.ts";
+import { resolveActor, resolveActorFromApiKey } from "./resolve-actor.ts";
 import { createRecordingMailers } from "./testing/index.ts";
+
+const authSchema = {
+  user: dbSchema.user,
+  session: dbSchema.session,
+  account: dbSchema.account,
+  verification: dbSchema.verification,
+  organization: dbSchema.organization,
+  member: dbSchema.member,
+  invitation: dbSchema.invitation,
+  twoFactor: dbSchema.twoFactor,
+  passkey: dbSchema.passkey,
+  apikey: dbSchema.apikey,
+};
 
 function requireRedisUrl(): string {
   const url = process.env["REDIS_URL"];
@@ -67,6 +80,7 @@ describe("@repo/auth integration", () => {
   it("signs up, verifies email, creates personal org, and resolves matching Actors", async () => {
     const created = createAuth({
       db,
+      schema: authSchema,
       secret: "integration-test-better-auth-secret-32",
       baseURL: "http://localhost:3000",
       appEnv: "local",
@@ -121,7 +135,7 @@ describe("@repo/auth integration", () => {
     const sessionAfter = await auth.api.getSession({ headers: activeHeaders });
     expect(sessionAfter?.session.activeOrganizationId).toBe(personal?.id);
 
-    const sessionActor = await resolveActorFromSession({ auth, headers: activeHeaders });
+    const sessionActor = await resolveActor({ auth, headers: activeHeaders });
     expect(sessionActor).toBeDefined();
     expect(sessionActor?.role).toBe("owner");
     expect(sessionActor?.organizationId).toBe(personal?.id);
@@ -179,9 +193,9 @@ describe("@repo/auth integration", () => {
     // Bootstrap platform admin via DB — setRole requires an existing admin session.
     expect(sessionActor?.userId).toBeDefined();
     await db
-      .update(user)
+      .update(dbSchema.user)
       .set({ role: "admin" })
-      .where(eq(user.id, sessionActor?.userId ?? ""));
+      .where(eq(dbSchema.user.id, sessionActor?.userId ?? ""));
 
     const targetEmail = `target-${Date.now()}@example.com`;
     await auth.api.signUpEmail({
@@ -226,7 +240,7 @@ describe("@repo/auth integration", () => {
       headers: impCookies,
     });
 
-    const impActor = await resolveActorFromSession({ auth, headers: impCookies });
+    const impActor = await resolveActor({ auth, headers: impCookies });
     expect(impActor).toBeDefined();
     expect(impActor?.isImpersonating).toBe(true);
     if (impActor === undefined) {

@@ -1,4 +1,16 @@
-import type { Database } from "@repo/db";
+import type { drizzleAdapter } from "better-auth/adapters/drizzle";
+
+/**
+ * Drizzle database handle from the composition root (`createDb().db`).
+ * Typed via Better Auth's adapter so `@repo/auth` never imports `@repo/db`
+ * (same-layer ban — inject schema + db).
+ */
+export type AuthDatabase = Parameters<typeof drizzleAdapter>[0];
+
+type DrizzleAdapterOptions = NonNullable<Parameters<typeof drizzleAdapter>[1]>;
+
+/** Tables Better Auth + our plugins need — supplied by `@repo/db/schema` at the edge. */
+export type AuthSchema = NonNullable<DrizzleAdapterOptions["schema"]>;
 
 export type OAuthProviderConfig = {
   clientId: string;
@@ -26,7 +38,8 @@ export type SendInvitationEmailInput = {
 };
 
 export type CreateAuthOptions = {
-  db: Database;
+  db: AuthDatabase;
+  schema: AuthSchema;
   secret: string;
   baseURL: string;
   /** `APP_ENV` — drives API key prefix (`sk_live_` vs `sk_test_`). */

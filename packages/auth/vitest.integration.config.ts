@@ -9,7 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Package barrels import `server-only`; Vitest is not the RSC graph.
-      "server-only": path.join(root, "src/testing/server-only-stub.ts"),
+      "server-only": path.join(root, "vitest.server-only-stub.ts"),
     },
   },
   test: {

@@ -59,7 +59,8 @@ export type ResolveActorFromSessionInput = {
   headers: Headers;
 };
 
-export async function resolveActorFromSession(
+/** Session-cookie path — builds an {@link Actor} for the active organization. */
+export async function resolveActor(
   input: ResolveActorFromSessionInput,
 ): Promise<Actor | undefined> {
   const session = await input.auth.api.getSession({ headers: input.headers });
@@ -89,9 +90,6 @@ export async function resolveActorFromSession(
       : { isImpersonating: true }),
   };
 }
-
-/** Session-cookie path — preferred call-site name in docs/architecture/07-auth.md. */
-export const resolveActor = resolveActorFromSession;
 
 export type ResolveActorFromApiKeyInput = {
   auth: Auth;

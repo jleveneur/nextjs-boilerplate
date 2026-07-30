@@ -82,6 +82,7 @@ webauthn
 totp
 passkey
 passkeys
+apikey
 otel
 otlp
 opentelemetry
@@ -103,6 +104,7 @@ biome
 
 # --- Domain / architecture -------------------------------------------------
 authz
+superadmin
 multi
 tenancy
 idempotency

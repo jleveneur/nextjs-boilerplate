@@ -1,13 +1,13 @@
 /**
  * Better Auth composition-root factory.
  *
- * Side effects (email, Redis) are injected — this package never imports
- * `@repo/email` or `@repo/cache` (same-layer ban).
+ * Side effects (email, Redis) and the Drizzle schema/db handle are injected —
+ * this package never imports `@repo/email`, `@repo/cache`, or `@repo/db`
+ * (same-layer ban).
  */
 
 import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
-import * as schema from "@repo/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, magicLink, organization, twoFactor } from "better-auth/plugins";
@@ -50,18 +50,7 @@ export function createAuth(options: CreateAuthOptions) {
     baseURL: options.baseURL,
     database: drizzleAdapter(options.db, {
       provider: "pg",
-      schema: {
-        user: schema.user,
-        session: schema.session,
-        account: schema.account,
-        verification: schema.verification,
-        organization: schema.organization,
-        member: schema.member,
-        invitation: schema.invitation,
-        twoFactor: schema.twoFactor,
-        passkey: schema.passkey,
-        apikey: schema.apikey,
-      },
+      schema: options.schema,
     }),
     ...(secondary === undefined
       ? {}

@@ -18,19 +18,19 @@
   "dependencies": {
     "@better-auth/api-key": "catalog:",
     "@better-auth/passkey": "catalog:",
-    "@repo/db": "workspace:*",
     "@repo/types": "workspace:*",
     "better-auth": "catalog:",
-    "drizzle-orm": "catalog:",
     "ioredis": "catalog:",
     "server-only": "0.0.1"
   },
   "devDependencies": {
     "@repo/authz": "workspace:*",
+    "@repo/db": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "drizzle-orm": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

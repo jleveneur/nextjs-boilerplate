@@ -26,6 +26,10 @@
     },
     "packages/i18n": {
       "entry": ["src/**/*.test-d.ts"]
+    },
+    "packages/auth": {
+      // Referenced only via Vitest `resolve.alias` for `server-only`.
+      "entry": ["vitest.server-only-stub.ts"]
     }
   },
 

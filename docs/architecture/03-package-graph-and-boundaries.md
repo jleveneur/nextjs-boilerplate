@@ -106,7 +106,8 @@ flowchart BT
 | `@repo/contracts` | `types`, `utils`                                                                           |
 | `@repo/env`       | _(nothing internal)_ — Zod only                                                            |
 | `@repo/db`        | `env`, `types`, `utils`, `logger` ✗ — see note                                             |
-| `@repo/authz`     | `types`                                                                                    |
+| `@repo/authz`     | `types`, `errors`                                                                          |
+| `@repo/auth`      | `types` — db schema + email/Redis callbacks are injected (same-layer ban)                  |
 | `@repo/core`      | all of layer 0 + `db`, `cache`, `storage`, `authz`, `logger`, `jobs`, `analytics`, `flags` |
 | `@repo/trpc`      | `core`, `auth`, `errors`, `contracts`, `logger`                                            |
 | `@repo/ui`        | `types`, `utils`, `i18n`                                                                   |
