@@ -26,6 +26,7 @@
     "server-only": "0.0.1"
   },
   "devDependencies": {
+    "@repo/authz": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",

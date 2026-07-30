@@ -5,6 +5,7 @@ export { ac, admin, member, organizationRoles, owner } from "./access-control.ts
 export { apiKeyPrefixForEnv } from "./api-key-prefix.ts";
 export { createAuth, type Auth } from "./create-auth.ts";
 export {
+  resolveActor,
   resolveActorFromApiKey,
   resolveActorFromSession,
   type ResolveActorFromApiKeyInput,

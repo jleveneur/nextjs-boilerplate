@@ -104,6 +104,8 @@ test-integration: ## Run integration tests (requires `make deps-up-test`)
 		S3_SECRET_ACCESS_KEY=minioadmin \
 		SMTP_URL=smtp://127.0.0.1:55441 \
 		MAILPIT_API_URL=http://127.0.0.1:55442 \
+		BETTER_AUTH_SECRET=dev-local-better-auth-secret-min-32-chars \
+		BETTER_AUTH_URL=http://localhost:3000 \
 		NODE_ENV=development APP_ENV=local APP_URL=http://localhost:3000 \
 		pnpm test:integration
 

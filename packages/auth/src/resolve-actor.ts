@@ -90,6 +90,9 @@ export async function resolveActorFromSession(
   };
 }
 
+/** Session-cookie path — preferred call-site name in docs/architecture/07-auth.md. */
+export const resolveActor = resolveActorFromSession;
+
 export type ResolveActorFromApiKeyInput = {
   auth: Auth;
   key: string;

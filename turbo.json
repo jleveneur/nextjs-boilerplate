@@ -62,7 +62,9 @@
         "S3_ACCESS_KEY_ID",
         "S3_SECRET_ACCESS_KEY",
         "SMTP_URL",
-        "MAILPIT_API_URL"
+        "MAILPIT_API_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL"
       ]
     },
 

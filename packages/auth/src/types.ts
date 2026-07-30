@@ -39,4 +39,9 @@ export type CreateAuthOptions = {
   sendInvitationEmail?: (input: SendInvitationEmailInput) => Promise<void>;
   /** Optional Redis URL for Better Auth secondary storage (not `@repo/cache`). */
   redisUrl?: string;
+  /**
+   * Cookie cache avoids a DB hit per request. Disable in integration tests so
+   * session mutations (active org, impersonation) are visible immediately.
+   */
+  cookieCache?: boolean;
 };

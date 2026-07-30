@@ -101,7 +101,7 @@ export function createAuth(options: CreateAuthOptions) {
       // Absolute upper bound: sessions older than 90 days must re-authenticate.
       freshAge: DAY * 90,
       cookieCache: {
-        enabled: true,
+        enabled: options.cookieCache !== false,
         maxAge: 5 * 60,
       },
     },
@@ -172,6 +172,7 @@ export function createAuth(options: CreateAuthOptions) {
                 ?.toLowerCase()
                 .replace(/[^a-z0-9-]/g, "-") || "org";
             const slug = `${slugBase}-${user.id.slice(0, 8)}`;
+            // `userId` is a server-only field — call without session headers.
             await auth.api.createOrganization({
               body: {
                 name: `${user.name}'s workspace`,
