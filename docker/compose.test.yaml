@@ -1,7 +1,7 @@
-# Ephemeral services for integration tests. Separate volume so `make db-reset`
-# on the dev stack cannot wipe a mid-run test database.
+# Ephemeral services for integration tests. Separate from the dev stack so
+# `make db-reset` cannot wipe a mid-run test database.
 #
-# Usage: `make db-up-test`
+# Usage: `make deps-up-test`
 
 name: repo-test
 
@@ -19,6 +19,61 @@ services:
       - /var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d app_test"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "55435:6379"
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "55440:9000"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: ["server", "/data"]
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+      start_period: 3s
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 0.5; done;
+      mc mb --ignore-existing local/app-test;
+      exit 0;
+      "
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "55441:1025"
+      - "55442:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
       interval: 1s
       timeout: 3s
       retries: 30

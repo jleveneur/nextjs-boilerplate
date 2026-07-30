@@ -17,7 +17,9 @@ SHELL := bash
 .PHONY: help install hooks check verify format format-check lint lint-fix \
         typecheck spell knip layers test test-scripts test-integration \
         changeset clean clean-all \
-        db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push
+        deps-up deps-up-test deps-down \
+        db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push \
+        email
 
 # Do not `include .env` here: Make treats `//` as a comment, which truncates
 # URLs like APP_URL=http://…. Scripts load `.env` via Node `--env-file` instead.
@@ -92,16 +94,44 @@ test: ## Run unit tests
 test-scripts: ## Test the repo's own tooling scripts
 	pnpm test:scripts
 
-test-integration: ## Run integration tests (requires `make db-up-test`)
+test-integration: ## Run integration tests (requires `make deps-up-test`)
 	DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55433/app_test \
+		REDIS_URL=redis://127.0.0.1:55435 \
+		S3_ENDPOINT=http://127.0.0.1:55440 \
+		S3_REGION=auto \
+		S3_BUCKET=app-test \
+		S3_ACCESS_KEY_ID=minioadmin \
+		S3_SECRET_ACCESS_KEY=minioadmin \
+		SMTP_URL=smtp://127.0.0.1:55441 \
+		MAILPIT_API_URL=http://127.0.0.1:55442 \
 		NODE_ENV=development APP_ENV=local APP_URL=http://localhost:3000 \
-		pnpm --filter @repo/db test:integration
+		pnpm test:integration
+
+## ----------------------------------------------------------------------------
+## Local dependencies (Docker)
+## ----------------------------------------------------------------------------
+
+deps-up: ## Start Postgres, Redis, MinIO, Mailpit
+	$(COMPOSE) up -d postgres redis minio minio-init mailpit
+	@$(MAKE) db-wait
+	@until $(COMPOSE) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
+
+deps-up-test: ## Start ephemeral dependency stack for integration tests
+	$(COMPOSE_TEST) up -d
+	@until $(COMPOSE_TEST) exec -T postgres pg_isready -U postgres -d app_test >/dev/null 2>&1; do \
+		sleep 0.5; \
+	done
+	@until $(COMPOSE_TEST) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
+
+deps-down: ## Stop local dependency containers
+	-$(COMPOSE) down
+	-$(COMPOSE_TEST) down
 
 ## ----------------------------------------------------------------------------
 ## Database
 ## ----------------------------------------------------------------------------
 
-db-up: ## Start local Postgres (docker/compose.yaml)
+db-up: ## Start local Postgres only
 	$(COMPOSE) up -d postgres
 	@$(MAKE) db-wait
 
@@ -111,9 +141,7 @@ db-up-test: ## Start ephemeral Postgres for integration tests (port 55433)
 		sleep 0.5; \
 	done
 
-db-down: ## Stop local dependency containers
-	-$(COMPOSE) down
-	-$(COMPOSE_TEST) down
+db-down: deps-down ## Alias for deps-down
 
 db-wait: ## Block until local Postgres accepts connections
 	@until $(COMPOSE) exec -T postgres pg_isready -U postgres -d app >/dev/null 2>&1; do \

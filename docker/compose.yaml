@@ -1,7 +1,7 @@
 # Local development dependencies. App images are not built here — see
 # docs/architecture/11-infrastructure-and-deployment.md.
 #
-# Usage: `make db-up` (or `docker compose -f docker/compose.yaml up -d`)
+# Usage: `make deps-up` (or `docker compose -f docker/compose.yaml up -d`)
 
 name: repo
 
@@ -27,5 +27,67 @@ services:
       timeout: 5s
       retries: 30
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "55434:6379"
+    # BullMQ requires noeviction — an evicting Redis silently drops jobs.
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    ports:
+      - "55436:9000"
+      - "55437:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  # Creates the default bucket once MinIO is up. Credentials match .env.example.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 0.5; done;
+      mc mb --ignore-existing local/app;
+      exit 0;
+      "
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "55438:1025"
+      - "55439:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
 volumes:
   postgres_data:
+  minio_data:

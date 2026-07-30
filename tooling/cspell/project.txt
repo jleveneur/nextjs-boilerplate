@@ -43,7 +43,10 @@ vitest
 playwright
 axe
 mailpit
+mailpit's
 minio
+minioadmin
+readyz
 neon
 resend
 sentry
