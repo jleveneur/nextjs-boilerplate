@@ -9,7 +9,7 @@ enforced by mechanisms nobody can casually bypass.
 ## 1. The layer rule
 
 Every package belongs to exactly one layer. **A package may depend only on packages in strictly
-lower layers.** No same-layer dependencies, no upward dependencies, no exceptions.
+lower layers, with one exception below.** No upward dependencies, ever.
 
 | Layer | Name              | Runtime        | Packages                                                                                                                |
 | ----- | ----------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -21,10 +21,15 @@ lower layers.** No same-layer dependencies, no upward dependencies, no exception
 | U     | UI                | Browser        | `ui` (may depend on layer 0 only)                                                                                       |
 | T     | Tooling/testing   | Build-time     | `tooling/*`, `testing`                                                                                                  |
 
-Banning same-layer dependencies is the unusual part, and it is the rule that does the most work.
-It is what guarantees the graph is acyclic _by construction_ rather than by periodic inspection.
-When two layer-1 adapters seem to need each other, the correct answer is always one of: move the
-shared piece down to layer 0, or let layer 2 orchestrate both.
+**Layer 0 may depend on other layer-0 packages**, forming a small DAG (`errors → types`,
+`contracts → types + utils`). Cycles are still rejected. This is the one same-layer exception:
+foundation packages share branded types and pure helpers, and inventing a layer below 0 just to
+satisfy the letter of the rule would add ceremony without adding safety.
+
+**From layer 1 up, same-layer dependencies are banned.** That is the rule that does the most work.
+It is what keeps adapters from coupling — when two layer-1 packages seem to need each other, the
+correct answer is always one of: move the shared piece down to layer 0, let layer 2 orchestrate
+both, or inject a function. See the `db` / `logger` note below.
 
 ---
 

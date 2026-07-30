@@ -53,8 +53,10 @@ Every package declares its own layer in `package.json`:
 a `node` package — that is the path by which a secret reaches a client bundle.
 
 **When two packages in the same layer seem to need each other**, do not add the
-dependency. Move the shared piece down a layer, let a higher layer orchestrate
-both, or inject a function. If you cannot see which applies, stop and ask.
+dependency — **except inside layer 0**, where foundation packages may form a
+small DAG (`errors → types`, `contracts → types + utils`). From layer 1 up: move
+the shared piece down a layer, let a higher layer orchestrate both, or inject a
+function. If you cannot see which applies, stop and ask.
 
 ---
 

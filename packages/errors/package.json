@@ -1,0 +1,29 @@
+{
+  "name": "@repo/errors",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed AppError hierarchy and error-code registry. Layer 0: no logger, no transport.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@repo/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "repo": {
+    "layer": 0,
+    "runtime": "browser"
+  }
+}

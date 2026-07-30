@@ -227,11 +227,17 @@ function checkLayerRule(packages: Package[], byName: Map<string, Package>, fail:
       }
 
       if (typeof pkg.layer === "number" && typeof dep.layer === "number") {
-        if (dep.layer === pkg.layer) {
+        // Layer 0 is the exception: foundation packages form a small DAG among
+        // themselves (`errors → types`, `contracts → types + utils`). Same-layer
+        // edges elsewhere are banned — that is what keeps layer 1 adapters from
+        // coupling (see the db/logger note in the architecture docs). Cycles are
+        // still rejected for every layer by checkNoCycles.
+        if (dep.layer === pkg.layer && pkg.layer !== 0) {
           fail(
             `${pkg.name} depends on ${dep.name}, which is in the same layer (${pkg.layer}). ` +
-              `Same-layer dependencies are banned. Move the shared piece down a layer, let a ` +
-              `higher layer orchestrate both, or inject a function instead of importing a package.`,
+              `Same-layer dependencies are banned outside layer 0. Move the shared piece ` +
+              `down a layer, let a higher layer orchestrate both, or inject a function ` +
+              `instead of importing a package.`,
           );
         } else if (dep.layer > pkg.layer) {
           fail(

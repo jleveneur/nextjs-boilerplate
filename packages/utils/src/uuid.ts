@@ -49,9 +49,10 @@ let counter = 0;
  * Returns a new UUIDv7 in canonical hyphenated lowercase form.
  *
  * Successive calls are strictly increasing, including within one millisecond and
- * across a clock that moves backwards. Returns a plain `string`: branded ids live
- * in `@repo/types`, which is the same layer and therefore not importable, so
- * narrowing to `UserId` happens in the `IdGenerator` port that wraps this.
+ * across a clock that moves backwards. Returns a plain `string`. Narrowing to a
+ * branded id (`UserId`, …) happens in the `IdGenerator` port that wraps this —
+ * this package stays dependency-free so it remains the leaf every other
+ * foundation package can share.
  */
 export function generateUuidV7(): string {
   const { milliseconds, sequence } = nextSequencePosition();

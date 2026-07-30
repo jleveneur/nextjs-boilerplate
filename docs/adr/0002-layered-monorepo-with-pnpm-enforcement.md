@@ -66,10 +66,14 @@ Enforcement is layered, strongest first:
 `.npmrc` therefore pins `node-linker=isolated`, `shamefully-hoist=false`, and
 `auto-install-peers=false`. These are not tuning preferences; they are the architecture.
 
-The banning of same-layer dependencies deserves its own note, since it is the unusual part. When two
-layer-1 adapters appear to need each other, the answer is always to move the shared piece down a
-layer or to let layer 2 orchestrate both. The concrete case we hit immediately: `@repo/db` wanting
-`@repo/logger`. Resolved by **injecting a function rather than importing a package** — the
+The banning of same-layer dependencies deserves its own note, since it is the unusual part. It
+applies from layer 1 up. Layer 0 is the exception: foundation packages may form a small DAG among
+themselves (`errors → types`, `contracts → types + utils`), with cycles still rejected. Inventing a
+layer below 0 just to hold `types` would add ceremony without adding safety.
+
+When two layer-1 adapters appear to need each other, the answer is always to move the shared piece
+down a layer or to let layer 2 orchestrate both. The concrete case we hit immediately: `@repo/db`
+wanting `@repo/logger`. Resolved by **injecting a function rather than importing a package** — the
 composition root passes a `logQuery` callback. This keeps `@repo/db` usable in migration scripts and
 tests with no logging stack attached, which is a real benefit rather than a rule-following exercise.
 

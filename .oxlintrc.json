@@ -26,6 +26,9 @@
         // code the same assertion is a bug waiting to happen, so the rule stays on
         // everywhere else: production code narrows through a validator.
         "typescript/no-unsafe-type-assertion": "off",
+        // Type tests assert that a construction is rejected with @ts-expect-error;
+        // the `new` is never reached and assigning it would be fiction.
+        "no-new": "off",
         "typescript/no-floating-promises": [
           "error",
           {

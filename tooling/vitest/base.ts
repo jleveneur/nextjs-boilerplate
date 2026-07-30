@@ -110,6 +110,9 @@ export function defineLibraryConfig(options: LibraryConfigOptions): ViteUserConf
         include: ["src/**/*.{ts,tsx}"],
         exclude: [
           "src/**/*.test.{ts,tsx}",
+          // Type assertions have no runtime body; counting them as uncovered
+          // would make a 100 % threshold impossible for any package that has them.
+          "src/**/*.test-d.ts",
           "src/**/*.d.ts",
           // Barrel files only re-export; covering them measures nothing.
           "src/index.ts",

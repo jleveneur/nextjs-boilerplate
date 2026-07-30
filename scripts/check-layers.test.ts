@@ -83,13 +83,29 @@ describe("layer rule", () => {
     assertSingleProblem(problems, /must point strictly downward/);
   });
 
-  it("rejects a dependency within the same layer", async () => {
+  it("rejects a dependency within the same layer outside layer 0", async () => {
     await writePackage("packages", "a", pkg("a", 2, "node", { "@repo/b": "workspace:*" }));
     await writePackage("packages", "b", pkg("b", 2));
 
     const { problems } = await checkLayers(root);
 
     assertSingleProblem(problems, /same layer \(2\)/);
+  });
+
+  it("allows same-layer dependencies inside layer 0", async () => {
+    // Foundation packages form a small DAG (`errors → types`, `contracts → utils`).
+    // The cycle checker is what keeps that DAG honest; the same-layer ban applies
+    // from layer 1 up, where adapters must not couple.
+    await writePackage(
+      "packages",
+      "errors",
+      pkg("errors", 0, "browser", { "@repo/types": "workspace:*" }),
+    );
+    await writePackage("packages", "types", pkg("types", 0, "browser"));
+
+    const { problems } = await checkLayers(root);
+
+    assert.deepEqual(problems, []);
   });
 
   it("exempts devDependencies, which never reach a production bundle", async () => {

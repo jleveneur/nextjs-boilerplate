@@ -42,4 +42,6 @@ export const invoiceRouter = router({
 ```
 
 Two same-layer packages that seem to need each other: move the shared piece down,
-orchestrate from above, or inject a function. Never add the dependency.
+orchestrate from above, or inject a function — **except inside layer 0**, where
+foundation packages may form a small DAG (`errors → types`, `contracts → utils`).
+From layer 1 up, never add the dependency.
