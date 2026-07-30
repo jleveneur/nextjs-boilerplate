@@ -1,0 +1,42 @@
+---
+description: Drizzle schema, repository, and migration conventions
+globs: packages/db/**/*.ts,**/*.repository.ts,**/repositories/**/*.ts
+alwaysApply: false
+---
+
+# Database
+
+Queries live in repositories. Repositories contain queries, never policy.
+
+```ts
+// ✅ Repository — every function takes organizationId
+export async function findById(input: {
+  id: ProjectId;
+  organizationId: OrganizationId;
+}): Promise<Project | undefined> {
+  return db.query.projects.findFirst({
+    where: and(eq(projects.id, input.id), eq(projects.organizationId, input.organizationId)),
+  });
+}
+
+// ❌ A query without a tenant predicate is a data leak, not a bug
+return db.query.projects.findFirst({ where: eq(projects.id, input.id) });
+```
+
+## Schema conventions
+
+- Columns are `snake_case`; the TypeScript field is `camelCase`.
+- Primary keys are UUIDv7. Not serial, not UUIDv4.
+- Money is `integer` in minor units. Never `float` or `numeric` for amounts.
+- Timestamps are `timestamptz`, always stored in UTC.
+- Every tenant-owned table has `organization_id` with an index, and it is part of
+  every composite index that supports a tenant-scoped query.
+
+## Migrations
+
+- Generated into `packages/db/src/migrations/` and committed. Never edited after
+  merge — a migration that has run somewhere is immutable.
+- Never applied on application boot; they run as an explicit step.
+- Destructive changes use expand/contract across two releases: add the new shape,
+  migrate reads and writes, then remove the old one in a later release. A single
+  release that drops a column cannot be rolled back.

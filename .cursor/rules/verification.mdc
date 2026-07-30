@@ -1,0 +1,37 @@
+---
+description: How to verify work in this repo, and what not to do when a check fails
+alwaysApply: true
+---
+
+# Verification
+
+`make check` is the gate. It runs format, lint (type-aware), typecheck, layer
+boundaries, spelling, dead-code detection, and tests — the same set CI runs.
+
+Faster individual loops: `make lint`, `make typecheck`, `make test`, `make layers`.
+
+Do not report work complete without running it. If a failure looks pre-existing,
+confirm that on a clean tree instead of assuming.
+
+## When a check fails, fix the cause
+
+```jsonc
+// ❌ BAD — the check was the only thing keeping this correct
+{ "rules": { "typescript/no-floating-promises": "off" } }
+```
+
+Disabling a rule, loosening a type, adding an ignore entry, or skipping a test is
+a change to the repo's guarantees. It needs its own justification and review, and
+usually an ADR. If you genuinely believe a rule is wrong here, say so and explain
+why rather than turning it off quietly.
+
+## Evidence over inference
+
+Reading code tells you what it should do. Running it tells you what it does. When
+reporting a fix, say what you ran and what came back — and prefer a failing test
+that now passes over a description of why the change should work.
+
+## Commits
+
+Conventional Commits, enforced by commitlint: `feat(scope): summary`. Run
+`pnpm changeset` when a `packages/*` public API changes.

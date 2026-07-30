@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Base",
+  "compilerOptions": {
+    "target": "es2024",
+    "lib": ["es2024"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "moduleDetection": "force",
+
+    // --- Strictness -------------------------------------------------------
+    // Beyond `strict`. Each of these catches a class of real bug; see
+    // docs/architecture/04-conventions.md#compiler-configuration.
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "useUnknownInCatchVariables": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // --- Module semantics -------------------------------------------------
+    // verbatimModuleSyntax makes import elision predictable.
+    // erasableSyntaxOnly bans enum, namespaces, and parameter properties, which
+    // guarantees every file is type-strippable rather than requiring
+    // compilation. That is what makes source-only internal packages work
+    // uniformly across Next, Vitest, and Node.
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+
+    // --- Emit -------------------------------------------------------------
+    // Internal packages are never built; apps are bundled by Next or tsdown.
+    "noEmit": true,
+    "sourceMap": true,
+    "declaration": false,
+    "incremental": true,
+
+    // Third-party .d.ts errors are not ours to fix.
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules", "dist", ".next", "coverage"]
+}

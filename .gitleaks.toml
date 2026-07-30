@@ -1,0 +1,44 @@
+# Secret scanning configuration, used identically by the pre-commit hook and CI.
+#
+# Committing this rather than relying on defaults means local and CI results
+# always agree, and any exception is a reviewed diff instead of a flag someone
+# added to one command.
+
+# Start from the maintained default rule set — roughly 170 providers — and narrow
+# from there. Writing rules from scratch would mean silently losing coverage every
+# time upstream adds a provider.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Deliberately narrow. See the note below before adding to this."
+
+# Generated or vendored files with no authored content. Note that lockfiles are
+# *not* here: a private registry URL with an embedded token is a real leak that
+# has happened to real projects, and it appears in exactly that kind of file.
+#
+# SOPS-encrypted files are also listed: they are ciphertext by design and safe to
+# commit, so scanning them yields guaranteed findings with no signal. Their
+# unencrypted counterparts are gitignored, so a mistake there still gets caught.
+paths = [
+  '''(^|/)\.?pnpm-store/''',
+  '''(^|/)node_modules/''',
+  '''(^|/)\.turbo/''',
+  '''(^|/)dist/''',
+  '''(^|/)\.next/''',
+  '''\.enc\.(yaml|yml|json|env)$''',
+]
+
+# ---------------------------------------------------------------------------
+# Adding an exception
+#
+# Prefer an inline marker over widening the lists above. A path allowlist is
+# permanent and invisible: it will still be suppressing findings long after the
+# file it was added for has changed purpose. An inline comment sits next to the
+# value a reviewer needs to judge:
+#
+#   const example = "sk_test_4eC39H..."; // gitleaks:allow — Stripe's public docs key
+#
+# If a rule produces repeated false positives across many files, that is a case
+# for tuning the rule itself here, with a comment saying which rule and why.
+# ---------------------------------------------------------------------------

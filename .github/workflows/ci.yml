@@ -1,0 +1,157 @@
+name: CI
+
+# Every gate here is also a `make` target, so anything CI rejects can be
+# reproduced locally with one command. See docs/architecture/12-git-ci-release.md.
+#
+# Jobs run in parallel rather than as one `make check`: a developer wants to know
+# every problem from one push, not the first one alphabetically.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Required for a merge queue: the queue tests the merged result, not the branch.
+  merge_group:
+
+# A new push makes the previous run's answer irrelevant. `main` is exempt so the
+# post-merge record stays complete.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Read-only by default. Any job needing more asks for it explicitly, so a
+# compromised dependency in a lint job cannot push code.
+permissions:
+  contents: read
+
+env:
+  # Turborepo prints hashes rather than a progress spinner in CI logs.
+  TURBO_TELEMETRY_DISABLED: 1
+  DO_NOT_TRACK: 1
+
+jobs:
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: make format-check
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: make lint
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: make typecheck
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: make test-scripts
+      - run: make test
+
+  boundaries:
+    name: Architecture boundaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: make layers
+
+  hygiene:
+    name: Spelling and dead code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: make spell
+      - run: make knip
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Secret scanning needs history: a secret added and then removed in the
+          # same branch is still a leaked secret.
+          fetch-depth: 0
+
+      # The binary is installed from a pinned release and checksum-verified
+      # rather than run through a third-party action. A secret scanner is the
+      # last place to add an unaudited dependency, and this keeps the repo free
+      # of the licence conditions attached to the official action.
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          cd "$(mktemp -d)"
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          curl --fail --silent --show-error --location --remote-name "${base}/${archive}"
+          curl --fail --silent --show-error --location --remote-name \
+            "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          grep " ${archive}\$" "gitleaks_${GITLEAKS_VERSION}_checksums.txt" | sha256sum --check --strict
+          tar -xzf "${archive}" gitleaks
+          install -m 0755 gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Scan history for secrets
+        run: gitleaks git . --redact --no-banner --verbose
+
+  commits:
+    name: Commit messages
+    runs-on: ubuntu-latest
+    # Only pull requests have a range to validate; a push to `main` is already
+    # merged, so failing it would block nothing and just produce a red badge.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Validate against Conventional Commits
+        run: |
+          pnpm exec commitlint \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to "${{ github.event.pull_request.head.sha }}" \
+            --verbose
+
+  # A single required status check. Branch protection points at this one job, so
+  # adding or renaming a job above never means editing repository settings — and
+  # a skipped or cancelled dependency cannot be mistaken for a pass.
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - format
+      - lint
+      - typecheck
+      - test
+      - boundaries
+      - hygiene
+      - secrets
+      - commits
+    steps:
+      - name: Verify every job succeeded
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] \
+            || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "::error::One or more CI jobs did not succeed."
+            exit 1
+          fi
+          echo "All CI jobs succeeded."

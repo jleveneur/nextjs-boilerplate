@@ -1,0 +1,45 @@
+---
+description: React Server Component defaults, client boundaries, and component responsibilities
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# React components
+
+Server Components by default. `"use client"` is a decision, not a habit — it is
+what pulls code and dependencies into the browser bundle.
+
+```tsx
+// ❌ BAD — whole page becomes client-side to get one interactive button
+"use client";
+export default function ProjectPage({ params }: Props) {
+  const { data } = useQuery({ queryKey: ["project"], queryFn: fetchProject });
+  return <div>{data?.name}<ArchiveButton /></div>;
+}
+
+// ✅ GOOD — server renders, the boundary is as small as the interactivity
+export default async function ProjectPage({ params }: Props) {
+  const project = await getProject(params.id);
+  return (
+    <div>
+      {project.name}
+      <ArchiveButton projectId={project.id} />
+    </div>
+  );
+}
+```
+
+## Responsibilities
+
+- Components render state and raise events. No business rules, no `fetch` to your
+  own API, no direct database access.
+- Forms use React Hook Form with a Zod resolver, sharing the schema with the
+  server. Client validation is UX; the server validates again because it must.
+- Data mutations go through a Server Action or a tRPC mutation that calls an
+  application service.
+
+## Accessibility
+
+Interactive elements are real elements: `button`, `a`, `label`-bound inputs. A
+`div` with `onClick` is not keyboard reachable and fails the axe checks in CI.
+Every image needs `alt`; decorative images take `alt=""`.

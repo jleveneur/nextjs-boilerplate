@@ -1,0 +1,29 @@
+; Baseline editor behaviour, independent of anyone's local settings.
+; Oxfmt owns code formatting; this covers everything Oxfmt does not.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 100
+
+[*.md]
+; Trailing whitespace is significant in Markdown (hard line break).
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[Makefile]
+; Make requires real tabs.
+indent_style = tab
+
+[*.{tf,tfvars}]
+indent_size = 2
+
+[{package.json,pnpm-workspace.yaml,pnpm-lock.yaml}]
+indent_size = 2

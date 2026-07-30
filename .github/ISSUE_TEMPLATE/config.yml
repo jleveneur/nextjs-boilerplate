@@ -1,0 +1,11 @@
+# Forms only. A blank issue is almost always missing the one detail needed to act
+# on it, which costs a round trip before work can start.
+blank_issues_enabled: false
+
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/jleveneur/nextjs-boilerplate/discussions
+    about: For questions and ideas that are not yet a specific bug or task.
+  - name: Security vulnerability
+    url: https://github.com/jleveneur/nextjs-boilerplate/security/advisories/new
+    about: Report privately. Never open a public issue for a vulnerability.

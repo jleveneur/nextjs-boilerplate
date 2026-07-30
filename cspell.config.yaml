@@ -1,0 +1,45 @@
+$schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+version: "0.2"
+
+# British English, with `en` kept alongside it because dependency names, APIs,
+# and quoted error strings are all US-spelled ("color", "serialize", "behavior").
+# Both dictionaries are active so prose can be en-GB while identifiers stay
+# whatever upstream chose.
+language: en,en-GB
+
+# The project dictionary is committed so that new jargon arrives as a reviewed
+# diff rather than as CI noise someone silences.
+dictionaryDefinitions:
+  - name: project
+    path: ./tooling/cspell/project.txt
+    addWords: true
+
+dictionaries:
+  - project
+  - typescript
+  - node
+  - npm
+  - html
+  - css
+  - bash
+  - docker
+  - softwareTerms
+  - companies
+  - filetypes
+
+ignorePaths:
+  - node_modules/**
+  - dist/**
+  - .next/**
+  - coverage/**
+  - pnpm-lock.yaml
+  - "*.enc.yaml"
+  - "**/*.generated.*"
+  - "**/openapi.json"
+  - .git/**
+
+# Hex colours, base64-ish blobs, and URLs are not words.
+ignoreRegExpList:
+  - "#[0-9a-fA-F]{3,8}\\b"
+  - "https?://[^\\s)\"']+"
+  - "[A-Za-z0-9+/]{32,}={0,2}"

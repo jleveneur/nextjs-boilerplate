@@ -1,0 +1,46 @@
+{
+  "name": "@repo/root",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Production-grade application foundation. See docs/architecture/README.md.",
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "spell": "cspell lint --no-progress --gitignore --dot .",
+    "knip": "knip",
+    "check:layers": "node scripts/check-layers.ts",
+    "test:scripts": "node --test \"scripts/**/*.test.ts\"",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:layers && pnpm spell && pnpm knip && pnpm test:scripts && pnpm test",
+    "changeset": "changeset",
+    "changeset:status": "changeset status --since=origin/main",
+    "prepare": "node scripts/install-hooks.ts"
+  },
+  "devDependencies": {
+    "@changesets/cli": "2.31.1",
+    "@commitlint/cli": "21.2.1",
+    "@commitlint/config-conventional": "21.2.0",
+    "@commitlint/types": "21.2.0",
+    "@types/node": "catalog:",
+    "cspell": "10.0.1",
+    "knip": "6.29.0",
+    "lefthook": "2.1.10",
+    "oxfmt": "0.61.0",
+    "oxlint": "1.76.0",
+    "oxlint-tsgolint": "7.0.2001",
+    "turbo": "2.10.7",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "packageManager": "pnpm@11.17.0"
+}

@@ -1,0 +1,52 @@
+# Code owners are requested for review automatically, and are required reviewers
+# where branch protection says so.
+#
+# Later rules win, so the specific entries below override the catch-all.
+#
+# When this repository is used as a template, replace @jleveneur throughout.
+
+* @jleveneur
+
+# ---------------------------------------------------------------------------
+# Load-bearing configuration
+#
+# These files decide how everything else is built, checked, and released. A
+# change here has a much larger blast radius than its diff size suggests, which
+# is the argument for a named owner rather than whoever is available.
+# ---------------------------------------------------------------------------
+
+/.github/                 @jleveneur
+/tooling/                 @jleveneur
+/turbo.json               @jleveneur
+/pnpm-workspace.yaml      @jleveneur
+/package.json             @jleveneur
+/Makefile                 @jleveneur
+/lefthook.yml             @jleveneur
+/scripts/                 @jleveneur
+
+# ---------------------------------------------------------------------------
+# Architecture and decisions
+#
+# Documentation that other people rely on being accurate. An ADR changing status
+# is a decision being made, not a docs edit.
+# ---------------------------------------------------------------------------
+
+/docs/architecture/       @jleveneur
+/docs/adr/                @jleveneur
+
+# ---------------------------------------------------------------------------
+# Security-sensitive surfaces
+#
+# Auth, authorization, secrets, and infrastructure. Mistakes here are not caught
+# by tests and are expensive to discover in production.
+# ---------------------------------------------------------------------------
+
+/packages/auth/           @jleveneur
+/packages/authz/          @jleveneur
+/packages/env/            @jleveneur
+/infra/                   @jleveneur
+/docker/                  @jleveneur
+
+# Database schema and migrations: a migration is effectively irreversible once it
+# has run in production.
+/packages/db/             @jleveneur

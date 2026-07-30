@@ -1,0 +1,199 @@
+// Dependency update policy. Implements the table in
+// docs/architecture/12-git-ci-release.md#6-dependency-updates--renovate.
+//
+// JSON5 so the reasoning lives next to the rule. The goal is that routine,
+// low-risk updates land without a human, and everything else arrives as a small
+// reviewable PR with the release notes attached. A bot that opens thirty PRs a
+// week gets muted, and a muted bot is worse than no bot.
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  extends: [
+    "config:recommended",
+    // One tracking issue listing everything pending, so the backlog is visible
+    // without leaving thirty PRs open.
+    ":dependencyDashboard",
+    // Commit messages must satisfy commitlint, which CI enforces on every PR.
+    ":semanticCommits",
+    // Keep the lockfile fresh even when no manifest changed, so transitive
+    // security fixes are not held back by an unrelated pin.
+    "helpers:pinGitHubActionDigests",
+  ],
+
+  timezone: "Europe/Paris",
+
+  // Outside working hours, so a merge queue full of bot PRs never competes with
+  // someone trying to ship.
+  schedule: ["* 2-6 * * 1"],
+
+  // Exact versions everywhere: a range means CI and production can resolve
+  // differently, and the lockfile becomes the only record of what shipped.
+  rangeStrategy: "pin",
+
+  // Supply-chain delay. Most malicious releases are found and yanked within a
+  // couple of days; waiting costs nothing on a weekly schedule and removes the
+  // window where a compromised release is auto-merged. Security updates below
+  // deliberately override this.
+  minimumReleaseAge: "3 days",
+
+  // A cap on review load rather than a technical limit.
+  prConcurrentLimit: 8,
+  prHourlyLimit: 4,
+
+  postUpdateOptions: ["pnpmDedupe"],
+
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["* 2-6 * * 1"],
+    automerge: true,
+  },
+
+  // Security fixes bypass the schedule and the release-age delay: the exposure
+  // window of a known advisory is worse than the risk the delay protects
+  // against.
+  vulnerabilityAlerts: {
+    enabled: true,
+    schedule: ["at any time"],
+    minimumReleaseAge: null,
+    labels: ["security", "priority: high"],
+    automerge: true,
+    automergeType: "pr",
+  },
+
+  packageRules: [
+    // ---------------------------------------------------------------------
+    // Auto-merged: mechanical updates where a green CI run is genuine evidence
+    // of safety, because the tools in question are what CI runs.
+    // ---------------------------------------------------------------------
+    {
+      matchDepTypes: ["devDependencies"],
+      matchUpdateTypes: ["patch", "minor"],
+      groupName: "dev dependencies",
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true,
+    },
+    {
+      matchDepTypes: ["dependencies"],
+      matchUpdateTypes: ["patch"],
+      groupName: "production patches",
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true,
+    },
+    {
+      // Type definitions travel with the library they describe, so splitting
+      // them produces a PR that cannot pass typecheck on its own.
+      matchPackageNames: ["@types/**"],
+      matchUpdateTypes: ["patch", "minor"],
+      groupName: "type definitions",
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true,
+    },
+
+    // ---------------------------------------------------------------------
+    // Grouped by ecosystem: these packages release in lockstep and are only
+    // coherent when upgraded together.
+    // ---------------------------------------------------------------------
+    {
+      matchPackageNames: ["react", "react-dom", "@types/react", "@types/react-dom"],
+      groupName: "react",
+    },
+    {
+      matchPackageNames: ["next", "eslint-config-next", "@next/**"],
+      groupName: "next.js",
+    },
+    {
+      matchPackageNames: ["@tanstack/**"],
+      groupName: "tanstack",
+    },
+    {
+      matchPackageNames: ["@trpc/**"],
+      groupName: "trpc",
+    },
+    {
+      matchPackageNames: ["drizzle-orm", "drizzle-kit", "drizzle-zod"],
+      groupName: "drizzle",
+    },
+    {
+      matchPackageNames: ["@opentelemetry/**"],
+      groupName: "opentelemetry",
+    },
+    {
+      matchPackageNames: ["@sentry/**"],
+      groupName: "sentry",
+    },
+    {
+      matchPackageNames: ["oxlint", "oxfmt", "oxlint-tsgolint"],
+      groupName: "oxc toolchain",
+      // Pre-1.0 formatter and linter releases change output and rule sets, so a
+      // minor bump can rewrite files or fail the build. Reviewed, never merged
+      // by the bot. See the risk register in the dependency review.
+      automerge: false,
+    },
+    {
+      matchPackageNames: ["@base-ui/react"],
+      groupName: "base ui",
+      automerge: false,
+    },
+
+    // ---------------------------------------------------------------------
+    // Never auto-merged.
+    // ---------------------------------------------------------------------
+    {
+      matchUpdateTypes: ["major"],
+      // One PR per package, monthly, so a breaking change is reviewed on its own
+      // terms instead of buried in a group.
+      schedule: ["* 2-6 1 * *"],
+      automerge: false,
+      labels: ["dependencies", "major"],
+      minimumReleaseAge: "14 days",
+    },
+    {
+      // A workflow runs with repository permissions, so a mutable reference here
+      // is a supply-chain hole. Digests are pinned and updates are read, not
+      // trusted.
+      matchManagers: ["github-actions"],
+      groupName: "github actions",
+      schedule: ["* 2-6 1 * *"],
+      automerge: false,
+      pinDigests: true,
+    },
+    {
+      // The runtime the whole repo is built against. A Node major is a
+      // deliberate migration, not a dependency bump.
+      matchPackageNames: ["node", "@types/node"],
+      matchUpdateTypes: ["major"],
+      automerge: false,
+      labels: ["dependencies", "runtime"],
+    },
+    {
+      matchPackageNames: ["typescript"],
+      // The compiler decides whether everything else builds, and TypeScript
+      // minors routinely surface new type errors in existing code.
+      automerge: false,
+      labels: ["dependencies", "typescript"],
+    },
+    {
+      matchPackageNames: ["pnpm"],
+      // Changing the package manager version changes how the lockfile and
+      // node_modules layout are produced, which is what enforces layer
+      // boundaries. See ADR-0002.
+      automerge: false,
+    },
+    {
+      matchManagers: ["dockerfile", "docker-compose"],
+      groupName: "docker images",
+      pinDigests: true,
+      automerge: false,
+    },
+    {
+      // Database engine upgrades need a migration plan and a maintenance window.
+      matchPackageNames: ["postgres", "redis", "valkey"],
+      matchUpdateTypes: ["major", "minor"],
+      automerge: false,
+      labels: ["dependencies", "infrastructure"],
+    },
+  ],
+}

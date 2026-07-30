@@ -1,0 +1,37 @@
+{
+  // Prompted on first open. Deliberately short: every recommendation is either
+  // required for the workspace settings to work, or catches something CI also
+  // catches (so you find it before pushing rather than after).
+  "recommendations": [
+    // Required. Provides the TypeScript 7 native language server; without it the
+    // editor type-checks with a different compiler than CI. See settings.json.
+    "TypeScriptTeam.native-preview",
+
+    // Required. Runs Oxlint and Oxfmt, which the on-save code actions invoke.
+    "oxc.oxc-vscode",
+
+    // Honours .editorconfig, which owns whitespace for files Oxfmt does not.
+    "EditorConfig.EditorConfig",
+
+    // The same spell checker `make spell` runs, reading the same config.
+    "streetsidesoftware.code-spell-checker",
+    "streetsidesoftware.code-spell-checker-british-english",
+
+    // Tailwind class completion and hover previews.
+    "bradlc.vscode-tailwindcss",
+
+    // Schema validation for workflows, Compose files, and lefthook.yml.
+    "redhat.vscode-yaml",
+
+    // Renders the Mermaid diagrams used throughout docs/architecture.
+    "bierner.markdown-mermaid",
+
+    // Reviews and CI logs without leaving the editor.
+    "GitHub.vscode-pull-request-github"
+  ],
+
+  // Flagged rather than blocked. These format or lint JavaScript and TypeScript,
+  // so with Oxfmt and Oxlint also active every save produces a fight over the
+  // same lines. See ADR-0004.
+  "unwantedRecommendations": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "biomejs.biome"]
+}

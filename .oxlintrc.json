@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "extends": ["./tooling/oxlint/base.json"],
+  "options": {
+    // Type-aware linting via oxlint-tsgolint, which is built on typescript-go
+    // (TypeScript 7). This is root-only configuration. See ADR-0004.
+    "typeAware": true
+  },
+  "overrides": [
+    {
+      // Composition roots and process bootstraps legitimately write to stdout
+      // before a logger exists, and scripts are not shipped code.
+      "files": ["scripts/**", "**/*.config.*", "**/src/index.ts", "**/instrumentation*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      // Tests may assert on promise rejections and construct partial fixtures.
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/e2e/**", "**/*.spec.ts"],
+      "rules": {
+        "typescript/no-non-null-assertion": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-floating-promises": [
+          "error",
+          {
+            // node:test's `describe`/`it` return a promise the runner already
+            // tracks and awaits; the caller is not meant to. Narrowed to those
+            // names so a genuinely unawaited promise inside a test still fails.
+            "allowForKnownSafeCalls": [
+              { "from": "package", "package": "node:test", "name": ["describe", "it"] }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+name: Setup
+description: Install pnpm, Node, and dependencies, and restore the Turborepo cache.
+
+# Every CI job needs the same four steps. Defining them once means a change to
+# how the repo is prepared cannot apply to some jobs and not others — the class
+# of bug where CI passes on one job and fails on another for no visible reason.
+
+inputs:
+  install:
+    description: Whether to install dependencies.
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    # pnpm must exist before setup-node, or setup-node's pnpm cache has no
+    # package manager to ask about the store location.
+    - name: Install pnpm
+      uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+    # The Node version comes from .nvmrc so the local toolchain and CI cannot
+    # drift apart. `cache: pnpm` keys the store cache on the lockfile.
+    - name: Install Node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+
+    # --frozen-lockfile makes an out-of-date lockfile a CI failure rather than
+    # something CI silently fixes, which would let a PR pass with dependencies
+    # nobody reviewed.
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    # Turborepo's local cache. Keyed by commit SHA so every run writes a fresh
+    # entry, with restore-keys falling back to the most recent cache on this
+    # branch and then on any branch.
+    - name: Restore Turborepo cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ github.sha }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ github.ref_name }}-
+          turbo-${{ runner.os }}-

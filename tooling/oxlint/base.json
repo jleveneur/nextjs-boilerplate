@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "promise", "node"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn",
+    "pedantic": "off",
+    "style": "off"
+  },
+  "rules": {
+    // --- Type safety -------------------------------------------------------
+    // The repo bans `any`, non-null assertions, and unsafe casts. These rules
+    // are what make that a build failure rather than a review preference.
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-return": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-call": "error",
+
+    // These two are the reason type-aware linting is worth its setup cost: an
+    // unawaited promise in a request handler is silent data loss, and no
+    // syntax-only linter can see it.
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/await-thenable": "error",
+    "typescript/require-await": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/switch-exhaustiveness-check": "error",
+
+    // --- Correctness -------------------------------------------------------
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "no-var": "error",
+    "prefer-const": "error",
+    "no-param-reassign": "error",
+    "promise/no-return-wrap": "error",
+    "import/no-duplicates": "error",
+    "import/no-self-import": "error",
+    "import/no-cycle": "error",
+
+    // --- Observability -----------------------------------------------------
+    // All logging goes through @repo/logger, which owns levels, structure, and
+    // redaction. `console` bypasses all three.
+    "no-console": "error",
+    "no-debugger": "error",
+    "no-alert": "error",
+
+    // --- Deliberately off --------------------------------------------------
+    // `null` is a real value in JSON payloads and SQL columns; pretending
+    // otherwise means translating at every boundary.
+    "unicorn/no-null": "off",
+    // File naming is asserted by scripts/check-layers.ts against the documented
+    // convention, which is stricter and repo-specific.
+    "unicorn/filename-case": "off"
+  },
+  "settings": {},
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/.next/**",
+    "**/coverage/**",
+    "**/node_modules/**",
+    "**/*.generated.*"
+  ]
+}

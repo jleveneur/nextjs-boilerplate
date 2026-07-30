@@ -1,0 +1,52 @@
+packages:
+  - apps/*
+  - packages/*
+  - tooling/*
+
+# Install scripts execute arbitrary code, so pnpm blocks them by default and
+# every decision has to be explicit and reviewable. Each entry is a deliberate
+# answer, `false` included — an unanswered package makes `pnpm install` warn,
+# which is the behaviour we want.
+#
+# Prefer `false`. Only grant `true` when a package genuinely cannot work without
+# running code at install time (native compilation, browser downloads).
+allowBuilds:
+  # lefthook ships prebuilt platform binaries as optional dependencies, so its
+  # postinstall — which links a binary into node_modules/.bin — is redundant.
+  # Verified: `lefthook version` resolves correctly with the script declined.
+  lefthook: false
+
+# ---------------------------------------------------------------------------
+# Dependency catalog
+#
+# Shared versions are declared once here and referenced as "catalog:" from
+# package manifests. This is what prevents two packages from silently
+# resolving different copies of React or Zod — the classic monorepo failure.
+# Renovate updates this file, so a bump is one reviewed diff.
+#
+# Versions verified against the npm registry on 2026-07-30.
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Peer dependency exceptions
+#
+# Narrowly scoped and dated. `strict-peer-dependencies=true` in .npmrc means an
+# unmet peer is an error, which is what we want — so every exception is written
+# down with the reason it is safe and the condition for deleting it.
+# ---------------------------------------------------------------------------
+peerDependencyRules:
+  allowedVersions:
+    # knip → oxc-parser / oxc-resolver ship wasm32-wasi bindings whose
+    # @napi-rs/wasm-runtime wants an @emnapi 2.x alpha. That binding is the
+    # fallback for platforms with no native binary, so it is never loaded on any
+    # platform we build for. Remove once oxc's wasm bindings track a stable
+    # @emnapi 2.
+    "@napi-rs/wasm-runtime>@emnapi/core": "1"
+    "@napi-rs/wasm-runtime>@emnapi/runtime": "1"
+
+# An entry is added when the first package consumes it, never in anticipation:
+# Knip reports unused catalog entries, and a catalog full of aspirations trains
+# people to ignore that report.
+catalog:
+  # --- Language & runtime types -------------------------------------------
+  typescript: 7.0.2
+  "@types/node": 24.13.3

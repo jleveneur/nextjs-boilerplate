@@ -1,0 +1,60 @@
+name: Release
+
+# Turns merged changesets into a version bump and a changelog.
+#
+# The flow is two-step on purpose. This workflow does not release anything when it
+# runs: it opens (or updates) a "Version packages" pull request containing the
+# bumps and generated changelogs. Releasing happens when a human merges that PR.
+# A version number is a claim about what changed, and it should be reviewed like
+# any other claim.
+#
+# See docs/architecture/12-git-ci-release.md#5-versioning-and-releases--changesets.
+
+on:
+  push:
+    branches: [main]
+  # Allows recovery when a run failed for an unrelated reason, without needing an
+  # empty commit to re-trigger it.
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Version packages
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Push the version branch and its commits.
+      contents: write
+      # Open and update the version pull request.
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Changesets compares against the base branch to work out which
+          # packages changed, which needs more than a shallow clone.
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup
+
+      # Nothing is published to a registry — every package is private — so there
+      # is no `publish` input and no npm token. The action's job here is the
+      # version PR and the changelogs.
+      - name: Create or update the version pull request
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          version: pnpm exec changeset version
+          title: "chore(release): version packages"
+          commit: "chore(release): version packages"
+          # The lockfile records the bumped internal versions, so it has to be
+          # refreshed in the same commit or the version PR fails its own CI.
+          setupGitUser: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

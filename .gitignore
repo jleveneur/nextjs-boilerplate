@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Test output
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# Environment — every .env EXCEPT the committed example.
+# Secrets belong in infra/secrets/*.enc.yaml (SOPS + age), never here.
+.env
+.env.*
+!.env.example
+
+# Decrypted secrets must never be committed. If you see one of these in a diff,
+# stop and rotate the values.
+*.dec.yaml
+*.dec.yml
+*.decrypted
+
+# Local tooling caches
+.cache/
+.eslintcache
+.oxlintcache
+
+# Editors
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Docker volumes mounted into the repo
+docker/data/
+
+# OpenTofu / Terraform local state. Remote state lives in R2; local state is
+# never authoritative.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Ansible
+*.retry

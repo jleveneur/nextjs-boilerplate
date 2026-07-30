@@ -1,0 +1,64 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalDependencies": [
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    ".npmrc",
+    "tooling/typescript/*.json",
+    "tooling/oxlint/*.json"
+  ],
+  "globalEnv": ["NODE_ENV", "APP_ENV", "CI"],
+  "globalPassThroughEnv": ["FORCE_COLOR", "TERM"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*", "!**/*.spec.*", "!**/e2e/**"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+
+    // typecheck, lint, and test:unit declare no dependencies so they fan out
+    // across every package in parallel. This is only correct because internal
+    // packages ship TypeScript source with no build step (ADR-0002); the moment
+    // a package emits declarations, typecheck would need "dependsOn": ["^build"].
+    "typecheck": {
+      "dependsOn": [],
+      "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"],
+      "outputs": ["*.tsbuildinfo"]
+    },
+
+    "lint": {
+      "dependsOn": [],
+      "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"],
+      "outputs": []
+    },
+
+    "test:unit": {
+      "dependsOn": [],
+      "outputs": ["coverage/**"]
+    },
+
+    // Integration and E2E need live services, so they are never part of the
+    // default local loop and always depend on a real build.
+    "test:integration": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": ["DATABASE_URL", "REDIS_URL", "S3_ENDPOINT"]
+    },
+
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": ["APP_URL", "DATABASE_URL"]
+    },
+
+    "clean": {
+      "cache": false
+    }
+  }
+}

@@ -1,0 +1,58 @@
+name: Feature or change request
+description: Propose new behaviour, or a change to existing behaviour.
+labels: ["type: feature", "status: needs triage"]
+
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: >
+        The problem in terms of who is blocked and by what. Describe the situation
+        rather than the solution — a request framed only as a solution hides the
+        problem, and the problem is what gets prioritised.
+      placeholder: >
+        Admins cannot tell which team member changed a billing setting, so
+        reconciling an unexpected invoice means asking people individually.
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What someone can do afterwards that they cannot do now.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: >
+        Including doing nothing, and any workaround in use today. If a workaround
+        exists and is tolerable, say so — that is useful information.
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope notes
+      description: >
+        Anything known about the edges: multi-tenancy, permissions, migrations,
+        third-party APIs, or i18n implications.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: considerations
+    attributes:
+      label: Likely to involve
+      description: A triage hint, not a commitment.
+      options:
+        - label: A database migration
+        - label: A new permission or role change
+        - label: A public API change
+        - label: A new third-party dependency
+        - label: An architectural decision that needs an ADR

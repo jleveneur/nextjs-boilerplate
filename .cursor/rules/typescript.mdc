@@ -1,0 +1,49 @@
+---
+description: TypeScript rules that fail CI
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript
+
+`any`, non-null assertions, floating promises, and `console` all fail `make lint`.
+
+```ts
+// ❌ BAD
+const data = JSON.parse(body) as Payload;
+const name = user!.name;
+sendEmail(user);
+console.log("saved", id);
+
+// ✅ GOOD
+const data = payloadSchema.parse(JSON.parse(body));
+const name = user?.name ?? "unknown";
+await sendEmail(user);
+logger.info({ id }, "saved");
+```
+
+## Narrow unknown, do not assert
+
+External input — request bodies, webhook payloads, third-party responses, parsed
+JSON — is `unknown` until a Zod schema validates it. A cast moves the failure from
+the boundary to somewhere unrelated and much later.
+
+## Branded IDs
+
+IDs are branded so they cannot be swapped:
+
+```ts
+// ❌ BAD — compiles, wrong at runtime
+function getMembers(organizationId: string) {}
+getMembers(user.id);
+
+// ✅ GOOD — a type error
+function getMembers(organizationId: OrganizationId) {}
+```
+
+## Other rules
+
+- `import type { Foo }` for type-only imports.
+- Money is an integer in minor units, never a float.
+- No `process.env` outside `@repo/env`.
+- Prefer `satisfies` over annotation when you want inference kept.

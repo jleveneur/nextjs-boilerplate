@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Library (runtime-agnostic)",
+  "extends": "./base.json",
+  "compilerOptions": {
+    // No DOM and no node types: a library extending this config cannot
+    // accidentally depend on either runtime. Layer 0 packages use this so their
+    // browser-safety is a compile-time property rather than a convention.
+    "lib": ["es2024"],
+    "types": []
+  }
+}

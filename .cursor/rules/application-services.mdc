@@ -1,0 +1,51 @@
+---
+description: The canonical shape of an application service, including authorization and tenant scoping
+globs: packages/core/**/*.ts,packages/*/src/services/**/*.ts,packages/*/src/application/**/*.ts
+alwaysApply: false
+---
+
+# Application services
+
+Every service takes an explicit actor, authorizes before touching data, and scopes
+every query to an organisation.
+
+```ts
+// ✅ The canonical shape
+export async function archiveProject(input: {
+  actor: Actor;
+  projectId: ProjectId;
+}): Promise<Project> {
+  // 1. Authorize first — before any read or write.
+  await assertCan(input.actor, "project:archive", { projectId: input.projectId });
+
+  // 2. Load scoped to the actor's organisation, never by ID alone.
+  const project = await projects.findById({
+    id: input.projectId,
+    organizationId: input.actor.organizationId,
+  });
+  if (project === undefined) throw new NotFoundError("project", input.projectId);
+
+  // 3. Domain rule lives here, not in the transport or the component.
+  if (project.status === "archived") throw new ConflictError("Project already archived");
+
+  return projects.archive({ id: project.id, organizationId: input.actor.organizationId });
+}
+```
+
+## Failure modes this prevents
+
+```ts
+// ❌ Reads ambient session state — untestable, and wrong in a job or webhook
+const session = await auth.getSession();
+
+// ❌ Authorizes after loading — leaks existence and wastes a query
+const project = await projects.findById({ id });
+await assertCan(actor, "project:archive", { project });
+
+// ❌ No tenant scope — returns another organisation's row
+await projects.findById({ id });
+```
+
+Throw typed `AppError` subclasses (`NotFoundError`, `ConflictError`,
+`ForbiddenError`). Transports map them to status codes; services never format
+HTTP.

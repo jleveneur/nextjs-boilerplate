@@ -1,0 +1,140 @@
+{
+  // Workspace defaults, committed so everyone gets the same diagnostics and the
+  // same formatting. Personal preferences belong in user settings, not here.
+
+  // ---------------------------------------------------------------------------
+  // TypeScript
+  //
+  // TypeScript 7 is the native (Go) compiler: `node_modules/typescript` ships a
+  // platform binary and has no `tsserver.js`, so VS Code's bundled TypeScript
+  // extension cannot load it as an SDK. Without the settings below the editor
+  // would silently type-check with its own older TypeScript while CI uses this
+  // one — the worst kind of drift, because the editor looks authoritative.
+  //
+  // Requires the "TypeScript 7" extension (TypeScriptTeam.native-preview),
+  // recommended in extensions.json.
+  // ---------------------------------------------------------------------------
+  "js/ts.experimental.useTsgo": true,
+  "js/ts.tsdk.path": "./node_modules/typescript",
+
+  // Pointless here: there is no loadable workspace tsserver to switch to.
+  "typescript.enablePromptUseWorkspaceTsdk": false,
+
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "typescript.inlayHints.parameterNames.enabled": "literals",
+
+  // ---------------------------------------------------------------------------
+  // Formatting and linting — Oxfmt and Oxlint via the Oxc extension
+  //
+  // Run as code actions rather than through `formatOnSave` so the order is
+  // defined: format first, then apply lint fixes. With both racing as separate
+  // on-save hooks, a lint fix can land in text the formatter has already
+  // rewritten.
+  // ---------------------------------------------------------------------------
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.format.oxc": "always",
+    "source.fixAll.oxc": "always"
+  },
+
+  // Scoped per language: Oxfmt handles exactly these, and claiming the others
+  // would leave files silently unformatted.
+  "[typescript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[javascriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[json]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[css]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    // Two trailing spaces are a hard line break in Markdown.
+    "editor.trimTrailingWhitespace": false
+  },
+
+  // Turned off explicitly. If someone has these installed globally they will
+  // fight Oxfmt over every file, and the resulting diff churn is hard to
+  // attribute. See ADR-0004.
+  "prettier.enable": false,
+  "eslint.enable": false,
+  "biome.enabled": false,
+
+  // ---------------------------------------------------------------------------
+  // Files
+  // ---------------------------------------------------------------------------
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.associations": {
+    "*.css": "tailwindcss",
+    ".oxlintrc.json": "jsonc",
+    ".oxfmtrc.json": "jsonc",
+    "turbo.json": "jsonc",
+    "knip.json": "jsonc"
+  },
+
+  // Excluded from watching, not from view. A monorepo has enough build output to
+  // exhaust the OS file-watcher limit, which shows up as the editor mysteriously
+  // failing to notice changes.
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.turbo/**": true,
+    "**/.next/**": true,
+    "**/dist/**": true,
+    "**/coverage/**": true,
+    "**/playwright-report/**": true,
+    "**/test-results/**": true
+  },
+
+  // Noise removed from search results, while the files stay openable.
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.turbo": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/pnpm-lock.yaml": true,
+    "**/playwright-report": true,
+    "**/test-results": true
+  },
+
+  // ---------------------------------------------------------------------------
+  // Editor behaviour matching the repo conventions
+  // ---------------------------------------------------------------------------
+  "editor.rulers": [100],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.linkedEditing": true,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "package.json": "pnpm-lock.yaml, pnpm-workspace.yaml, .npmrc, turbo.json, knip.json, .nvmrc",
+    "*.ts": "$(capture).test.ts, $(capture).spec.ts",
+    "*.tsx": "$(capture).test.tsx, $(capture).spec.tsx"
+  },
+
+  // ---------------------------------------------------------------------------
+  // Schemas
+  //
+  // Validation and completion for files with no $schema key of their own.
+  // ---------------------------------------------------------------------------
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml",
+    "https://json.schemastore.org/github-action.json": ".github/actions/*/action.yml",
+    "https://json.schemastore.org/github-issue-forms.json": ".github/ISSUE_TEMPLATE/*.yml",
+    "https://raw.githubusercontent.com/evilmartians/lefthook/master/schema.json": "lefthook.yml"
+  },
+
+  // ---------------------------------------------------------------------------
+  // Spelling
+  //
+  // The dictionary lives in tooling/cspell/project.txt via cspell.config.yaml,
+  // so new jargon arrives as a reviewed diff rather than in someone's user
+  // settings where nobody else benefits.
+  // ---------------------------------------------------------------------------
+  "cSpell.enabled": true
+}

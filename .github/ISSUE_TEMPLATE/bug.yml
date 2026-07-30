@@ -1,0 +1,87 @@
+name: Bug report
+description: Something behaves differently from how it should.
+labels: ["type: bug", "status: needs triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not include secrets, tokens, or real customer data. Redact logs
+        before pasting them.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: The actual behaviour, and what you expected instead.
+      placeholder: |
+        Expected: submitting the form saves the invoice and shows a confirmation.
+        Actual: the button spins forever and a 500 appears in the console.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: >
+        The minimum sequence that triggers it. A bug that cannot be reproduced
+        cannot be verified as fixed, so this is the field that decides whether
+        the issue is actionable.
+      placeholder: |
+        1. Sign in as a member of an organisation with no billing account
+        2. Go to Settings → Billing
+        3. Click "Add payment method"
+    validations:
+      required: true
+
+  - type: input
+    id: frequency
+    attributes:
+      label: How often
+      description: Every time, intermittently, or once?
+      placeholder: Every time since the 2026-07-28 deploy
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: >
+        Trace ID, request ID, Sentry link, correlation ID, or a redacted log
+        excerpt. A trace ID usually turns an hour of searching into a minute.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - production
+        - staging
+        - preview
+        - local
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      description: Used for triage order, not as a commitment.
+      options:
+        - Blocking — data loss, security, or nobody can work around it
+        - Serious — a core flow is broken but there is a workaround
+        - Minor — cosmetic or rarely hit
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The release tag, image tag, or commit SHA where you saw this.
+    validations:
+      required: false

@@ -1,0 +1,51 @@
+# Git hooks. See docs/architecture/12-git-ci-release.md#2-git-hooks--lefthook
+#
+# Hooks are fast on purpose. Pre-commit is sub-second; pre-push is seconds.
+# Integration and E2E tests are never here: a slow hook gets bypassed with
+# --no-verify, and a bypassed hook protects nothing. CI is the real gate.
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,css,md,yaml,yml}"
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
+
+    - name: lint
+      glob: "*.{ts,tsx,js,jsx,mjs,cjs}"
+      run: pnpm exec oxlint {staged_files}
+
+    # The one exception to "hooks catch trivia": a committed secret is
+    # compromised the moment it is pushed, so catching it in CI is already
+    # too late.
+    - name: secrets
+      run: |
+        if command -v gitleaks >/dev/null 2>&1; then
+          gitleaks git --staged --redact --no-banner
+        else
+          echo "gitleaks not installed — skipping local scan (CI still enforces it)."
+          echo "Install: brew install gitleaks"
+        fi
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: typecheck
+      run: pnpm exec turbo run typecheck --affected
+
+    - name: test
+      run: pnpm exec turbo run test:unit --affected
+
+    - name: boundaries
+      run: node scripts/check-layers.ts
+
+    # The boundary checker is the only enforcement of ADR-0002, so it is tested
+    # like production code and those tests run before the checker is trusted.
+    - name: scripts
+      run: pnpm exec node --test "scripts/**/*.test.ts"

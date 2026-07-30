@@ -1,0 +1,41 @@
+# Normalise line endings on checkin. Without this, a Windows contributor produces
+# CRLF diffs that make every file look changed and break shell scripts in the
+# Docker images.
+* text=auto eol=lf
+
+# Files that must keep LF regardless of platform.
+*.sh text eol=lf
+Makefile text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+
+# Binary — never diff or merge these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# Generated or vendored: excluded from language statistics and collapsed in
+# review, so a lockfile bump does not bury the actual change.
+pnpm-lock.yaml linguist-generated=true -diff
+**/openapi.json linguist-generated=true
+**/*.generated.* linguist-generated=true
+packages/db/src/migrations/** linguist-generated=true
+
+# Encrypted secrets: SOPS output is line-oriented, so a normal diff usefully
+# shows *which* key changed without revealing the value. Keep diffing enabled.
+infra/secrets/*.enc.yaml text eol=lf
+
+# Documentation counts as documentation, not code.
+docs/** linguist-documentation=true

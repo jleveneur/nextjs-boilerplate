@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+
+  // Knip infers workspaces from pnpm-workspace.yaml and resolves binaries
+  // referenced in package scripts, so almost nothing needs declaring. Entries
+  // are added here only when a default proves wrong for a specific workspace —
+  // config that describes packages which do not exist yet is config nobody
+  // validates. `knip --no-config-hints` disables the reminders if they mislead.
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.ts", "*.config.ts"],
+      "project": ["scripts/**/*.ts"]
+    }
+  },
+
+  // An export used only inside its own file is not dead code in a package that
+  // exists to be imported; it is usually a helper under test.
+  "ignoreExportsUsedInFile": true
+}
