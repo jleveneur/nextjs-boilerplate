@@ -20,6 +20,9 @@
     },
     "packages/errors": {
       "entry": ["src/**/*.test-d.ts"]
+    },
+    "packages/contracts": {
+      "entry": ["src/**/*.test-d.ts"]
     }
   },
 
