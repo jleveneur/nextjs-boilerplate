@@ -51,6 +51,12 @@ catalog:
   typescript: 7.0.2
   "@types/node": 24.13.3
 
+  # --- Validation ----------------------------------------------------------
+  # Sole runtime dependency of @repo/env. Also used by contracts, forms, and
+  # every external-input boundary. Catalogued once so the whole monorepo shares
+  # one Zod major.
+  zod: 4.4.3
+
   # --- Testing -------------------------------------------------------------
   # Pinned exactly, not caret-ranged: Vitest's type-testing mode is explicitly
   # experimental and documented as not following SemVer, and it is what verifies

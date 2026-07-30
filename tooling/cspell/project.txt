@@ -212,3 +212,5 @@ relitigated
 # Real API names, so they appear in prose and in code and cannot be reworded.
 unbrand # @repo/types: recovers the base type behind a Brand
 unstub # Vitest: unstubEnvs / unstubGlobals
+rediss # TLS Redis URL scheme (redis:// vs rediss://)
+whsec # Stripe webhook secret prefix

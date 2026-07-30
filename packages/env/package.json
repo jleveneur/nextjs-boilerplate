@@ -1,0 +1,34 @@
+{
+  "name": "@repo/env",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zod-validated environment schemas with server/client split and composable presets. Sole process.env reader.",
+  "type": "module",
+  "exports": {
+    "./shared": "./src/shared.ts",
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts",
+    "./presets": "./src/presets/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "server-only": "0.0.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "repo": {
+    "layer": 0,
+    "runtime": "browser"
+  }
+}
