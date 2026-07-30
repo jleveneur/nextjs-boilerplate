@@ -26,5 +26,21 @@ export function crossFieldProblems(env: Readonly<Record<string, unknown>>): stri
     problems.push("SENTRY_DSN: required when SENTRY_ENABLED is true");
   }
 
+  if (env["GITHUB_CLIENT_ID"] !== undefined && env["GITHUB_CLIENT_SECRET"] === undefined) {
+    problems.push("GITHUB_CLIENT_SECRET: required when GITHUB_CLIENT_ID is set");
+  }
+
+  if (env["GITHUB_CLIENT_SECRET"] !== undefined && env["GITHUB_CLIENT_ID"] === undefined) {
+    problems.push("GITHUB_CLIENT_ID: required when GITHUB_CLIENT_SECRET is set");
+  }
+
+  if (env["GOOGLE_CLIENT_ID"] !== undefined && env["GOOGLE_CLIENT_SECRET"] === undefined) {
+    problems.push("GOOGLE_CLIENT_SECRET: required when GOOGLE_CLIENT_ID is set");
+  }
+
+  if (env["GOOGLE_CLIENT_SECRET"] !== undefined && env["GOOGLE_CLIENT_ID"] === undefined) {
+    problems.push("GOOGLE_CLIENT_ID: required when GOOGLE_CLIENT_SECRET is set");
+  }
+
   return problems.toSorted();
 }

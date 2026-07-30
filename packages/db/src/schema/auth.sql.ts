@@ -19,6 +19,13 @@ export const user = pgTable(
     email: text("email").notNull(),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
+    // Two-factor plugin.
+    twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+    // Admin plugin — app-level role (`user` | `admin`), not org membership role.
+    role: text("role").notNull().default("user"),
+    banned: boolean("banned").notNull().default(false),
+    banReason: text("ban_reason"),
+    banExpires: timestamp("ban_expires", { withTimezone: true, mode: "date" }),
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
     deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "date" }),
@@ -39,6 +46,8 @@ export const session = pgTable(
     userAgent: text("user_agent"),
     // Organization plugin extension — filled when a session has an active org.
     activeOrganizationId: uuid("active_organization_id"),
+    // Admin plugin — set while an admin is impersonating this session's user.
+    impersonatedBy: text("impersonated_by"),
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
   },

@@ -108,6 +108,50 @@ describe("createEnv", () => {
         },
       }),
     ).toThrow(/TRIGGER_SECRET_KEY/);
+
+    expect(() =>
+      createEnv({
+        server: [auth],
+        runtimeEnv: {
+          BETTER_AUTH_SECRET: "x".repeat(32),
+          BETTER_AUTH_URL: "http://localhost:3000",
+          GITHUB_CLIENT_ID: "gh-id",
+        },
+      }),
+    ).toThrow(/GITHUB_CLIENT_SECRET/);
+
+    expect(() =>
+      createEnv({
+        server: [auth],
+        runtimeEnv: {
+          BETTER_AUTH_SECRET: "x".repeat(32),
+          BETTER_AUTH_URL: "http://localhost:3000",
+          GITHUB_CLIENT_SECRET: "gh-secret",
+        },
+      }),
+    ).toThrow(/GITHUB_CLIENT_ID/);
+
+    expect(() =>
+      createEnv({
+        server: [auth],
+        runtimeEnv: {
+          BETTER_AUTH_SECRET: "x".repeat(32),
+          BETTER_AUTH_URL: "http://localhost:3000",
+          GOOGLE_CLIENT_ID: "google-id",
+        },
+      }),
+    ).toThrow(/GOOGLE_CLIENT_SECRET/);
+
+    expect(() =>
+      createEnv({
+        server: [auth],
+        runtimeEnv: {
+          BETTER_AUTH_SECRET: "x".repeat(32),
+          BETTER_AUTH_URL: "http://localhost:3000",
+          GOOGLE_CLIENT_SECRET: "google-secret",
+        },
+      }),
+    ).toThrow(/GOOGLE_CLIENT_ID/);
   });
 
   it("skips validation when SKIP_ENV_VALIDATION is set", () => {
