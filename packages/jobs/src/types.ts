@@ -1,0 +1,56 @@
+import type { JobName, JobPayload } from "./registry.ts";
+
+export type EnqueueOptions = {
+  /** Delay before the job becomes active. */
+  delayMs?: number;
+  /** Max attempts including the first run. Defaults to adapter policy. */
+  attempts?: number;
+  /**
+   * Stable id for deduplication. Prefer the payload's idempotency key when
+   * the backend supports job ids.
+   */
+  jobId?: string;
+};
+
+export type EnqueueResult = {
+  id: string;
+};
+
+/**
+ * JobQueue port. Lives here until `@repo/core` re-exports it in Phase 6.
+ *
+ * Core only sees this surface — never BullMQ or Trigger.dev types.
+ */
+export type JobQueue = {
+  enqueue<N extends JobName>(
+    name: N,
+    payload: JobPayload<N>,
+    opts?: EnqueueOptions,
+  ): Promise<EnqueueResult>;
+  close(): Promise<void>;
+};
+
+export type CreateBullMqJobQueueOptions = {
+  redisUrl: string;
+  /** BullMQ queue name. Defaults to `default`. */
+  queueName?: string;
+  /** Key prefix so multiple apps can share one Redis. */
+  prefix?: string;
+};
+
+export type JobHandler<N extends JobName = JobName> = (
+  payload: JobPayload<N>,
+  meta: { jobId: string; attemptsMade: number },
+) => Promise<void>;
+
+export type JobHandlers = {
+  [N in JobName]: JobHandler<N>;
+};
+
+export type CreateBullMqWorkerOptions = {
+  redisUrl: string;
+  handlers: JobHandlers;
+  queueName?: string;
+  prefix?: string;
+  concurrency?: number;
+};

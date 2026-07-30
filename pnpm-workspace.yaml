@@ -18,6 +18,12 @@ allowBuilds:
   # drizzle-kit depends on esbuild to bundle its CLI. Without the install
   # script, the binary is missing and `drizzle-kit generate|migrate` fails.
   esbuild: true
+  # Optional native accelerator for msgpackr (BullMQ). Pure-JS fallback works;
+  # we do not need the compile step in this repo.
+  msgpackr-extract: false
+  # React Email pulls Sharp for image tooling. Image derivation is deferred to
+  # the worker phase; decline the install script until `@repo/storage` needs it.
+  sharp: false
 
 # ---------------------------------------------------------------------------
 # Dependency catalog
@@ -84,6 +90,7 @@ catalog:
   # catalog pins). See docs/architecture/13-dependency-review.md for rationale.
   pino: 10.3.1
   ioredis: 5.11.1
+  bullmq: 5.81.3
   "@aws-sdk/client-s3": 3.1099.0
   "@aws-sdk/s3-request-presigner": 3.1099.0
   resend: 6.18.1
@@ -100,3 +107,4 @@ minimumReleaseAgeExclude:
   - "@aws-sdk/client-s3@3.1099.0"
   - "@aws-sdk/s3-request-presigner@3.1099.0"
   - "@types/react@19.2.18"
+  - bullmq@5.81.3
