@@ -1,6 +1,23 @@
 // oxlint-disable-next-line import/no-unassigned-import
 import "server-only";
 
+export {
+  assertCanVoidInvoice,
+  BILLING_ERROR_CODES,
+  canVoidInvoice,
+  createInvoice,
+  getInvoice,
+  INVOICE_VOIDED,
+  InvoiceAlreadyPaidError,
+  InvoiceAlreadyVoidError,
+  invoiceVoidedEvent,
+  listInvoicesForOrg,
+  subscribeInvoiceVoidedNotify,
+  voidInvoice,
+  type InvoiceResource,
+  type InvoiceVoidedEvent,
+  type InvoiceVoidedPayload,
+} from "./billing/index.ts";
 export type { Ctx, CtxPorts } from "./ctx.ts";
 export {
   writeOutboxEvent,

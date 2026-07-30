@@ -29,6 +29,9 @@ export default mergeConfig(
           "src/ports/**",
           // Covered by integration tests (Postgres).
           "src/outbox/**",
+          "src/billing/billing.repository.ts",
+          "src/billing/billing.mapper.ts",
+          "src/billing/index.ts",
           "src/**/*.test.ts",
           "src/**/*.integration.test.ts",
           "src/**/*.d.ts",
