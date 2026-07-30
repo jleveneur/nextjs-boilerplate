@@ -24,6 +24,9 @@ allowBuilds:
   # React Email pulls Sharp for image tooling. Image derivation is deferred to
   # the worker phase; decline the install script until `@repo/storage` needs it.
   sharp: false
+  # protobufjs ships prebuilt code; its postinstall is optional. OTLP HTTP
+  # exporters work without the install script regenerating stubs.
+  protobufjs: false
 
 # ---------------------------------------------------------------------------
 # Dependency catalog
@@ -102,6 +105,12 @@ catalog:
   react: 19.2.8
   "react-dom": 19.2.8
   "@types/react": 19.2.18
+  "@opentelemetry/api": 1.9.1
+  "@opentelemetry/sdk-node": 0.221.0
+  "@opentelemetry/exporter-trace-otlp-http": 0.221.0
+  "@opentelemetry/resources": 2.10.0
+  "@opentelemetry/semantic-conventions": 1.43.0
+  "@sentry/node": 10.69.0
 
 minimumReleaseAgeExclude:
   - "@aws-sdk/client-s3@3.1099.0"
