@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@hono/node-server": "catalog:",
-    "@repo/cache": "workspace:*",
+    "@repo/authz": "workspace:*",
     "@repo/core": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/email": "workspace:*",

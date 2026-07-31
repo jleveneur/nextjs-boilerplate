@@ -5,7 +5,6 @@ import type {
   DomainEvent,
   EventBus,
   EventHandler,
-  FileStore,
   FlagProvider,
   IdGenerator,
   Mailer,
@@ -79,29 +78,6 @@ export function createInProcessEventBus(): EventBus {
       return () => {
         set?.delete(handler);
       };
-    },
-  };
-}
-
-export function createNoopFileStore(): FileStore {
-  return {
-    createPresignedPut() {
-      return Promise.reject(new Error("File storage is not configured in this environment"));
-    },
-    createPresignedGet() {
-      return Promise.reject(new Error("File storage is not configured in this environment"));
-    },
-    headObject() {
-      return Promise.resolve(undefined);
-    },
-    getObject() {
-      return Promise.resolve(undefined);
-    },
-    putObject() {
-      return Promise.reject(new Error("File storage is not configured in this environment"));
-    },
-    deleteObject() {
-      return Promise.resolve();
     },
   };
 }

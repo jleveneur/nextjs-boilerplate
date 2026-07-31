@@ -49,6 +49,9 @@
         "vitest.server-only-stub.ts",
         "src/**/*.integration.test.ts"
       ]
+    },
+    "apps/worker": {
+      "entry": ["vitest.server-only-stub.ts", "src/**/*.integration.test.ts"]
     }
   },
 

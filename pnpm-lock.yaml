@@ -469,9 +469,9 @@ importers:
       '@hono/node-server':
         specifier: 'catalog:'
         version: 2.0.12(hono@4.12.32)
-      '@repo/cache':
+      '@repo/authz':
         specifier: workspace:*
-        version: link:../../packages/cache
+        version: link:../../packages/authz
       '@repo/core':
         specifier: workspace:*
         version: link:../../packages/core

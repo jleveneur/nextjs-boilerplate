@@ -3,8 +3,8 @@
  */
 
 import {
+  assetSchema,
   confirmUploadInputSchema,
-  confirmUploadOutputSchema,
   requestUploadInputSchema,
   requestUploadOutputSchema,
 } from "@repo/contracts";
@@ -20,6 +20,6 @@ export const assetsRouter = createTRPCRouter({
 
   confirmUpload: orgProcedure
     .input(confirmUploadInputSchema)
-    .output(confirmUploadOutputSchema)
+    .output(assetSchema)
     .mutation(({ ctx, input }) => confirmUpload(ctx.serviceCtx, input)),
 });

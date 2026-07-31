@@ -4,7 +4,6 @@ export {
   assetSchema,
   assetStatusSchema,
   confirmUploadInputSchema,
-  confirmUploadOutputSchema,
   requestUploadInputSchema,
   requestUploadOutputSchema,
   type Asset,

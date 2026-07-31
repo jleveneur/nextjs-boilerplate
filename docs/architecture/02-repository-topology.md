@@ -128,8 +128,9 @@ apps/worker/
 ├── src/
 │   ├── index.ts             # Bootstrap: workers, schedulers, graceful shutdown, health port
 │   ├── container.ts
-│   ├── consumers/           # One file per queue; each maps payload → core service call
-│   └── schedules.ts         # Repeatable jobs (cron)
+│   ├── outbox-relay.ts      # Poll pending outbox → enqueue → mark published
+│   ├── consumers/           # One file per job; each maps payload → core service call
+│   └── schedules.ts         # Repeatable jobs (cron) with stable scheduler ids
 └── package.json
 ```
 

@@ -61,6 +61,4 @@ export const confirmUploadInputSchema = z.object({
 
 export type ConfirmUploadInput = z.infer<typeof confirmUploadInputSchema>;
 
-export const confirmUploadOutputSchema = assetSchema;
-
-export type ConfirmUploadOutput = z.infer<typeof confirmUploadOutputSchema>;
+export type ConfirmUploadOutput = Asset;
