@@ -128,8 +128,9 @@ job, and unit tests run with no database.
 
 `@repo/ui`: Tailwind 4 CSS-first theme in `tooling/tailwind` with tokens as CSS variables; `cn()`;
 shadcn/ui initialised on Base UI (`@base-ui/react` 1.6.0 — note the package rename); the core
-primitives; the HugeIcons wrapper; Motion primitives; Sonner; and the heavy widgets (chart, editor,
-table) behind subpath exports. Plus a `/design-system` route in `apps/web` that renders everything.
+primitives; the HugeIcons wrapper; Motion primitives; Sonner. Chart / editor / table subpaths are
+deferred until product needs them. Plus a minimal `apps/web` with a `/design-system` gallery (full
+product web surface is Phase 8).
 
 **Done when** every component has behaviour and axe tests, a test proves `@repo/ui` has no `node:*` in
 its transitive graph, and the bundle-budget check is in place so a heavy dependency cannot leak into

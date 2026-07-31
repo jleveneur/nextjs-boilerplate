@@ -202,21 +202,24 @@ mobile app or CLI) without importing a Next.js app.
 
 ### UI track (browser, parallel to layers 1–3)
 
-| Package    | Responsibility                                                                                                                                        |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@repo/ui` | The design system: Tailwind theme, shadcn/ui components on Base UI primitives, icon wrapper, motion primitives, heavy widgets behind subpath exports. |
+| Package    | Responsibility                                                                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/ui` | The design system: shadcn/ui on Base UI, icon wrapper, motion primitives, Sonner. Theme tokens live in `tooling/tailwind` (`@repo/tailwind-config`). |
 
 `@repo/ui` may import only Layer 0. It never learns that a database exists.
 
 Heavy dependencies are isolated behind subpath exports so they cannot be pulled into the base
-bundle by accident:
+bundle by accident. Chart / editor / table are **deferred** until a product surface needs them;
+the Next bundle-budget gate on `apps/web` keeps them off `/` when they land:
 
 ```
 @repo/ui          → primitives (button, input, dialog, …)
-@repo/ui/chart    → Recharts
-@repo/ui/editor   → Tiptap
-@repo/ui/table    → TanStack Table
 @repo/ui/icons    → HugeIcons wrapper
+@repo/ui/motion   → Motion wrappers
+@repo/ui/sonner   → Toaster
+@repo/ui/chart    → Recharts (deferred)
+@repo/ui/editor   → Tiptap (deferred)
+@repo/ui/table    → TanStack Table (deferred)
 ```
 
 ### Cross-cutting
