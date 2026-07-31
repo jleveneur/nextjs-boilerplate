@@ -94,10 +94,17 @@ export function createAuth(options: CreateAuthOptions) {
         maxAge: 5 * 60,
       },
     },
+    // NODE_ENV=production enables rate limits; E2E hammers sign-up on one IP.
+    rateLimit: {
+      enabled: options.appEnv !== "local" && options.appEnv !== "test",
+    },
     advanced: {
       database: {
         generateId: "uuid",
       },
+      // NODE_ENV=production defaults Secure cookies; those are dropped on plain
+      // HTTP (local `next start`, Playwright). Match the public base URL.
+      useSecureCookies: new URL(options.baseURL).protocol === "https:",
     },
     plugins: [
       organization({

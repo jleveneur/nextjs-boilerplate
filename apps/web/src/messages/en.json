@@ -48,7 +48,10 @@
     "passkeyRegister": "Register a passkey",
     "passkeyAuthenticate": "Sign in with passkey",
     "magicLinkTitle": "Magic link",
-    "magicLinkSubmit": "Send magic link"
+    "magicLinkSubmit": "Send magic link",
+    "continueTitle": "Continuing",
+    "continuing": "Taking you to your workspace…",
+    "noOrganizations": "No organization found for this account."
   },
   "Shell": {
     "invoices": "Invoices",

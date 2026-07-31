@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Skeleton } from "@repo/ui";
 
 import { EnsureActiveOrg } from "../../../../components/ensure-active-org.tsx";
 import { OrgSwitcher } from "../../../../components/org-switcher.tsx";
@@ -13,7 +15,19 @@ type Props = {
   params: Promise<{ locale: string; orgSlug: string }>;
 };
 
-export default async function AppShellLayout({ children, params }: Props) {
+/**
+ * `[orgSlug]` is runtime-only (no generateStaticParams). With cacheComponents,
+ * awaiting those params must sit under Suspense so the static shell can render.
+ */
+export default function AppShellLayout({ children, params }: Props) {
+  return (
+    <Suspense fallback={<AppShellFallback />}>
+      <AppShell params={params}>{children}</AppShell>
+    </Suspense>
+  );
+}
+
+async function AppShell({ children, params }: Props) {
   const { locale, orgSlug } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("Shell");
@@ -39,6 +53,30 @@ export default async function AppShellLayout({ children, params }: Props) {
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
         <EnsureActiveOrg orgSlug={orgSlug}>{children}</EnsureActiveOrg>
+      </main>
+    </div>
+  );
+}
+
+function AppShellFallback() {
+  return (
+    <div className="bg-background flex min-h-dvh flex-col">
+      <header className="border-border sticky top-0 z-40 border-b">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center gap-4 px-4">
+          <Skeleton className="h-4 w-20" />
+          <div className="ml-auto flex items-center gap-2">
+            <Skeleton className="h-8 w-36" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-20" />
+          </div>
+        </div>
+      </header>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
       </main>
     </div>
   );

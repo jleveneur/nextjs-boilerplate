@@ -3,7 +3,7 @@ import createMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { routing } from "./i18n/routing.ts";
-import { SESSION_COOKIE_NAME } from "./lib/session-cookie.ts";
+import { SESSION_COOKIE_NAMES } from "./lib/session-cookie.ts";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -20,6 +20,7 @@ const PUBLIC_SEGMENTS = new Set([
   "two-factor",
   "accept-invitation",
   "passkey",
+  "continue",
 ]);
 
 function localeAndRest(pathname: string): { locale: string; rest: string[] } | undefined {
@@ -56,7 +57,7 @@ export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (requiresSessionCookie(pathname)) {
-    const hasSession = request.cookies.has(SESSION_COOKIE_NAME);
+    const hasSession = SESSION_COOKIE_NAMES.some((name) => request.cookies.has(name));
     if (!hasSession) {
       const parsed = localeAndRest(pathname);
       const locale = parsed?.locale ?? routing.defaultLocale;

@@ -37,13 +37,21 @@ export function getPostAuthHref(next: string | null | undefined, locale: string)
   return safe;
 }
 
-/** Absolute-on-origin path including locale — for Better Auth callbackURL / window redirects. */
+/**
+ * Absolute-on-origin path including locale — for Better Auth callbackURL / window redirects.
+ * Default post-auth landing is `/continue`, which resolves the first org client-side.
+ */
 export function getPostAuthCallbackURL(next: string | null | undefined, locale: string): string {
   const href = getPostAuthHref(next, locale);
   if (href === "/") {
-    return `/${locale}`;
+    return `/${locale}/continue`;
   }
   return `/${locale}${href}`;
+}
+
+/** next-intl path for the post-auth org resolver. */
+export function continueHref(): string {
+  return "/continue";
 }
 
 export function authErrorMessage(error: unknown, fallback: string): string {

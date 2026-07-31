@@ -7,6 +7,10 @@ dist/
 build/
 out/
 .next/
+playwright-report/
+test-results/
+.lighthouseci/
+apps/web/.env
 .turbo/
 *.tsbuildinfo
 

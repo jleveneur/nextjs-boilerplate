@@ -1,5 +1,12 @@
 {
   "extends": "@repo/tsconfig/next.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx", "next.config.ts", "next-env.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "next.config.ts",
+    "next-env.d.ts",
+    "playwright.config.ts",
+    "e2e/**/*.ts"
+  ],
   "exclude": ["node_modules", ".next"]
 }

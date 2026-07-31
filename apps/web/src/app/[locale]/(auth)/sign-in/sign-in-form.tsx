@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import {
   authErrorMessage,
-  firstOrgInvoicesHref,
+  continueHref,
   getPostAuthCallbackURL,
   getPostAuthHref,
 } from "../../../../features/auth/auth-utils.ts";
@@ -59,13 +59,8 @@ export function SignInForm({ nextPath }: Props) {
       return;
     }
 
-    let destination = getPostAuthHref(nextPath, locale);
-    if (destination === "/") {
-      const { data: orgs } = await authClient.organization.list({});
-      destination = firstOrgInvoicesHref(orgs, destination);
-    }
-
-    router.push(destination);
+    const destination = getPostAuthHref(nextPath, locale);
+    router.push(destination === "/" ? continueHref() : destination);
     router.refresh();
   }
 

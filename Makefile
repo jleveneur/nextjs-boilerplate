@@ -16,6 +16,7 @@ SHELL := bash
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks check verify format format-check lint lint-fix \
         typecheck spell knip layers bundle-budget test test-scripts test-integration \
+        e2e lighthouse \
         changeset clean clean-all \
         deps-up deps-up-test deps-down \
         db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push \
@@ -113,6 +114,42 @@ test-integration: ## Run integration tests (requires `make deps-up-test`)
 		BETTER_AUTH_URL=http://localhost:3000 \
 		NODE_ENV=development APP_ENV=local APP_URL=http://localhost:3000 \
 		pnpm test:integration
+
+# Test-stack env for web E2E / Lighthouse (deps-up-test ports).
+E2E_ENV := \
+	NODE_ENV=production \
+	APP_ENV=test \
+	APP_URL=http://127.0.0.1:3000 \
+	NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000 \
+	NEXT_PUBLIC_APP_ENV=test \
+	LOG_LEVEL=error \
+	DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55433/app_test \
+	DATABASE_POOL_SIZE=5 \
+	REDIS_URL=redis://127.0.0.1:55435 \
+	BETTER_AUTH_SECRET=dev-local-better-auth-secret-min-32-chars \
+	BETTER_AUTH_URL=http://127.0.0.1:3000 \
+	EMAIL_FROM=noreply@example.com \
+	RESEND_API_KEY=re_test_replace_me \
+	SMTP_URL=smtp://127.0.0.1:55441 \
+	MAILPIT_API_URL=http://127.0.0.1:55442 \
+	S3_ENDPOINT=http://127.0.0.1:55440 \
+	S3_REGION=auto \
+	S3_BUCKET=app-test \
+	S3_ACCESS_KEY_ID=minioadmin \
+	S3_SECRET_ACCESS_KEY=minioadmin
+
+e2e: ## Playwright E2E against deps-up-test + next start
+	$(MAKE) deps-up-test
+	$(E2E_ENV) pnpm --filter @repo/db exec tsx src/migrate.ts
+	$(E2E_ENV) pnpm --filter @repo/web build
+	pnpm --filter @repo/web exec playwright install chromium
+	$(E2E_ENV) pnpm --filter @repo/web test:e2e
+
+lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
+	$(MAKE) deps-up-test
+	$(E2E_ENV) pnpm --filter @repo/db exec tsx src/migrate.ts
+	$(E2E_ENV) pnpm --filter @repo/web build
+	$(E2E_ENV) pnpm --filter @repo/web lighthouse
 
 ## ----------------------------------------------------------------------------
 ## Local dependencies (Docker)

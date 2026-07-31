@@ -15,12 +15,12 @@ import {
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import type { z } from "zod";
 
 import { Link, useRouter } from "../../i18n/navigation.ts";
 import { useCreateInvoice } from "./hooks.ts";
 
-const formSchema = createInvoiceInputSchema;
-type FormValues = CreateInvoiceInput;
+type FormInput = z.input<typeof createInvoiceInputSchema>;
 
 type Props = {
   orgSlug: string;
@@ -32,8 +32,8 @@ export function CreateInvoiceForm({ orgSlug }: Props) {
   const createInvoice = useCreateInvoice();
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormInput, unknown, CreateInvoiceInput>({
+    resolver: zodResolver(createInvoiceInputSchema),
     defaultValues: {
       number: "",
       currency: "USD",
@@ -41,11 +41,10 @@ export function CreateInvoiceForm({ orgSlug }: Props) {
     },
   });
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: CreateInvoiceInput) {
     setError(null);
-    const parsed = formSchema.parse(values);
     try {
-      const invoice = await createInvoice.mutateAsync(parsed);
+      const invoice = await createInvoice.mutateAsync(values);
       router.push(`/${orgSlug}/invoices/${invoice.id}`);
       router.refresh();
     } catch (err) {

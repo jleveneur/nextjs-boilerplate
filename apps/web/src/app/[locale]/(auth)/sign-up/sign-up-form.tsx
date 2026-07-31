@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, CardContent, Input, Label } from "@repo/ui";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,6 +21,7 @@ type SignUpValues = z.infer<typeof signUpSchema>;
 
 export function SignUpForm() {
   const t = useTranslations("Auth");
+  const locale = useLocale();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +36,8 @@ export function SignUpForm() {
       name: values.name,
       email: values.email,
       password: values.password,
-      callbackURL: "/verify-email",
+      // After email verification, Better Auth redirects here (session already set).
+      callbackURL: `/${locale}/continue`,
     });
 
     if (resultError) {

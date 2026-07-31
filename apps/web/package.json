@@ -9,7 +9,10 @@
     "build": "next build",
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit",
-    "bundle-budget": "node --experimental-strip-types ../../scripts/check-bundle-budget.ts"
+    "bundle-budget": "node --experimental-strip-types ../../scripts/check-bundle-budget.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
+    "lighthouse": "lhci autorun --config=lighthouserc.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "catalog:",
@@ -43,6 +46,9 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@axe-core/playwright": "catalog:",
+    "@lhci/cli": "catalog:",
+    "@playwright/test": "catalog:",
     "@repo/tailwind-config": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "catalog:",

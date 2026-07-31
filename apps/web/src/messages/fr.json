@@ -48,7 +48,10 @@
     "passkeyRegister": "Enregistrer une passkey",
     "passkeyAuthenticate": "Se connecter avec une passkey",
     "magicLinkTitle": "Lien magique",
-    "magicLinkSubmit": "Envoyer le lien magique"
+    "magicLinkSubmit": "Envoyer le lien magique",
+    "continueTitle": "Redirection",
+    "continuing": "Ouverture de votre espace de travail…",
+    "noOrganizations": "Aucune organisation trouvée pour ce compte."
   },
   "Shell": {
     "invoices": "Factures",
