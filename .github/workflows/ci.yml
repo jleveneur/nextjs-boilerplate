@@ -130,6 +130,30 @@ jobs:
             --to "${{ github.event.pull_request.head.sha }}" \
             --verbose
 
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: make e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Install Playwright Chromium (LHCI browser)
+        run: pnpm --filter @repo/web exec playwright install --with-deps chromium
+      - run: make lighthouse
+
   # A single required status check. Branch protection points at this one job, so
   # adding or renaming a job above never means editing repository settings — and
   # a skipped or cancelled dependency cannot be mistaken for a pass.
@@ -146,6 +170,8 @@ jobs:
       - hygiene
       - secrets
       - commits
+      - e2e
+      - lighthouse
     steps:
       - name: Verify every job succeeded
         run: |

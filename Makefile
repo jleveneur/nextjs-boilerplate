@@ -149,7 +149,9 @@ lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
 	$(MAKE) deps-up-test
 	$(E2E_ENV) pnpm --filter @repo/db exec tsx src/migrate.ts
 	$(E2E_ENV) pnpm --filter @repo/web build
-	$(E2E_ENV) pnpm --filter @repo/web lighthouse
+	pnpm --filter @repo/web exec playwright install chromium
+	CHROME_PATH=$$(pnpm --filter @repo/web exec node --input-type=module -e "import { chromium } from 'playwright'; console.log(chromium.executablePath())") \
+		$(E2E_ENV) pnpm --filter @repo/web lighthouse
 
 ## ----------------------------------------------------------------------------
 ## Local dependencies (Docker)

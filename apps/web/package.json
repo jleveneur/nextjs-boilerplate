@@ -12,7 +12,7 @@
     "bundle-budget": "node --experimental-strip-types ../../scripts/check-bundle-budget.ts",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",
-    "lighthouse": "lhci autorun --config=lighthouserc.cjs"
+    "lighthouse": "lhci autorun --config=lighthouserc.cjs --collect.chromePath=${CHROME_PATH}"
   },
   "dependencies": {
     "@hookform/resolvers": "catalog:",
