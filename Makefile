@@ -15,7 +15,7 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks check verify format format-check lint lint-fix \
-        typecheck spell knip layers test test-scripts test-integration \
+        typecheck spell knip layers bundle-budget test test-scripts test-integration \
         changeset clean clean-all \
         deps-up deps-up-test deps-down \
         db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push \
@@ -57,6 +57,7 @@ hooks: ## Reinstall Git hooks
 
 check: ## Run every quality gate (what CI runs)
 	pnpm check
+	$(MAKE) bundle-budget
 
 verify: check ## Alias for `check`
 
@@ -83,6 +84,10 @@ knip: ## Find unused files, exports, and dependencies
 
 layers: ## Assert package layer boundaries (ADR-0002)
 	pnpm check:layers
+
+bundle-budget: ## Build apps/web and assert First Load JS budgets
+	pnpm --filter @repo/web build
+	pnpm --filter @repo/web bundle-budget
 
 ## ----------------------------------------------------------------------------
 ## Tests

@@ -1,0 +1,19 @@
+{
+  "routes": {
+    "/": {
+      "maxFirstLoadJsBytes": 700000,
+      "forbiddenModuleSubstrings": [
+        "packages/ui/",
+        "@base-ui/",
+        "recharts",
+        "@tiptap/",
+        "@tanstack/react-table",
+        "sonner",
+        "node_modules/motion/"
+      ]
+    },
+    "/design-system": {
+      "maxFirstLoadJsBytes": 1300000
+    }
+  }
+}
