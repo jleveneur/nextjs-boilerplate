@@ -1,0 +1,19 @@
+{
+  "name": "@repo/tailwind-config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared Tailwind 4 CSS-first theme tokens. Consumed at build time, never imported by server runtime.",
+  "files": [
+    "theme.css",
+    "animations.css"
+  ],
+  "type": "module",
+  "exports": {
+    "./theme.css": "./theme.css",
+    "./animations.css": "./animations.css"
+  },
+  "repo": {
+    "layer": "tooling",
+    "runtime": "build"
+  }
+}
