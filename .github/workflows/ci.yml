@@ -182,7 +182,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
-      - run: make deps-up-test
+      # Worker proofs use a noop mailer — skip mailpit (and its flaky UI port bind).
+      - run: make deps-up-test-worker
       - name: Run worker integration tests
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55433/app_test

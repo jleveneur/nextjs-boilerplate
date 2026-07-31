@@ -170,7 +170,22 @@ deps-up: ## Start Postgres, Redis, MinIO, Mailpit
 	@until $(COMPOSE) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
 
 deps-up-test: ## Start ephemeral dependency stack for integration tests
-	$(COMPOSE_TEST) up -d
+	# Retry once after a clean down — GHA occasionally races host port binds
+	# (especially mailpit UI on 55442) on a fresh runner.
+	@$(COMPOSE_TEST) up -d postgres redis minio minio-init mailpit || ( \
+		$(COMPOSE_TEST) down --remove-orphans; \
+		$(COMPOSE_TEST) up -d postgres redis minio minio-init mailpit; \
+	)
+	@until $(COMPOSE_TEST) exec -T postgres pg_isready -U postgres -d app_test >/dev/null 2>&1; do \
+		sleep 0.5; \
+	done
+	@until $(COMPOSE_TEST) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
+
+deps-up-test-worker: ## Postgres + Redis + MinIO for worker proofs (no mailpit)
+	@$(COMPOSE_TEST) up -d postgres redis minio minio-init || ( \
+		$(COMPOSE_TEST) down --remove-orphans; \
+		$(COMPOSE_TEST) up -d postgres redis minio minio-init; \
+	)
 	@until $(COMPOSE_TEST) exec -T postgres pg_isready -U postgres -d app_test >/dev/null 2>&1; do \
 		sleep 0.5; \
 	done
