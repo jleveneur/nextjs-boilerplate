@@ -57,15 +57,17 @@ COPY --from=builder --chown=app:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=app:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=sharp --chown=app:nodejs /sharp/node_modules/sharp ./node_modules/sharp
 COPY --from=sharp --chown=app:nodejs /sharp/node_modules/@img ./node_modules/@img
-# Standalone tracing can leave Next's older sharp (and its package.json) under
-# .pnpm — Trivy flags that even when NEXT_SHARP_PATH points at the patched copy.
-# Keep one sharp tree at /app/node_modules/{sharp,@img}.
-RUN find /app -depth \( -path '*/node_modules/sharp' -o -path '*/node_modules/@img' \) \
-      ! -path '/app/node_modules/sharp' ! -path '/app/node_modules/@img' \
-      -exec rm -rf {} + \
-  && LIBVIPS_SO="$(find /app/node_modules/@img -name 'libvips-cpp.so*' | head -1)" \
+# File tracing often drops sharp's Alpine libvips `.so` from the pnpm store layout.
+# Workspace `overrides.sharp` pins 0.35.3 so traced package.json matches the
+# patched binaries (and Trivy does not see Next's older sharp line).
+RUN LIBVIPS_SO="$(find /app/node_modules/@img -name 'libvips-cpp.so*' | head -1)" \
   && test -n "$LIBVIPS_SO" \
+  && LIBVIPS_DIR="$(dirname "$LIBVIPS_SO")" \
+  && for dest in /app/node_modules/.pnpm/@img+sharp-libvips-linuxmusl-*/node_modules/@img/sharp-libvips-linuxmusl-*/lib; do \
+       if [ -d "$dest" ]; then cp -a "$LIBVIPS_DIR"/. "$dest"/; fi; \
+     done \
   && chown -R app:nodejs /app/node_modules
+
 USER app
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=3 \
