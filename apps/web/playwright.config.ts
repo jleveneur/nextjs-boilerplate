@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env["PLAYWRIGHT_BASE_URL"] ?? "http://127.0.0.1:3000";
+const againstImage = process.env["E2E_AGAINST_IMAGE"] === "1";
 
 const testEnv = {
   NODE_ENV: "production",
@@ -39,11 +40,16 @@ export default defineConfig({
     screenshot: "only-on-failure",
     ...devices["Desktop Chrome"],
   },
-  webServer: {
-    command: "pnpm start",
-    url: baseURL,
-    reuseExistingServer: !process.env["CI"],
-    timeout: 120_000,
-    env: testEnv,
-  },
+  // Image E2E boots Next from compose (make e2e); host path starts it here.
+  ...(againstImage
+    ? {}
+    : {
+        webServer: {
+          command: "pnpm start",
+          url: baseURL,
+          reuseExistingServer: !process.env["CI"],
+          timeout: 120_000,
+          env: testEnv,
+        },
+      }),
 });

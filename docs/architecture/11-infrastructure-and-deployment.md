@@ -42,7 +42,7 @@ RUN addgroup -S nodejs && adduser -S app -G nodejs
 COPY --from=builder --chown=app:nodejs /app/apps/api/dist ./dist
 USER app
 HEALTHCHECK CMD node -e "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1))"
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/index.mjs"]
 ```
 
 Two details that matter more than they look:
@@ -51,12 +51,18 @@ Two details that matter more than they look:
 on lockfile changes only. Without it, every source edit reinstalls the whole workspace, and image
 builds go from seconds to minutes.
 
-**Backend apps are bundled** (via `tsdown`, Rolldown-based) rather than shipped as source plus
+**Backend apps are bundled** (via `tsdown` 0.22, Rolldown-based) rather than shipped as source plus
 `node_modules`. This is what makes source-only internal packages
 ([03](./03-package-graph-and-boundaries.md)) work in production: bundling resolves the workspace
-graph at build time, so the runtime image contains one JS file and no workspace symlinks. It also
-cuts image size dramatically and removes install-time surprises. `apps/web` uses Next's
-`output: "standalone"`, which does the equivalent.
+graph at build time, so the runtime image contains the ESM graph and no workspace symlinks. It also
+cuts image size dramatically and removes install-time surprises. `sharp` stays external on the
+worker image so Alpine can install the musl native binary; the web runner reinstalls `sharp` and
+patches traced libvips paths because Next standalone file-tracing often drops the `.so` on musl.
+`apps/web` uses Next's `output: "standalone"`, which does the equivalent for the app graph.
+
+**Local prod-like stack** (`docker/compose.prod.yaml`) runs Traefik on HTTP with Docker labels
+routing to the built `web` / `api` images; the worker stays internal. GHCR publish and ACME are
+Phase 12–13.
 
 ### The build/run split for Next.js
 

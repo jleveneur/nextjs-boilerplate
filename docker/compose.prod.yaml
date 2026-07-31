@@ -1,0 +1,197 @@
+# Local production-like stack: Traefik + built app images + shared deps.
+# ACME / Cloudflare / GHCR promotion are Phase 12–13; this file validates the
+# image + reverse-proxy shape on a laptop.
+
+name: repo-prod
+
+services:
+  traefik:
+    image: traefik:v3.5.0
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --api.dashboard=true
+      - --api.insecure=true
+    ports:
+      - "8080:80"
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    volumes:
+      - prod_postgres_data:/var/lib/postgresql
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - prod_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 0.5; done;
+      mc mb --ignore-existing local/app;
+      exit 0;
+      "
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  web:
+    image: repo-web:local
+    build:
+      context: ..
+      dockerfile: docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: http://localhost:8080
+        NEXT_PUBLIC_APP_ENV: production
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      APP_ENV: production
+      APP_URL: http://localhost:8080
+      NEXT_PUBLIC_APP_URL: http://localhost:8080
+      NEXT_PUBLIC_APP_ENV: production
+      LOG_LEVEL: info
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
+      DATABASE_POOL_SIZE: "10"
+      REDIS_URL: redis://redis:6379
+      BETTER_AUTH_SECRET: dev-local-better-auth-secret-min-32-chars
+      BETTER_AUTH_URL: http://localhost:8080
+      EMAIL_FROM: noreply@example.com
+      RESEND_API_KEY: re_test_replace_me
+      SMTP_URL: smtp://mailpit:1025
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: auto
+      S3_BUCKET: app
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web.rule=Host(`localhost`) || Host(`127.0.0.1`)
+      - traefik.http.routers.web.entrypoints=web
+      - traefik.http.services.web.loadbalancer.server.port=3000
+
+  api:
+    image: repo-api:local
+    build:
+      context: ..
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      APP_ENV: production
+      APP_URL: http://localhost:8080
+      LOG_LEVEL: info
+      API_PORT: "3001"
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
+      DATABASE_POOL_SIZE: "10"
+      REDIS_URL: redis://redis:6379
+      BETTER_AUTH_SECRET: dev-local-better-auth-secret-min-32-chars
+      BETTER_AUTH_URL: http://localhost:8080
+      EMAIL_FROM: noreply@example.com
+      RESEND_API_KEY: re_test_replace_me
+      SMTP_URL: smtp://mailpit:1025
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=(Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/v1`)
+      - traefik.http.routers.api.entrypoints=web
+      - traefik.http.routers.api.priority=100
+      - traefik.http.services.api.loadbalancer.server.port=3001
+
+  worker:
+    image: repo-worker:local
+    build:
+      context: ..
+      dockerfile: docker/worker.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      APP_ENV: production
+      APP_URL: http://localhost:8080
+      LOG_LEVEL: info
+      WORKER_PORT: "3002"
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
+      DATABASE_POOL_SIZE: "5"
+      REDIS_URL: redis://redis:6379
+      EMAIL_FROM: noreply@example.com
+      RESEND_API_KEY: re_test_replace_me
+      SMTP_URL: smtp://mailpit:1025
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: auto
+      S3_BUCKET: app
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  prod_postgres_data:
+  prod_minio_data:

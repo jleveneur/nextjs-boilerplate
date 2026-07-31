@@ -94,6 +94,10 @@ opentelemetry
 pino
 grafana
 jaeger
+jaegertracing
+libc
+linuxmusl
+exposedbydefault
 prometheus
 loki
 tempo

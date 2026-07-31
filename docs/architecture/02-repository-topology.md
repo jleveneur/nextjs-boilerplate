@@ -305,11 +305,12 @@ here is designed to make that feel wrong.
 docker/
 ├── web.Dockerfile
 ├── api.Dockerfile
-├── worker.Dockerfile
-├── docs.Dockerfile
+├── worker.Dockerfile         # docs.Dockerfile lands with apps/docs (Phase 15)
 ├── compose.yaml              # Local dev dependencies (postgres, redis, minio, mailpit, otel, jaeger)
-├── compose.prod.yaml         # Production stack (Traefik + app images from GHCR)
-├── compose.test.yaml         # Ephemeral services for CI integration/E2E
+├── compose.prod.yaml         # Local prod-like stack (Traefik + built app images; GHCR in Phase 12)
+├── compose.test.yaml         # Ephemeral services for CI integration tests
+├── compose.e2e.yaml          # Test deps + built web image for Playwright
+├── otel-collector-config.yaml
 └── postgres/init/            # Extensions and roles at first boot
 ```
 
@@ -382,10 +383,12 @@ pnpm _and_ Docker _and_ SOPS.
 make setup            # Install toolchain, deps, .env, start services, migrate, seed
 make dev              # Services + all apps in watch mode
 make check            # Everything CI runs, locally, in the same order
+make images           # Build web/api/worker images and assert size budgets
+make e2e              # Playwright against the built web image
+make e2e-host         # Fast Playwright against next start (local loops)
 make db-reset         # Drop, migrate, seed
-make db-studio        # Drizzle Studio
 make email            # React Email preview server
-make test-e2e         # Build, boot the test stack, run Playwright, tear down
+make prod-up          # Local Traefik + app images
 make secrets-edit ENV=production
 make deploy ENV=staging
 ```

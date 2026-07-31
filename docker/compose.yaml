@@ -88,6 +88,33 @@ services:
       timeout: 3s
       retries: 30
 
+  # Observability sink for local loops (apps opt in via OTEL_* — Phase 14).
+  jaeger:
+    image: jaegertracing/all-in-one:1.69.0
+    restart: unless-stopped
+    ports:
+      - "55443:16686"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:16686/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.128.0
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "55444:4317"
+      - "55445:4318"
+    depends_on:
+      jaeger:
+        condition: service_started
+
 volumes:
   postgres_data:
   minio_data:

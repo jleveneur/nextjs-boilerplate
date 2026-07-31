@@ -171,11 +171,13 @@ SIGTERM drains cleanly.
 
 ## Phase 11 — Containers & local stack
 
-The four Dockerfiles with `turbo prune`, multi-stage builds, non-root users, and healthchecks;
-`compose.yaml`, `compose.prod.yaml`, `compose.test.yaml`; and the full `Makefile`.
+Three runtime Dockerfiles (`web`, `api`, `worker`) with `turbo prune`, multi-stage builds, non-root
+users, and healthchecks; `compose.yaml` (deps + OTel/Jaeger), `compose.prod.yaml` (local Traefik +
+app images), `compose.test.yaml`, `compose.e2e.yaml`; and `make setup` / `make e2e` / `make images`.
+`docs.Dockerfile` waits for Phase 15 (`apps/docs`).
 
 **Done when** all images build under 250 MB (web) / 150 MB (api, worker), `make setup` works on a clean
-machine, and the E2E suite passes against the built images rather than the dev servers.
+machine, and the E2E suite passes against the built web image (CI) rather than `next start`.
 
 ## Phase 12 — CI/CD
 

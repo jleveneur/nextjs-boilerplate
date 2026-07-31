@@ -14,18 +14,21 @@ SHELL := bash
 .DEFAULT_GOAL := help
 
 # Nothing here builds a file named after the target.
-.PHONY: help install hooks check verify format format-check lint lint-fix \
+.PHONY: help install hooks setup check verify format format-check lint lint-fix \
         typecheck spell knip layers bundle-budget openapi-check test test-scripts test-integration \
-        e2e lighthouse \
+        e2e e2e-host lighthouse images image-size \
         changeset clean clean-all \
-        deps-up deps-up-test deps-down \
+        deps-up deps-up-test deps-up-test-worker deps-down \
+        prod-up prod-down \
         db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push \
-        email
+        email dev
 
 # Do not `include .env` here: Make treats `//` as a comment, which truncates
 # URLs like APP_URL=http://…. Scripts load `.env` via Node `--env-file` instead.
 COMPOSE      := docker compose -f docker/compose.yaml
 COMPOSE_TEST := docker compose -f docker/compose.test.yaml
+COMPOSE_E2E  := docker compose -f docker/compose.e2e.yaml
+COMPOSE_PROD := docker compose -f docker/compose.prod.yaml
 ENV_FILE     := $(if $(wildcard .env),.env,.env.example)
 
 ## ----------------------------------------------------------------------------
@@ -47,6 +50,23 @@ install: ## Install dependencies and Git hooks
 
 hooks: ## Reinstall Git hooks
 	pnpm exec lefthook install
+
+setup: ## Idempotent clean-machine bootstrap (tools, deps, .env, services, migrate, seed)
+	@command -v node >/dev/null || (echo "Node.js >= 24 is required" && exit 1)
+	@node -e "const [m]=process.versions.node.split('.').map(Number); if(m<24){console.error('Node.js >= 24 required, found',process.versions.node); process.exit(1)}"
+	@command -v pnpm >/dev/null || (echo "pnpm >= 11 is required (corepack enable)" && exit 1)
+	@command -v docker >/dev/null || (echo "Docker is required" && exit 1)
+	@docker info >/dev/null 2>&1 || (echo "Docker daemon is not running" && exit 1)
+	pnpm install
+	@if [ ! -f .env ]; then cp .env.example .env; echo "Created .env from .env.example"; fi
+	$(MAKE) deps-up
+	$(MAKE) db-migrate
+	$(MAKE) db-seed
+	@printf '\nSetup complete. Next: make dev\n\n'
+
+dev: ## Start dependency containers and all apps in watch mode
+	$(MAKE) deps-up
+	pnpm dev
 
 ## ----------------------------------------------------------------------------
 ## Quality gates
@@ -145,7 +165,22 @@ E2E_ENV := \
 	S3_ACCESS_KEY_ID=minioadmin \
 	S3_SECRET_ACCESS_KEY=minioadmin
 
-e2e: ## Playwright E2E against deps-up-test + next start
+e2e: ## Playwright E2E against the built web image (CI path)
+	-$(COMPOSE_TEST) down --remove-orphans
+	-$(COMPOSE_E2E) down --remove-orphans
+	docker build -f docker/web.Dockerfile -t repo-web:local \
+		--build-arg NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000 \
+		--build-arg NEXT_PUBLIC_APP_ENV=test \
+		.
+	$(COMPOSE_E2E) up -d --wait
+	$(E2E_ENV) pnpm --filter @repo/db exec tsx src/migrate.ts
+	$(E2E_ENV) pnpm --filter @repo/db exec tsx src/seeds/run.ts test
+	pnpm --filter @repo/web exec playwright install chromium
+	E2E_AGAINST_IMAGE=1 $(E2E_ENV) PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 \
+		pnpm --filter @repo/web test:e2e
+	-$(COMPOSE_E2E) down --remove-orphans
+
+e2e-host: ## Fast local Playwright against deps-up-test + next start
 	$(MAKE) deps-up-test
 	$(E2E_ENV) pnpm --filter @repo/db exec tsx src/migrate.ts
 	$(E2E_ENV) pnpm --filter @repo/web build
@@ -161,11 +196,24 @@ lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
 		$(E2E_ENV) pnpm --filter @repo/web lighthouse
 
 ## ----------------------------------------------------------------------------
+## Images
+## ----------------------------------------------------------------------------
+
+images: ## Build web/api/worker images tagged *:local
+	docker build -f docker/web.Dockerfile -t repo-web:local .
+	docker build -f docker/api.Dockerfile -t repo-api:local .
+	docker build -f docker/worker.Dockerfile -t repo-worker:local .
+	$(MAKE) image-size
+
+image-size: ## Fail if local app images exceed Phase 11 budgets
+	node --experimental-strip-types scripts/check-image-size.ts
+
+## ----------------------------------------------------------------------------
 ## Local dependencies (Docker)
 ## ----------------------------------------------------------------------------
 
-deps-up: ## Start Postgres, Redis, MinIO, Mailpit
-	$(COMPOSE) up -d postgres redis minio minio-init mailpit
+deps-up: ## Start Postgres, Redis, MinIO, Mailpit, OTel, Jaeger
+	$(COMPOSE) up -d postgres redis minio minio-init mailpit jaeger otel-collector
 	@$(MAKE) db-wait
 	@until $(COMPOSE) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
 
@@ -194,6 +242,13 @@ deps-up-test-worker: ## Postgres + Redis + MinIO for worker proofs (no mailpit)
 deps-down: ## Stop local dependency containers
 	-$(COMPOSE) down
 	-$(COMPOSE_TEST) down
+	-$(COMPOSE_E2E) down --remove-orphans
+
+prod-up: ## Build and start the local production-like stack (Traefik on :8080)
+	$(COMPOSE_PROD) up -d --build
+
+prod-down: ## Stop the local production-like stack
+	-$(COMPOSE_PROD) down
 
 ## ----------------------------------------------------------------------------
 ## Database

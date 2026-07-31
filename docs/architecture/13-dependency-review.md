@@ -312,6 +312,18 @@ for queries, caching, and non-form interactions.
 **Exit** Medium — resolvers are thin over `@repo/core`, so replacing the transport is a
 transport-layer job. This is precisely what the one-core-two-transports design protects.
 
+### tsdown 0.22
+
+**Why** Bundles `apps/api` and `apps/worker` into a single ESM artifact for Docker runners so
+source-only workspace packages resolve at build time and the runtime image does not ship
+`node_modules` for the whole monorepo. Rolldown-based, TypeScript-native, and small enough that the
+config lives next to each app.
+**Instead of** _tsup_ — esbuild-based and effectively in maintenance; _esbuild_ directly — more
+boilerplate for the same job; _shipping source + node_modules_ — large images and workspace symlink
+pain; _pnpm deploy_ alone — workable but still ships far more than one JS file.
+**Health** Active under the Rolldown org; pin exactly.
+**Exit** Low — replace the `build` script and Docker `CMD`; application source is unchanged.
+
 ### Hono 4.12 + `@hono/zod-openapi`
 
 **Why** A small, fast, Web-standard (`Request`/`Response`) framework, and `@hono/zod-openapi` derives
