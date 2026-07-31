@@ -4,6 +4,11 @@
     // `@repo/email` re-exports React email templates; typecheck needs JSX.
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts", "vitest.config.ts"],
+  "include": [
+    "src/**/*.ts",
+    "vitest.config.ts",
+    "vitest.integration.config.ts",
+    "vitest.server-only-stub.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

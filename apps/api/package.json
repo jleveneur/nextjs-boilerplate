@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "openapi:generate": "tsx src/openapi-generate.ts",
     "test:unit": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@hono/node-server": "catalog:",
@@ -26,6 +27,7 @@
     "@repo/jobs": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/observability": "workspace:*",
+    "@repo/trpc": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",
     "@scalar/hono-api-reference": "catalog:",
