@@ -3,6 +3,11 @@ packages:
   - packages/*
   - tooling/*
 
+# Next still pulls sharp@0.34.x for image optimization; force the catalog
+# version so standalone tracing and Trivy see the patched libvips line.
+overrides:
+  sharp: 0.35.3
+
 # Install scripts execute arbitrary code, so pnpm blocks them by default and
 # every decision has to be explicit and reviewable. Each entry is a deliberate
 # answer, `false` included — an unanswered package makes `pnpm install` warn,
