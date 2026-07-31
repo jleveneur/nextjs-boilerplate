@@ -61,7 +61,8 @@ export type CreateEnvOptions<
   /**
    * Skip validation. Also honoured when `SKIP_ENV_VALIDATION=1`, which Docker
    * image builds set because runtime secrets are legitimately absent then.
-   * Validation runs at container start instead.
+   * Validation runs at container start instead. Listed in `turbo.json` `build.env`
+   * so remote cache cannot reuse an artifact built with a different skip flag.
    */
   skipValidation?: boolean;
   /**

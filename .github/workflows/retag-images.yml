@@ -1,0 +1,55 @@
+name: Retag release images
+
+# When a `v*` git tag is pushed, point `:vX.Y.Z` at the already-published
+# `:sha` images for that commit. No rebuild — the SHA tag is what deploys;
+# the version tag is for humans (docs/architecture/11-infrastructure-and-deployment.md).
+
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: retag-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  retag:
+    name: Retag ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web, api, worker]
+
+    steps:
+      - name: Image coordinates
+        id: meta
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          version="${GITHUB_REF_NAME}"
+          echo "image=ghcr.io/${owner}/${{ matrix.app }}" >> "$GITHUB_OUTPUT"
+          echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Point version tag at sha
+        run: |
+          docker buildx imagetools create \
+            -t "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}" \
+            "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha }}"

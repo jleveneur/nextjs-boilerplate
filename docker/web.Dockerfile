@@ -58,6 +58,8 @@ COPY --from=builder --chown=app:nodejs /app/apps/web/.next/static ./apps/web/.ne
 COPY --from=sharp --chown=app:nodejs /sharp/node_modules/sharp ./node_modules/sharp
 COPY --from=sharp --chown=app:nodejs /sharp/node_modules/@img ./node_modules/@img
 # File tracing often drops sharp's Alpine libvips `.so` from the pnpm store layout.
+# Workspace `overrides.sharp` pins 0.35.3 so traced package.json matches the
+# patched binaries (and Trivy does not see Next's older sharp line).
 RUN LIBVIPS_SO="$(find /app/node_modules/@img -name 'libvips-cpp.so*' | head -1)" \
   && test -n "$LIBVIPS_SO" \
   && LIBVIPS_DIR="$(dirname "$LIBVIPS_SO")" \
@@ -65,6 +67,7 @@ RUN LIBVIPS_SO="$(find /app/node_modules/@img -name 'libvips-cpp.so*' | head -1)
        if [ -d "$dest" ]; then cp -a "$LIBVIPS_DIR"/. "$dest"/; fi; \
      done \
   && chown -R app:nodejs /app/node_modules
+
 USER app
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=3 \

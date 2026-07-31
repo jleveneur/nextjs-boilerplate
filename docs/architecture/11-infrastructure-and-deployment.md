@@ -95,9 +95,13 @@ Volumes are named and persistent; `make db-reset` removes them explicitly.
 
 Images go to **GitHub Container Registry** (same permissions model as the repo, no extra vendor).
 
-Tagging: `ghcr.io/<owner>/<app>:<git-sha>` always, plus `:v1.2.3` on release and `:staging` /
-`:production` as moving pointers to what is deployed. **The SHA tag is what deploys**; the named
-tags are for humans, because a mutable tag in a deploy command means you cannot say what is running.
+Tagging: `ghcr.io/<owner>/{web,api,worker}:<git-sha>` always (owner lowercased), plus `:v1.2.3` on
+release via retag-without-rebuild, and `:staging` / `:production` as moving pointers once Phase 13
+deploys. **The SHA tag is what deploys**; the named tags are for humans, because a mutable tag in a
+deploy command means you cannot say what is running.
+
+Published by `.github/workflows/publish.yml` on every merge to `main`. Local `make images` keeps
+provenance/SBOM off so size budgets measure the runnable layers only.
 
 Supply-chain measures: SBOM generated per image, build provenance attestation, Trivy scanning with
 a CI failure on HIGH/CRITICAL, and multi-arch (`amd64`/`arm64`) builds so an ARM VPS or an Apple

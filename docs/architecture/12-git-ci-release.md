@@ -93,38 +93,57 @@ Fast, parallel, and reproducible locally via `make check`.
 
 ```mermaid
 flowchart TB
-    START["Pull request"] --> SETUP["Setup: pnpm install (cached), restore Turbo cache"]
+    START["Pull request"] --> SETUP["Setup: pnpm install, Turbo remote cache OIDC"]
     SETUP --> A["format:check"]
     SETUP --> B["lint (oxlint --type-aware)"]
-    SETUP --> C["typecheck (tsc --noEmit)"]
-    SETUP --> D["test:unit + component"]
+    SETUP --> C["typecheck --affected"]
+    SETUP --> D["test:unit --affected"]
     SETUP --> E["spell + knip"]
-    SETUP --> F["gitleaks + CodeQL"]
-    SETUP --> G["build"]
-    G --> H["test:integration<br/>(Postgres + Redis services)"]
-    G --> I["docker build + Trivy scan"]
-    H --> J["openapi generate + diff"]
-    I --> K["test:e2e (Playwright on the built stack)"]
-    K --> L["preview env (Neon branch)"]
-    J --> DONE["All green"]
-    L --> DONE
+    SETUP --> F["gitleaks"]
+    SETUP --> CQ["CodeQL (separate workflow)"]
+    SETUP --> G["changeset status"]
+    SETUP --> H["openapi generate + diff"]
+    SETUP --> I["docker build + Trivy<br/>when apps/packages/docker change"]
+    I --> J["integration + e2e + lighthouse<br/>same path filter"]
+    A --> DONE["Aggregate CI job"]
+    B --> DONE
+    C --> DONE
+    D --> DONE
+    E --> DONE
+    F --> DONE
+    G --> DONE
+    H --> DONE
+    J --> DONE
+    CQ --> PROT["Required for merge"]
+    DONE --> PROT
 ```
 
 Practices that keep it honest:
 
 - **Concurrency group per branch** with cancel-in-progress, so a new push does not queue behind a
   stale run.
-- **`--affected`** limits work to packages the diff touches, with a full run on `main`.
-- **Turborepo remote cache** shared between CI and developers. The `env` field in `turbo.json` must
-  list every variable that affects output, or the cache will serve a wrong artifact — this is the
-  one place remote caching can cause a genuinely confusing production bug, so it is reviewed
-  carefully.
-- **Pinned action SHAs**, not tags. A mutable tag in a workflow with repository secrets is a
+- **`--affected`** limits typecheck and unit tests to packages the diff touches on PRs and
+  merge-group runs; **`main` always runs the full set**.
+- **Path filters** skip image, E2E, Lighthouse, and integration jobs when the diff cannot affect
+  apps, packages, Dockerfiles, or the lockfile (again: full set on `main`).
+- **Turborepo remote cache** via Vercel OIDC (`vercel/setup-turborepo-remote-cache-action`) when the
+  repository variable `TURBO_TEAM` is set. One-time setup: create a Turborepo CLI OIDC policy on the
+  Vercel team for this repo, then `gh variable set TURBO_TEAM --body "<team-slug>"`. Jobs need
+  `id-token: write`. Forks and unset repos fall back to the Actions `.turbo` cache only.
+- The `env` field in `turbo.json` must list every variable that affects output (including
+  `NEXT_PUBLIC_*` and `SKIP_ENV_VALIDATION` on `build`), or the cache will serve a wrong artifact —
+  this is the one place remote caching can cause a genuinely confusing production bug, so it is
+  reviewed carefully.
+- **Pinned action SHAs**, not tags. A mutable tag in a workflow with repository permissions is a
   supply-chain hole.
-- **Minimal `permissions:`** per job, `id-token: write` only where OIDC is needed.
+- **Minimal `permissions:`** per job, `id-token: write` where OIDC is needed (remote cache, image
+  attestations).
 - **No secrets in PR workflows from forks.** Jobs needing secrets run only on branches in the repo.
 - **Every job uploads artifacts on failure**: Playwright traces, test reports, build logs. A red CI
   run with no artifact costs someone an hour.
+- **CodeQL** runs as its own required workflow so its duration does not dominate the aggregate CI
+  wall-clock.
+- **Trivy** fails the images job (and the publish workflow) on HIGH/CRITICAL findings.
 
 Duration target: **under 6 minutes** for a typical PR. CI slower than a coffee break changes how
 people work — they batch changes into bigger PRs, which is worse for everything.
@@ -133,20 +152,23 @@ people work — they batch changes into bigger PRs, which is worse for everythin
 
 ## 4. Continuous deployment
 
-| Trigger             | Action                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------- |
-| PR opened/updated   | CI + preview environment on a Neon branch                                                         |
-| PR merged to `main` | Build and push images tagged `:sha`, deploy to **staging**, run smoke tests                       |
-| Release tag `v*`    | Verify the SHA passed CI, promote the **same images** to production behind a manual approval gate |
-| Manual dispatch     | Deploy an arbitrary SHA to an arbitrary environment (documented break-glass)                      |
+| Trigger             | Action                                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------------------------- |
+| PR opened/updated   | CI (+ CodeQL). Neon preview environments arrive in Phase 13                                               |
+| PR merged to `main` | Publish multi-arch images to GHCR as `:sha` with SBOM + provenance (`publish.yml`); Changesets version PR |
+| Release tag `v*`    | Retag the same `:sha` images to `:vX.Y.Z` (`retag-images.yml`); production promote is Phase 13            |
+| Manual dispatch     | Re-run publish for an arbitrary SHA (break-glass)                                                         |
 
-Production deployment requires a GitHub **environment** with required reviewers, so promotion is an
-auditable event with a name attached to it.
+Staging deploy, smoke tests, and production promotion behind a GitHub **environment** with required
+reviewers are **Phase 13**. Phase 12 stops at immutable registry artifacts.
 
 **CI is the only thing that builds release artifacts.** No local `docker push`; registry write
 permission belongs to the workflow identity only. Otherwise the provenance chain — this image came
 from this commit, which passed these checks — is broken, and it is exactly what you need during an
 incident.
+
+Image coordinates: `ghcr.io/<owner>/{web,api,worker}:<git-sha>`. Owner is lowercased. Local
+`make images` / `make prod-up` still use `repo-*:local` tags.
 
 ---
 

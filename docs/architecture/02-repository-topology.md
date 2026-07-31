@@ -307,7 +307,7 @@ docker/
 ├── api.Dockerfile
 ├── worker.Dockerfile         # docs.Dockerfile lands with apps/docs (Phase 15)
 ├── compose.yaml              # Local dev dependencies (postgres, redis, minio, mailpit, otel, jaeger)
-├── compose.prod.yaml         # Local prod-like stack (Traefik + built app images; GHCR in Phase 12)
+├── compose.prod.yaml         # Local prod-like stack (Traefik + local tags; CI publishes to GHCR)
 ├── compose.test.yaml         # Ephemeral services for CI integration tests
 ├── compose.e2e.yaml          # Test deps + built web image for Playwright
 ├── otel-collector-config.yaml

@@ -15,7 +15,8 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck spell knip layers bundle-budget openapi-check test test-scripts test-integration \
+        typecheck typecheck-affected spell knip layers bundle-budget openapi-check \
+        test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         changeset clean clean-all \
         deps-up deps-up-test deps-up-test-worker deps-down \
@@ -97,6 +98,9 @@ lint-fix: ## Lint and apply safe fixes
 typecheck: ## Type-check every package
 	pnpm typecheck
 
+typecheck-affected: ## Type-check packages changed vs the merge base
+	pnpm exec turbo run typecheck --affected
+
 spell: ## Spell-check code, comments, and docs
 	pnpm spell
 
@@ -121,6 +125,9 @@ openapi-check: ## Regenerate apps/api OpenAPI and fail on drift
 
 test: ## Run unit tests
 	pnpm test
+
+test-affected: ## Unit-test packages changed vs the merge base
+	NODE_ENV=test pnpm exec turbo run test:unit --affected
 
 test-scripts: ## Test the repo's own tooling scripts
 	pnpm test:scripts

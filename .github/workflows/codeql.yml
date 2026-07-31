@@ -1,0 +1,43 @@
+name: CodeQL
+
+# Static analysis for the JavaScript/TypeScript graph. Kept as its own workflow
+# so branch protection can require it without folding its duration into the
+# aggregate CI job wall-clock. See docs/architecture/12-git-ci-release.md §3.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly catch-up for the query pack; PRs still get an on-demand run.
+    - cron: "17 4 * * 1"
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@a2983b8bed1923f44751c5c43237f479442827b3 # v3.37.4
+        with:
+          languages: javascript-typescript
+          build-mode: none
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@a2983b8bed1923f44751c5c43237f479442827b3 # v3.37.4
+        with:
+          category: "/language:javascript-typescript"

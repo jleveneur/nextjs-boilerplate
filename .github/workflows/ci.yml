@@ -19,10 +19,11 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-# Read-only by default. Any job needing more asks for it explicitly, so a
-# compromised dependency in a lint job cannot push code.
+# Read-only by default. id-token is for optional Vercel Turborepo remote cache
+# OIDC (see .github/actions/setup). Jobs needing more ask explicitly.
 permissions:
   contents: read
+  id-token: write
 
 env:
   # Turborepo prints hashes rather than a progress spinner in CI logs.
@@ -30,12 +31,39 @@ env:
   DO_NOT_TRACK: 1
 
 jobs:
+  changes:
+    name: Path filter
+    runs-on: ubuntu-latest
+    # Heavy image/e2e/lighthouse jobs skip when the diff cannot affect them.
+    # `main` always runs the full set so post-merge evidence stays complete.
+    outputs:
+      apps: ${{ steps.filter.outputs.apps }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        id: filter
+        with:
+          filters: |
+            apps:
+              - 'apps/**'
+              - 'packages/**'
+              - 'docker/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
+              - 'turbo.json'
+              - 'tooling/**'
+              - '.npmrc'
+              - 'Makefile'
+
   format:
     name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - run: make format-check
 
   lint:
@@ -44,6 +72,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - run: make lint
 
   typecheck:
@@ -51,17 +81,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # --affected needs the merge base against the default branch.
+          fetch-depth: 0
       - uses: ./.github/actions/setup
-      - run: make typecheck
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
+      - name: Typecheck
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            make typecheck
+          else
+            make typecheck-affected
+          fi
 
   test:
     name: Unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - run: make test-scripts
-      - run: make test
+      - name: Unit tests
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            make test
+          else
+            make test-affected
+          fi
 
   boundaries:
     name: Architecture boundaries
@@ -69,6 +120,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - run: make layers
 
   hygiene:
@@ -77,6 +130,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - run: make spell
       - run: make knip
 
@@ -123,6 +178,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - name: Validate against Conventional Commits
         run: |
           pnpm exec commitlint \
@@ -130,28 +187,80 @@ jobs:
             --to "${{ github.event.pull_request.head.sha }}" \
             --verbose
 
+  changeset:
+    name: Changeset
+    runs-on: ubuntu-latest
+    # Apps are ignored in .changeset/config.json; this fails when a packages/*
+    # surface changes without a changeset file.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
+      - name: Require changeset for package surface changes
+        run: |
+          git fetch origin main --depth=1
+          pnpm changeset:status
+
   openapi:
     name: OpenAPI drift
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - run: make openapi-check
 
   images:
     name: Container images
     runs-on: ubuntu-latest
+    needs: changes
+    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - run: make images
+      - name: Scan web image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: repo-web:local
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          format: table
+      - name: Scan api image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: repo-api:local
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          format: table
+      - name: Scan worker image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: repo-worker:local
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          format: table
 
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
+    needs: changes
+    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       # Boots the built web image via docker/compose.e2e.yaml (not next start).
       - run: make e2e
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -164,9 +273,13 @@ jobs:
   lighthouse:
     name: Lighthouse
     runs-on: ubuntu-latest
+    needs: changes
+    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - name: Install Playwright Chromium (LHCI browser)
         run: pnpm --filter @repo/web exec playwright install --with-deps chromium
       - run: make lighthouse
@@ -174,9 +287,13 @@ jobs:
   api-integration:
     name: API authz parity
     runs-on: ubuntu-latest
+    needs: changes
+    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       - run: make deps-up-test
       - name: Run API integration tests
         env:
@@ -188,9 +305,13 @@ jobs:
   worker-integration:
     name: Worker proofs
     runs-on: ubuntu-latest
+    needs: changes
+    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
       # Worker proofs use a noop mailer — skip mailpit (and its flaky UI port bind).
       - run: make deps-up-test-worker
       - name: Run worker integration tests
@@ -212,11 +333,14 @@ jobs:
   # A single required status check. Branch protection points at this one job, so
   # adding or renaming a job above never means editing repository settings — and
   # a skipped or cancelled dependency cannot be mistaken for a pass.
+  # Skipped jobs (path filter, PR-only) are success for this gate; failures and
+  # cancellations are not.
   ci:
     name: CI
     runs-on: ubuntu-latest
     if: always()
     needs:
+      - changes
       - format
       - lint
       - typecheck
@@ -225,6 +349,7 @@ jobs:
       - hygiene
       - secrets
       - commits
+      - changeset
       - openapi
       - images
       - e2e

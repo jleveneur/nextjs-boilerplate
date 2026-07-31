@@ -183,10 +183,15 @@
       automerge: false,
     },
     {
+      // Digests only after Trivy has gated the images job (and publish). A green
+      // CI run is evidence the new base is free of HIGH/CRITICAL findings we care
+      // about — matching docs/architecture/12-git-ci-release.md §6.
       matchManagers: ["dockerfile", "docker-compose"],
       groupName: "docker images",
       pinDigests: true,
-      automerge: false,
+      automerge: true,
+      automergeType: "pr",
+      platformAutomerge: true,
     },
     {
       // Database engine upgrades need a migration plan and a maintenance window.
