@@ -1,6 +1,6 @@
 {
   "name": "@repo/db",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Drizzle schema, client factory, migrations, seeds, and tenant-scoped query helpers.",
   "type": "module",
