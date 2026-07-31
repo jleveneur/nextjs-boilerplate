@@ -10,6 +10,9 @@ module.exports = {
       numberOfRuns: 1,
       settings: {
         preset: "desktop",
+        // GitHub-hosted runners (and many Linux CI images) disable unprivileged
+        // user namespaces, so Chromium cannot start its sandbox.
+        chromeFlags: "--no-sandbox --disable-dev-shm-usage",
       },
     },
     assert: {
