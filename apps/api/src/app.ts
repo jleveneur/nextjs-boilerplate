@@ -1,6 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Ctx } from "@repo/core";
 import type { Actor } from "@repo/types";
+import { apiReference } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
 
 import {
@@ -12,6 +13,7 @@ import {
 } from "./middleware/index.ts";
 import { registerInvoiceRoutes } from "./routes/v1/invoices.ts";
 import type { AppContainer } from "./server/container.ts";
+import { registerStripeWebhook } from "./webhooks/stripe.ts";
 
 export type ApiEnv = {
   Variables: {
@@ -55,6 +57,9 @@ export function createApp(container: AppContainer): OpenAPIHono<ApiEnv> {
   registerInvoiceRoutes(v1);
   app.route("/v1", v1);
 
+  // Outside Bearer auth — Stripe signs the body instead.
+  registerStripeWebhook(app);
+
   app.doc31("/openapi.json", {
     openapi: "3.1.0",
     info: {
@@ -62,6 +67,14 @@ export function createApp(container: AppContainer): OpenAPIHono<ApiEnv> {
       version: "1.0.0",
     },
   });
+
+  app.get(
+    "/reference",
+    apiReference({
+      url: "/openapi.json",
+      pageTitle: "Repo Public API",
+    }),
+  );
 
   return app;
 }

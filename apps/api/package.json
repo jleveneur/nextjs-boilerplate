@@ -8,7 +8,9 @@
     "dev": "tsx watch --env-file=../../.env src/index.ts",
     "start": "tsx --env-file=../../.env src/index.ts",
     "typecheck": "tsc --noEmit",
-    "openapi:generate": "tsx src/openapi-generate.ts"
+    "openapi:generate": "tsx src/openapi-generate.ts",
+    "test:unit": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@hono/node-server": "catalog:",
@@ -33,9 +35,12 @@
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "tsx": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "repo": {
     "layer": 4,
