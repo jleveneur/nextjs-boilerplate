@@ -3,6 +3,7 @@
 # Shape: docs/architecture/11-infrastructure-and-deployment.md
 
 ARG NODE_IMAGE=node:24-alpine@sha256:f70403e87646dc51b45295f4b8b70cdad0b63d2297c4c9899119b03f7af7a6b3
+ARG ALPINE_IMAGE=alpine:3.24.1
 
 FROM ${NODE_IMAGE} AS base
 RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
@@ -27,27 +28,20 @@ ENV SKIP_ENV_VALIDATION=1
 # Package script directly (not `turbo run`) so Dockerfile ENV is not filtered.
 RUN pnpm --filter @repo/worker build
 
-FROM ${NODE_IMAGE} AS runner
-RUN apk add --no-cache libc6-compat \
+FROM ${NODE_IMAGE} AS sharp
+WORKDIR /sharp
+RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.3 \
+  && rm -rf package.json package-lock.json /root/.npm /tmp/*
+
+FROM ${ALPINE_IMAGE} AS runner
+RUN apk add --no-cache libstdc++ libgcc ca-certificates \
   && addgroup -S nodejs \
   && adduser -S app -G nodejs
+COPY --from=base /usr/local/bin/node /usr/local/bin/node
 WORKDIR /app
 ENV NODE_ENV=production
-# sharp stays external from the bundle; install the Alpine/musl binary here.
 COPY --from=builder --chown=app:nodejs /app/apps/worker/dist ./dist
-RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.3 \
-  && rm -rf package.json package-lock.json /root/.npm /tmp/* \
-  # Drop package managers after the sharp install (~20–25 MB on amd64).
-  && rm -rf \
-    /opt/yarn-* \
-    /usr/local/bin/yarn \
-    /usr/local/bin/yarnpkg \
-    /usr/local/lib/node_modules/npm \
-    /usr/local/lib/node_modules/corepack \
-    /usr/local/bin/npm \
-    /usr/local/bin/npx \
-    /usr/local/bin/corepack \
-  && chown -R app:nodejs /app/node_modules
+COPY --from=sharp --chown=app:nodejs /sharp/node_modules ./node_modules
 USER app
 EXPOSE 3002
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \

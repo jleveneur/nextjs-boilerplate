@@ -14,7 +14,8 @@
 5. **Reproducible**: pinned base image digests, `--frozen-lockfile`, no `latest`.
 6. **Small**: budgets are **linux/amd64** uncompressed `docker image inspect` sizes
    (CI gate): web &lt; 260 MB, api &lt; 150 MB, worker &lt; 190 MB. Arm64 locals run smaller;
-   do not calibrate against them. Runners strip yarn/npm/corepack after any Sharp install.
+   do not calibrate against them. Runners start from Alpine and copy only the `node`
+   binary (plus Sharp where needed), so yarn/npm from the Node image never ship.
 7. **Observable**: `HEALTHCHECK`, graceful `SIGTERM` handling, build metadata as labels.
 
 ### Build shape
@@ -41,8 +42,10 @@ COPY --from=pruner /app/out/full/ .
 RUN pnpm --filter @repo/api build
 # tsdown bundles to a single JS artifact
 
-FROM node:24-alpine AS runner
-RUN addgroup -S nodejs && adduser -S app -G nodejs
+FROM alpine:3.24 AS runner
+RUN apk add --no-cache libstdc++ libgcc ca-certificates \
+  && addgroup -S nodejs && adduser -S app -G nodejs
+COPY --from=base /usr/local/bin/node /usr/local/bin/node
 COPY --from=builder --chown=app:nodejs /app/apps/api/dist ./dist
 USER app
 HEALTHCHECK CMD node -e "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1))"
