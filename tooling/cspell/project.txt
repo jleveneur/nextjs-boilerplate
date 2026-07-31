@@ -82,6 +82,8 @@ ioredis
 msgpackr
 protobufjs
 libvips
+libstdc
+libgcc
 argon
 webauthn
 totp
