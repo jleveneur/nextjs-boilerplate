@@ -1,7 +1,7 @@
 name: Setup
 description: Install pnpm, Node, and dependencies, and restore the Turborepo cache.
 
-# Every CI job needs the same four steps. Defining them once means a change to
+# Every CI job needs the same preparation. Defining it once means a change to
 # how the repo is prepared cannot apply to some jobs and not others — the class
 # of bug where CI passes on one job and fails on another for no visible reason.
 
@@ -10,6 +10,12 @@ inputs:
     description: Whether to install dependencies.
     required: false
     default: "true"
+  turbo_team:
+    description: >
+      Vercel team slug for Turborepo remote cache via OIDC. When empty, only the
+      local Actions cache for `.turbo` is used (forks, unset repos).
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -35,9 +41,18 @@ runs:
       shell: bash
       run: pnpm install --frozen-lockfile
 
-    # Turborepo's local cache. Keyed by commit SHA so every run writes a fresh
-    # entry, with restore-keys falling back to the most recent cache on this
-    # branch and then on any branch.
+    # Short-lived token via GitHub OIDC — no long-lived TURBO_TOKEN secret.
+    # Requires job permission id-token: write and a Vercel Turborepo CLI OIDC
+    # policy for this repository (see docs/architecture/12-git-ci-release.md).
+    - name: Enable Turborepo remote cache
+      if: inputs.turbo_team != ''
+      uses: vercel/setup-turborepo-remote-cache-action@135046f5efcadb17337d9b29b8d5b4035ae64b10 # v1.0.0
+      with:
+        team: ${{ inputs.turbo_team }}
+
+    # Local `.turbo` cache as a fallback (and for runs without remote cache).
+    # Keyed by commit SHA so every run writes a fresh entry, with restore-keys
+    # falling back to the most recent cache on this branch and then on any branch.
     - name: Restore Turborepo cache
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:

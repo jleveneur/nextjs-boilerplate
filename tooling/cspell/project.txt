@@ -84,6 +84,8 @@ protobufjs
 libvips
 libstdc
 libgcc
+dorny
+retag
 argon
 webauthn
 totp

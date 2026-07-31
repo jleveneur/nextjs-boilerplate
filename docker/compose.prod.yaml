@@ -1,6 +1,7 @@
 # Local production-like stack: Traefik + built app images + shared deps.
-# ACME / Cloudflare / GHCR promotion are Phase 12–13; this file validates the
-# image + reverse-proxy shape on a laptop.
+# CI publishes multi-arch images to GHCR as ghcr.io/<owner>/{web,api,worker}:<sha>
+# (Phase 12). ACME / Cloudflare / staging promotion are Phase 13. This file
+# validates the image + reverse-proxy shape on a laptop with locally built tags.
 
 name: repo-prod
 

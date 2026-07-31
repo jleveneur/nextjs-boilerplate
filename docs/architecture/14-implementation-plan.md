@@ -187,6 +187,9 @@ Full CI with parallel jobs and `--affected`; remote caching with the `env` decla
 multi-arch image publishing to GHCR with SBOM and provenance; Changesets release workflow; Renovate;
 issue and PR templates; `CODEOWNERS`.
 
+**Status:** implemented — see `.github/workflows/{ci,codeql,publish,retag-images,release}.yml`,
+`.github/actions/setup`, and [12](./12-git-ci-release.md). Staging deploy stays Phase 13.
+
 **Done when** a PR completes in under 6 minutes, images publish on merge, and a test release produces
 a correct changelog.
 

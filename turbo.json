@@ -14,7 +14,11 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*", "!**/*.spec.*", "!**/e2e/**"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      // Public bake-time vars and Docker's SKIP_ENV_VALIDATION must participate in
+      // the hash — otherwise remote cache can serve an artifact built for another
+      // environment (docs/architecture/12-git-ci-release.md §3).
+      "env": ["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_APP_ENV", "SKIP_ENV_VALIDATION"]
     },
 
     "dev": {

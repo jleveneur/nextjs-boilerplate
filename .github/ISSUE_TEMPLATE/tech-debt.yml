@@ -1,0 +1,52 @@
+name: Technical debt
+description: Track work that reduces future cost without changing user-visible behaviour.
+labels: ["type: tech-debt", "status: needs triage"]
+
+body:
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: >
+        Who pays today, and what it costs — slower features, brittle tests, confusing
+        onboarding, or risk of a production incident. Debt without a cost is not
+        debt; it is preference.
+      placeholder: >
+        New packages copy a hand-rolled Vitest config, so every test-setup change
+        has to be repeated in five places and two of them have drifted already.
+    validations:
+      required: true
+
+  - type: textarea
+    id: remedy
+    attributes:
+      label: Proposed remedy
+      description: The smallest change that removes the cost. Prefer a concrete end state.
+      placeholder: >
+        Extract a shared Vitest config factory in tooling/vitest and migrate the
+        five packages onto it in one PR.
+    validations:
+      required: true
+
+  - type: textarea
+    id: trigger
+    attributes:
+      label: Why now
+      description: >
+        What makes this the right time — a feature that would otherwise re-pay the
+        cost, a near miss in production, or a merge that would make the debt harder
+        to unwind.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: Urgency
+      options:
+        - Blocks current work
+        - Will block the next adjacent feature
+        - Nice to clear when touching the area
+        - Parking lot
+    validations:
+      required: true
