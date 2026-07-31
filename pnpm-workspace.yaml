@@ -27,8 +27,10 @@ allowBuilds:
   # protobufjs ships prebuilt code; its postinstall is optional. OTLP HTTP
   # exporters work without the install script regenerating stubs.
   protobufjs: false
-  "@parcel/watcher": set this to true or false
-  "@swc/core": set this to true or false
+  # Next / tooling pull these in. Both ship platform optionalDependencies with
+  # prebuilt binaries, so the install script is unnecessary in CI and locally.
+  "@parcel/watcher": false
+  "@swc/core": false
 
 # ---------------------------------------------------------------------------
 # Dependency catalog
