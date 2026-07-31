@@ -118,6 +118,11 @@ catalog:
   "@trpc/server": 11.18.0
   superjson: 2.2.6
 
+  # --- Design system -----------------------------------------------------
+  clsx: 2.1.1
+  tailwind-merge: 3.6.0
+  jsdom: 26.1.0
+
 minimumReleaseAgeExclude:
   - "@aws-sdk/client-s3@3.1099.0"
   - "@aws-sdk/s3-request-presigner@3.1099.0"
