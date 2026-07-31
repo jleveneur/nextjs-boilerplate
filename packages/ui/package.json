@@ -5,7 +5,10 @@
   "description": "Design system: shadcn/ui on Base UI, icons, motion, and shared primitives.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./icons": "./src/icons/index.ts",
+    "./motion": "./src/motion/index.ts",
+    "./sonner": "./src/sonner/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -18,6 +21,8 @@
     "@hugeicons/react": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
+    "motion": "catalog:",
+    "sonner": "catalog:",
     "tailwind-merge": "catalog:"
   },
   "devDependencies": {

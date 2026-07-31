@@ -67,4 +67,6 @@ export { Switch } from "./components/switch.tsx";
 export { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/tabs.tsx";
 export { Textarea } from "./components/textarea.tsx";
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip.tsx";
+export { Fade } from "./motion/fade.tsx";
+export { Toaster, toast } from "./sonner/toaster.tsx";
 export { cn } from "./lib/cn.ts";
