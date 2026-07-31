@@ -290,9 +290,9 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
-      '@repo/observability':
+      '@repo/trpc':
         specifier: workspace:*
-        version: link:../../packages/observability
+        version: link:../../packages/trpc
       '@repo/types':
         specifier: workspace:*
         version: link:../../packages/types

@@ -103,13 +103,17 @@ render, handle a form submission by delegating — the logic belongs in `feature
 ```
 apps/api/
 ├── src/
-│   ├── index.ts             # Hono app + server bootstrap
-│   ├── container.ts          # Composition root (same ports, same adapters as web)
-│   ├── middleware/           # auth (API key/bearer), rate limit, request id, OTel, error mapper
-│   ├── routes/v1/            # One file per resource; @hono/zod-openapi route definitions
-│   ├── webhooks/             # stripe.ts — raw-body signature verification
-│   └── openapi.ts            # Document assembly + Scalar reference mount
-├── openapi.json              # Committed snapshot; CI diffs it to catch breaking changes
+│   ├── index.ts                  # @hono/node-server bootstrap + SIGTERM
+│   ├── app.ts                    # Hono app: health, /v1, webhooks, Scalar, OpenAPI
+│   ├── env.ts
+│   ├── openapi-generate.ts       # Writes committed openapi.json (no DB)
+│   ├── server/
+│   │   ├── container.ts          # Composition root (db, auth, cache, ports)
+│   │   └── ports.ts
+│   ├── middleware/               # request-id, API-key auth, rate limit, idempotency, errors
+│   ├── routes/v1/                # @hono/zod-openapi invoice routes
+│   └── webhooks/                 # stripe.ts — signature verify + replay stub
+├── openapi.json                  # Committed snapshot; `make openapi-check` / CI
 └── package.json
 ```
 

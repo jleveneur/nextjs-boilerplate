@@ -26,7 +26,6 @@
     "@repo/errors": "workspace:*",
     "@repo/jobs": "workspace:*",
     "@repo/logger": "workspace:*",
-    "@repo/observability": "workspace:*",
     "@repo/trpc": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",

@@ -41,6 +41,14 @@
       // LHCI config is passed as a CLI flag (`--config=lighthouserc.cjs`), which
       // Knip does not treat as a script reference.
       "entry": ["lighthouserc.cjs", "e2e/**/*.ts"]
+    },
+    "apps/api": {
+      "entry": [
+        "src/index.ts",
+        "src/openapi-generate.ts",
+        "vitest.server-only-stub.ts",
+        "src/**/*.integration.test.ts"
+      ]
     }
   },
 

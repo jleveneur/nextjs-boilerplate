@@ -150,9 +150,11 @@ hold on marketing/sign-in, and `cacheComponents` boundaries are explicit and com
 
 ## Phase 9 — Public API
 
-`apps/api`: Hono bootstrap, middleware (request id, OTel, API-key auth, rate limit, error mapper),
-`/v1` routes for the slice, generated and committed `openapi.json` with the CI diff check, Scalar
-mount, idempotency handling, cursor pagination, and the Stripe webhook endpoint skeleton.
+`apps/api`: Hono bootstrap, middleware (request id, API-key auth, rate limit, idempotency, problem+json
+error mapper), `/v1` billing invoice routes (snake_case), generated and committed `openapi.json` with
+`make openapi-check` / CI drift gate, Scalar at `/reference`, cursor pagination, and a Stripe webhook
+skeleton (verify + replay id; processing stays Phase 17 with `@repo/payments`). Full OTel/Sentry wiring
+stays Phase 14.
 
 **Done when** the same operation is reachable over tRPC and REST with **identical authorization
 behaviour**, proven by a test — this is the assertion that validates
