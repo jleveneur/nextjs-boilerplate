@@ -88,7 +88,7 @@ describe("core test ports", () => {
     expect(mailer.sent).toHaveLength(0);
   });
 
-  it("presigns, heads, and deletes objects in the memory file store", async () => {
+  it("presigns, gets, puts, heads, and deletes objects in the memory file store", async () => {
     const files = createInMemoryFileStore();
     const put = await files.createPresignedPut({
       key: "org/a/file",
@@ -98,9 +98,17 @@ describe("core test ports", () => {
     const get = await files.createPresignedGet({ key: "org/a/file" });
     expect(get.url).toContain("memory://get/");
     expect(files.keys.has("org/a/file")).toBe(true);
+    await files.putObject({
+      key: "org/a/file",
+      body: new TextEncoder().encode("hi"),
+      contentType: "text/plain",
+    });
+    await expect(files.getObject("org/a/file")).resolves.toEqual(new TextEncoder().encode("hi"));
     const head = await files.headObject("org/a/file");
     expect(head?.contentType).toBe("text/plain");
+    expect(head?.contentLength).toBe(2);
     expect(await files.headObject("missing")).toBeUndefined();
+    expect(await files.getObject("missing")).toBeUndefined();
     await files.deleteObject("org/a/file");
     expect(files.keys.has("org/a/file")).toBe(false);
   });

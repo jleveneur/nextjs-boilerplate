@@ -21,9 +21,9 @@ allowBuilds:
   # Optional native accelerator for msgpackr (BullMQ). Pure-JS fallback works;
   # we do not need the compile step in this repo.
   msgpackr-extract: false
-  # React Email pulls Sharp for image tooling. Image derivation is deferred to
-  # the worker phase; decline the install script until `@repo/storage` needs it.
-  sharp: false
+  # Sharp needs its install script to fetch platform-specific libvips binaries.
+  # Required by `@repo/storage` image derivation in the worker.
+  sharp: true
   # protobufjs ships prebuilt code; its postinstall is optional. OTLP HTTP
   # exporters work without the install script regenerating stubs.
   protobufjs: false
@@ -100,6 +100,7 @@ catalog:
   bullmq: 5.81.3
   "@aws-sdk/client-s3": 3.1099.0
   "@aws-sdk/s3-request-presigner": 3.1099.0
+  sharp: 0.35.3
   resend: 6.18.1
   "@react-email/components": 1.0.12
   "@react-email/render": 2.1.0

@@ -10,6 +10,8 @@ import { z } from "zod";
 export const JOB_NAMES = {
   emailSend: "email.send",
   invoiceVoidedNotify: "invoice.voided.notify",
+  imageDerive: "image.derive",
+  assetReconcileOrphans: "asset.reconcile-orphans",
 } as const;
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
@@ -28,6 +30,16 @@ export const jobPayloadSchemas = {
     amountMinor: z.number().int(),
     /** Idempotency key derived by the producer (e.g. outbox row id). */
     idempotencyKey: z.string().min(1),
+  }),
+  "image.derive": z.object({
+    assetId: z.uuid(),
+    organizationId: z.uuid(),
+    /** Idempotency key derived by the producer (e.g. outbox row id). */
+    idempotencyKey: z.string().min(1),
+  }),
+  "asset.reconcile-orphans": z.object({
+    /** Wall-clock cutoff; pending assets older than this are failed. */
+    olderThanIso: z.string().datetime(),
   }),
 } as const satisfies Record<JobName, z.ZodType>;
 

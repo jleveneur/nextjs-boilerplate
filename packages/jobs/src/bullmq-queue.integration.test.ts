@@ -33,6 +33,8 @@ describe("createBullMqJobQueue", () => {
           return Promise.resolve();
         },
         "invoice.voided.notify": () => Promise.resolve(),
+        "image.derive": () => Promise.resolve(),
+        "asset.reconcile-orphans": () => Promise.resolve(),
       },
     });
     await worker.waitUntilReady();

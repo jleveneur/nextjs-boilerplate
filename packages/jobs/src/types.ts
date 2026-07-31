@@ -47,10 +47,29 @@ export type JobHandlers = {
   [N in JobName]: JobHandler<N>;
 };
 
+export type DeadLetterRecord = {
+  queueName: string;
+  dlqName: string;
+  jobName: string;
+  jobId: string;
+  attemptsMade: number;
+  failedReason: string;
+  payload: unknown;
+};
+
 export type CreateBullMqWorkerOptions = {
   redisUrl: string;
   handlers: JobHandlers;
   queueName?: string;
   prefix?: string;
   concurrency?: number;
+  /** Per-job lock duration (ms). Defaults to BullMQ's 30s. */
+  lockDurationMs?: number;
+  /** Max attempts including the first run. Defaults to 5. */
+  attempts?: number;
+  /**
+   * Called when a job is moved to the dead-letter queue (exhausted retries or
+   * terminal error). Composition roots log / alert from here.
+   */
+  onDeadLetter?: (record: DeadLetterRecord) => void | Promise<void>;
 };

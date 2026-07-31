@@ -6,6 +6,8 @@ describe("job registry", () => {
   it("recognises registered names", () => {
     expect(isJobName(JOB_NAMES.emailSend)).toBe(true);
     expect(isJobName(JOB_NAMES.invoiceVoidedNotify)).toBe(true);
+    expect(isJobName(JOB_NAMES.imageDerive)).toBe(true);
+    expect(isJobName(JOB_NAMES.assetReconcileOrphans)).toBe(true);
     expect(isJobName("unknown.job")).toBe(false);
   });
 
@@ -40,5 +42,15 @@ describe("job registry", () => {
     });
 
     expect(payload.amountMinor).toBe(100);
+  });
+
+  it("parses a valid image.derive payload", () => {
+    const payload = parseJobPayload("image.derive", {
+      assetId: "01900000-0000-7000-8000-000000000003",
+      organizationId: "01900000-0000-7000-8000-000000000001",
+      idempotencyKey: "outbox-3",
+    });
+
+    expect(payload.assetId).toBe("01900000-0000-7000-8000-000000000003");
   });
 });

@@ -26,8 +26,15 @@ export type BuildObjectKeyInput = {
   filename: string;
 };
 
+export type PutObjectInput = {
+  key: string;
+  body: Uint8Array;
+  contentType: string;
+};
+
 /**
- * Object storage port. Lives here until `@repo/core` re-exports it in Phase 6.
+ * Object storage port. Bytes for worker-side derivation go through get/put;
+ * browsers use presigned URLs only.
  */
 export type FileStore = {
   createPresignedPut(input: {
@@ -37,6 +44,8 @@ export type FileStore = {
   }): Promise<PresignedPut>;
   createPresignedGet(input: { key: string; expiresInSeconds?: number }): Promise<PresignedGet>;
   headObject(key: string): Promise<ObjectHead | undefined>;
+  getObject(key: string): Promise<Uint8Array | undefined>;
+  putObject(input: PutObjectInput): Promise<void>;
   deleteObject(key: string): Promise<void>;
 };
 

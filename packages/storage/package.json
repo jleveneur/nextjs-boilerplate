@@ -2,7 +2,7 @@
   "name": "@repo/storage",
   "version": "0.0.0",
   "private": true,
-  "description": "S3-compatible object storage with presigned URLs and structured keys.",
+  "description": "S3-compatible object storage with presigned URLs, byte I/O, and Sharp derivatives.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -18,7 +18,8 @@
     "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/s3-request-presigner": "catalog:",
     "@repo/utils": "workspace:*",
-    "server-only": "0.0.1"
+    "server-only": "0.0.1",
+    "sharp": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",

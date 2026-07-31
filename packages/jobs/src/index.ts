@@ -12,9 +12,11 @@ export {
   type JobPayload,
   type JobPayloadMap,
 } from "./registry.ts";
+export { TerminalJobError, isTerminalJobError } from "./terminal-error.ts";
 export type {
   CreateBullMqJobQueueOptions,
   CreateBullMqWorkerOptions,
+  DeadLetterRecord,
   EnqueueOptions,
   EnqueueResult,
   JobHandler,

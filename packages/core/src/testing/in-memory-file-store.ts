@@ -3,14 +3,17 @@ import type { FileStore, ObjectHead, PresignedGet, PresignedPut } from "../ports
 export function createInMemoryFileStore(): FileStore & {
   readonly keys: ReadonlySet<string>;
 } {
-  const objects = new Map<string, { contentType: string }>();
+  const objects = new Map<string, { contentType: string; body: Uint8Array }>();
 
   return {
     get keys() {
       return new Set(objects.keys());
     },
     createPresignedPut(input): Promise<PresignedPut> {
-      objects.set(input.key, { contentType: input.contentType });
+      // Mark key as reserved so head/get work before an explicit putObject.
+      if (!objects.has(input.key)) {
+        objects.set(input.key, { contentType: input.contentType, body: new Uint8Array() });
+      }
       return Promise.resolve({
         url: `memory://put/${input.key}`,
         key: input.key,
@@ -32,9 +35,21 @@ export function createInMemoryFileStore(): FileStore & {
 
       return Promise.resolve({
         contentType: obj.contentType,
-        contentLength: 0,
+        contentLength: obj.body.byteLength,
         etag: undefined,
       });
+    },
+    getObject(key: string): Promise<Uint8Array | undefined> {
+      const obj = objects.get(key);
+      if (obj === undefined) {
+        return Promise.resolve(undefined);
+      }
+
+      return Promise.resolve(obj.body);
+    },
+    putObject(input): Promise<void> {
+      objects.set(input.key, { contentType: input.contentType, body: input.body });
+      return Promise.resolve();
     },
     deleteObject(key: string): Promise<void> {
       objects.delete(key);

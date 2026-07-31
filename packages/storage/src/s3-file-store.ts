@@ -4,9 +4,9 @@
 
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
-  GetObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -66,6 +66,38 @@ export function createFileStore(options: CreateFileStoreOptions): FileStore {
 
         throw error;
       }
+    },
+
+    async getObject(key) {
+      try {
+        const result = await client.send(
+          new GetObjectCommand({ Bucket: options.bucket, Key: key }),
+        );
+        const body = result.Body;
+        if (body === undefined) {
+          return undefined;
+        }
+
+        const bytes = await body.transformToByteArray();
+        return bytes;
+      } catch (error) {
+        if (isNotFound(error)) {
+          return undefined;
+        }
+
+        throw error;
+      }
+    },
+
+    async putObject(input) {
+      await client.send(
+        new PutObjectCommand({
+          Bucket: options.bucket,
+          Key: input.key,
+          Body: input.body,
+          ContentType: input.contentType,
+        }),
+      );
     },
 
     async deleteObject(key) {
