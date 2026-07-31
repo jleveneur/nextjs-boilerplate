@@ -210,6 +210,11 @@ flowchart LR
 CI fails a PR that changes a package's public surface without a changeset (`changeset status
 --since=origin/main`). Changes confined to apps, tests, docs, or config need none.
 
+The Release workflow opens the Version Packages PR with `GITHUB_TOKEN`. Repository setting
+**Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull
+requests** must be enabled, or the push of `changeset-release/main` succeeds and the PR create
+step fails.
+
 ### Semver applied to internal packages
 
 Even unpublished, the bump level communicates intent to reviewers and to future readers of the
