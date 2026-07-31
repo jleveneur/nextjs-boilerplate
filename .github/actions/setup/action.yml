@@ -44,11 +44,24 @@ runs:
     # Short-lived token via GitHub OIDC — no long-lived TURBO_TOKEN secret.
     # Requires job permission id-token: write and a Vercel Turborepo CLI OIDC
     # policy for this repository (see docs/architecture/12-git-ci-release.md).
+    # Non-fatal: a misconfigured policy must not fail every CI job; the Actions
+    # `.turbo` cache below still applies.
     - name: Enable Turborepo remote cache
       if: inputs.turbo_team != ''
+      id: turbo-remote
+      continue-on-error: true
       uses: vercel/setup-turborepo-remote-cache-action@135046f5efcadb17337d9b29b8d5b4035ae64b10 # v1.0.0
       with:
         team: ${{ inputs.turbo_team }}
+    - name: Remote cache status
+      if: inputs.turbo_team != ''
+      shell: bash
+      run: |
+        if [[ "${{ steps.turbo-remote.outcome }}" == "success" ]]; then
+          echo "Turborepo remote cache enabled for team ${{ inputs.turbo_team }}."
+        else
+          echo "::warning::Turborepo remote cache OIDC exchange failed; using local Actions cache only. Check the Vercel OIDC policy audience (leave default) and TURBO_TEAM slug."
+        fi
 
     # Local `.turbo` cache as a fallback (and for runs without remote cache).
     # Keyed by commit SHA so every run writes a fresh entry, with restore-keys
