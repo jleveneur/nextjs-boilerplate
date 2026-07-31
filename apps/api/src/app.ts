@@ -10,6 +10,7 @@ import {
   rateLimitMiddleware,
   requestIdMiddleware,
 } from "./middleware/index.ts";
+import { registerInvoiceRoutes } from "./routes/v1/invoices.ts";
 import type { AppContainer } from "./server/container.ts";
 
 export type ApiEnv = {
@@ -23,10 +24,8 @@ export type ApiEnv = {
 };
 
 /**
- * Build the Hono app with the public middleware stack and health probes.
- *
- * Authenticated `/v1` routes are mounted here; billing registers in a later
- * milestone. Webhooks mount on the root app (outside Bearer auth).
+ * Build the Hono app with the public middleware stack, `/v1` billing routes,
+ * and the OpenAPI document endpoint.
  */
 export function createApp(container: AppContainer): OpenAPIHono<ApiEnv> {
   const app = new OpenAPIHono<ApiEnv>();
@@ -53,7 +52,16 @@ export function createApp(container: AppContainer): OpenAPIHono<ApiEnv> {
   v1.use("*", apiKeyAuthMiddleware);
   v1.use("*", rateLimitMiddleware);
   v1.use("*", idempotencyMiddleware);
+  registerInvoiceRoutes(v1);
   app.route("/v1", v1);
+
+  app.doc31("/openapi.json", {
+    openapi: "3.1.0",
+    info: {
+      title: "Repo Public API",
+      version: "1.0.0",
+    },
+  });
 
   return app;
 }

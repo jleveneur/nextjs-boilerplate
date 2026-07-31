@@ -25,6 +25,17 @@ export {
   type ListInvoicesOutput,
   type VoidInvoiceInput,
 } from "./invoice.ts";
+export {
+  createInvoiceRestInputSchema,
+  fromCreateInvoiceRest,
+  invoiceRestSchema,
+  listInvoicesRestQuerySchema,
+  listInvoicesRestResponseSchema,
+  toInvoiceRest,
+  toInvoiceRestPage,
+  type CreateInvoiceRestInput,
+  type InvoiceRest,
+} from "./invoice-rest.ts";
 export { currencyCodeSchema, moneySchema, type CurrencyCode, type Money } from "./money.ts";
 export {
   DEFAULT_PAGE_LIMIT,

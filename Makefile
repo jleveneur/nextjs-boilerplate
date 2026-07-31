@@ -15,7 +15,7 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks check verify format format-check lint lint-fix \
-        typecheck spell knip layers bundle-budget test test-scripts test-integration \
+        typecheck spell knip layers bundle-budget openapi-check test test-scripts test-integration \
         e2e lighthouse \
         changeset clean clean-all \
         deps-up deps-up-test deps-down \
@@ -89,6 +89,11 @@ layers: ## Assert package layer boundaries (ADR-0002)
 bundle-budget: ## Build apps/web and assert First Load JS budgets
 	pnpm --filter @repo/web build
 	pnpm --filter @repo/web bundle-budget
+
+openapi-check: ## Regenerate apps/api OpenAPI and fail on drift
+	pnpm --filter @repo/api openapi:generate
+	@git diff --exit-code -- apps/api/openapi.json || \
+		(echo "apps/api/openapi.json is out of date; commit the regenerated file." && exit 1)
 
 ## ----------------------------------------------------------------------------
 ## Tests
