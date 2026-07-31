@@ -5,6 +5,8 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
+import { trpcClient } from "../trpc/client.ts";
+import { TRPCProvider } from "../trpc/react.ts";
 import { ThemeProvider } from "./theme-provider.tsx";
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -21,9 +23,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NuqsAdapter>
-        <ThemeProvider>{children}</ThemeProvider>
-      </NuqsAdapter>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        <NuqsAdapter>
+          <ThemeProvider>{children}</ThemeProvider>
+        </NuqsAdapter>
+      </TRPCProvider>
     </QueryClientProvider>
   );
 }
