@@ -9,6 +9,18 @@ export function getSafeNextPath(next: string | null | undefined, fallback = "/")
   return next;
 }
 
+/** Path to the first organization's invoices list, or `fallback` when none exist. */
+export function firstOrgInvoicesHref(
+  orgs: readonly { slug: string }[] | null | undefined,
+  fallback = "/",
+): string {
+  const first = orgs?.[0];
+  if (first === undefined || first.slug.length === 0) {
+    return fallback;
+  }
+  return `/${first.slug}/invoices`;
+}
+
 /**
  * Path for next-intl `router.push` / `Link` (no locale prefix).
  * Accepts either a locale-prefixed `next` (from proxy) or an app-relative path.

@@ -55,7 +55,10 @@
     "settings": "Settings",
     "signOut": "Sign out",
     "switchOrg": "Organization",
-    "theme": "Theme"
+    "theme": "Theme",
+    "noOrganizations": "No organizations",
+    "errorTitle": "Something went wrong",
+    "errorRetry": "Try again"
   },
   "Billing": {
     "title": "Invoices",
@@ -63,7 +66,20 @@
     "empty": "No invoices yet.",
     "status": "Status",
     "amount": "Amount",
+    "amountMinor": "Amount (minor units)",
     "void": "Void",
-    "customer": "Customer email"
+    "number": "Number",
+    "currency": "Currency",
+    "createdAt": "Created",
+    "backToList": "Back to invoices",
+    "statusAll": "All",
+    "statusDraft": "Draft",
+    "statusOpen": "Open",
+    "statusPaid": "Paid",
+    "statusVoid": "Void",
+    "loadError": "Could not load invoices.",
+    "saveError": "Could not save the invoice.",
+    "voidError": "Could not void the invoice.",
+    "retry": "Retry"
   }
 }

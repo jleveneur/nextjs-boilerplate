@@ -7,7 +7,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { authErrorMessage, getPostAuthHref } from "../../../../features/auth/auth-utils.ts";
+import {
+  authErrorMessage,
+  firstOrgInvoicesHref,
+  getPostAuthHref,
+} from "../../../../features/auth/auth-utils.ts";
 import { useRouter } from "../../../../i18n/navigation.ts";
 import { authClient } from "../../../../lib/auth-client.ts";
 
@@ -45,7 +49,13 @@ export function TwoFactorForm({ nextPath }: Props) {
       return;
     }
 
-    router.push(getPostAuthHref(nextPath, locale));
+    let destination = getPostAuthHref(nextPath, locale);
+    if (destination === "/") {
+      const { data: orgs } = await authClient.organization.list({});
+      destination = firstOrgInvoicesHref(orgs, destination);
+    }
+
+    router.push(destination);
     router.refresh();
   }
 

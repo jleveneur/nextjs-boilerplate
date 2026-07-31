@@ -55,7 +55,10 @@
     "settings": "Paramètres",
     "signOut": "Se déconnecter",
     "switchOrg": "Organisation",
-    "theme": "Thème"
+    "theme": "Thème",
+    "noOrganizations": "Aucune organisation",
+    "errorTitle": "Une erreur est survenue",
+    "errorRetry": "Réessayer"
   },
   "Billing": {
     "title": "Factures",
@@ -63,7 +66,20 @@
     "empty": "Aucune facture.",
     "status": "Statut",
     "amount": "Montant",
+    "amountMinor": "Montant (unités mineures)",
     "void": "Annuler",
-    "customer": "E-mail client"
+    "number": "Numéro",
+    "currency": "Devise",
+    "createdAt": "Créée le",
+    "backToList": "Retour aux factures",
+    "statusAll": "Toutes",
+    "statusDraft": "Brouillon",
+    "statusOpen": "Ouverte",
+    "statusPaid": "Payée",
+    "statusVoid": "Annulée",
+    "loadError": "Impossible de charger les factures.",
+    "saveError": "Impossible d'enregistrer la facture.",
+    "voidError": "Impossible d'annuler la facture.",
+    "retry": "Réessayer"
   }
 }
