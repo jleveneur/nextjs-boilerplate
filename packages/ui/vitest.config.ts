@@ -16,6 +16,9 @@ export default mergeConfig(
       coverage: {
         exclude: [
           "src/index.ts",
+          "src/icons/index.ts",
+          "src/motion/index.ts",
+          "src/sonner/index.ts",
           "src/test/**",
           "src/**/*.test.ts",
           "src/**/*.test.tsx",

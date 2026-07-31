@@ -1,6 +1,20 @@
 // oxlint-disable-next-line import/no-unassigned-import -- registers jest-dom matchers
 import "@testing-library/jest-dom/vitest";
 
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent: () => false,
+  }),
+});
+
 /**
  * Base UI constructs PointerEvents in click handlers. jsdom does not implement
  * PointerEvent as a constructor until recent versions — polyfill for tests.
