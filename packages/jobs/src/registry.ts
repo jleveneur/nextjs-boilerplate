@@ -38,8 +38,11 @@ export const jobPayloadSchemas = {
     idempotencyKey: z.string().min(1),
   }),
   "asset.reconcile-orphans": z.object({
-    /** Wall-clock cutoff; pending assets older than this are failed. */
-    olderThanIso: z.string().datetime(),
+    /**
+     * Wall-clock cutoff; pending assets older than this are failed.
+     * When omitted, the handler defaults to now minus 24 hours.
+     */
+    olderThanIso: z.string().datetime().optional(),
   }),
 } as const satisfies Record<JobName, z.ZodType>;
 

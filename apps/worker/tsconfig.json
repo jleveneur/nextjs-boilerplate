@@ -1,0 +1,13 @@
+{
+  "extends": "@repo/tsconfig/node.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src/**/*.ts",
+    "vitest.config.ts",
+    "vitest.integration.config.ts",
+    "vitest.server-only-stub.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}
