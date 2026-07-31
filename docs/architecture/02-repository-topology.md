@@ -75,15 +75,17 @@ apps/web/
 │   │   ├── context.ts              # Builds the request Ctx (actor, adapters, logger)
 │   │   ├── container.ts            # Composition root: wires ports to adapters
 │   │   └── router.ts               # Root tRPC router: merges feature routers
-│   ├── messages/                   # next-intl message catalogs, one file per namespace
+│   ├── messages/                   # next-intl catalogs (`en.json`, `fr.json`)
 │   ├── styles/
 │   └── proxy.ts                    # Next 16 proxy (formerly middleware.ts)
-├── e2e/                            # Playwright specs
-├── instrumentation.ts              # OTel + Sentry server init
-├── instrumentation-client.ts       # Sentry browser init
+├── e2e/                            # Playwright + axe specs (`make e2e`)
+├── lighthouserc.cjs                # LHCI budgets (`make lighthouse`)
+├── playwright.config.ts
 ├── next.config.ts
 └── package.json
 ```
+
+OTel/Sentry `instrumentation*.ts` land in Phase 14; Phase 8 boots without them.
 
 `app/` mirrors URLs and nothing else. The moment a route file exceeds composition — fetch data,
 render, handle a form submission by delegating — the logic belongs in `features/` (client) or

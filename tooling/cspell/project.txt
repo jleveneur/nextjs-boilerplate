@@ -16,6 +16,11 @@ turborepo
 knip
 cspell
 gitleaks
+lhci
+LHCI
+lighthouseci
+lighthouserc
+autorun
 
 # --- Stack -----------------------------------------------------------------
 drizzle
@@ -231,3 +236,13 @@ unstub # Vitest: unstubEnvs / unstubGlobals
 rediss # TLS Redis URL scheme (redis:// vs rediss://)
 whsec # Stripe webhook secret prefix
 nosniff # X-Content-Type-Options header value
+
+# --- French UI copy referenced by Playwright selectors ----------------------
+# Locale catalogs are ignored; e2e specs match visible French labels directly.
+créer
+déconnecter
+envoyer
+magique
+montant
+numéro
+s'inscrire

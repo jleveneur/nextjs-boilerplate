@@ -6,4 +6,4 @@
  * until a second transport needs a different merge.
  */
 
-export { appRouter, type AppRouter } from "@repo/trpc";
+export { appRouter } from "@repo/trpc";

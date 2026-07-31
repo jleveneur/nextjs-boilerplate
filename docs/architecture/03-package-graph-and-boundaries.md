@@ -111,7 +111,7 @@ flowchart BT
 | `@repo/core`      | layer 0 + `db`, `authz`, `logger`, `jobs` (side-effect ports for mail/files/flags/analytics; adapters injected)                |
 | `@repo/trpc`      | `core`, `auth`, `errors`, `contracts`, `logger`, `db`, `types`                                                                 |
 | `@repo/ui`        | _(nothing internal yet)_ — may use layer 0 only (`types`, `utils`, `i18n`); theme CSS from `@repo/tailwind-config` (dev/build) |
-| `apps/web`        | `@repo/ui` (Phase 7 gallery). Phase 8 adds `trpc`, `core`, auth, i18n routing.                                                 |
+| `apps/web`        | `ui`, `trpc`, `core`, `auth`, `auth/client`, `db`, `email`, `env`, `i18n`, `jobs`, `logger`, `contracts`, `types`, `utils`     |
 | `apps/api`        | `core`, `auth`, `contracts`, `errors`, `env`, `logger`, `observability`, `payments`                                            |
 
 > **Note on `db` → `logger`:** both are layer 1, so `@repo/db` may not import `@repo/logger`.

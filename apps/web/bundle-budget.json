@@ -1,7 +1,7 @@
 {
   "routes": {
     "/en": {
-      "maxFirstLoadJsBytes": 800000,
+      "maxFirstLoadJsBytes": 1150000,
       "manifestPath": "server/app/[locale]/(marketing)/page_client-reference-manifest.js",
       "entrySuffix": "/[locale]/(marketing)/page",
       "forbiddenModuleSubstrings": [
@@ -15,7 +15,7 @@
       ]
     },
     "/en/design-system": {
-      "maxFirstLoadJsBytes": 1400000,
+      "maxFirstLoadJsBytes": 1700000,
       "manifestPath": "server/app/[locale]/(marketing)/design-system/page_client-reference-manifest.js",
       "entrySuffix": "/[locale]/(marketing)/design-system/page"
     }

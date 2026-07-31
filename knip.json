@@ -36,6 +36,11 @@
     },
     "packages/trpc": {
       "entry": ["vitest.server-only-stub.ts"]
+    },
+    "apps/web": {
+      // LHCI config is passed as a CLI flag (`--config=lighthouserc.cjs`), which
+      // Knip does not treat as a script reference.
+      "entry": ["lighthouserc.cjs", "e2e/**/*.ts"]
     }
   },
 

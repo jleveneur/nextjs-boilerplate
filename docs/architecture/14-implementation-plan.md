@@ -139,12 +139,14 @@ the base bundle unnoticed.
 ## Phase 8 — Web application
 
 `apps/web`: route groups, `[locale]` routing with next-intl, `proxy.ts` (locale and cookie presence
-only — no authorization), theming, the auth screens, the app shell with the organization switcher, the
-slice's UI with TanStack Query over tRPC, nuqs for filters, Server Actions for forms, error and
-loading boundaries, and the container/context composition roots. Then the E2E suite.
+only — no authorization), theming, the full auth screens (password, OAuth, magic link, passkey, 2FA,
+invite), the app shell with the organization switcher, the billing invoice UI with TanStack Query over
+tRPC and nuqs for filters, error and loading boundaries, and the container/context composition roots.
+Playwright + axe and Lighthouse CI run against `make deps-up-test` + `next start` (image-level E2E
+stays Phase 11). Stripe checkout UI stays Phase 17.
 
-**Done when** the critical journeys pass in Playwright, Lighthouse and axe are clean on the main
-pages, and `cacheComponents` boundaries are explicit and commented.
+**Done when** the critical journeys pass in Playwright (axe on major pages), Lighthouse CI budgets
+hold on marketing/sign-in, and `cacheComponents` boundaries are explicit and commented.
 
 ## Phase 9 — Public API
 

@@ -6,6 +6,8 @@
     // (TypeScript 7). This is root-only configuration. See ADR-0004.
     "typeAware": true
   },
+  // Extends does not always merge ignorePatterns into the root config.
+  "ignorePatterns": ["**/next-env.d.ts"],
   "overrides": [
     {
       // Composition roots and process bootstraps legitimately write to stdout

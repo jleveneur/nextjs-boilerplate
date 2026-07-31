@@ -8,7 +8,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test:unit",
+    "test": "NODE_ENV=test turbo run test:unit",
     "test:integration": "turbo run test:integration",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
