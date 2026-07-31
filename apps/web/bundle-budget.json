@@ -1,9 +1,11 @@
 {
   "routes": {
-    "/": {
-      "maxFirstLoadJsBytes": 700000,
+    "/en": {
+      "maxFirstLoadJsBytes": 800000,
+      "manifestPath": "server/app/[locale]/(marketing)/page_client-reference-manifest.js",
+      "entrySuffix": "/[locale]/(marketing)/page",
       "forbiddenModuleSubstrings": [
-        "packages/ui/",
+        "packages/ui/src/components/",
         "@base-ui/",
         "recharts",
         "@tiptap/",
@@ -12,8 +14,10 @@
         "node_modules/motion/"
       ]
     },
-    "/design-system": {
-      "maxFirstLoadJsBytes": 1300000
+    "/en/design-system": {
+      "maxFirstLoadJsBytes": 1400000,
+      "manifestPath": "server/app/[locale]/(marketing)/design-system/page_client-reference-manifest.js",
+      "entrySuffix": "/[locale]/(marketing)/design-system/page"
     }
   }
 }

@@ -1,11 +1,19 @@
-import Link from "next/link";
+import { setRequestLocale } from "next-intl/server";
 
 import { Button } from "@repo/ui";
 
-import { ThemeToggle } from "../../components/theme-toggle.tsx";
+import { ThemeToggle } from "../../../../components/theme-toggle.tsx";
+import { Link } from "../../../../i18n/navigation.ts";
 import { DesignSystemGallery } from "./gallery.tsx";
 
-export default function DesignSystemPage() {
+type Props = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function DesignSystemPage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-10 flex flex-wrap items-start justify-between gap-4">

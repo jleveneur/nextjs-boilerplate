@@ -25,6 +25,7 @@ export {
   logLevels,
   otel,
   posthog,
+  publicApp,
   redis,
   resend,
   s3,

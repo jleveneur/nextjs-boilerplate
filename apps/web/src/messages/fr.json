@@ -1,0 +1,53 @@
+{
+  "Metadata": {
+    "title": "Repo",
+    "description": "Boilerplate Next.js"
+  },
+  "Marketing": {
+    "headline": "Repo",
+    "body": "Design system, authentification et facturation. Connectez-vous pour gérer les factures de votre organisation.",
+    "designSystem": "Ouvrir le design system",
+    "signIn": "Se connecter",
+    "signUp": "Créer un compte"
+  },
+  "Auth": {
+    "signInTitle": "Connexion",
+    "signUpTitle": "Créer un compte",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "name": "Nom",
+    "submitSignIn": "Se connecter",
+    "submitSignUp": "S'inscrire",
+    "forgotPassword": "Mot de passe oublié ?",
+    "magicLink": "Recevoir un lien magique",
+    "continueWithGitHub": "Continuer avec GitHub",
+    "continueWithGoogle": "Continuer avec Google",
+    "passkey": "Se connecter avec une passkey",
+    "verifyEmailTitle": "Vérifiez votre e-mail",
+    "verifyEmailBody": "Consultez votre boîte de réception pour le lien de vérification.",
+    "forgotTitle": "Réinitialiser le mot de passe",
+    "forgotSubmit": "Envoyer le lien",
+    "resetTitle": "Nouveau mot de passe",
+    "resetSubmit": "Mettre à jour",
+    "twoFactorTitle": "Authentification à deux facteurs",
+    "twoFactorCode": "Code d'authentification",
+    "twoFactorSubmit": "Vérifier",
+    "acceptInviteTitle": "Accepter l'invitation"
+  },
+  "Shell": {
+    "invoices": "Factures",
+    "settings": "Paramètres",
+    "signOut": "Se déconnecter",
+    "switchOrg": "Organisation",
+    "theme": "Thème"
+  },
+  "Billing": {
+    "title": "Factures",
+    "create": "Créer une facture",
+    "empty": "Aucune facture.",
+    "status": "Statut",
+    "amount": "Montant",
+    "void": "Annuler",
+    "customer": "E-mail client"
+  }
+}

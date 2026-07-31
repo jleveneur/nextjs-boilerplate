@@ -1,0 +1,53 @@
+{
+  "Metadata": {
+    "title": "Repo",
+    "description": "Next.js boilerplate"
+  },
+  "Marketing": {
+    "headline": "Repo",
+    "body": "Design system, auth, and the billing slice. Sign in to manage invoices for your organization.",
+    "designSystem": "Open design system",
+    "signIn": "Sign in",
+    "signUp": "Create account"
+  },
+  "Auth": {
+    "signInTitle": "Sign in",
+    "signUpTitle": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "submitSignIn": "Sign in",
+    "submitSignUp": "Sign up",
+    "forgotPassword": "Forgot password?",
+    "magicLink": "Email me a magic link",
+    "continueWithGitHub": "Continue with GitHub",
+    "continueWithGoogle": "Continue with Google",
+    "passkey": "Sign in with passkey",
+    "verifyEmailTitle": "Verify your email",
+    "verifyEmailBody": "Check your inbox for a verification link.",
+    "forgotTitle": "Reset password",
+    "forgotSubmit": "Send reset link",
+    "resetTitle": "Choose a new password",
+    "resetSubmit": "Update password",
+    "twoFactorTitle": "Two-factor authentication",
+    "twoFactorCode": "Authentication code",
+    "twoFactorSubmit": "Verify",
+    "acceptInviteTitle": "Accept invitation"
+  },
+  "Shell": {
+    "invoices": "Invoices",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "switchOrg": "Organization",
+    "theme": "Theme"
+  },
+  "Billing": {
+    "title": "Invoices",
+    "create": "Create invoice",
+    "empty": "No invoices yet.",
+    "status": "Status",
+    "amount": "Amount",
+    "void": "Void",
+    "customer": "Customer email"
+  }
+}

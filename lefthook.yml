@@ -14,6 +14,8 @@ pre-commit:
 
     - name: lint
       glob: "*.{ts,tsx,js,jsx,mjs,cjs}"
+      exclude:
+        - "**/next-env.d.ts"
       run: pnpm exec oxlint {staged_files}
 
     # The one exception to "hooks catch trivia": a committed secret is

@@ -1,18 +1,20 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 /**
- * Minimal Next 16 app for the design-system gallery (Phase 7).
+ * Product Next 16 app.
  *
- * Product routing, proxy.ts, auth, and tRPC mount in Phase 8.
  * `cacheComponents` is on so caching stays explicit when routes grow.
+ * TypeScript 7 has no JS compiler API yet; next build must use local `tsc`.
  */
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  transpilePackages: ["@repo/ui"],
-  // TypeScript 7 has no JS compiler API yet; next build must use local `tsc`.
+  transpilePackages: ["@repo/ui", "@repo/i18n", "@repo/env"],
   experimental: {
     useTypeScriptCli: true,
   },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+export default withNextIntl(nextConfig);

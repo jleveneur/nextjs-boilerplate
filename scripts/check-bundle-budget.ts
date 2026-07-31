@@ -19,6 +19,16 @@ import { join, resolve } from "node:path";
 export type RouteBudget = {
   maxFirstLoadJsBytes: number;
   forbiddenModuleSubstrings?: string[];
+  /**
+   * Path under `.next/` to the route's client-reference-manifest.js.
+   * Required for App Router routes that use `[locale]` / route groups.
+   */
+  manifestPath?: string;
+  /**
+   * Suffix matched against entryJSFiles keys (e.g. `/[locale]/(marketing)/page`).
+   * Defaults to a guess from the public route string.
+   */
+  entrySuffix?: string;
 };
 
 export type BundleBudgetFile = {
@@ -87,13 +97,15 @@ export function parseEntryJsFiles(manifestSource: string): Record<string, string
   throw new Error("entryJSFiles object was not closed");
 }
 
-/** Map a public route (`/`, `/design-system`) to its app entry key suffix. */
+/** Map a public route to its app entry key using an explicit or guessed suffix. */
 export function entryKeyForRoute(
   route: string,
   entryJsFiles: Record<string, string[]>,
+  entrySuffix?: string,
 ): string | undefined {
   const suffix =
-    route === "/" ? "/app/page" : `/app${route.endsWith("/") ? route.slice(0, -1) : route}/page`;
+    entrySuffix ??
+    (route === "/" ? "/app/page" : `/app${route.endsWith("/") ? route.slice(0, -1) : route}/page`);
 
   return Object.keys(entryJsFiles).find((key) => key.endsWith(suffix));
 }
@@ -148,15 +160,22 @@ function parseRouteBudget(raw: unknown, route: string): RouteBudget {
   if (typeof maxFirstLoadJsBytes !== "number" || !Number.isFinite(maxFirstLoadJsBytes)) {
     throw new Error(`budget for ${route} needs a numeric maxFirstLoadJsBytes`);
   }
+  const budget: RouteBudget = { maxFirstLoadJsBytes };
   const forbiddenRaw = raw["forbiddenModuleSubstrings"];
-  if (forbiddenRaw === undefined) {
-    return { maxFirstLoadJsBytes };
+  if (forbiddenRaw !== undefined) {
+    const forbiddenModuleSubstrings = asStringArray(forbiddenRaw);
+    if (forbiddenModuleSubstrings === undefined) {
+      throw new Error(`budget for ${route}: forbiddenModuleSubstrings must be string[]`);
+    }
+    budget.forbiddenModuleSubstrings = forbiddenModuleSubstrings;
   }
-  const forbiddenModuleSubstrings = asStringArray(forbiddenRaw);
-  if (forbiddenModuleSubstrings === undefined) {
-    throw new Error(`budget for ${route}: forbiddenModuleSubstrings must be string[]`);
+  if (typeof raw["manifestPath"] === "string") {
+    budget.manifestPath = raw["manifestPath"];
   }
-  return { maxFirstLoadJsBytes, forbiddenModuleSubstrings };
+  if (typeof raw["entrySuffix"] === "string") {
+    budget.entrySuffix = raw["entrySuffix"];
+  }
+  return budget;
 }
 
 function parseBudgetFile(raw: unknown): BundleBudgetFile {
@@ -174,7 +193,10 @@ function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
-function clientManifestPath(nextDir: string, route: string): string {
+function clientManifestPath(nextDir: string, route: string, manifestPath?: string): string {
+  if (manifestPath !== undefined) {
+    return join(nextDir, manifestPath);
+  }
   if (route === "/") {
     return join(nextDir, "server/app/page_client-reference-manifest.js");
   }
@@ -212,7 +234,7 @@ export function checkBundleBudget(options: {
       continue;
     }
 
-    const entryKey = entryKeyForRoute(route, entryJsFiles);
+    const entryKey = entryKeyForRoute(route, entryJsFiles, routeBudget.entrySuffix);
     if (entryKey === undefined) {
       problems.push(`${route}: no entryJSFiles key ending in app page path`);
       continue;
@@ -256,8 +278,11 @@ export function checkBundleBudgetFromDisk(options: {
   const buildManifest = parseBuildManifest(readJson(join(nextDir, "build-manifest.json")));
 
   const routeManifests: Record<string, string> = {};
-  for (const route of Object.keys(budget.routes)) {
-    routeManifests[route] = readFileSync(clientManifestPath(nextDir, route), "utf8");
+  for (const [route, routeBudget] of Object.entries(budget.routes)) {
+    routeManifests[route] = readFileSync(
+      clientManifestPath(nextDir, route, routeBudget.manifestPath),
+      "utf8",
+    );
   }
 
   return checkBundleBudget({
