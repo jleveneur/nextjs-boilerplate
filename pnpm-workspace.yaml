@@ -122,6 +122,16 @@ catalog:
   clsx: 2.1.1
   tailwind-merge: 3.6.0
   jsdom: 26.1.0
+  "@base-ui/react": 1.6.0
+  class-variance-authority: 0.7.1
+  "@hugeicons/react": 1.1.9
+  "@hugeicons/core-free-icons": 4.2.3
+  "@types/react-dom": 19.2.3
+  "@testing-library/react": 16.3.2
+  "@testing-library/dom": 10.4.1
+  "@testing-library/jest-dom": 6.9.1
+  "@testing-library/user-event": 14.6.1
+  axe-core: 4.12.1
 
 minimumReleaseAgeExclude:
   - "@aws-sdk/client-s3@3.1099.0"
