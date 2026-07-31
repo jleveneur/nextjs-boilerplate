@@ -53,6 +53,10 @@ runs:
       uses: vercel/setup-turborepo-remote-cache-action@135046f5efcadb17337d9b29b8d5b4035ae64b10 # v1.0.0
       with:
         team: ${{ inputs.turbo_team }}
+        # Must match the Vercel Turborepo CLI OIDC policy Audience field.
+        # GitHub's default owner audience is https://github.com/<owner>; Vercel
+        # prefills that and the form often cannot be left blank.
+        audience: https://github.com/${{ github.repository_owner }}
     - name: Remote cache status
       if: inputs.turbo_team != ''
       shell: bash
@@ -60,7 +64,7 @@ runs:
         if [[ "${{ steps.turbo-remote.outcome }}" == "success" ]]; then
           echo "Turborepo remote cache enabled for team ${{ inputs.turbo_team }}."
         else
-          echo "::warning::Turborepo remote cache OIDC exchange failed; using local Actions cache only. Check the Vercel OIDC policy audience (leave default) and TURBO_TEAM slug."
+          echo "::warning::Turborepo remote cache OIDC exchange failed; using local Actions cache only. Ensure the Vercel OIDC policy Audience is https://github.com/${{ github.repository_owner }} and TURBO_TEAM is the team slug."
         fi
 
     # Local `.turbo` cache as a fallback (and for runs without remote cache).

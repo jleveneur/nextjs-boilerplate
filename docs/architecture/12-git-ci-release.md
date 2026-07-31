@@ -128,8 +128,10 @@ Practices that keep it honest:
   apps, packages, Dockerfiles, or the lockfile (again: full set on `main`).
 - **Turborepo remote cache** via Vercel OIDC (`vercel/setup-turborepo-remote-cache-action`) when the
   repository variable `TURBO_TEAM` is set. One-time setup: create a Turborepo CLI OIDC policy on the
-  Vercel team for this repo, then `gh variable set TURBO_TEAM --body "<team-slug>"`. Jobs need
-  `id-token: write`. Forks and unset repos fall back to the Actions `.turbo` cache only.
+  Vercel team for this repo (Audience = `https://github.com/<owner>`, matching what CI passes to
+  `getIDToken()`), then `gh variable set TURBO_TEAM --body "<team-slug>"`. Jobs need
+  `id-token: write`. A failed OIDC exchange warns and falls back to the Actions `.turbo` cache so
+  CI stays green; forks and unset `TURBO_TEAM` skip remote cache entirely.
 - The `env` field in `turbo.json` must list every variable that affects output (including
   `NEXT_PUBLIC_*` and `SKIP_ENV_VALIDATION` on `build`), or the cache will serve a wrong artifact —
   this is the one place remote caching can cause a genuinely confusing production bug, so it is
