@@ -10,10 +10,11 @@ import type {
   IdGenerator,
   Mailer,
 } from "@repo/core";
+import type { Mailer as EmailMailer } from "@repo/email";
 import { createBullMqJobQueue } from "@repo/jobs";
+import { createFileStore } from "@repo/storage";
 import type { AssetId, InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
 import { generateUuidV7 } from "@repo/utils";
-import type { Mailer as EmailMailer } from "@repo/email";
 
 function brandInvoiceId(id: string): InvoiceId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
@@ -140,6 +141,13 @@ export function createAppPorts(options: {
   appEnv: string;
   redisUrl: string;
   emailMailer: EmailMailer;
+  s3: {
+    endpoint: string;
+    region: string;
+    bucket: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
 }): CtxPorts {
   const events = createInProcessEventBus();
   // Lazy BullMQ connection — avoid opening Redis during `next build`.
@@ -162,7 +170,14 @@ export function createAppPorts(options: {
       },
     },
     mailer: adaptEmailMailer(options.emailMailer),
-    files: createNoopFileStore(),
+    files: createFileStore({
+      endpoint: options.s3.endpoint,
+      region: options.s3.region,
+      bucket: options.s3.bucket,
+      accessKeyId: options.s3.accessKeyId,
+      secretAccessKey: options.s3.secretAccessKey,
+      forcePathStyle: true,
+    }),
     flags: createNoopFlagProvider(),
     analytics: createNoopAnalyticsSink(),
   };

@@ -3,12 +3,12 @@ import { Writable } from "node:stream";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { permissionsForOrganizationRole } from "@repo/auth";
-import type { Invoice } from "@repo/contracts";
+import type { Asset, Invoice, RequestUploadOutput } from "@repo/contracts";
 import * as core from "@repo/core";
 import { createTestPorts } from "@repo/core/testing";
 import { ForbiddenError, NotFoundError } from "@repo/errors";
 import { createLogger } from "@repo/logger";
-import type { Actor, InvoiceId, OrganizationId, UserId } from "@repo/types";
+import type { Actor, AssetId, InvoiceId, OrganizationId, UserId } from "@repo/types";
 import type { TRPCError } from "@trpc/server";
 
 import type { TrpcContext } from "./context.ts";
@@ -23,6 +23,8 @@ vi.mock("@repo/core", async (importOriginal) => {
     getInvoice: vi.fn(),
     listInvoicesForOrg: vi.fn(),
     voidInvoice: vi.fn(),
+    requestUpload: vi.fn(),
+    confirmUpload: vi.fn(),
   };
 });
 
@@ -39,6 +41,11 @@ function brandOrganizationId(id: string): OrganizationId {
 function brandInvoiceId(id: string): InvoiceId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- test brand
   return id as InvoiceId;
+}
+
+function brandAssetId(id: string): AssetId {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- test brand
+  return id as AssetId;
 }
 
 function makeActor(role: "owner" | "member"): Actor {
@@ -155,5 +162,56 @@ describe("billing router via createCaller", () => {
 
     const result = await caller.billing.list({ limit: 20 });
     expect(result.data).toHaveLength(1);
+  });
+});
+
+describe("assets router via createCaller", () => {
+  const assetId = brandAssetId("01900000-0000-7000-8000-000000000020");
+  const sampleAsset: Asset = {
+    id: assetId,
+    organizationId: brandOrganizationId("01900000-0000-7000-8000-000000000001"),
+    ownerUserId: brandUserId("01900000-0000-7000-8000-0000000000aa"),
+    status: "pending",
+    storageKey: "test/org/asset/id/photo.jpg",
+    contentType: "image/jpeg",
+    sizeBytes: 1024,
+    originalFilename: "photo.jpg",
+    createdAt: "2026-01-15T12:00:00.000Z",
+    updatedAt: "2026-01-15T12:00:00.000Z",
+  };
+
+  beforeEach(() => {
+    vi.mocked(core.requestUpload).mockReset();
+    vi.mocked(core.confirmUpload).mockReset();
+  });
+
+  it("requests an upload", async () => {
+    const output: RequestUploadOutput = {
+      asset: sampleAsset,
+      upload: {
+        url: "https://example.com/put",
+        key: sampleAsset.storageKey,
+        expiresInSeconds: 300,
+      },
+    };
+    vi.mocked(core.requestUpload).mockResolvedValue(output);
+    const caller = createCaller(makeCtx(makeActor("member")));
+
+    const result = await caller.assets.requestUpload({
+      filename: "photo.jpg",
+      contentType: "image/jpeg",
+      sizeBytes: 1024,
+    });
+
+    expect(result.asset.id).toBe(assetId);
+    expect(core.requestUpload).toHaveBeenCalledOnce();
+  });
+
+  it("confirms an upload", async () => {
+    vi.mocked(core.confirmUpload).mockResolvedValue(sampleAsset);
+    const caller = createCaller(makeCtx(makeActor("member")));
+
+    const result = await caller.assets.confirmUpload({ assetId });
+    expect(result.status).toBe("pending");
   });
 });

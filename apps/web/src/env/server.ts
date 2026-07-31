@@ -1,7 +1,7 @@
 // oxlint-disable-next-line import/no-unassigned-import -- credential firewall
 import "server-only";
 
-import { auth, base, createEnv, db, publicApp, redis, resend, smtp } from "@repo/env/server";
+import { auth, base, createEnv, db, publicApp, redis, resend, s3, smtp } from "@repo/env/server";
 
 /**
  * Server edge env for `apps/web`.
@@ -9,7 +9,7 @@ import { auth, base, createEnv, db, publicApp, redis, resend, smtp } from "@repo
  * Validated once at import. Client code must import `./client.ts` — never this file.
  */
 export const env = createEnv({
-  server: [base, db, redis, auth, resend, smtp],
+  server: [base, db, redis, auth, resend, smtp, s3],
   client: [publicApp],
   skipValidation:
     process.env["SKIP_ENV_VALIDATION"] === "1" || process.env["SKIP_ENV_VALIDATION"] === "true",
@@ -33,6 +33,11 @@ export const env = createEnv({
     EMAIL_FROM: process.env["EMAIL_FROM"],
     SMTP_URL: process.env["SMTP_URL"],
     MAILPIT_API_URL: process.env["MAILPIT_API_URL"],
+    S3_ENDPOINT: process.env["S3_ENDPOINT"],
+    S3_REGION: process.env["S3_REGION"],
+    S3_BUCKET: process.env["S3_BUCKET"],
+    S3_ACCESS_KEY_ID: process.env["S3_ACCESS_KEY_ID"],
+    S3_SECRET_ACCESS_KEY: process.env["S3_SECRET_ACCESS_KEY"],
     NEXT_PUBLIC_APP_URL: process.env["NEXT_PUBLIC_APP_URL"],
     NEXT_PUBLIC_APP_ENV: process.env["NEXT_PUBLIC_APP_ENV"],
     SKIP_ENV_VALIDATION: process.env["SKIP_ENV_VALIDATION"],

@@ -118,6 +118,13 @@ function buildContainer(): AppContainer {
     appEnv: env.APP_ENV,
     redisUrl: env.REDIS_URL,
     emailMailer,
+    s3: {
+      endpoint: env.S3_ENDPOINT,
+      region: env.S3_REGION,
+      bucket: env.S3_BUCKET,
+      accessKeyId: env.S3_ACCESS_KEY_ID,
+      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+    },
   });
 
   return { db, logger, auth, ports, emailMailer };
