@@ -1,0 +1,9 @@
+{
+  "extends": "@repo/tsconfig/node.json",
+  "compilerOptions": {
+    // `@repo/email` re-exports React email templates; typecheck needs JSX.
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

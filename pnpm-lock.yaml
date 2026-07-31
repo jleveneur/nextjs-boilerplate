@@ -24,6 +24,12 @@ catalogs:
     '@better-auth/passkey':
       specifier: 1.6.25
       version: 1.6.25
+    '@hono/node-server':
+      specifier: 2.0.12
+      version: 2.0.12
+    '@hono/zod-openapi':
+      specifier: 1.5.1
+      version: 1.5.1
     '@hookform/resolvers':
       specifier: 5.2.2
       version: 5.2.2
@@ -60,6 +66,9 @@ catalogs:
     '@react-email/render':
       specifier: 2.1.0
       version: 2.1.0
+    '@scalar/hono-api-reference':
+      specifier: 0.11.12
+      version: 0.11.12
     '@sentry/node':
       specifier: 10.69.0
       version: 10.69.0
@@ -126,6 +135,9 @@ catalogs:
     drizzle-orm:
       specifier: 0.45.2
       version: 0.45.2
+    hono:
+      specifier: 4.12.32
+      version: 4.12.32
     ioredis:
       specifier: 5.11.1
       version: 5.11.1
@@ -236,6 +248,79 @@ importers:
       turbo:
         specifier: 2.10.7
         version: 2.10.7
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  apps/api:
+    dependencies:
+      '@hono/node-server':
+        specifier: 'catalog:'
+        version: 2.0.12(hono@4.12.32)
+      '@hono/zod-openapi':
+        specifier: 'catalog:'
+        version: 1.5.1(hono@4.12.32)(zod@4.4.3)
+      '@repo/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@repo/cache':
+        specifier: workspace:*
+        version: link:../../packages/cache
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@repo/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@repo/email':
+        specifier: workspace:*
+        version: link:../../packages/email
+      '@repo/env':
+        specifier: workspace:*
+        version: link:../../packages/env
+      '@repo/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
+      '@repo/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@repo/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@scalar/hono-api-reference':
+        specifier: 'catalog:'
+        version: 0.11.12(hono@4.12.32)
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.4)(postgres@3.4.9)
+      hono:
+        specifier: 'catalog:'
+        version: 4.12.32
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.1
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1058,6 +1143,11 @@ packages:
 
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
+
+  '@asteasolutions/zod-to-openapi@8.5.0':
+    resolution: {integrity: sha512-SABbKiObg5dLRiTFnqiW1WWwGcg1BJfmHtT2asIBnBHg6Smy/Ms2KHc650+JI4Hw7lSkdiNebEGXpwoxfben8Q==}
+    peerDependencies:
+      zod: ^4.0.0
 
   '@aws-sdk/checksums@3.1000.23':
     resolution: {integrity: sha512-Hv4VX5+IdDYmAbOdiwZguz8fLh3WnE4VtyJwVNEHLulA+OYy7Z5L0ETGUlX2T4g8DLO8XxCV8CyWrtVL4uwqkg==}
@@ -2239,6 +2329,25 @@ packages:
 
   '@hexagon/base64@1.1.28':
     resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
+
+  '@hono/node-server@2.0.12':
+    resolution: {integrity: sha512-eWpQYr67tqJLeaSUl0Q+TquuYfUdTibpOJlUMV2FfUP7+KqCC5TufnwnlXL6mobZBJbGAYRd7ZvEBDCbLInjhg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      hono: ^4
+
+  '@hono/zod-openapi@1.5.1':
+    resolution: {integrity: sha512-ZaDdEIkn6PEGjIYHXJeyByg6yhvLzI+UXn968pWtahpwcQ6HMjQYXI3zNffTl0Wl9QZ79nUnGqiN1erEIu23fA==}
+    engines: {node: '>=16.0.0'}
+    peerDependencies:
+      hono: '>=4.10.0'
+      zod: ^4.0.0
+
+  '@hono/zod-validator@0.9.0':
+    resolution: {integrity: sha512-n0ZSXmCiHVIp4Y5wlOOyZCeTd/rsawA/qW1cipB8QOYKZ9N8Tk0nZUZCXho9cu374AN4JpDNKioNKBJ/W+LBug==}
+    peerDependencies:
+      hono: '>=4.11.2'
+      zod: ^3.25.0 || ^4.0.0
 
   '@hookform/resolvers@5.2.2':
     resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
@@ -3765,6 +3874,32 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
+
+  '@scalar/client-side-rendering@0.3.5':
+    resolution: {integrity: sha512-0MX6HN4hNhMlBTqm+PJ1Rgi5yQy7NkMEPMa6QXdyKAO59pQVzWlBGT+MlAnyXCeVrqFULzZh90v81t5UQ/uYEw==}
+    engines: {node: '>=22'}
+
+  '@scalar/helpers@0.9.2':
+    resolution: {integrity: sha512-hjyMpMZjTBZQhyByZmz5oUgRKUQJO5V5AOiJxsVEGbUmgA7sJRQeTrXLB+BEwzaKS5nm2opJeNyMBYLFNK4hiQ==}
+    engines: {node: '>=22'}
+
+  '@scalar/hono-api-reference@0.11.12':
+    resolution: {integrity: sha512-8cdUntsPjx4WN/hqoP8sFN01ESnJXJDhmLQjAbZHJgnLxoGbITmFlS3Fy6cTPX+5eXuZHdqx9JTqRkdI3mHvzQ==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      hono: ^4.12.5
+
+  '@scalar/schemas@0.8.0':
+    resolution: {integrity: sha512-bwu/NCOghZI/cL6Ayti/Oeb5XEMRTncBsyQeHhkFwk4PZsR910me+kZPd5TAp6TqifMfDbAe3xyLSdlzU/KFLA==}
+    engines: {node: '>=22'}
+
+  '@scalar/types@0.17.0':
+    resolution: {integrity: sha512-mj033MX0EFOEwfpO3ch7FGGnMbye1aLlnP6LmTC9Il2AlBCDL41rYPk67jF5ICAMsAES1RQ+8N2bcC0MJnupLQ==}
+    engines: {node: '>=22'}
+
+  '@scalar/validation@0.6.2':
+    resolution: {integrity: sha512-Sc1TkcwGV6aVCO51AyKeaGiP8gpwAHxEtO5d3tZzPV+KsnlC/YokQxFxwBrbIXw73k9hmcExnJyGu3k5i6n6VA==}
+    engines: {node: '>=20'}
 
   '@schummar/icu-type-parser@1.21.5':
     resolution: {integrity: sha512-bXHSaW5jRTmke9Vd0h5P7BtWZG9Znqb8gSDxZnxaGSJnGwPLDPfS+3g0BKzeWqzgZPsIVZkM7m2tbo18cm5HBw==}
@@ -5486,6 +5621,10 @@ packages:
     resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
 
+  hono@4.12.32:
+    resolution: {integrity: sha512-XcuyW9qE2kJn07PkecMOBd5Vq/hMy7mmGw+idz1yblbg9N17ijJODrvPkn7/dwL3Kulj8LcRJ69DLOWf91dRUg==}
+    engines: {node: '>=16.9.0'}
+
   html-encoding-sniffer@4.0.0:
     resolution: {integrity: sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ==}
     engines: {node: '>=18'}
@@ -6197,6 +6336,11 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanoid@5.1.16:
+    resolution: {integrity: sha512-kVrnsrJqMR8+oLJnGEmSWw9BivK5mt7H3FZatVRjrc5wGqFYuBxX1yG7+A7Gi5AefkX6t/oCkizcQgpu0cY1dQ==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+
   nanostores@1.4.2:
     resolution: {integrity: sha512-Wxv8Roefr2nqtiRG0bnaFlpYqpIVtOEeJZHaH+4nGgOK1/7n6OHOuHCb/bhqrNQgZM8fyd0s1PqhdrJc9Ib44g==}
     engines: {node: ^20.0.0 || >=22.0.0}
@@ -6372,6 +6516,9 @@ packages:
   open@8.4.2:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
+
+  openapi3-ts@4.6.1:
+    resolution: {integrity: sha512-XW9MOldkhoICNeXVzzmXzmOW5G73ppOEGmh7fLCqHjgfdEYCGGN+00MlVCeUZgovjjfC56j9tvtDt1zGabNjjA==}
 
   os-tmpdir@1.0.2:
     resolution: {integrity: sha512-D2FR03Vir7FIu45XBY20mTb+/ZSWB00sjU9jdQXt83gDrI4Ztz5Fs7/yy74g2N5SVQY4xY1qDr4rNddwYRVX0g==}
@@ -7518,6 +7665,11 @@ snapshots:
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
+
+  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.4.3)':
+    dependencies:
+      openapi3-ts: 4.6.1
+      zod: 4.4.3
 
   '@aws-sdk/checksums@3.1000.23':
     dependencies:
@@ -8684,6 +8836,23 @@ snapshots:
       yargs: 17.7.3
 
   '@hexagon/base64@1.1.28': {}
+
+  '@hono/node-server@2.0.12(hono@4.12.32)':
+    dependencies:
+      hono: 4.12.32
+
+  '@hono/zod-openapi@1.5.1(hono@4.12.32)(zod@4.4.3)':
+    dependencies:
+      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.4.3)
+      '@hono/zod-validator': 0.9.0(hono@4.12.32)(zod@4.4.3)
+      hono: 4.12.32
+      openapi3-ts: 4.6.1
+      zod: 4.4.3
+
+  '@hono/zod-validator@0.9.0(hono@4.12.32)(zod@4.4.3)':
+    dependencies:
+      hono: 4.12.32
+      zod: 4.4.3
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.83.0(react@19.2.8))':
     dependencies:
@@ -9880,6 +10049,33 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@scalar/client-side-rendering@0.3.5':
+    dependencies:
+      '@scalar/schemas': 0.8.0
+      '@scalar/types': 0.17.0
+      '@scalar/validation': 0.6.2
+
+  '@scalar/helpers@0.9.2': {}
+
+  '@scalar/hono-api-reference@0.11.12(hono@4.12.32)':
+    dependencies:
+      '@scalar/client-side-rendering': 0.3.5
+      hono: 4.12.32
+
+  '@scalar/schemas@0.8.0':
+    dependencies:
+      '@scalar/helpers': 0.9.2
+      '@scalar/validation': 0.6.2
+
+  '@scalar/types@0.17.0':
+    dependencies:
+      '@scalar/helpers': 0.9.2
+      nanoid: 5.1.16
+      type-fest: 5.8.0
+      zod: 4.4.3
+
+  '@scalar/validation@0.6.2': {}
 
   '@schummar/icu-type-parser@1.21.5': {}
 
@@ -11504,6 +11700,8 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
+  hono@4.12.32: {}
+
   html-encoding-sniffer@4.0.0:
     dependencies:
       whatwg-encoding: 3.1.1
@@ -12156,6 +12354,8 @@ snapshots:
 
   nanoid@3.3.16: {}
 
+  nanoid@5.1.16: {}
+
   nanostores@1.4.2: {}
 
   negotiator@0.6.3: {}
@@ -12306,6 +12506,10 @@ snapshots:
       define-lazy-prop: 2.0.0
       is-docker: 2.2.1
       is-wsl: 2.2.0
+
+  openapi3-ts@4.6.1:
+    dependencies:
+      yaml: 2.9.0
 
   os-tmpdir@1.0.2: {}
 

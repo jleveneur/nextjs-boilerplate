@@ -129,6 +129,12 @@ catalog:
   "@axe-core/playwright": 4.12.1
   "@lhci/cli": 0.15.1
 
+  # --- Public API (Hono) -------------------------------------------------
+  hono: 4.12.32
+  "@hono/zod-openapi": 1.5.1
+  "@hono/node-server": 2.0.12
+  "@scalar/hono-api-reference": 0.11.12
+
   # --- Design system -----------------------------------------------------
   clsx: 2.1.1
   tailwind-merge: 3.6.0
@@ -156,3 +162,7 @@ minimumReleaseAgeExclude:
   - "@aws-sdk/s3-request-presigner@3.1099.0"
   - "@types/react@19.2.18"
   - bullmq@5.81.3
+  - "@scalar/client-side-rendering@0.3.5"
+  - "@scalar/hono-api-reference@0.11.12"
+  - "@scalar/schemas@0.8.0"
+  - "@scalar/types@0.17.0"

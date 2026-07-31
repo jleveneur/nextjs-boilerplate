@@ -1,0 +1,44 @@
+{
+  "name": "@repo/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Public REST API — Hono, OpenAPI, and the billing slice over API keys.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=../../.env src/index.ts",
+    "start": "tsx --env-file=../../.env src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "openapi:generate": "tsx src/openapi-generate.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "catalog:",
+    "@hono/zod-openapi": "catalog:",
+    "@repo/auth": "workspace:*",
+    "@repo/cache": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/core": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/email": "workspace:*",
+    "@repo/env": "workspace:*",
+    "@repo/errors": "workspace:*",
+    "@repo/jobs": "workspace:*",
+    "@repo/logger": "workspace:*",
+    "@repo/observability": "workspace:*",
+    "@repo/types": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "@scalar/hono-api-reference": "catalog:",
+    "drizzle-orm": "catalog:",
+    "hono": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  },
+  "repo": {
+    "layer": 4,
+    "runtime": "node"
+  }
+}
