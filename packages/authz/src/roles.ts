@@ -15,6 +15,8 @@ const memberPermissions: readonly Action[] = [
   PERMISSIONS["invoice:update"],
   PERMISSIONS["invoice:export"],
   PERMISSIONS["apiKey:list"],
+  PERMISSIONS["asset:create"],
+  PERMISSIONS["asset:read"],
 ];
 
 const adminPermissions: readonly Action[] = [

@@ -2,6 +2,17 @@
 import "server-only";
 
 export {
+  ASSET_CONFIRMED,
+  assetConfirmedEvent,
+  confirmUpload,
+  markAssetFailed,
+  markAssetReady,
+  reconcileOrphanAssets,
+  requestUpload,
+  type AssetConfirmedEvent,
+  type AssetConfirmedPayload,
+} from "./assets/index.ts";
+export {
   assertCanVoidInvoice,
   BILLING_ERROR_CODES,
   canVoidInvoice,
@@ -19,6 +30,12 @@ export {
   type InvoiceVoidedPayload,
 } from "./billing/index.ts";
 export type { Ctx, CtxPorts } from "./ctx.ts";
+export { mapOutboxEventToJob, type MappedJob } from "./outbox/map-event-to-job.ts";
+export {
+  relayOutboxBatch,
+  type RelayOutboxBatchOptions,
+  type RelayOutboxBatchResult,
+} from "./outbox/relay.ts";
 export {
   writeOutboxEvent,
   type OutboxRow,
@@ -43,3 +60,4 @@ export type {
   SendEmailInput,
   SendEmailResult,
 } from "./ports/index.ts";
+export { systemActorForOrganization } from "./system-actor.ts";

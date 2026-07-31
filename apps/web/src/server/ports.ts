@@ -130,12 +130,17 @@ export function adaptEmailMailer(mailer: EmailMailer): Mailer {
   };
 }
 
-export function createAppPorts(options: { redisUrl: string; emailMailer: EmailMailer }): CtxPorts {
+export function createAppPorts(options: {
+  appEnv: string;
+  redisUrl: string;
+  emailMailer: EmailMailer;
+}): CtxPorts {
   const events = createInProcessEventBus();
   // Lazy BullMQ connection — avoid opening Redis during `next build`.
   let jobs: ReturnType<typeof createBullMqJobQueue> | undefined;
 
   return {
+    appEnv: options.appEnv,
     clock: createSystemClock(),
     ids: createUuidIdGenerator(),
     events,

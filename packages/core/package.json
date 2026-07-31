@@ -21,6 +21,7 @@
     "@repo/errors": "workspace:*",
     "@repo/jobs": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",
     "drizzle-orm": "catalog:",

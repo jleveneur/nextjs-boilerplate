@@ -1,3 +1,19 @@
+export {
+  ALLOWED_UPLOAD_CONTENT_TYPES,
+  MAX_UPLOAD_BYTES,
+  assetSchema,
+  assetStatusSchema,
+  confirmUploadInputSchema,
+  confirmUploadOutputSchema,
+  requestUploadInputSchema,
+  requestUploadOutputSchema,
+  type Asset,
+  type AssetStatus,
+  type ConfirmUploadInput,
+  type ConfirmUploadOutput,
+  type RequestUploadInput,
+  type RequestUploadOutput,
+} from "./asset.ts";
 export { createdAtIdCursorSchema, type CreatedAtIdCursor } from "./cursor-payload.ts";
 export {
   assetIdSchema,

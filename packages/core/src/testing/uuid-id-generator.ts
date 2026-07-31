@@ -1,4 +1,4 @@
-import type { InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
+import type { AssetId, InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
 import { generateUuidV7 } from "@repo/utils";
 
 import type { IdGenerator } from "../ports/id-generator.ts";
@@ -6,6 +6,11 @@ import type { IdGenerator } from "../ports/id-generator.ts";
 function brandInvoiceId(id: string): InvoiceId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
   return id as InvoiceId;
+}
+
+function brandAssetId(id: string): AssetId {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
+  return id as AssetId;
 }
 
 function brandOrganizationId(id: string): OrganizationId {
@@ -28,6 +33,7 @@ export function createUuidIdGenerator(): IdGenerator {
   return {
     uuidV7: () => generateUuidV7(),
     invoiceId: () => brandInvoiceId(generateUuidV7()),
+    assetId: () => brandAssetId(generateUuidV7()),
     organizationId: () => brandOrganizationId(generateUuidV7()),
     userId: () => brandUserId(generateUuidV7()),
     outboxId: () => brandOutboxId(generateUuidV7()),
@@ -45,6 +51,7 @@ export function createSequenceIdGenerator(prefix = "01900000-0000-7000-8000"): I
   return {
     uuidV7: next,
     invoiceId: () => brandInvoiceId(next()),
+    assetId: () => brandAssetId(next()),
     organizationId: () => brandOrganizationId(next()),
     userId: () => brandUserId(next()),
     outboxId: () => brandOutboxId(next()),

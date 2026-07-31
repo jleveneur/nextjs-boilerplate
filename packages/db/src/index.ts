@@ -12,7 +12,20 @@ export {
   type QueryLogEvent,
   type SqlClient,
 } from "./client.ts";
-export { findAssetById, type AssetRow } from "./repositories/asset.repository.ts";
+export {
+  findAssetById,
+  insertAsset,
+  listStalePendingAssets,
+  updateAssetStatus,
+  type AssetRow,
+  type InsertAssetInput,
+} from "./repositories/asset.repository.ts";
+export {
+  claimPendingOutboxEvents,
+  markOutboxFailed,
+  markOutboxPublished,
+  type OutboxClaimRow,
+} from "./repositories/outbox.repository.ts";
 export * from "./schema/index.ts";
 export { scopedWhere, tenantFilter, type TenantCtx, type TenantScopedTable } from "./tenant.ts";
 export {

@@ -27,8 +27,10 @@ export default mergeConfig(
           "src/ctx.ts",
           "src/testing/index.ts",
           "src/ports/**",
-          // Covered by integration tests (Postgres).
+          // Covered by integration tests (Postgres / worker).
           "src/outbox/**",
+          "src/assets/**",
+          "src/system-actor.ts",
           "src/billing/billing.repository.ts",
           "src/billing/billing.mapper.ts",
           "src/billing/index.ts",

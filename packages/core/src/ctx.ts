@@ -21,6 +21,8 @@ import type {
 } from "./ports/index.ts";
 
 export type CtxPorts = {
+  /** `APP_ENV` — first segment of storage object keys. */
+  appEnv: string;
   clock: Clock;
   ids: IdGenerator;
   events: EventBus;

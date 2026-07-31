@@ -2,7 +2,7 @@
 import "server-only";
 
 import { createAuth, type Auth } from "@repo/auth";
-import { subscribeInvoiceVoidedNotify, type CtxPorts } from "@repo/core";
+import type { CtxPorts } from "@repo/core";
 import { createDb, type Database } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
@@ -115,11 +115,10 @@ function buildContainer(): AppContainer {
   });
 
   const ports = createAppPorts({
+    appEnv: env.APP_ENV,
     redisUrl: env.REDIS_URL,
     emailMailer,
   });
-
-  subscribeInvoiceVoidedNotify(ports.events, ports.jobs);
 
   return { db, logger, auth, ports, emailMailer };
 }

@@ -116,6 +116,7 @@ describe("core test ports", () => {
   it("generates sequence and uuid ids", () => {
     const seq = createSequenceIdGenerator();
     expect(seq.invoiceId()).toMatch(/^01900000-0000-7000-8000-/);
+    expect(seq.assetId()).toMatch(/^01900000-0000-7000-8000-/);
     expect(seq.organizationId()).not.toBe(seq.userId());
     expect(seq.outboxId()).toBeTruthy();
     expect(seq.uuidV7()).toBeTruthy();
@@ -124,6 +125,7 @@ describe("core test ports", () => {
     expect(uuid.invoiceId()).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     );
+    expect(uuid.assetId()).toBeTruthy();
     expect(uuid.organizationId()).toBeTruthy();
     expect(uuid.userId()).toBeTruthy();
     expect(uuid.outboxId()).toBeTruthy();

@@ -1,4 +1,4 @@
-import type { InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
+import type { AssetId, InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
 
 /**
  * ID factory for domain writes.
@@ -8,6 +8,7 @@ import type { InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
 export type IdGenerator = {
   uuidV7(): string;
   invoiceId(): InvoiceId;
+  assetId(): AssetId;
   organizationId(): OrganizationId;
   userId(): UserId;
   outboxId(): OutboxId;

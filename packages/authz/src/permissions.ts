@@ -21,6 +21,8 @@ export const PERMISSIONS = {
   "apiKey:create": "apiKey:create",
   "apiKey:revoke": "apiKey:revoke",
   "apiKey:list": "apiKey:list",
+  "asset:create": "asset:create",
+  "asset:read": "asset:read",
 } as const;
 
 export type Action = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

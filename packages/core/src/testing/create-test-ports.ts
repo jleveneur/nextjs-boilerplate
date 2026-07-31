@@ -18,6 +18,7 @@ export type TestPorts = CtxPorts & {
 /** Full in-memory port bundle for service unit tests. */
 export function createTestPorts(): TestPorts {
   return {
+    appEnv: "test",
     clock: createFakeClock(),
     ids: createSequenceIdGenerator(),
     events: createInMemoryEventBus(),

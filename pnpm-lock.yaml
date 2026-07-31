@@ -614,6 +614,9 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
+      '@repo/storage':
+        specifier: workspace:*
+        version: link:../storage
       '@repo/types':
         specifier: workspace:*
         version: link:../types
