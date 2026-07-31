@@ -191,8 +191,11 @@ jobs:
     name: Changeset
     runs-on: ubuntu-latest
     # Apps are ignored in .changeset/config.json; this fails when a packages/*
-    # surface changes without a changeset file.
-    if: github.event_name == 'pull_request'
+    # surface changes without a changeset file. Skip the Version Packages PR —
+    # that branch consumes changesets and bumps versions by design.
+    if: >
+      github.event_name == 'pull_request' &&
+      github.head_ref != 'changeset-release/main'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
