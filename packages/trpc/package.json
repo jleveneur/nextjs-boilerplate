@@ -5,7 +5,8 @@
   "description": "tRPC init, layered procedures, and feature routers.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./router": "./src/root.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

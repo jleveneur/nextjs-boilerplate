@@ -30,6 +30,7 @@ export {
   resend,
   s3,
   sentry,
+  smtp,
   shared,
   stripe,
   appEnvs,

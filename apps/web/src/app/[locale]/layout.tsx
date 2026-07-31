@@ -3,7 +3,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { ThemeProvider } from "../../components/theme-provider.tsx";
+import { AppProviders } from "../../components/providers.tsx";
 import { routing } from "../../i18n/routing.ts";
 
 // oxlint-disable-next-line import/no-unassigned-import -- Next.css entry
@@ -31,7 +31,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} suppressHydrationWarning>
       <body>
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider>{children}</ThemeProvider>
+          <AppProviders>{children}</AppProviders>
         </NextIntlClientProvider>
       </body>
     </html>
