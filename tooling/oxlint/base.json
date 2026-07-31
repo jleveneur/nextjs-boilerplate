@@ -62,6 +62,7 @@
     "**/.next/**",
     "**/coverage/**",
     "**/node_modules/**",
-    "**/*.generated.*"
+    "**/*.generated.*",
+    "**/next-env.d.ts"
   ]
 }

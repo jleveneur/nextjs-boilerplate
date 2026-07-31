@@ -1,0 +1,35 @@
+{
+  "name": "@repo/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Next.js web application. Phase 7 ships a design-system gallery only.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc --noEmit",
+    "bundle-budget": "node --experimental-strip-types ../../scripts/check-bundle-budget.ts"
+  },
+  "dependencies": {
+    "@repo/ui": "workspace:*",
+    "next": "catalog:",
+    "next-themes": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/tailwind-config": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  },
+  "repo": {
+    "layer": 4,
+    "runtime": "browser"
+  }
+}
