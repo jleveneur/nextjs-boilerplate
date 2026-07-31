@@ -37,6 +37,8 @@ ignorePaths:
   - "**/*.generated.*"
   - "**/openapi.json"
   - .git/**
+  # Locale catalogs are translated prose, not English spelling targets.
+  - apps/*/src/messages/**
 
 # Hex colours, base64-ish blobs, and URLs are not words.
 ignoreRegExpList:

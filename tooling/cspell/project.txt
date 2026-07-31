@@ -230,3 +230,4 @@ unbrand # @repo/types: recovers the base type behind a Brand
 unstub # Vitest: unstubEnvs / unstubGlobals
 rediss # TLS Redis URL scheme (redis:// vs rediss://)
 whsec # Stripe webhook secret prefix
+nosniff # X-Content-Type-Options header value
