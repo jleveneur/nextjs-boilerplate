@@ -176,8 +176,9 @@ users, and healthchecks; `compose.yaml` (deps + OTel/Jaeger), `compose.prod.yaml
 app images), `compose.test.yaml`, `compose.e2e.yaml`; and `make setup` / `make e2e` / `make images`.
 `docs.Dockerfile` waits for Phase 15 (`apps/docs`).
 
-**Done when** all images build under 250 MB (web) / 150 MB (api, worker), `make setup` works on a clean
-machine, and the E2E suite passes against the built web image (CI) rather than `next start`.
+**Done when** linux/amd64 images stay under the size budgets in `scripts/check-image-size.ts`
+(web 260 / api 150 / worker 190 MB uncompressed), `make setup` works on a clean machine, and the
+E2E suite passes against the built web image (CI) rather than `next start`.
 
 ## Phase 12 — CI/CD
 

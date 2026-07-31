@@ -168,11 +168,11 @@ E2E_ENV := \
 e2e: ## Playwright E2E against the built web image (CI path)
 	-$(COMPOSE_TEST) down --remove-orphans
 	-$(COMPOSE_E2E) down --remove-orphans
-	docker build -f docker/web.Dockerfile -t repo-web:local \
+	$(DOCKER_BUILD) -f docker/web.Dockerfile -t repo-web:local \
 		--build-arg NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000 \
 		--build-arg NEXT_PUBLIC_APP_ENV=test \
 		.
-	$(COMPOSE_E2E) up -d --wait
+	$(COMPOSE_E2E) up -d --no-build --wait
 	$(E2E_ENV) pnpm --filter @repo/db exec tsx src/migrate.ts
 	$(E2E_ENV) pnpm --filter @repo/db exec tsx src/seeds/run.ts test
 	pnpm --filter @repo/web exec playwright install chromium
@@ -199,10 +199,14 @@ lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
 ## Images
 ## ----------------------------------------------------------------------------
 
+# Provenance/SBOM attestations inflate `docker image inspect` size without
+# shipping in the runnable image config we care about for budgets.
+DOCKER_BUILD := docker build --provenance=false --sbom=false
+
 images: ## Build web/api/worker images tagged *:local
-	docker build -f docker/web.Dockerfile -t repo-web:local .
-	docker build -f docker/api.Dockerfile -t repo-api:local .
-	docker build -f docker/worker.Dockerfile -t repo-worker:local .
+	$(DOCKER_BUILD) -f docker/web.Dockerfile -t repo-web:local .
+	$(DOCKER_BUILD) -f docker/api.Dockerfile -t repo-api:local .
+	$(DOCKER_BUILD) -f docker/worker.Dockerfile -t repo-worker:local .
 	$(MAKE) image-size
 
 image-size: ## Fail if local app images exceed Phase 11 budgets

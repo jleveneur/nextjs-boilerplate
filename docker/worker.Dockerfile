@@ -35,7 +35,18 @@ WORKDIR /app
 ENV NODE_ENV=production
 # sharp stays external from the bundle; install the Alpine/musl binary here.
 COPY --from=builder --chown=app:nodejs /app/apps/worker/dist ./dist
-RUN npm install --omit=dev sharp@0.35.3 \
+RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.3 \
+  && rm -rf package.json package-lock.json /root/.npm /tmp/* \
+  # Drop package managers after the sharp install (~20–25 MB on amd64).
+  && rm -rf \
+    /opt/yarn-* \
+    /usr/local/bin/yarn \
+    /usr/local/bin/yarnpkg \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /usr/local/bin/corepack \
   && chown -R app:nodejs /app/node_modules
 USER app
 EXPOSE 3002

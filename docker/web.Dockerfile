@@ -50,13 +50,23 @@ COPY --from=builder --chown=app:nodejs /app/apps/web/.next/static ./apps/web/.ne
 # File tracing often drops sharp's Alpine libvips `.so` from the pnpm store
 # layout. Install a complete platform binary, then patch the traced paths Next
 # still resolves for `@repo/storage` / image optimization.
-RUN npm install --omit=dev sharp@0.35.3 \
+RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.3 \
   && LIBVIPS_SO="$(find /app/node_modules/@img -name 'libvips-cpp.so*' | head -1)" \
   && test -n "$LIBVIPS_SO" \
   && LIBVIPS_DIR="$(dirname "$LIBVIPS_SO")" \
   && for dest in /app/node_modules/.pnpm/@img+sharp-libvips-linuxmusl-*/node_modules/@img/sharp-libvips-linuxmusl-*/lib; do \
        if [ -d "$dest" ]; then cp -a "$LIBVIPS_DIR"/. "$dest"/; fi; \
      done \
+  && rm -rf package.json package-lock.json /root/.npm /tmp/* \
+  && rm -rf \
+    /opt/yarn-* \
+    /usr/local/bin/yarn \
+    /usr/local/bin/yarnpkg \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /usr/local/bin/corepack \
   && chown -R app:nodejs /app/node_modules
 USER app
 EXPOSE 3000

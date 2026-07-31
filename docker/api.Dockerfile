@@ -31,7 +31,18 @@ RUN pnpm --filter @repo/api build
 FROM ${NODE_IMAGE} AS runner
 RUN apk add --no-cache libc6-compat \
   && addgroup -S nodejs \
-  && adduser -S app -G nodejs
+  && adduser -S app -G nodejs \
+  # Runtime only needs `node`. Yarn/npm/corepack are ~20–25 MB on amd64.
+  && rm -rf \
+    /opt/yarn-* \
+    /usr/local/bin/yarn \
+    /usr/local/bin/yarnpkg \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /usr/local/bin/corepack \
+  && rm -rf /root/.npm /tmp/*
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder --chown=app:nodejs /app/apps/api/dist ./dist

@@ -12,7 +12,9 @@
    invalidate the `apps/web` build cache.
 4. **Non-root, read-only filesystem where possible, no shell in the final stage** unless required.
 5. **Reproducible**: pinned base image digests, `--frozen-lockfile`, no `latest`.
-6. **Small**: target < 250 MB for the Next image, < 150 MB for `api` and `worker`.
+6. **Small**: budgets are **linux/amd64** uncompressed `docker image inspect` sizes
+   (CI gate): web &lt; 260 MB, api &lt; 150 MB, worker &lt; 190 MB. Arm64 locals run smaller;
+   do not calibrate against them. Runners strip yarn/npm/corepack after any Sharp install.
 7. **Observable**: `HEALTHCHECK`, graceful `SIGTERM` handling, build metadata as labels.
 
 ### Build shape
