@@ -34,7 +34,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 FROM deps AS builder
 COPY --from=pruner /app/out/full/ .
-RUN pnpm turbo run build --filter=@repo/api
+# Prefer `pnpm --filter … build` over `turbo run` here so Dockerfile ENV
+# (e.g. SKIP_ENV_VALIDATION) is not stripped by Turbo's strict env mode.
+RUN pnpm --filter @repo/api build
 # tsdown bundles to a single JS artifact
 
 FROM node:24-alpine AS runner

@@ -31,7 +31,9 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
     NEXT_PUBLIC_APP_ENV=${NEXT_PUBLIC_APP_ENV} \
     SKIP_ENV_VALIDATION=1 \
     NODE_ENV=production
-RUN pnpm turbo run build --filter=@repo/web
+# Call the package script directly — Turbo's strict env mode would strip
+# SKIP_ENV_VALIDATION before next build. Prune still uses turbo above.
+RUN pnpm --filter @repo/web build
 
 FROM ${NODE_IMAGE} AS runner
 RUN apk add --no-cache libc6-compat \

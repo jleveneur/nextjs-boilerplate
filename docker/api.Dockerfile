@@ -25,7 +25,8 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 FROM deps AS builder
 COPY --from=pruner /app/out/full/ .
 ENV SKIP_ENV_VALIDATION=1
-RUN pnpm turbo run build --filter=@repo/api
+# Package script directly (not `turbo run`) so Dockerfile ENV is not filtered.
+RUN pnpm --filter @repo/api build
 
 FROM ${NODE_IMAGE} AS runner
 RUN apk add --no-cache libc6-compat \
