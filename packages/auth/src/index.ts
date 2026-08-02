@@ -16,7 +16,10 @@ export type {
   AuthSchema,
   CreateAuthOptions,
   OAuthProviderConfig,
+  OnOrganizationCreatedInput,
+  OnUserCreatedInput,
   SendInvitationEmailInput,
   SendMagicLinkInput,
   SendVerificationEmailInput,
+  SignupMethod,
 } from "./types.ts";

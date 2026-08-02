@@ -83,6 +83,7 @@
     "loadError": "Could not load invoices.",
     "saveError": "Could not save the invoice.",
     "voidError": "Could not void the invoice.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "newPortalHint": "You're on the new billing portal preview."
   }
 }

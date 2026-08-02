@@ -50,6 +50,7 @@ export type {
   EventBus,
   EventHandler,
   FileStore,
+  FlagContext,
   FlagProvider,
   IdGenerator,
   JobQueue,

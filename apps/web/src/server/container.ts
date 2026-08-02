@@ -1,6 +1,7 @@
 // oxlint-disable-next-line import/no-unassigned-import -- credential firewall
 import "server-only";
 
+import { capture } from "@repo/analytics";
 import { createAuth, type Auth } from "@repo/auth";
 import type { CtxPorts } from "@repo/core";
 import { createDb, type Database } from "@repo/db";
@@ -66,6 +67,23 @@ function buildContainer(): AppContainer {
     });
   };
 
+  // Ports before auth so signup hooks can capture through the analytics sink.
+  const { ports, closeAnalytics } = createAppPorts({
+    appEnv: env.APP_ENV,
+    redisUrl: env.REDIS_URL,
+    emailMailer,
+    ...(env.POSTHOG_API_KEY !== undefined ? { posthogApiKey: env.POSTHOG_API_KEY } : {}),
+    ...(env.POSTHOG_HOST !== undefined ? { posthogHost: env.POSTHOG_HOST } : {}),
+    ...(env.FLAGS_JSON !== undefined ? { flagsJson: env.FLAGS_JSON } : {}),
+    s3: {
+      endpoint: env.S3_ENDPOINT,
+      region: env.S3_REGION,
+      bucket: env.S3_BUCKET,
+      accessKeyId: env.S3_ACCESS_KEY_ID,
+      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+    },
+  });
+
   const { auth } = createAuth({
     db,
     schema: authSchema,
@@ -117,21 +135,11 @@ function buildContainer(): AppContainer {
         html: `<p>${inviterName} invited you to ${organizationName}. Accept: <a href="${url}">${url}</a></p>`,
       });
     },
-  });
-
-  const { ports, closeAnalytics } = createAppPorts({
-    appEnv: env.APP_ENV,
-    redisUrl: env.REDIS_URL,
-    emailMailer,
-    ...(env.POSTHOG_API_KEY !== undefined ? { posthogApiKey: env.POSTHOG_API_KEY } : {}),
-    ...(env.POSTHOG_HOST !== undefined ? { posthogHost: env.POSTHOG_HOST } : {}),
-    ...(env.FLAGS_JSON !== undefined ? { flagsJson: env.FLAGS_JSON } : {}),
-    s3: {
-      endpoint: env.S3_ENDPOINT,
-      region: env.S3_REGION,
-      bucket: env.S3_BUCKET,
-      accessKeyId: env.S3_ACCESS_KEY_ID,
-      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+    onUserCreated: async ({ method }) => {
+      await capture(ports.analytics, "user.signed_up", { method });
+    },
+    onOrganizationCreated: async ({ organizationId, plan }) => {
+      await capture(ports.analytics, "organization.created", { organizationId, plan });
     },
   });
 

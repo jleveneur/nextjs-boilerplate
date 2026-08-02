@@ -15,6 +15,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useMemo } from "react";
 
+import { useFlag } from "../../components/flags-provider.tsx";
 import { Link } from "../../i18n/navigation.ts";
 import { formatAmountMinor, invoiceStatusBadgeVariant } from "./format-money.ts";
 import { useInvoiceList } from "./hooks.ts";
@@ -32,6 +33,7 @@ type Props = {
 export function InvoiceList({ orgSlug }: Props) {
   const t = useTranslations("Billing");
   const locale = useLocale();
+  const newBillingPortal = useFlag("new-billing-portal");
   const [status, setStatus] = useQueryState(
     "status",
     parseAsStringLiteral(STATUS_FILTERS).withDefault("all"),
@@ -54,6 +56,10 @@ export function InvoiceList({ orgSlug }: Props) {
           {t("create")}
         </Button>
       </div>
+
+      {newBillingPortal ? (
+        <p className="text-muted-foreground text-sm">{t("newPortalHint")}</p>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="text-muted-foreground text-sm" htmlFor="invoice-status-filter">

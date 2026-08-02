@@ -83,6 +83,7 @@
     "loadError": "Impossible de charger les factures.",
     "saveError": "Impossible d'enregistrer la facture.",
     "voidError": "Impossible d'annuler la facture.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "newPortalHint": "Vous utilisez l'aperçu du nouveau portail de facturation."
   }
 }

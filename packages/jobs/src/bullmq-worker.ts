@@ -8,6 +8,7 @@
 import { Queue, UnrecoverableError, Worker, type Job } from "bullmq";
 import { Redis } from "ioredis";
 
+import { createBullMqMetrics } from "./metrics.ts";
 import { isJobName, parseJobPayload } from "./registry.ts";
 import { unwrapJobData, withJobTraceContext } from "./trace-envelope.ts";
 import type { CreateBullMqWorkerOptions, DeadLetterRecord } from "./types.ts";
@@ -30,6 +31,12 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
   const connection = new Redis(options.redisUrl, {
     maxRetriesPerRequest: null,
   });
+
+  const waitingQueue = new Queue(queueName, {
+    connection,
+    ...(options.prefix === undefined ? {} : { prefix: options.prefix }),
+  });
+  const metricsHandle = createBullMqMetrics(waitingQueue);
 
   const dlq = new Queue(dlqName, {
     connection,
@@ -69,32 +76,37 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
         jobId: job.id ?? job.name,
         attemptsMade: job.attemptsMade,
       };
+      const started = performance.now();
 
-      await withJobTraceContext(job.name, trace, async () => {
-        // Exhaustive switch keeps payload/handler pairing sound as jobs are added.
-        switch (job.name) {
-          case "email.send": {
-            const payload = parseJobPayload(job.name, rawPayload);
-            await options.handlers[job.name](payload, meta);
-            return;
+      try {
+        await withJobTraceContext(job.name, trace, async () => {
+          // Exhaustive switch keeps payload/handler pairing sound as jobs are added.
+          switch (job.name) {
+            case "email.send": {
+              const payload = parseJobPayload(job.name, rawPayload);
+              await options.handlers[job.name](payload, meta);
+              return;
+            }
+            case "invoice.voided.notify": {
+              const payload = parseJobPayload(job.name, rawPayload);
+              await options.handlers[job.name](payload, meta);
+              return;
+            }
+            case "image.derive": {
+              const payload = parseJobPayload(job.name, rawPayload);
+              await options.handlers[job.name](payload, meta);
+              return;
+            }
+            case "asset.reconcile-orphans": {
+              const payload = parseJobPayload(job.name, rawPayload);
+              await options.handlers[job.name](payload, meta);
+              return;
+            }
           }
-          case "invoice.voided.notify": {
-            const payload = parseJobPayload(job.name, rawPayload);
-            await options.handlers[job.name](payload, meta);
-            return;
-          }
-          case "image.derive": {
-            const payload = parseJobPayload(job.name, rawPayload);
-            await options.handlers[job.name](payload, meta);
-            return;
-          }
-          case "asset.reconcile-orphans": {
-            const payload = parseJobPayload(job.name, rawPayload);
-            await options.handlers[job.name](payload, meta);
-            return;
-          }
-        }
-      });
+        });
+      } finally {
+        metricsHandle.recordDuration(queueName, job.name, (performance.now() - started) / 1000);
+      }
     },
     {
       connection,
@@ -115,6 +127,8 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
       return;
     }
 
+    metricsHandle.recordFailure(queueName, job.name);
+
     void moveToDeadLetter(job, error.message).catch(() => {
       // DLQ move failures are logged by the composition root if onDeadLetter throws.
     });
@@ -127,7 +141,9 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
       return worker.waitUntilReady().then(() => undefined);
     },
     async close() {
+      metricsHandle.dispose();
       await worker.close();
+      await waitingQueue.close();
       await dlq.close();
       await connection.quit();
     },

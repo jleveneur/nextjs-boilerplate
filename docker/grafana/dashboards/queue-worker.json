@@ -29,7 +29,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(bullmq_job_duration_bucket[5m])) by (le, queue))",
+          "expr": "histogram_quantile(0.95, sum(rate(bullmq_job_duration_seconds_bucket[5m])) by (le, queue))",
           "legendFormat": "{{queue}}"
         }
       ]

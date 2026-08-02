@@ -38,6 +38,9 @@ export const flags = {
 
 export type FlagName = keyof typeof flags;
 
+/** Server-evaluated set passed to the client (no flash of the wrong variant). */
+export type FlagBootstrap = Readonly<Record<FlagName, boolean>>;
+
 export function hasFlagName(name: string): name is FlagName {
   return name in flags;
 }

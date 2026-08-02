@@ -3,6 +3,7 @@ import "server-only";
 
 export { createBullMqJobQueue, type BullMqJobQueue } from "./bullmq-queue.ts";
 export { createBullMqWorker, type BullMqWorker } from "./bullmq-worker.ts";
+export { createBullMqMetrics, type BullMqMetrics } from "./metrics.ts";
 export {
   JOB_NAMES,
   isJobName,

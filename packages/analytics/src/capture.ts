@@ -12,7 +12,7 @@ import type { AnalyticsSink } from "./types.ts";
  * to the sink. Throws on schema failure (programmer error at the call site).
  */
 export async function capture<Name extends EventName>(
-  sink: AnalyticsSink,
+  sink: Pick<AnalyticsSink, "capture">,
   name: Name,
   properties: EventProperties<Name>,
 ): Promise<void> {

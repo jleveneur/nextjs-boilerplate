@@ -36,7 +36,11 @@ describe("captureUnexpectedException", () => {
     });
 
     expect(setTag).toHaveBeenCalledWith("requestId", "req_1");
-    expect(setUser).toHaveBeenCalledWith({ id: "user_1", segment: "org_1" });
+    expect(setUser).toHaveBeenCalledWith({
+      id: expect.stringMatching(/^[a-f0-9]{32}$/),
+      segment: expect.stringMatching(/^[a-f0-9]{32}$/),
+    });
+    expect(setUser.mock.calls[0]?.[0]).not.toEqual({ id: "user_1", segment: "org_1" });
     expect(setExtras).toHaveBeenCalledWith({ route: "/v1/invoices" });
     expect(captureException).toHaveBeenCalledWith(error);
   });
@@ -47,9 +51,12 @@ describe("captureUnexpectedException", () => {
     expect(captureException).toHaveBeenCalledOnce();
   });
 
-  it("sets only organization on the user when userId is absent", () => {
+  it("sets only hashed organization on the user when userId is absent", () => {
     setUser.mockClear();
     captureUnexpectedException(new Error("org-only"), { organizationId: "org_2" });
-    expect(setUser).toHaveBeenCalledWith({ segment: "org_2" });
+    expect(setUser).toHaveBeenCalledWith({
+      segment: expect.stringMatching(/^[a-f0-9]{32}$/),
+    });
+    expect(setUser.mock.calls[0]?.[0]).not.toEqual({ segment: "org_2" });
   });
 });

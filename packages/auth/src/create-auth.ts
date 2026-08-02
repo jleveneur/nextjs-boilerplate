@@ -169,12 +169,19 @@ export function createAuth(options: CreateAuthOptions) {
                 .replace(/[^a-z0-9-]/g, "-") || "org";
             const slug = `${slugBase}-${user.id.slice(0, 8)}`;
             // `userId` is a server-only field — call without session headers.
-            await auth.api.createOrganization({
+            const personalOrg = await auth.api.createOrganization({
               body: {
                 name: `${user.name}'s workspace`,
                 slug,
                 userId: user.id,
               },
+            });
+
+            // Composition-root analytics hooks — auth stays free of `@repo/analytics`.
+            await options.onUserCreated?.({ userId: user.id, method: "password" });
+            await options.onOrganizationCreated?.({
+              organizationId: personalOrg.id,
+              plan: "free",
             });
           },
         },

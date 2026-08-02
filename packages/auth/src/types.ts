@@ -37,6 +37,18 @@ export type SendInvitationEmailInput = {
   url: string;
 };
 
+export type SignupMethod = "password" | "oauth" | "magic_link";
+
+export type OnUserCreatedInput = {
+  userId: string;
+  method: SignupMethod;
+};
+
+export type OnOrganizationCreatedInput = {
+  organizationId: string;
+  plan: string;
+};
+
 export type CreateAuthOptions = {
   db: AuthDatabase;
   schema: AuthSchema;
@@ -57,4 +69,11 @@ export type CreateAuthOptions = {
    * session mutations (active org, impersonation) are visible immediately.
    */
   cookieCache?: boolean;
+  /**
+   * Fired after a user row is created (composition root maps to analytics).
+   * Default signup method is `password`; OAuth/magic-link refine later if needed.
+   */
+  onUserCreated?: (input: OnUserCreatedInput) => Promise<void>;
+  /** Fired after the personal organization is created at signup. */
+  onOrganizationCreated?: (input: OnOrganizationCreatedInput) => Promise<void>;
 };

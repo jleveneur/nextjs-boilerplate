@@ -489,14 +489,17 @@ levels, structure, or redaction.
 **Health** Stable and widely used.
 **Exit** Low — behind `@repo/logger`.
 
-### Sentry 10.69
+### Sentry 10.69 (`@sentry/node` + `@sentry/browser`)
 
 **Why** Error grouping, release tracking, source maps, and OTel-compatible tracing. Grouping and
-deduplication are the hard part and the reason not to hand-roll this.
+deduplication are the hard part and the reason not to hand-roll this. Server processes use
+`@sentry/node` via `@repo/observability`; the web client boots `@sentry/browser` only when
+`NEXT_PUBLIC_SENTRY_DSN` is set.
 **Instead of** _Self-hosted GlitchTip_ — a viable open-source path if data residency demands it, and
 API-compatible. _Rollbar / Bugsnag_ — comparable. _Logs alone_ — no grouping, no regression detection.
 **Health** The category standard; self-hostable, though heavy.
-**Exit** Low-Medium — initialisation is centralised in `@repo/observability`.
+**Exit** Low-Medium — initialisation is centralised in `@repo/observability` (server) and a thin
+web provider (browser).
 
 ### PostHog 1.408
 

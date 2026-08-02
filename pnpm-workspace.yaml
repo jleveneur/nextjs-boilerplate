@@ -133,6 +133,7 @@ catalog:
   "@opentelemetry/resources": 2.10.0
   "@opentelemetry/semantic-conventions": 1.43.0
   "@sentry/node": 10.69.0
+  "@sentry/browser": 10.69.0
   better-auth: 1.6.25
   "@better-auth/api-key": 1.6.25
   "@better-auth/passkey": 1.6.25
