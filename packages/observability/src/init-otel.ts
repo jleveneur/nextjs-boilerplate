@@ -1,10 +1,16 @@
 /**
  * OpenTelemetry Node SDK bootstrap (OTLP HTTP traces + metrics).
+ *
+ * Explicit instrumentations only — the auto-instrumentations meta-package
+ * pulls Mongo/AWS/Kafka/etc. into the api/worker bundles for no gain here.
  */
 
-import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
+import { IORedisInstrumentation } from "@opentelemetry/instrumentation-ioredis";
+import { RuntimeNodeInstrumentation } from "@opentelemetry/instrumentation-runtime-node";
+import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import { NodeSDK } from "@opentelemetry/sdk-node";
@@ -43,10 +49,14 @@ export function initOtel(serviceName: string, options: OtelInitOptions): OtelHan
       exportIntervalMillis: 15_000,
     }),
     instrumentations: [
-      getNodeAutoInstrumentations({
-        "@opentelemetry/instrumentation-fs": { enabled: false },
-        "@opentelemetry/instrumentation-dns": { enabled: false },
-      }),
+      // Inbound HTTP (api) and Node's http/https clients.
+      new HttpInstrumentation(),
+      // Global fetch / undici (outbound calls from api + worker).
+      new UndiciInstrumentation(),
+      // Redis via ioredis (@repo/cache, BullMQ).
+      new IORedisInstrumentation(),
+      // Event-loop / runtime metrics for Grafana RED panels.
+      new RuntimeNodeInstrumentation(),
     ],
   });
 

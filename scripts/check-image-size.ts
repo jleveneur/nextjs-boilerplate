@@ -13,10 +13,13 @@ import { execFileSync } from "node:child_process";
 
 const MiB = 1024 * 1024;
 
-/** Headroom over slimmed linux/amd64 CI measurements (~10%). */
+/**
+ * Headroom over slimmed linux/amd64 CI measurements (~10%).
+ * API raised after Phase 14 OTel/Sentry (maps stay out of the image; JS still grew).
+ */
 const budgets: ReadonlyArray<{ tag: string; maxBytes: number }> = [
   { tag: "repo-web:local", maxBytes: 260 * MiB },
-  { tag: "repo-api:local", maxBytes: 150 * MiB },
+  { tag: "repo-api:local", maxBytes: 165 * MiB },
   { tag: "repo-worker:local", maxBytes: 190 * MiB },
 ];
 

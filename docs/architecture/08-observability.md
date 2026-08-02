@@ -116,8 +116,11 @@ flowchart LR
 
 ### What is instrumented
 
-Auto-instrumentation for HTTP, PostgreSQL, Redis, and outbound fetch. Manual spans for: every
-core service call, every job execution, every external API call, and expensive computations.
+Explicit instrumentations for HTTP, Redis (ioredis), outbound fetch (undici), and Node runtime
+metrics — not the auto-instrumentations meta-package (which would ship unused Mongo/AWS/Kafka
+instrumentations into the api/worker images). Plus manual spans for: Postgres (`postgres.js`)
+repository work, every core service call, every job execution, every external API call, and
+expensive computations.
 
 Span naming is `<layer>.<operation>` (`core.invoice.void`, `db.invoice.findById`), with attributes
 for tenant, actor, and result. High-cardinality values (ids) are span **attributes**, never part

@@ -26,7 +26,9 @@ FROM deps AS builder
 COPY --from=pruner /app/out/full/ .
 ENV SKIP_ENV_VALIDATION=1
 # Package script directly (not `turbo run`) so Dockerfile ENV is not filtered.
-RUN pnpm --filter @repo/worker build
+# Strip sourcemaps from the runtime layer — CI uploads them to Sentry from the host build.
+RUN pnpm --filter @repo/worker build \
+  && find apps/worker/dist -type f -name '*.map' -delete
 
 FROM ${NODE_IMAGE} AS sharp
 WORKDIR /sharp

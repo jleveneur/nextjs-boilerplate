@@ -1,4 +1,3 @@
-import { bootstrapFlags } from "@repo/flags";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -7,7 +6,7 @@ import type { ReactNode } from "react";
 
 import { AppProviders } from "../../components/providers.tsx";
 import { routing } from "../../i18n/routing.ts";
-import { getContainer } from "../../server/container.ts";
+import { getBootstrappedFlags } from "../../server/flag-bootstrap.ts";
 
 // oxlint-disable-next-line import/no-unassigned-import -- Next.css entry
 import "../../styles/globals.css";
@@ -41,7 +40,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   setRequestLocale(locale);
   const messages = await getMessages();
-  const initialFlags = await bootstrapFlags(getContainer().ports.flags);
+  const initialFlags = await getBootstrappedFlags();
 
   return (
     <html lang={locale} suppressHydrationWarning>

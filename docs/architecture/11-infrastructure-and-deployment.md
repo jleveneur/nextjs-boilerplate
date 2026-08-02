@@ -13,9 +13,10 @@
 4. **Non-root, read-only filesystem where possible, no shell in the final stage** unless required.
 5. **Reproducible**: pinned base image digests, `--frozen-lockfile`, no `latest`.
 6. **Small**: budgets are **linux/amd64** uncompressed `docker image inspect` sizes
-   (CI gate): web &lt; 260 MB, api &lt; 150 MB, worker &lt; 190 MB. Arm64 locals run smaller;
+   (CI gate): web &lt; 260 MB, api &lt; 165 MB, worker &lt; 190 MB. Arm64 locals run smaller;
    do not calibrate against them. Runners start from Alpine and copy only the `node`
    binary (plus Sharp where needed), so yarn/npm from the Node image never ship.
+   Hidden sourcemaps are built for Sentry upload but stripped before the runtime `COPY`.
 7. **Observable**: `HEALTHCHECK`, graceful `SIGTERM` handling, build metadata as labels.
 
 ### Build shape
@@ -51,6 +52,8 @@ USER app
 HEALTHCHECK CMD node -e "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1))"
 CMD ["node", "dist/index.mjs"]
 ```
+
+(`docker/api.Dockerfile` deletes `*.map` after `tsdown` so maps never reach the runner.)
 
 Two details that matter more than they look:
 

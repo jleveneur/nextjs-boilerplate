@@ -28,7 +28,9 @@ FROM deps AS builder
 COPY --from=pruner /app/out/full/ .
 ENV SKIP_ENV_VALIDATION=1
 # Package script directly (not `turbo run`) so Dockerfile ENV is not filtered.
-RUN pnpm --filter @repo/api build
+# Strip sourcemaps from the runtime layer — CI uploads them to Sentry from the host build.
+RUN pnpm --filter @repo/api build \
+  && find apps/api/dist -type f -name '*.map' -delete
 
 # Fresh Alpine + only the node binary — avoids shipping yarn/npm from the Node image.
 FROM ${ALPINE_IMAGE} AS runner

@@ -11,21 +11,16 @@ import type {
   DomainEvent,
   EventBus,
   EventHandler,
-  FlagProvider,
   IdGenerator,
   Mailer,
 } from "@repo/core";
 import type { Mailer as EmailMailer } from "@repo/email";
-import {
-  createEnvFlagProvider,
-  createPostHogFlagProvider,
-  hasFlagName,
-  resolveFlag,
-} from "@repo/flags";
 import { createBullMqJobQueue } from "@repo/jobs";
 import { createFileStore } from "@repo/storage";
 import type { AssetId, InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
 import { generateUuidV7 } from "@repo/utils";
+
+import { createFlagPort } from "./flag-bootstrap.ts";
 
 function brandInvoiceId(id: string): InvoiceId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
@@ -105,36 +100,6 @@ export function adaptEmailMailer(mailer: EmailMailer): Mailer {
         ...(input.headers === undefined ? {} : { headers: input.headers }),
         ...(input.replyTo === undefined ? {} : { replyTo: input.replyTo }),
       });
-    },
-  };
-}
-
-function createFlagPort(options: {
-  flagsJson?: string;
-  posthogApiKey?: string;
-  posthogHost?: string;
-}): FlagProvider {
-  const envProvider =
-    options.flagsJson === undefined
-      ? createEnvFlagProvider()
-      : createEnvFlagProvider({ flagsJson: options.flagsJson });
-  const posthogProvider =
-    options.posthogApiKey !== undefined &&
-    options.posthogApiKey !== "" &&
-    options.posthogHost !== undefined
-      ? createPostHogFlagProvider({
-          apiKey: options.posthogApiKey,
-          host: options.posthogHost,
-        })
-      : undefined;
-
-  return {
-    async isEnabled(flag, context) {
-      if (!hasFlagName(flag)) {
-        return false;
-      }
-      const provider = posthogProvider ?? envProvider;
-      return resolveFlag(provider, flag, context);
     },
   };
 }

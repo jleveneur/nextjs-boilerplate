@@ -473,9 +473,13 @@ by keeping Stripe behind the `PaymentGateway` port and never letting Stripe type
 ### OpenTelemetry (`@opentelemetry/sdk-node` 0.221)
 
 **Why** The only vendor-neutral instrumentation standard. Instrumenting once and choosing the backend
-later is the difference between a swappable decision and a rewrite.
+later is the difference between a swappable decision and a rewrite. We register **explicit**
+instrumentations (HTTP, undici, ioredis, runtime-node) rather than
+`@opentelemetry/auto-instrumentations-node`, which pulls dozens of unused libraries into the
+bundled api/worker images.
 **Instead of** _Vendor agents (Datadog, New Relic)_ — better turnkey experience, and re-instrumentation
 is the price of leaving. _No tracing_ — not an option for a distributed system with queues.
+_Auto-instrumentations meta-package_ — convenient, but ~40 instrumentations we do not run.
 **Health** CNCF, industry-wide adoption. The JS SDK's `0.x` versioning on some packages is a known
 annoyance rather than a stability signal.
 **Exit** Low — that is the entire point of the standard.
