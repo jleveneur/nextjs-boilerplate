@@ -21,11 +21,13 @@ test-results/
 blob-report/
 .playwright/
 
-# Environment — every .env EXCEPT the committed example.
-# Secrets belong in infra/secrets/*.enc.yaml (SOPS + age), never here.
+# Environment — every .env EXCEPT committed placeholder catalogs.
+# Inject secrets at deploy time; never commit real values.
 .env
 .env.*
 !.env.example
+!.env.staging.example
+!.env.production.example
 
 # Decrypted secrets must never be committed. If you see one of these in a diff,
 # stop and rotate the values.

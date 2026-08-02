@@ -117,71 +117,141 @@ treated as incomplete work.
 
 ## 4. Secrets management
 
-**SOPS + age. Encrypted files committed to the repository.**
+**This repository does not ship encrypted secret trees.** Runtime secrets are injected by the
+adopter's platform (Compose env files, Kubernetes Secrets, a cloud secret manager, CI OIDC, …).
+`.gitignore` covers every `.env*` except the committed `*.example` files, and Gitleaks runs
+pre-commit and in CI.
 
-### Why this rather than a secret manager
+Placeholder catalogs for non-local targets: [`.env.staging.example`](../../.env.staging.example)
+and [`.env.production.example`](../../.env.production.example). Never commit real values.
 
-| Option                                  | Assessment                                                                                                                                                                                                                                                                   |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **SOPS + age** ✅                       | Secrets are versioned with the code that needs them, reviewable as diffs (SOPS encrypts values but not keys, so a diff shows _which_ secret changed without revealing it), no service to run, no vendor, works identically in CI and on hosts, and rollback is a git revert. |
-| Vault                                   | Powerful and operationally heavy: a service to run, unseal, back up, and monitor. Disproportionate at this scale.                                                                                                                                                            |
-| Cloud secret managers                   | Vendor lock-in in the one place it hurts most, plus a bootstrap problem: you need a credential to fetch credentials.                                                                                                                                                         |
-| `.env` files copied to servers manually | Unversioned, undiffable, unauditable, and inevitably divergent.                                                                                                                                                                                                              |
-| GitHub Secrets alone                    | Fine for CI, but no history, no diffs, no local decryption, and a poor fit for host-level configuration.                                                                                                                                                                     |
+### Recommended pattern for adopters (illustrative)
 
-`age` over GPG: modern, tiny, no keyring or trust-model complexity, and a keypair is two short
-strings — which matters because key handling is where secret systems actually fail.
+**SOPS + age** is a strong default when you want secrets versioned beside the code that needs them:
+reviewable diffs (values encrypted, keys visible), no service to run, no vendor, identical in CI and
+on hosts, rollback is a git revert. Alternatives (Vault, cloud secret managers, GitHub Secrets alone)
+each trade operational weight or auditability — pick for your organisation, not because this repo
+requires one.
 
-### Layout
+If you adopt SOPS + age, a typical layout _outside or beside_ the app repo looks like:
 
 ```
-infra/secrets/
-├── .sops.yaml              # Rules: which key encrypts which path
+secrets/                    # adopter-owned; not required in this boilerplate
+├── .sops.yaml
 ├── staging.enc.yaml
 ├── production.enc.yaml
-└── shared.enc.yaml         # Values common to all environments
+└── shared.enc.yaml
 ```
 
-Keys:
+### Rotation (guidance)
 
-| Holder        | Key                                                   | Purpose                         |
-| ------------- | ----------------------------------------------------- | ------------------------------- |
-| Each engineer | Personal `age` key                                    | Local decryption for debugging  |
-| CI            | `age` key in a GitHub Actions secret                  | Decrypt at deploy time          |
-| Each host     | Host `age` key, provisioned by Ansible                | Decrypt on the machine          |
-| Break-glass   | Offline key in a password manager plus a printed copy | Recovery if all others are lost |
+| Secret                                 | Cadence                            | Notes                                       |
+| -------------------------------------- | ---------------------------------- | ------------------------------------------- |
+| Database passwords                     | 90 days                            | Requires a coordinated restart              |
+| API keys (outbound: Stripe, Resend, …) | 180 days, immediately on suspicion | Providers support overlapping keys          |
+| Auth signing secret                    | 180 days                           | Rotating invalidates sessions — schedule it |
+| Customer API keys                      | Customer-controlled                | Overlapping keys supported                  |
 
-Any of these keys can decrypt, and the recipient list is in `.sops.yaml`, so **removing a departed
-engineer is a re-encryption commit** — reviewable and complete, rather than a hope that nobody
-kept a copy.
-
-### Workflow
-
-```
-make secrets-edit ENV=production    # Decrypt to a temp file, open $EDITOR, re-encrypt on save
-make secrets-view ENV=staging
-make secrets-rotate KEY=STRIPE_SECRET_KEY ENV=production
-```
-
-Plaintext never touches disk unencrypted (SOPS uses a temp file cleaned on exit), `.gitignore`
-covers every `.env*` except `.env.example`, and Gitleaks runs pre-commit and in CI.
-
-### Rotation
-
-| Secret                                 | Cadence                              | Notes                                       |
-| -------------------------------------- | ------------------------------------ | ------------------------------------------- |
-| Database passwords                     | 90 days                              | Requires a coordinated restart              |
-| API keys (outbound: Stripe, Resend, …) | 180 days, immediately on suspicion   | Providers support overlapping keys          |
-| Auth signing secret                    | 180 days                             | Rotating invalidates sessions — schedule it |
-| Customer API keys                      | Customer-controlled                  | Overlapping keys supported                  |
-| `age` keys                             | Annually, immediately on team change | Re-encrypt all files                        |
-
-Rotation is a documented runbook with the blast radius stated for each secret, because the
-question during an incident is never "how do I rotate this" but "what breaks when I do".
+Rotation should be a documented runbook with blast radius stated for each secret.
 
 ---
 
-## 5. Build-time versus runtime configuration
+## 5. Runtime variable catalog
+
+Source of truth: composable presets in `packages/env/src/presets/`. Each app validates **only**
+the presets it imports. Placeholder files:
+
+| File                                                       | Purpose                     |
+| ---------------------------------------------------------- | --------------------------- |
+| [`.env.example`](../../.env.example)                       | Local laptop (`make setup`) |
+| [`.env.staging.example`](../../.env.staging.example)       | Staging-shaped deploy       |
+| [`.env.production.example`](../../.env.production.example) | Production-shaped deploy    |
+
+### Shared / base (every process)
+
+| Variable    | Kind    | Notes                                                       |
+| ----------- | ------- | ----------------------------------------------------------- |
+| `NODE_ENV`  | runtime | `development` \| `test` \| `production` only                |
+| `APP_ENV`   | runtime | `local` \| `test` \| `preview` \| `staging` \| `production` |
+| `APP_URL`   | runtime | Canonical origin, no trailing slash                         |
+| `LOG_LEVEL` | runtime | Default `info`                                              |
+
+### Database (`db` preset) — web, api, worker, migrate
+
+| Variable             | Kind           | Notes                                         |
+| -------------------- | -------------- | --------------------------------------------- |
+| `DATABASE_URL`       | runtime secret | `postgres://` or `postgresql://`              |
+| `DATABASE_POOL_SIZE` | runtime        | Positive int; default `10`. Migrate uses `1`. |
+
+### Redis (`redis`) — web, api, worker
+
+| Variable    | Kind           | Notes                     |
+| ----------- | -------------- | ------------------------- |
+| `REDIS_URL` | runtime secret | `redis://` or `rediss://` |
+
+### Auth (`auth`) — web, api
+
+| Variable                                 | Kind           | Notes                                  |
+| ---------------------------------------- | -------------- | -------------------------------------- |
+| `BETTER_AUTH_SECRET`                     | runtime secret | ≥ 32 characters                        |
+| `BETTER_AUTH_URL`                        | runtime        | Usually same origin as the web app     |
+| `GITHUB_*` / `GOOGLE_*`                  | runtime secret | Optional; providers skipped when unset |
+| `TRIGGER_ENABLED` / `TRIGGER_SECRET_KEY` | runtime        | Optional durable-jobs gate             |
+
+### Email (`resend` + optional `smtp`) — web, api, worker
+
+| Variable          | Kind           | Notes                                          |
+| ----------------- | -------------- | ---------------------------------------------- |
+| `RESEND_API_KEY`  | runtime secret | Must start with `re_`                          |
+| `EMAIL_FROM`      | runtime        | Valid email                                    |
+| `SMTP_URL`        | runtime        | Optional; preferred when set (Mailpit locally) |
+| `MAILPIT_API_URL` | runtime        | Optional local inspection                      |
+
+### Object storage (`s3`) — web, worker
+
+| Variable                                    | Kind           | Notes                                        |
+| ------------------------------------------- | -------------- | -------------------------------------------- |
+| `S3_ENDPOINT`                               | runtime        | Required so the client never defaults to AWS |
+| `S3_REGION`                                 | runtime        | Default `auto`                               |
+| `S3_BUCKET`                                 | runtime        | Bucket name                                  |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | runtime secret | S3 API credentials                           |
+
+### Public client (`publicApp` + optional analytics/error presets)
+
+| Variable                                           | Kind           | Notes                                       |
+| -------------------------------------------------- | -------------- | ------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`                              | **build-time** | Baked into the web image                    |
+| `NEXT_PUBLIC_APP_ENV`                              | **build-time** | Baked into the web image                    |
+| `NEXT_PUBLIC_POSTHOG_*` / `NEXT_PUBLIC_SENTRY_DSN` | **build-time** | Only when those client presets are composed |
+
+### Observability / payments presets (composed when wired — Phase 14/17)
+
+| Variable                                                             | Kind           | Notes                                        |
+| -------------------------------------------------------------------- | -------------- | -------------------------------------------- |
+| `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_SERVICE_NAME` | runtime        | Off by default                               |
+| `SENTRY_ENABLED` / `SENTRY_DSN`                                      | runtime        | Off by default                               |
+| `POSTHOG_API_KEY` / `POSTHOG_HOST`                                   | runtime        | Server capture                               |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`                        | runtime secret | Rejected test keys when `APP_ENV=production` |
+
+### Process ports (app-local)
+
+| Variable                         | App    | Default         |
+| -------------------------------- | ------ | --------------- |
+| `PORT` / `HOSTNAME`              | web    | Next standalone |
+| `API_PORT`                       | api    | `3001`          |
+| `WORKER_PORT` / `OUTBOX_POLL_MS` | worker | `3002` / `1000` |
+
+### Validation skip
+
+| Variable                | When                                                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `SKIP_ENV_VALIDATION=1` | **Image build only** — secrets are legitimately absent. Validation is mandatory at container/process start. |
+
+Production strictness (`APP_ENV=production`): no localhost URLs, no `dev-` secret prefixes, no Stripe test keys — see `packages/env/src/production.ts`.
+
+---
+
+## 6. Build-time versus runtime configuration
 
 An easy thing to get wrong with Next.js, and expensive to discover late.
 

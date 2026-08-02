@@ -65,6 +65,10 @@ ansible
 sops
 cloudflare
 hetzner
+deployability
+runbook
+runbooks
+nomad
 pgbouncer
 uuidv
 jsonb

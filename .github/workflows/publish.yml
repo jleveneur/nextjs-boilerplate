@@ -1,13 +1,12 @@
 name: Publish images
 
 # Build multi-arch app images and push to GHCR on every merge to main.
-# Tags: ghcr.io/<owner>/{web,api,worker}:<git-sha>
+# Tags: ghcr.io/<owner>/{web,api,worker,migrate}:<git-sha>
 # SBOM + provenance attestations are enabled here (local `make images` keeps
 # them off so size budgets stay meaningful).
 #
-# Staging deploy of these tags is Phase 13. See
-# docs/architecture/11-infrastructure-and-deployment.md and
-# docs/architecture/12-git-ci-release.md.
+# Deploy is bring-your-own host: pull these SHA tags, run migrate, roll apps.
+# See docs/runbooks/deploy.md.
 
 on:
   push:
@@ -45,6 +44,8 @@ jobs:
             file: docker/api.Dockerfile
           - app: worker
             file: docker/worker.Dockerfile
+          - app: migrate
+            file: docker/migrate.Dockerfile
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

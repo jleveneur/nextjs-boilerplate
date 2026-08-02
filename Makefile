@@ -210,10 +210,11 @@ lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
 # shipping in the runnable image config we care about for budgets.
 DOCKER_BUILD := docker build --provenance=false --sbom=false
 
-images: ## Build web/api/worker images tagged *:local
+images: ## Build web/api/worker/migrate images tagged *:local
 	$(DOCKER_BUILD) -f docker/web.Dockerfile -t repo-web:local .
 	$(DOCKER_BUILD) -f docker/api.Dockerfile -t repo-api:local .
 	$(DOCKER_BUILD) -f docker/worker.Dockerfile -t repo-worker:local .
+	$(DOCKER_BUILD) -f docker/migrate.Dockerfile -t repo-migrate:local .
 	$(MAKE) image-size
 
 image-size: ## Fail if local app images exceed Phase 11 budgets
@@ -255,8 +256,9 @@ deps-down: ## Stop local dependency containers
 	-$(COMPOSE_TEST) down
 	-$(COMPOSE_E2E) down --remove-orphans
 
-prod-up: ## Build and start the local production-like stack (Traefik on :8080)
+prod-up: ## Build, migrate, then start the local production-like stack (Traefik on :8080)
 	$(COMPOSE_PROD) up -d --build
+	@echo "Stack ready: http://localhost:8080 (Traefik dashboard :8081)"
 
 prod-down: ## Stop the local production-like stack
 	-$(COMPOSE_PROD) down

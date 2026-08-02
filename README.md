@@ -42,8 +42,9 @@ The load-bearing ideas:
   rule the other would have to duplicate.
 - **Multi-tenant from the first migration.** Tenancy is not something a schema
   grows later without a rewrite.
-- **Self-hostable by default.** Docker, OpenTofu, and Ansible, with no managed
-  service on the critical path that lacks a documented exit.
+- **Self-hostable by default.** OCI images, Compose, and a portable migrate-then-roll
+  deploy sequence — no managed service on the critical path that lacks a documented
+  exit. Provider IaC stays optional for adopters.
 
 ---
 
@@ -68,9 +69,8 @@ The load-bearing ideas:
 apps/        Deployable units (web, api, workers)
 packages/    Shared libraries, arranged in layers
 tooling/     Build, lint, and type configuration
-docker/      Images and Compose stacks
-infra/       OpenTofu and Ansible
-docs/        Architecture and ADRs
+docker/      Images and Compose stacks (incl. local prod-like)
+docs/        Architecture, ADRs, and runbooks
 scripts/     Repository automation, with its own tests
 ```
 

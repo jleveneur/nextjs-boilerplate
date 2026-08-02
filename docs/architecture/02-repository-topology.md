@@ -9,8 +9,7 @@
 ├── apps/                    # Deployable units. Thin. No business logic.
 ├── packages/                # Everything reusable. Where the code actually lives.
 ├── tooling/                 # Shared build/lint/test configuration, published to nobody.
-├── docker/                  # Dockerfiles + compose stacks.
-├── infra/                   # OpenTofu, Ansible, Traefik, secrets.
+├── docker/                  # Dockerfiles + compose stacks (deps, prod-like, test, e2e).
 ├── docs/                    # Architecture, ADRs, runbooks (this folder).
 ├── .github/                 # Workflows, templates, CODEOWNERS.
 ├── .cursor/rules/           # Machine-readable architecture rules for AI agents.
@@ -28,13 +27,17 @@
 ├── .editorconfig
 ├── .gitattributes
 ├── .gitignore
-└── .env.example
+├── .env.example
+├── .env.staging.example     # Placeholder catalog for staging-shaped deploys
+└── .env.production.example  # Placeholder catalog for production-shaped deploys
 ```
 
-Why these six top-level folders and not more: each answers a distinct question — _what ships_
+Why these five top-level folders and not more: each answers a distinct question — _what ships_
 (`apps`), _what is shared_ (`packages`), _what configures the build_ (`tooling`), _what builds
-images_ (`docker`), _what runs them_ (`infra`), _what explains them_ (`docs`). Anything that
-does not answer one of those questions does not deserve a top-level folder.
+images_ (`docker`), _what explains them_ (`docs`). Provider-specific IaC (OpenTofu, Ansible, host
+Traefik, encrypted secret trees) is an **adopter concern**, not a required tree in this
+boilerplate — see [11 §3](./11-infrastructure-and-deployment.md#3-bring-your-own-infrastructure)
+and [docs/runbooks/deploy.md](../runbooks/deploy.md).
 
 ---
 
@@ -307,7 +310,9 @@ docker/
 ├── api.Dockerfile
 ├── worker.Dockerfile         # docs.Dockerfile lands with apps/docs (Phase 15)
 ├── compose.yaml              # Local dev dependencies (postgres, redis, minio, mailpit, otel, jaeger)
-├── compose.prod.yaml         # Local prod-like stack (Traefik + local tags; CI publishes to GHCR)
+├── migrate.Dockerfile        # One-shot Drizzle migrate job (CD + compose.prod)
+├── web.Dockerfile / api.Dockerfile / worker.Dockerfile
+├── compose.prod.yaml         # Local prod-like: Traefik + migrate-then-roll + local tags
 ├── compose.test.yaml         # Ephemeral services for CI integration tests
 ├── compose.e2e.yaml          # Test deps + built web image for Playwright
 ├── otel-collector-config.yaml
@@ -316,27 +321,18 @@ docker/
 
 Dockerfiles live centrally, not per-app, so cross-cutting changes (base image bump, CVE patch,
 build-cache strategy) are one review in one folder. See
-[11](./11-infrastructure-and-deployment.md).
+[11](./11-infrastructure-and-deployment.md). CI publishes
+`ghcr.io/<owner>/{web,api,worker,migrate}:<sha>`.
 
 ---
 
-## 7. `infra/`
+## 7. Optional adopter infrastructure (not in this repo)
 
-```
-infra/
-├── tofu/
-│   ├── modules/              # server, dns, r2, network, firewall
-│   └── environments/         # staging/, production/ — thin, composed from modules
-├── ansible/
-│   ├── playbooks/            # provision.yml, deploy.yml, backup.yml
-│   └── roles/                # docker, traefik, app, backup, hardening
-├── traefik/                  # Static + dynamic config, middleware chains
-└── secrets/                  # *.enc.yaml (SOPS + age), .sops.yaml rules
-```
-
-OpenTofu creates infrastructure; Ansible configures it and deploys. The boundary is deliberate:
-Tofu owns things with a lifecycle (servers, DNS records, buckets), Ansible owns state on a
-machine. Using either for both leads to drift.
+This boilerplate does **not** ship an `infra/` tree. Hosts, DNS, TLS, object-storage buckets, and
+secret stores are chosen per deployment. Illustrative patterns (OpenTofu modules, Ansible
+playbooks, host Traefik, SOPS + age) live in [11](./11-infrastructure-and-deployment.md) as
+examples only. The portable contract is: pull SHA-tagged images, run migrate to completion, roll
+apps, smoke-test — documented in [docs/runbooks/deploy.md](../runbooks/deploy.md).
 
 ---
 
@@ -377,21 +373,22 @@ Packages then declare `"zod": "catalog:"`. Renovate updates the catalog in one p
 ## 9. `Makefile` — the single entry point
 
 pnpm scripts are for the task graph; the Makefile is for humans, because real workflows span
-pnpm _and_ Docker _and_ SOPS.
+pnpm _and_ Docker.
 
 ```
 make setup            # Install toolchain, deps, .env, start services, migrate, seed
 make dev              # Services + all apps in watch mode
 make check            # Everything CI runs, locally, in the same order
-make images           # Build web/api/worker images and assert size budgets
+make images           # Build web/api/worker/migrate images and assert size budgets
 make e2e              # Playwright against the built web image
 make e2e-host         # Fast Playwright against next start (local loops)
 make db-reset         # Drop, migrate, seed
 make email            # React Email preview server
-make prod-up          # Local Traefik + app images
-make secrets-edit ENV=production
-make deploy ENV=staging
+make prod-up          # Local Traefik + migrate-then-roll + app images
+make prod-down        # Tear down the local production-like stack
 ```
 
 One command per intention, discoverable via `make help`. New engineers should need to read
-exactly one file to be productive.
+exactly one file to be productive. Deploy to a real host follows
+[docs/runbooks/deploy.md](../runbooks/deploy.md) — there is no `make deploy` that assumes a
+specific fleet.

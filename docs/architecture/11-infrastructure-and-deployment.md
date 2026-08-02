@@ -68,8 +68,10 @@ patches traced libvips paths because Next standalone file-tracing often drops th
 `apps/web` uses Next's `output: "standalone"`, which does the equivalent for the app graph.
 
 **Local prod-like stack** (`docker/compose.prod.yaml`) runs Traefik on HTTP with Docker labels
-routing to the built `web` / `api` images; the worker stays internal. GHCR publish and ACME are
-Phase 12–13.
+routing to the built `web` / `api` images; the worker stays internal; a one-shot `migrate`
+service applies schema before apps start. GHCR publish is Phase 12; the portable deploy sequence
+is Phase 13 ([docs/runbooks/deploy.md](../runbooks/deploy.md)). Host ACME/TLS is an adopter
+concern, not shipped here.
 
 ### The build/run split for Next.js
 
@@ -95,10 +97,11 @@ Volumes are named and persistent; `make db-reset` removes them explicitly.
 
 Images go to **GitHub Container Registry** (same permissions model as the repo, no extra vendor).
 
-Tagging: `ghcr.io/<owner>/{web,api,worker}:<git-sha>` always (owner lowercased), plus `:v1.2.3` on
-release via retag-without-rebuild, and `:staging` / `:production` as moving pointers once Phase 13
-deploys. **The SHA tag is what deploys**; the named tags are for humans, because a mutable tag in a
-deploy command means you cannot say what is running.
+Tagging: `ghcr.io/<owner>/{web,api,worker,migrate}:<git-sha>` always (owner lowercased), plus
+`:v1.2.3` on release via retag-without-rebuild. Adopters may add moving pointers (`:staging`,
+`:production`) in their own CD — those are not required by this repo. **The SHA tag is what
+deploys**; named tags are for humans, because a mutable tag in a deploy command means you cannot
+say what is running.
 
 Published by `.github/workflows/publish.yml` on every merge to `main`. Local `make images` keeps
 provenance/SBOM off so size budgets measure the runnable layers only.
@@ -109,131 +112,108 @@ Silicon laptop is a non-event.
 
 ---
 
-## 2. Reverse proxy — Traefik v3
+## 2. Reverse proxy — Traefik v3 (local example)
 
-Chosen over nginx and Caddy for one decisive reason: **it discovers services from Docker labels**,
-so routing configuration lives beside the service definition and cannot drift from what is actually
-running. Automatic ACME certificates, first-class middleware chains, and native metrics complete
-the case. nginx needs templating and reloads; Caddy is close but has a smaller middleware ecosystem
-and less mature Docker-native discovery.
+The local production-like stack uses **Traefik v3** because it discovers services from Docker
+labels, so routing configuration lives beside the service definition and cannot drift from what is
+actually running. Adopters may use nginx, Caddy, an ingress controller, or a cloud load balancer
+instead — apps only need to expose HTTP and healthchecks.
 
-Responsibilities: TLS termination (Let's Encrypt via DNS-01 through Cloudflare, so wildcard certs
-work and no port needs opening for validation), HTTP→HTTPS redirect, routing by host and path,
-security headers, rate limiting at the edge, compression, and access logs in JSON.
+In `compose.prod.yaml`, Traefik terminates HTTP on the laptop (`:8080`) with no ACME. For a real
+host, TLS, DNS, CDN, and WAF are adopter choices. One common pattern:
 
 ```mermaid
 flowchart LR
-    CF["Cloudflare<br/>DNS + CDN + WAF"] --> TR["Traefik v3<br/>:443"]
+    EDGE["DNS / CDN / WAF<br/>optional"] --> TR["Reverse proxy<br/>TLS + routing"]
     TR -->|"app.example.com"| WEB["web:3000"]
     TR -->|"api.example.com"| API["api:3001"]
     TR -->|"docs.example.com"| DOCS["docs:3002"]
-    TR -->|"internal only"| OBS["Grafana / Jaeger"]
 ```
 
-Middleware chains are defined once and composed per route: `secure-headers`, `rate-limit`,
-`compress`, `ip-allowlist` (internal tooling), `basic-auth` (dashboards).
-
-**Cloudflare in front** provides DNS, CDN caching for static assets, WAF rules, DDoS protection, and
-bot management. The origin firewall accepts traffic only from Cloudflare IP ranges, so the origin
-cannot be reached directly — otherwise the WAF is decorative.
+Useful middleware ideas regardless of proxy: security headers, rate limiting, compression, and
+an allowlist for internal dashboards.
 
 ---
 
-## 3. Infrastructure as code — OpenTofu
+## 3. Bring-your-own infrastructure
 
-**OpenTofu over Terraform**: after the HashiCorp licence change, OpenTofu is the Linux
-Foundation-governed, MIT-licensed continuation with a compatible provider ecosystem. For a
-foundation intended to last years, a permissive licence under neutral governance is the safer bet,
-and the migration cost is currently near zero.
+This repository is **infrastructure-agnostic**. It does not contain OpenTofu modules, Ansible
+playbooks, host Traefik configs, or encrypted secret trees. Those concerns belong to the adopter's
+deployment environment.
 
-```
-infra/tofu/
-├── modules/
-│   ├── server/      # VM, SSH keys, firewall, base cloud-init
-│   ├── dns/         # Cloudflare records, proxy settings
-│   ├── storage/     # R2 buckets, lifecycle rules, CORS
-│   └── network/     # Private network, firewall rules
-└── environments/
-    ├── staging/     # Composes modules; thin
-    └── production/
-```
+What the boilerplate **does** guarantee:
 
-Boundary discipline: **OpenTofu owns resources with a lifecycle** (servers, DNS records, buckets,
-firewall rules). **Ansible owns state inside a machine.** Using Tofu to configure servers (via
-`remote-exec`) or Ansible to create infrastructure both produce drift that nobody can reconcile.
+| Contract                         | Where                                                          |
+| -------------------------------- | -------------------------------------------------------------- |
+| Multi-arch OCI images by git SHA | `publish.yml` → GHCR `{web,api,worker,migrate}:<sha>`          |
+| Migrate before apps              | `docker/migrate.Dockerfile` + `compose.prod` / runbook         |
+| Typed runtime config             | `@repo/env` presets; see [09](./09-environment-and-secrets.md) |
+| Local proof of the shape         | `make prod-up` (Traefik + migrate-then-roll on a laptop)       |
+| Portable deploy sequence         | [docs/runbooks/deploy.md](../runbooks/deploy.md)               |
 
-Practices: remote state in R2 with locking; state is never local. `plan` on every PR touching
-`infra/`, posted as a comment; `apply` only from `main` after review. No manual console changes —
-drift is detected by a scheduled `plan` that fails when reality diverges. Everything is tagged with
-environment and owner.
+### Example topologies (non-normative)
 
-Providers are chosen so nothing is single-vendor: a VPS provider (Hetzner or DigitalOcean),
-Cloudflare, and R2. Moving to another VPS provider means rewriting one module while the Ansible and
-Docker layers stay untouched.
+Adopters commonly choose one of:
 
----
+1. **Single VPS + Docker Compose + Traefik** — closest to `compose.prod.yaml`; add TLS and DNS outside the repo.
+2. **Kubernetes** — same images and migrate Job; write manifests in the adopter's cluster repo.
+3. **Vercel (or similar) for `web` + self-hosted `api`/`worker`** — no `@vercel/*` imports; public URL and auth cookie domain must match.
 
-## 4. Provisioning — Ansible
+### Illustrative IaC pattern (optional, not shipped)
 
-```
-infra/ansible/
-├── playbooks/  provision.yml, deploy.yml, backup.yml, rotate-secrets.yml
-└── roles/      common, docker, traefik, app, backup, monitoring, hardening
-```
+If an adopter wants infrastructure-as-code beside the app, a common split is:
 
-`provision.yml` (run rarely): OS updates, unattended-upgrades, users and SSH hardening (key-only,
-no root login), firewall (only 22/80/443, and 22 restricted), fail2ban, kernel parameters, Docker
-Engine, log rotation, the host `age` key, and the monitoring agent.
+- **OpenTofu** (or Terraform) owns resources with a lifecycle: VMs, DNS records, object-storage buckets, firewall rules.
+- **Ansible** (or equivalent) owns state inside a machine: Docker Engine, compose deploy, hardening.
+- **SOPS + age** (or a cloud secret manager) holds environment secrets; plaintext never lands in git.
 
-`deploy.yml` (run per release): decrypt secrets with SOPS, render the compose file, `docker compose
-pull`, run the **migration job to completion**, then roll services one at a time waiting for
-healthchecks, then prune old images. It is idempotent and safe to re-run.
+That layout is deliberately **not** required here so the boilerplate stays usable on many
+infrastructures. See also [09 §4](./09-environment-and-secrets.md#4-secrets-management).
 
-Ansible is chosen over shell scripts for idempotency and over Kubernetes because Kubernetes is not
-justified at this scale: it adds a control plane to operate, upgrade, and secure, plus manifests,
-an ingress controller, and secret management — for orchestration benefits a Compose file on two
-machines already provides. The exit path is deliberate, though: the images are standard OCI
-artifacts, so moving to Kubernetes later means writing manifests, not changing applications.
+Kubernetes is not justified for every product at small scale; the exit path is deliberate either
+way: images are standard OCI artifacts, so moving between Compose and Kubernetes means writing
+orchestration, not changing applications.
 
 ---
 
-## 5. Deployment strategy
+## 4. Deployment strategy
 
 ### Two blessed targets
 
-| Target                           | What runs where                                                                      | When to choose it                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| **Self-hosted (primary)**        | All apps on Docker + Traefik on one or more VPS; managed or self-hosted Postgres; R2 | Cost control, data residency, no vendor dependency |
-| **Vercel + self-hosted backend** | `apps/web` on Vercel; `api`, `worker`, `tasks` on a VPS                              | Global edge delivery for the UI with minimal ops   |
+| Target                             | What runs where                                                                                 | When to choose it                                  |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Self-hosted (primary)**          | All apps on Docker (+ reverse proxy of choice); managed or self-hosted Postgres; S3 API storage | Cost control, data residency, no vendor dependency |
+| **Edge web + self-hosted backend** | `apps/web` on an edge platform; `api`, `worker` on containers                                   | Global edge delivery for the UI with minimal ops   |
 
-Both work without code changes because nothing imports `@vercel/*` and nothing depends on
-platform-specific primitives. Self-hosted is built and tested first precisely because it is the
-strictly harder target — a system that self-hosts cleanly deploys to a platform for free, and the
-reverse is not true.
+Both work without code changes because nothing imports platform-specific primitives. Self-hosted is
+built and tested first (`compose.prod`) precisely because it is the strictly harder target — a
+system that self-hosts cleanly deploys to a platform for free, and the reverse is not true.
 
 ### Environments and promotion
 
 ```mermaid
 flowchart LR
-    PR["Pull request"] -->|"CI + preview env"| REV["Review"]
+    PR["Pull request"] -->|"CI"| REV["Review"]
     REV -->|"squash merge to main"| MAIN["main"]
-    MAIN -->|"auto"| STG["staging<br/>images tagged :sha"]
-    STG -->|"manual approval + release tag"| PRD["production<br/>same :sha promoted"]
+    MAIN -->|"publish"| REG["GHCR :sha"]
+    REG -->|"adopter CD"| STG["staging<br/>same :sha"]
+    STG -->|"promote"| PRD["production<br/>same :sha"]
 ```
 
 **The same image SHA is promoted.** Production never builds. If staging tested `abc123`, production
-runs `abc123`.
+runs `abc123`. How an adopter wires staging vs production (GitHub Environments, GitOps, shell) is
+outside this repository.
 
 ### Release sequence
 
-1. Tag a release (`v1.2.3`) from `main`.
-2. CI verifies the images for that SHA already exist and passed all gates.
-3. **Backups**: confirm a recent database backup and note the PITR timestamp.
-4. **Migrate**: run the migration job to completion. Migrations are backward compatible, so old
-   code still works if the rollout is aborted here.
-5. **Roll** services one at a time; wait for healthy before continuing.
-6. **Smoke test**: automated checks against production (health, sign-in, a read, a cheap write).
-7. **Watch**: error rate and p95 for 15 minutes, with alerts routed to the deployer.
+Documented end-to-end in [docs/runbooks/deploy.md](../runbooks/deploy.md):
+
+1. Ensure images for the git SHA exist in GHCR (published on merge to `main`).
+2. **Backups**: confirm a recent database backup / PITR timestamp (adopter's DB provider).
+3. **Migrate**: run the migrate image to completion.
+4. **Roll** web → api → worker; wait for healthy before continuing.
+5. **Smoke test**: health + one read path (and a cheap write if safe).
+6. **Watch**: error rate and latency for a short window.
 
 ### Rollback
 
@@ -241,7 +221,7 @@ runs `abc123`.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Migration failed          | It ran in a transaction where possible; fix forward. Destructive migrations require a tested restore plan _before_ they are applied. |
 | App unhealthy after roll  | Re-deploy the previous image SHA. Fast, because migrations were backward compatible.                                                 |
-| Data corruption           | PITR restore. RTO ≤ 1 hour, drilled monthly.                                                                                         |
+| Data corruption           | PITR restore via the database provider.                                                                                              |
 | Bad feature behind a flag | Flip the flag. Seconds, no deploy.                                                                                                   |
 
 The reason expand/contract migrations ([06](./06-data-and-storage.md#zero-downtime-expandcontract-as-the-default))
@@ -254,28 +234,29 @@ minutes; a flag flip is seconds.
 
 ### Topology and scaling
 
-Start on **one server** (4 vCPU / 8 GB): Traefik, web, api, worker, Redis, and the OTel collector,
-with Postgres managed externally. It is honest about the scale most products actually operate at,
-and it is cheap to reason about.
+Sizing, replica counts, and whether Redis or Postgres are co-located are **adopter decisions**.
+The growth path that usually appears first: split `worker` (CPU-bound image work competing with
+request serving) → multiple `web`/`api` replicas behind a proxy → managed Redis → read replicas →
+a pooler. Each step is an orchestration change, not an application change.
 
-The documented growth path, in order: split `worker` onto its own machine (CPU-bound image work
-competing with request serving is the first real bottleneck) → multiple `web`/`api` replicas behind
-Traefik → move Redis to a managed instance → add read replicas → introduce a pooler. Each step is
-a compose and Ansible change, not an architecture change.
+Connection budget must be tracked explicitly at every step:
 
-Connection budget is the thing that must be tracked explicitly at every step:
-`replicas × DB_POOL_MAX + migrations + admin ≤ server max_connections`. Silent breach of that
-inequality is the most common self-hosted outage, so it is a documented number in the runbook, not
-a rediscovered fact.
+```
+replicas × DATABASE_POOL_SIZE + migrate(1) + admin ≤ max_connections
+```
+
+Silent breach of that inequality is the most common self-hosted outage. Record the numbers for
+_your_ deployment in your runbook; the formula lives in [docs/runbooks/deploy.md](../runbooks/deploy.md).
 
 ---
 
-## 6. Runbooks
+## 5. Runbooks
 
 Operational documentation lives in `docs/runbooks/` and is treated as deliverable work, because the
 value of a runbook is realised at 3 a.m. by someone who did not write it:
 
-`deploy.md`, `rollback.md`, `restore-database.md`, `rotate-secrets.md`, `scale-up.md`,
+`deploy.md` (portable sequence + connection budget), plus later:
+`restore-database.md`, `rotate-secrets.md`, `scale-up.md`,
 `incident-response.md`, `on-call.md`, plus one per alert (`high-error-rate.md`,
 `queue-backlog.md`, `db-connections-exhausted.md`, `disk-full.md`).
 

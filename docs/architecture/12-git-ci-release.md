@@ -46,9 +46,9 @@ Required: PR with one approval, `CODEOWNERS` review for protected paths, all sta
 branch up to date, conversations resolved, linear history, signed commits, no force push, no
 deletion. Administrators are included — an exception that exists is an exception that gets used.
 
-`CODEOWNERS` assigns stricter review to the paths where mistakes are expensive: `infra/`,
+`CODEOWNERS` assigns stricter review to the paths where mistakes are expensive:
 `packages/db/src/migrations/`, `packages/authz/`, `packages/auth/`, `.github/workflows/`,
-`docker/`, and `docs/adr/`.
+`docker/`, `docs/runbooks/`, and `docs/adr/`.
 
 ---
 
@@ -154,20 +154,21 @@ people work — they batch changes into bigger PRs, which is worse for everythin
 
 | Trigger             | Action                                                                                                    |
 | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| PR opened/updated   | CI (+ CodeQL). Neon preview environments arrive in Phase 13                                               |
+| PR opened/updated   | CI (+ CodeQL)                                                                                             |
 | PR merged to `main` | Publish multi-arch images to GHCR as `:sha` with SBOM + provenance (`publish.yml`); Changesets version PR |
-| Release tag `v*`    | Retag the same `:sha` images to `:vX.Y.Z` (`retag-images.yml`); production promote is Phase 13            |
+| Release tag `v*`    | Retag the same `:sha` images to `:vX.Y.Z` (`retag-images.yml`)                                            |
 | Manual dispatch     | Re-run publish for an arbitrary SHA (break-glass)                                                         |
 
-Staging deploy, smoke tests, and production promotion behind a GitHub **environment** with required
-reviewers are **Phase 13**. Phase 12 stops at immutable registry artifacts.
+Phase 12 stops at immutable registry artifacts (`web`, `api`, `worker`, `migrate`). Deploying those
+SHA tags to a host is **bring-your-own CD** — see [docs/runbooks/deploy.md](../runbooks/deploy.md)
+and Phase 13 (deployability) in [14](./14-implementation-plan.md).
 
 **CI is the only thing that builds release artifacts.** No local `docker push`; registry write
 permission belongs to the workflow identity only. Otherwise the provenance chain — this image came
 from this commit, which passed these checks — is broken, and it is exactly what you need during an
 incident.
 
-Image coordinates: `ghcr.io/<owner>/{web,api,worker}:<git-sha>`. Owner is lowercased. Local
+Image coordinates: `ghcr.io/<owner>/{web,api,worker,migrate}:<git-sha>`. Owner is lowercased. Local
 `make images` / `make prod-up` still use `repo-*:local` tags.
 
 ---

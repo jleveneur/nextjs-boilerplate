@@ -30,7 +30,7 @@ Two rules govern the order:
 | 10  | Workers                  | `apps/worker`: BullMQ consumers, schedules, outbox relay          | 4, 6       |
 | 11  | Containers & local stack | Dockerfiles, compose stacks, `make` targets                       | 8, 9, 10   |
 | 12  | CI/CD                    | Full pipelines, image publishing, Changesets, Renovate            | 11         |
-| 13  | Infrastructure           | OpenTofu, Ansible, Traefik, SOPS, first real deploy               | 12         |
+| 13  | Deployability            | Migrate-then-roll, env contract, agnostic deploy runbook          | 12         |
 | 14  | Observability wiring     | OTel end-to-end, Sentry, PostHog, flags, dashboards, alerts       | 13         |
 | 15  | Documentation site       | `apps/docs` with Fumadocs, ADRs, embedded API reference           | 9          |
 | 16  | Hardening                | Load tests, a11y audit, security review, runbooks, DR drill       | 14         |
@@ -188,19 +188,39 @@ multi-arch image publishing to GHCR with SBOM and provenance; Changesets release
 issue and PR templates; `CODEOWNERS`.
 
 **Status:** implemented — see `.github/workflows/{ci,codeql,publish,retag-images,release}.yml`,
-`.github/actions/setup`, and [12](./12-git-ci-release.md). Staging deploy stays Phase 13.
+`.github/actions/setup`, and [12](./12-git-ci-release.md). Portable deploy sequence is Phase 13.
 
 **Done when** a PR completes in under 6 minutes, images publish on merge, and a test release produces
 a correct changelog.
 
-## Phase 13 — Infrastructure
+## Phase 13 — Deployability (infrastructure-agnostic)
 
-OpenTofu modules and both environments; Ansible provisioning and deployment playbooks; Traefik static,
-dynamic, and middleware configuration; SOPS + age with the key set and rotation runbook; the migration
-job; and the first real deploy to staging followed by production.
+This repository is an **application boilerplate**. It ships what every adopter needs to build, run
+locally, and promote immutable OCI images on **any** host — not a personal VPS, DNS zone, or
+provider account.
 
-**Done when** staging and production are serving, TLS is valid, deployment and rollback have both been
-performed deliberately, and the connection-budget arithmetic is recorded in the runbook.
+Deliverables:
+
+- One-shot **migrate** image and `compose.prod` migrate-then-roll (`depends_on:
+service_completed_successfully`) so `make prod-up` applies schema without a host-side
+  `make db-migrate`
+- Runtime **environment catalog** and placeholder `.env.staging.example` /
+  `.env.production.example` derived from `@repo/env` presets
+- Agnostic deploy / rollback runbook ([docs/runbooks/deploy.md](../runbooks/deploy.md)): pull SHA
+  tags → migrate → roll → smoke → rollback-by-SHA; connection-budget **formula** only
+- Docs pivot: OpenTofu, Ansible, Cloudflare, host Traefik, and SOPS layouts remain **illustrative
+  examples** for adopters who self-host — they are not required tree contents and are not
+  implemented in this repository
+
+**Out of scope:** provisioning a real fleet, ACME/DNS, provider modules, encrypted secret trees,
+staging/production hostnames.
+
+**Status:** implemented — see `docker/migrate.Dockerfile`, `docker/compose.prod.yaml`,
+`.env.staging.example`, `.env.production.example`, [docs/runbooks/deploy.md](../runbooks/deploy.md),
+and the Phase 13 sections of [09](./09-environment-and-secrets.md) / [11](./11-infrastructure-and-deployment.md).
+
+**Done when** `make prod-up` migrates then serves web/api/worker locally behind compose Traefik, the
+env contract is documented, the BYO-host deploy sequence is written, and `make check` is green.
 
 ## Phase 14 — Observability wiring
 

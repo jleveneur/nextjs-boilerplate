@@ -47,9 +47,9 @@ Being explicit about non-goals is what keeps a boilerplate from rotting into a f
 | 06  | [Data, persistence & storage](./06-data-and-storage.md)                      | PostgreSQL, Drizzle, migrations, multi-tenancy, S3, caching            |
 | 07  | [Authentication & authorization](./07-auth.md)                               | Better Auth, sessions, API keys, RBAC + record-level policies          |
 | 08  | [Observability](./08-observability.md)                                       | Error handling, logging, tracing, analytics, feature flags             |
-| 09  | [Environment, config & secrets](./09-environment-and-secrets.md)             | Env validation, SOPS + age, per-environment configuration              |
+| 09  | [Environment, config & secrets](./09-environment-and-secrets.md)             | Env validation, runtime catalog, secrets patterns for adopters         |
 | 10  | [Testing](./10-testing.md)                                                   | What we test, at which level, and what we refuse to test               |
-| 11  | [Docker, infrastructure & deployment](./11-infrastructure-and-deployment.md) | Images, Traefik, OpenTofu, Ansible, environments, rollout              |
+| 11  | [Docker, infrastructure & deployment](./11-infrastructure-and-deployment.md) | Images, local Traefik, BYO infra, migrate-then-roll                    |
 | 12  | [Git, CI/CD & release](./12-git-ci-release.md)                               | Branching, hooks, pipelines, Changesets, versioning                    |
 | 13  | [Dependency review](./13-dependency-review.md)                               | Every dependency justified, every alternative rejected, risks tracked  |
 | 14  | [Implementation plan](./14-implementation-plan.md)                           | The phased, reviewable build order                                     |
@@ -214,19 +214,17 @@ current when the decisions were made.
 | Load testing     | k6                                | 1.x (binary) |
 | Docs site        | Fumadocs                          | 16.13.0      |
 
-### Infrastructure
+### Runtime & deployability
 
-| Concern             | Choice                    |
-| ------------------- | ------------------------- |
-| Containers          | Docker + Compose          |
-| Reverse proxy / TLS | Traefik v3                |
-| Registry            | GitHub Container Registry |
-| IaC                 | OpenTofu                  |
-| Provisioning        | Ansible                   |
-| Secrets             | SOPS + age                |
-| DNS / CDN / WAF     | Cloudflare                |
-| Object storage      | Cloudflare R2 (S3 API)    |
-| Managed Postgres    | Neon (swappable)          |
+| Concern                | Choice in this repo                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| Containers             | Docker + Compose                                                                                    |
+| Local reverse proxy    | Traefik v3 in `compose.prod` (example only)                                                         |
+| Registry               | GitHub Container Registry (`:sha` images)                                                           |
+| Migrations             | One-shot `migrate` image; never on app boot                                                         |
+| Host / DNS / TLS / IaC | Bring-your-own — see [11 §3](./11-infrastructure-and-deployment.md#3-bring-your-own-infrastructure) |
+| Object storage API     | S3-compatible (R2, MinIO, …)                                                                        |
+| Postgres               | PostgreSQL 18 (any host; Neon is one option)                                                        |
 
 ---
 
@@ -234,22 +232,23 @@ current when the decisions were made.
 
 ```mermaid
 flowchart TB
-    subgraph edge["Cloudflare — DNS, CDN, WAF"]
-        CF[["Proxy + TLS + rules"]]
+    subgraph edge["Edge — DNS / CDN / WAF optional"]
+        CF[["Proxy + TLS"]]
     end
 
     subgraph host["Host / Docker network"]
-        TR["Traefik v3<br/>routing, TLS, middleware"]
+        TR["Reverse proxy<br/>routing + TLS"]
         WEB["apps/web<br/>Next.js 16 — RSC, tRPC, Server Actions"]
         API["apps/api<br/>Hono — REST /v1, OpenAPI, webhooks"]
         WORKER["apps/worker<br/>BullMQ consumers + schedulers"]
         DOCS["apps/docs<br/>Fumadocs"]
+        MIG["migrate job<br/>one-shot"]
     end
 
     subgraph data["Stateful services"]
         PG[("PostgreSQL 18")]
         RD[("Redis")]
-        S3[("S3 API<br/>R2 in prod, MinIO in dev")]
+        S3[("S3 API<br/>MinIO local / any S3 in prod")]
     end
 
     subgraph ext["Third parties (all behind ports)"]
@@ -257,13 +256,14 @@ flowchart TB
         RES["Resend"]
         PH["PostHog"]
         SEN["Sentry"]
-        TRG["Trigger.dev (optional)"]
+        TRG["Trigger.dev optional"]
     end
 
     CF --> TR
     TR --> WEB
     TR --> API
     TR --> DOCS
+    MIG --> PG
 
     WEB -->|"@repo/core"| PG
     API -->|"@repo/core"| PG
@@ -321,7 +321,8 @@ the executive summary.
 | Jobs                 | BullMQ for throughput, Trigger.dev for durable workflows, shared payload contracts | Split by workload class, not by a leaky abstraction                                                   |
 | Storage              | S3 API only, presigned direct uploads                                              | R2 in prod and MinIO locally with identical code                                                      |
 | Config               | Hand-rolled Zod env module                                                         | ~80 lines beats a dependency; we need custom composition anyway                                       |
-| Secrets              | SOPS + age, encrypted in Git                                                       | No secret manager to run, works identically in CI and on hosts                                        |
+| Secrets              | Injected at deploy; SOPS + age is one adopter pattern                              | Boilerplate stays host-agnostic; no encrypted secret tree required                                    |
+| Deploy               | SHA-tagged OCI images + migrate-then-roll                                          | Same artifact everywhere; orchestration is bring-your-own                                             |
 | Observability        | OTLP to a collector we own; Sentry for errors                                      | Backend-swappable, no vendor agent in app code                                                        |
 | Feature flags        | Own `@repo/flags` interface, env provider by default, PostHog provider optional    | Works offline and self-hosted; flags are not a hard dependency                                        |
 | Lint/format          | Oxlint + tsgolint + Oxfmt                                                          | The only path that keeps type-aware linting on TypeScript 7                                           |

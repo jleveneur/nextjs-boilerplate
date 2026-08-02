@@ -47,11 +47,19 @@
         "src/index.ts",
         "src/openapi-generate.ts",
         "vitest.server-only-stub.ts",
+        // Referenced only via tsdown `alias` for Docker bundles.
+        "server-only-stub.ts",
+        "sharp-stub.ts",
         "src/**/*.integration.test.ts"
       ]
     },
     "apps/worker": {
-      "entry": ["vitest.server-only-stub.ts", "src/**/*.integration.test.ts"]
+      "entry": [
+        "vitest.server-only-stub.ts",
+        // Referenced only via tsdown `alias` for Docker bundles.
+        "server-only-stub.ts",
+        "src/**/*.integration.test.ts"
+      ]
     }
   },
 

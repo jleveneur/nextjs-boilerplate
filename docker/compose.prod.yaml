@@ -1,13 +1,15 @@
 # Local production-like stack: Traefik + built app images + shared deps.
-# CI publishes multi-arch images to GHCR as ghcr.io/<owner>/{web,api,worker}:<sha>
-# (Phase 12). ACME / Cloudflare / staging promotion are Phase 13. This file
-# validates the image + reverse-proxy shape on a laptop with locally built tags.
+# CI publishes multi-arch images to GHCR as
+# ghcr.io/<owner>/{web,api,worker,migrate}:<sha> (Phase 12).
+# This file proves migrate-then-roll and the reverse-proxy shape on a laptop
+# with locally built tags. Host TLS, DNS, and provider IaC are out of scope —
+# see docs/runbooks/deploy.md for the portable deploy sequence.
 
 name: repo-prod
 
 services:
   traefik:
-    image: traefik:v3.5.0
+    image: traefik:v3.6
     restart: unless-stopped
     command:
       - --providers.docker=true
@@ -88,6 +90,25 @@ services:
       timeout: 3s
       retries: 30
 
+  # One-shot: apply pending Drizzle migrations before any app starts.
+  # Adopters run the same image in CD: `docker compose run --rm migrate`.
+  migrate:
+    image: repo-migrate:local
+    build:
+      context: ..
+      dockerfile: docker/migrate.Dockerfile
+    environment:
+      NODE_ENV: production
+      APP_ENV: staging
+      APP_URL: http://localhost:8080
+      LOG_LEVEL: info
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
+      DATABASE_POOL_SIZE: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   web:
     image: repo-web:local
     build:
@@ -95,14 +116,14 @@ services:
       dockerfile: docker/web.Dockerfile
       args:
         NEXT_PUBLIC_APP_URL: http://localhost:8080
-        NEXT_PUBLIC_APP_ENV: production
+        NEXT_PUBLIC_APP_ENV: staging
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      APP_ENV: production
+      APP_ENV: staging
       APP_URL: http://localhost:8080
       NEXT_PUBLIC_APP_URL: http://localhost:8080
-      NEXT_PUBLIC_APP_ENV: production
+      NEXT_PUBLIC_APP_ENV: staging
       LOG_LEVEL: info
       PORT: "3000"
       HOSTNAME: 0.0.0.0
@@ -120,8 +141,8 @@ services:
       S3_ACCESS_KEY_ID: minioadmin
       S3_SECRET_ACCESS_KEY: minioadmin
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     labels:
@@ -138,7 +159,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      APP_ENV: production
+      APP_ENV: staging
       APP_URL: http://localhost:8080
       LOG_LEVEL: info
       API_PORT: "3001"
@@ -151,8 +172,8 @@ services:
       RESEND_API_KEY: re_test_replace_me
       SMTP_URL: smtp://mailpit:1025
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     labels:
@@ -170,7 +191,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      APP_ENV: production
+      APP_ENV: staging
       APP_URL: http://localhost:8080
       LOG_LEVEL: info
       WORKER_PORT: "3002"
@@ -186,8 +207,8 @@ services:
       S3_ACCESS_KEY_ID: minioadmin
       S3_SECRET_ACCESS_KEY: minioadmin
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       minio:

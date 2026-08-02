@@ -44,8 +44,8 @@
 /packages/auth/           @jleveneur
 /packages/authz/          @jleveneur
 /packages/env/            @jleveneur
-/infra/                   @jleveneur
 /docker/                  @jleveneur
+/docs/runbooks/           @jleveneur
 
 # Database schema and migrations: a migration is effectively irreversible once it
 # has run in production.
