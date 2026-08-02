@@ -1,6 +1,6 @@
 {
   "name": "@repo/core",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Domain and application services, ports, policies, and the billing vertical slice.",
   "type": "module",

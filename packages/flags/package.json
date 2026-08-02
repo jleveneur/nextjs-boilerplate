@@ -1,6 +1,6 @@
 {
   "name": "@repo/flags",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Feature-flag interface, typed flag registry, env + PostHog providers.",
   "type": "module",
