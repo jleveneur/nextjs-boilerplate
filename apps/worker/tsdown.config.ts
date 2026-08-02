@@ -5,6 +5,9 @@ import { defineConfig } from "tsdown";
  * Alpine image can ship its platform-native libvips binary from node_modules.
  * `server-only` is stubbed — workspace packages import it as a Next firewall;
  * the worker is a Node process, not an RSC boundary.
+ *
+ * Alias targets must be absolute: relative paths are resolved from the importer
+ * (workspace packages), which fails inside the Docker prune build.
  */
 export default defineConfig({
   entry: ["src/index.ts"],
@@ -16,7 +19,7 @@ export default defineConfig({
   dts: false,
   sourcemap: false,
   alias: {
-    "server-only": "./server-only-stub.ts",
+    "server-only": `${import.meta.dirname}/server-only-stub.ts`,
   },
   deps: {
     alwaysBundle: (id) => id !== "sharp" && !id.startsWith("sharp/"),
