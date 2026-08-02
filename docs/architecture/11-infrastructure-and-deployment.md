@@ -108,7 +108,9 @@ provenance/SBOM off so size budgets measure the runnable layers only.
 
 Supply-chain measures: SBOM generated per image, build provenance attestation, Trivy scanning with
 a CI failure on HIGH/CRITICAL, and multi-arch (`amd64`/`arm64`) builds so an ARM VPS or an Apple
-Silicon laptop is a non-event.
+Silicon laptop is a non-event. Platform builds run on **native** GitHub runners
+(`ubuntu-latest` + `ubuntu-24.04-arm`) and are merged into one `:sha` manifest — QEMU emulation
+is not used (it has crashed mid-`pnpm install` on arm64 with illegal-instruction dumps).
 
 ---
 

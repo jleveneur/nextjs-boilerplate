@@ -2,6 +2,9 @@ name: Publish images
 
 # Build multi-arch app images and push to GHCR on every merge to main.
 # Tags: ghcr.io/<owner>/{web,api,worker}:<git-sha>
+# Each platform builds natively (amd64 / ubuntu-24.04-arm) — no QEMU.
+# Emulated arm64 previously hung worker on `pnpm install` with:
+#   qemu: uncaught target signal 4 (Illegal instruction)
 # SBOM + provenance attestations are enabled here (local `make images` keeps
 # them off so size budgets stay meaningful).
 #
@@ -22,12 +25,11 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
-  publish:
-    name: Publish ${{ matrix.app }}
-    runs-on: ubuntu-latest
+  build:
+    name: Build ${{ matrix.app.name }} (${{ matrix.platform.name }})
+    runs-on: ${{ matrix.platform.runner }}
     permissions:
       contents: read
       packages: write
@@ -37,13 +39,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - app: web
+        app:
+          - name: web
             file: docker/web.Dockerfile
-          - app: api
+          - name: api
             file: docker/api.Dockerfile
-          - app: worker
+          - name: worker
             file: docker/worker.Dockerfile
+        platform:
+          - name: amd64
+            target: linux/amd64
+            runner: ubuntu-latest
+          - name: arm64
+            target: linux/arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,11 +61,8 @@ jobs:
         id: meta
         run: |
           owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
-          echo "image=${{ env.REGISTRY }}/${owner}/${{ matrix.app }}" >> "$GITHUB_OUTPUT"
+          echo "image=${{ env.REGISTRY }}/${owner}/${{ matrix.app.name }}" >> "$GITHUB_OUTPUT"
           echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
@@ -68,21 +74,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Scan the runnable amd64 image before any multi-arch push.
+      # Scan the runnable amd64 image before pushing digests for that platform.
       - name: Build amd64 for Trivy
+        if: matrix.platform.name == 'amd64'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
-          file: ${{ matrix.file }}
+          file: ${{ matrix.app.file }}
           platforms: linux/amd64
           load: true
           tags: ${{ steps.meta.outputs.image }}:trivy
           provenance: false
           sbom: false
-          cache-from: type=gha,scope=publish-${{ matrix.app }}
-          cache-to: type=gha,mode=max,scope=publish-${{ matrix.app }}
+          cache-from: type=gha,scope=publish-${{ matrix.app.name }}-amd64
+          cache-to: type=gha,mode=max,scope=publish-${{ matrix.app.name }}-amd64
 
       - name: Trivy scan
+        if: matrix.platform.name == 'amd64'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ steps.meta.outputs.image }}:trivy
@@ -91,15 +99,80 @@ jobs:
           ignore-unfixed: true
           format: table
 
-      - name: Build and push multi-arch
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
-          file: ${{ matrix.file }}
-          platforms: ${{ env.PLATFORMS }}
-          push: true
-          tags: ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha }}
+          file: ${{ matrix.app.file }}
+          platforms: ${{ matrix.platform.target }}
           provenance: mode=max
           sbom: true
-          cache-from: type=gha,scope=publish-${{ matrix.app }}
-          cache-to: type=gha,mode=max,scope=publish-${{ matrix.app }}
+          outputs: type=image,name=${{ steps.meta.outputs.image }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=publish-${{ matrix.app.name }}-${{ matrix.platform.name }}
+          cache-to: type=gha,mode=max,scope=publish-${{ matrix.app.name }}-${{ matrix.platform.name }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: digests-${{ matrix.app.name }}-${{ matrix.platform.name }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: Merge ${{ matrix.app }}
+    needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web, api, worker]
+
+    steps:
+      - name: Image name (lowercase)
+        id: meta
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "image=${{ env.REGISTRY }}/${owner}/${{ matrix.app }}" >> "$GITHUB_OUTPUT"
+          echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Download digests
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.app }}-*
+          merge-multiple: true
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            -t "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha }}" \
+            $(printf '${{ steps.meta.outputs.image }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect \
+            "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha }}"
