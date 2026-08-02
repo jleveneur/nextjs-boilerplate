@@ -1,3 +1,11 @@
+/**
+ * Worker process entry.
+ *
+ * Observability MUST be the first import so OTel auto-instrumentation patches
+ * HTTP / pg / ioredis / BullMQ before those modules load.
+ */
+import { observability } from "./observability.ts";
+
 import { serve } from "@hono/node-server";
 
 import { createApp } from "./app.ts";
@@ -39,6 +47,8 @@ async function shutdown(signal: string): Promise<void> {
   await container.jobs.close();
   await container.idempotencyRedis.quit();
   await container.sql.end({ timeout: 5 });
+  await container.closeAnalytics();
+  await observability.shutdown();
   process.exit(0);
 }
 

@@ -1,7 +1,23 @@
 // oxlint-disable-next-line import/no-unassigned-import -- credential firewall
 import "server-only";
 
-import { auth, base, createEnv, db, publicApp, redis, resend, s3, smtp } from "@repo/env/server";
+import {
+  auth,
+  base,
+  createEnv,
+  db,
+  featureFlags,
+  otel,
+  posthog,
+  posthogClient,
+  publicApp,
+  redis,
+  resend,
+  s3,
+  sentry,
+  sentryClient,
+  smtp,
+} from "@repo/env/server";
 
 /**
  * Server edge env for `apps/web`.
@@ -9,8 +25,8 @@ import { auth, base, createEnv, db, publicApp, redis, resend, s3, smtp } from "@
  * Validated once at import. Client code must import `./client.ts` — never this file.
  */
 export const env = createEnv({
-  server: [base, db, redis, auth, resend, smtp, s3],
-  client: [publicApp],
+  server: [base, db, redis, auth, resend, smtp, s3, otel, sentry, posthog, featureFlags],
+  client: [publicApp, posthogClient, sentryClient],
   skipValidation:
     process.env["SKIP_ENV_VALIDATION"] === "1" || process.env["SKIP_ENV_VALIDATION"] === "true",
   runtimeEnv: {
@@ -38,8 +54,22 @@ export const env = createEnv({
     S3_BUCKET: process.env["S3_BUCKET"],
     S3_ACCESS_KEY_ID: process.env["S3_ACCESS_KEY_ID"],
     S3_SECRET_ACCESS_KEY: process.env["S3_SECRET_ACCESS_KEY"],
+    OTEL_ENABLED: process.env["OTEL_ENABLED"],
+    OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
+    SENTRY_ENABLED: process.env["SENTRY_ENABLED"],
+    // Prefer per-service DSN when the monorepo shares one `.env`.
+    SENTRY_DSN: process.env["SENTRY_DSN_WEB"] ?? process.env["SENTRY_DSN"],
+    SENTRY_ENVIRONMENT: process.env["SENTRY_ENVIRONMENT"],
+    SENTRY_RELEASE: process.env["SENTRY_RELEASE"],
+    POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
+    POSTHOG_HOST: process.env["POSTHOG_HOST"],
+    FLAGS_JSON: process.env["FLAGS_JSON"],
     NEXT_PUBLIC_APP_URL: process.env["NEXT_PUBLIC_APP_URL"],
     NEXT_PUBLIC_APP_ENV: process.env["NEXT_PUBLIC_APP_ENV"],
+    NEXT_PUBLIC_POSTHOG_KEY: process.env["NEXT_PUBLIC_POSTHOG_KEY"],
+    NEXT_PUBLIC_POSTHOG_HOST: process.env["NEXT_PUBLIC_POSTHOG_HOST"],
+    NEXT_PUBLIC_SENTRY_DSN: process.env["NEXT_PUBLIC_SENTRY_DSN"],
     SKIP_ENV_VALIDATION: process.env["SKIP_ENV_VALIDATION"],
   },
 });

@@ -17,7 +17,8 @@ export default defineConfig({
   outDir: "dist",
   clean: true,
   dts: false,
-  sourcemap: false,
+  // Hidden source maps for Sentry upload — not served publicly.
+  sourcemap: "hidden",
   alias: {
     "server-only": `${import.meta.dirname}/server-only-stub.ts`,
   },

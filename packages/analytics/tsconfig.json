@@ -1,0 +1,10 @@
+{
+  "extends": "@repo/tsconfig/library.json",
+  "compilerOptions": {
+    // Server entries need Node types; browser-safety of `./client` is enforced
+    // by the export split and by server-only on the server entry — not by
+    // omitting the type (same pattern as @repo/env).
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "vitest.config.ts"]
+}

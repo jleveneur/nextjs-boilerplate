@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { trpcClient } from "../trpc/client.ts";
 import { TRPCProvider } from "../trpc/react.ts";
+import { AnalyticsProvider } from "./analytics-provider.tsx";
 import { ThemeProvider } from "./theme-provider.tsx";
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -25,7 +26,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
         <NuqsAdapter>
-          <ThemeProvider>{children}</ThemeProvider>
+          <AnalyticsProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </AnalyticsProvider>
         </NuqsAdapter>
       </TRPCProvider>
     </QueryClientProvider>

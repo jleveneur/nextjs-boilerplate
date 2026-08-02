@@ -48,10 +48,11 @@ export const idempotencyMiddleware: MiddlewareHandler<ApiEnv> = async (c, next) 
 
   const apiKey = c.get("apiKey");
   const fingerprint = createHash("sha256").update(apiKey).digest("hex").slice(0, 32);
+  // `buildCacheKey` forbids `:` inside the `key` segment (it is the delimiter).
   const cacheKey = {
     namespace: "api-idempotency",
     version: 1,
-    key: `${fingerprint}:${key}`,
+    key: `${fingerprint}-${key.replaceAll(":", "_")}`,
     organizationId: c.get("actor").organizationId,
   };
 

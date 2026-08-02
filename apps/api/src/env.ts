@@ -1,4 +1,16 @@
-import { auth, base, createEnv, db, redis, resend, smtp } from "@repo/env/server";
+import {
+  auth,
+  base,
+  createEnv,
+  db,
+  featureFlags,
+  otel,
+  posthog,
+  redis,
+  resend,
+  sentry,
+  smtp,
+} from "@repo/env/server";
 import { z } from "zod";
 
 const api = z.object({
@@ -13,7 +25,7 @@ const api = z.object({
  * Validated once at import. This is a Node composition root — no client presets.
  */
 export const env = createEnv({
-  server: [base, db, redis, auth, resend, smtp, api],
+  server: [base, db, redis, auth, resend, smtp, otel, sentry, posthog, featureFlags, api],
   skipValidation:
     process.env["SKIP_ENV_VALIDATION"] === "1" || process.env["SKIP_ENV_VALIDATION"] === "true",
   runtimeEnv: {
@@ -36,6 +48,17 @@ export const env = createEnv({
     EMAIL_FROM: process.env["EMAIL_FROM"],
     SMTP_URL: process.env["SMTP_URL"],
     MAILPIT_API_URL: process.env["MAILPIT_API_URL"],
+    OTEL_ENABLED: process.env["OTEL_ENABLED"],
+    OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
+    SENTRY_ENABLED: process.env["SENTRY_ENABLED"],
+    // Prefer per-service DSN when the monorepo shares one `.env`.
+    SENTRY_DSN: process.env["SENTRY_DSN_API"] ?? process.env["SENTRY_DSN"],
+    SENTRY_ENVIRONMENT: process.env["SENTRY_ENVIRONMENT"],
+    SENTRY_RELEASE: process.env["SENTRY_RELEASE"],
+    POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
+    POSTHOG_HOST: process.env["POSTHOG_HOST"],
+    FLAGS_JSON: process.env["FLAGS_JSON"],
     API_PORT: process.env["API_PORT"],
     STRIPE_WEBHOOK_SECRET: process.env["STRIPE_WEBHOOK_SECRET"],
     SKIP_ENV_VALIDATION: process.env["SKIP_ENV_VALIDATION"],

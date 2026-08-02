@@ -1,5 +1,4 @@
-# Local OTel collector — ships traces to Jaeger. App wiring is Phase 14;
-# this stack exists so exporters have somewhere to send when enabled.
+# Local OTel collector — traces to Jaeger, metrics to Prometheus (scraped on :8889).
 receivers:
   otlp:
     protocols:
@@ -16,6 +15,8 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  prometheus:
+    endpoint: 0.0.0.0:8889
 
 service:
   pipelines:
@@ -23,3 +24,7 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [otlp/jaeger]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]

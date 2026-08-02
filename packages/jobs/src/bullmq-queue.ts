@@ -9,6 +9,7 @@ import { Redis } from "ioredis";
 
 import { parseJobPayload } from "./registry.ts";
 import type { JobName, JobPayload } from "./registry.ts";
+import { wrapJobData } from "./trace-envelope.ts";
 import type {
   CreateBullMqJobQueueOptions,
   EnqueueOptions,
@@ -48,7 +49,7 @@ export function createBullMqJobQueue(options: CreateBullMqJobQueueOptions): Bull
       opts?: EnqueueOptions,
     ): Promise<EnqueueResult> {
       const validated = parseJobPayload(name, payload);
-      const job = await queue.add(name, validated, {
+      const job = await queue.add(name, wrapJobData(validated), {
         ...(opts?.delayMs === undefined ? {} : { delay: opts.delayMs }),
         ...(opts?.attempts === undefined ? {} : { attempts: opts.attempts }),
         ...(opts?.jobId === undefined ? {} : { jobId: opts.jobId }),

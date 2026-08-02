@@ -109,6 +109,9 @@ export async function resolveActorFromApiKey(
     return undefined;
   }
 
+  // `verifyApiKey` updates `request_count` / `last_request` — that is the
+  // per-key usage signal for deprecation (§5 Q6).
+
   const organizationId = result.key.referenceId;
   const role = input.fallbackRole ?? "member";
   const fromKey = permissionsFromApiKeyRecord(result.key.permissions);

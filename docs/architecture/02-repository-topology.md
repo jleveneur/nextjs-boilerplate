@@ -309,11 +309,13 @@ docker/
 ├── web.Dockerfile
 ├── api.Dockerfile            # HTTP server + migrate entry (`node dist/migrate.mjs`)
 ├── worker.Dockerfile         # docs.Dockerfile lands with apps/docs (Phase 15)
-├── compose.yaml              # Local dev dependencies (postgres, redis, minio, mailpit, otel, jaeger)
+├── compose.yaml              # Local dev dependencies (postgres, redis, minio, mailpit, otel, jaeger, prometheus, grafana)
 ├── compose.prod.yaml         # Local prod-like: Traefik + migrate-then-roll + local tags
 ├── compose.test.yaml         # Ephemeral services for CI integration tests
 ├── compose.e2e.yaml          # Test deps + built web image for Playwright
 ├── otel-collector-config.yaml
+├── prometheus/               # Scrape config + alert rules (local)
+├── grafana/                  # Provisioning + RED / queue dashboards (local)
 └── postgres/init/            # Extensions and roles at first boot
 ```
 

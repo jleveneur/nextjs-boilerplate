@@ -83,7 +83,8 @@ variable set is kept deliberately small so a single image is promotable from sta
 ### Local development
 
 `docker/compose.yaml` runs **dependencies only** — Postgres 18, Redis, MinIO, Mailpit, OTel
-collector, Jaeger. Applications run on the host via `pnpm dev`.
+collector (traces → Jaeger, metrics → Prometheus), Jaeger, Prometheus, and Grafana. Applications
+run on the host via `pnpm dev`.
 
 This is a deliberate choice against running apps in containers locally: HMR through a bind mount is
 slow and unreliable on macOS, `node_modules` mounting is fragile, and debugger attachment is
@@ -257,10 +258,10 @@ _your_ deployment in your runbook; the formula lives in [docs/runbooks/deploy.md
 Operational documentation lives in `docs/runbooks/` and is treated as deliverable work, because the
 value of a runbook is realised at 3 a.m. by someone who did not write it:
 
-`deploy.md` (portable sequence + connection budget), plus later:
-`restore-database.md`, `rotate-secrets.md`, `scale-up.md`,
-`incident-response.md`, `on-call.md`, plus one per alert (`high-error-rate.md`,
-`queue-backlog.md`, `db-connections-exhausted.md`, `disk-full.md`).
+`deploy.md` (portable sequence + connection budget), plus:
+`high-error-rate.md`, `queue-backlog.md`, stubs for `db-connections-exhausted.md` and
+`disk-full.md`; later: `restore-database.md`, `rotate-secrets.md`, `scale-up.md`,
+`incident-response.md`, `on-call.md`.
 
 Each states: symptoms, how to confirm, immediate mitigation, root-cause investigation, and
 prevention follow-up. Every alert links to its runbook; an alert without one is either given a

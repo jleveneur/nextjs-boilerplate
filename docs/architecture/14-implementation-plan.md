@@ -228,6 +228,10 @@ OTel traces spanning web → api → worker (including across queue boundaries),
 source maps, PostHog with the typed event registry and the reverse proxy, `@repo/flags` with both
 providers and expiry enforcement, dashboards, and alerts with runbook links.
 
+**Status:** implemented — `@repo/analytics`, `@repo/flags`, `@repo/observability` wiring in
+web/api/worker; local Prometheus/Grafana in `docker/compose.yaml`; runbooks in
+`docs/runbooks/`; flag expiry in `pnpm check`.
+
 **Done when** every question in [08 §5](./08-observability.md#5-what-good-observability-means-here)
 can be answered in minutes, verified by walking through them.
 

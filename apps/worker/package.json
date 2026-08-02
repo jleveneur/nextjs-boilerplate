@@ -15,13 +15,16 @@
   },
   "dependencies": {
     "@hono/node-server": "catalog:",
+    "@repo/analytics": "workspace:*",
     "@repo/authz": "workspace:*",
     "@repo/core": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/email": "workspace:*",
     "@repo/env": "workspace:*",
+    "@repo/flags": "workspace:*",
     "@repo/jobs": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/observability": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",
@@ -29,6 +32,7 @@
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
     "ioredis": "catalog:",
+    "sharp": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

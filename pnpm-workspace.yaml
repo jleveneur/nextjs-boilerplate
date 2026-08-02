@@ -36,6 +36,9 @@ allowBuilds:
   # prebuilt binaries, so the install script is unnecessary in CI and locally.
   "@parcel/watcher": false
   "@swc/core": false
+  # posthog-js lists core-js; the install script only patches global polyfills
+  # and is not required for our explicit-capture usage.
+  core-js: false
 
 # ---------------------------------------------------------------------------
 # Dependency catalog
@@ -103,6 +106,9 @@ catalog:
   # --- Platform adapters -------------------------------------------------
   # Entries are added when the first package consumes them (Knip flags unused
   # catalog pins). See docs/architecture/13-dependency-review.md for rationale.
+  # Product analytics + feature flags (docs/architecture/08-observability.md).
+  posthog-js: 1.408.0
+  posthog-node: 5.6.0
   pino: 10.3.1
   ioredis: 5.11.1
   bullmq: 5.81.3
@@ -120,7 +126,10 @@ catalog:
   "@types/react": 19.2.18
   "@opentelemetry/api": 1.9.1
   "@opentelemetry/sdk-node": 0.221.0
+  "@opentelemetry/sdk-metrics": 2.10.0
   "@opentelemetry/exporter-trace-otlp-http": 0.221.0
+  "@opentelemetry/exporter-metrics-otlp-http": 0.221.0
+  "@opentelemetry/auto-instrumentations-node": 0.72.0
   "@opentelemetry/resources": 2.10.0
   "@opentelemetry/semantic-conventions": 1.43.0
   "@sentry/node": 10.69.0

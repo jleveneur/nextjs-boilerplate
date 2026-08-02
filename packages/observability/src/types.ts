@@ -7,6 +7,8 @@ export type OtelInitOptions = {
   enabled: boolean;
   /** OTLP HTTP base URL, e.g. `http://127.0.0.1:4318`. Required when enabled. */
   endpoint?: string;
+  /** Service version / release — typically a git SHA. */
+  version?: string;
 };
 
 export type SentryInitOptions = {
@@ -15,6 +17,8 @@ export type SentryInitOptions = {
   environment?: string;
   /** Release tag — typically a git SHA. */
   release?: string;
+  /** Align with OTel sampling; default 0 (errors only via captureException). */
+  tracesSampleRate?: number;
 };
 
 export type InitObservabilityOptions = {

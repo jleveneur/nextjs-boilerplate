@@ -1,5 +1,5 @@
-import { TraceFlags } from "@opentelemetry/api";
-import { describe, expect, it } from "vitest";
+import { TraceFlags, trace } from "@opentelemetry/api";
+import { describe, expect, it, vi } from "vitest";
 
 import { createFixedTraceContext, noopGetTraceContext } from "./testing/index.ts";
 import { getTraceContext, spanContextToTraceContext } from "./trace-context.ts";
@@ -7,6 +7,23 @@ import { getTraceContext, spanContextToTraceContext } from "./trace-context.ts";
 describe("getTraceContext", () => {
   it("returns empty context when no span is active", () => {
     expect(getTraceContext()).toEqual({});
+  });
+
+  it("returns ids from the active span", () => {
+    vi.spyOn(trace, "getActiveSpan").mockReturnValue({
+      spanContext() {
+        return {
+          traceId: "c".repeat(32),
+          spanId: "d".repeat(16),
+          traceFlags: TraceFlags.SAMPLED,
+        };
+      },
+    } as ReturnType<typeof trace.getActiveSpan>);
+
+    expect(getTraceContext()).toEqual({
+      traceId: "c".repeat(32),
+      spanId: "d".repeat(16),
+    });
   });
 });
 

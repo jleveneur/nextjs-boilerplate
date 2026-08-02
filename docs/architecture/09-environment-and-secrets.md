@@ -106,8 +106,9 @@ steps.
 
 Local services in `docker/compose.yaml`: PostgreSQL 18, Redis, MinIO (with the bucket
 pre-created), Mailpit (SMTP catcher with a web UI so email is inspectable without sending),
-and an OTel collector plus Jaeger so traces are visible locally rather than being a
-production-only luxury.
+OTel collector (OTLP → Jaeger traces + Prometheus metrics), Jaeger UI, Prometheus, and Grafana.
+Host ports: Postgres `55432`, Redis `55434`, Jaeger `55443`, OTLP `55444`/`55445`, Prometheus
+`55447`, Grafana `55448`.
 
 `.env.example` is committed, exhaustively commented, and contains working defaults for every local
 service. It is the reference for what exists; a variable added without a documented entry there is
@@ -229,8 +230,9 @@ the presets it imports. Placeholder files:
 | Variable                                                             | Kind           | Notes                                        |
 | -------------------------------------------------------------------- | -------------- | -------------------------------------------- |
 | `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_SERVICE_NAME` | runtime        | Off by default                               |
-| `SENTRY_ENABLED` / `SENTRY_DSN`                                      | runtime        | Off by default                               |
+| `SENTRY_ENABLED` / `SENTRY_DSN` / `SENTRY_RELEASE`                   | runtime        | Off by default                               |
 | `POSTHOG_API_KEY` / `POSTHOG_HOST`                                   | runtime        | Server capture                               |
+| `FLAGS_JSON`                                                         | runtime        | Env flag overrides (`@repo/flags`)           |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`                        | runtime secret | Rejected test keys when `APP_ENV=production` |
 
 ### Process ports (app-local)

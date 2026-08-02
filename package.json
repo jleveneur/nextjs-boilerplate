@@ -17,8 +17,9 @@
     "spell": "cspell lint --no-progress --gitignore --dot .",
     "knip": "knip",
     "check:layers": "node scripts/check-layers.ts",
+    "check:flags": "node scripts/check-flag-expiry.ts",
     "test:scripts": "node --test \"scripts/**/*.test.ts\"",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:layers && pnpm spell && pnpm knip && pnpm test:scripts && pnpm test",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:layers && pnpm check:flags && pnpm spell && pnpm knip && pnpm test:scripts && pnpm test",
     "changeset": "changeset",
     "changeset:status": "changeset status --since=origin/main",
     "prepare": "node scripts/install-hooks.ts"

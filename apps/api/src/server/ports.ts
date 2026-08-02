@@ -1,3 +1,9 @@
+import {
+  createNoopAnalyticsSink,
+  createPostHogAnalyticsSink,
+  subscribeToAnalytics,
+  type AnalyticsSink as RepoAnalyticsSink,
+} from "@repo/analytics";
 import type {
   AnalyticsSink,
   Clock,
@@ -11,6 +17,12 @@ import type {
   Mailer,
 } from "@repo/core";
 import type { Mailer as EmailMailer } from "@repo/email";
+import {
+  createEnvFlagProvider,
+  createPostHogFlagProvider,
+  hasFlagName,
+  resolveFlag,
+} from "@repo/flags";
 import { createBullMqJobQueue } from "@repo/jobs";
 import type { AssetId, InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
 import { generateUuidV7 } from "@repo/utils";
@@ -105,22 +117,6 @@ export function createNoopFileStore(): FileStore {
   };
 }
 
-export function createNoopFlagProvider(): FlagProvider {
-  return {
-    isEnabled() {
-      return Promise.resolve(false);
-    },
-  };
-}
-
-export function createNoopAnalyticsSink(): AnalyticsSink {
-  return {
-    capture() {
-      return Promise.resolve();
-    },
-  };
-}
-
 /** Adapt `@repo/email` (React-capable) to the core html-only mailer port. */
 export function adaptEmailMailer(mailer: EmailMailer): Mailer {
   return {
@@ -136,33 +132,111 @@ export function adaptEmailMailer(mailer: EmailMailer): Mailer {
   };
 }
 
+function createFlagPort(options: {
+  flagsJson?: string;
+  posthogApiKey?: string;
+  posthogHost?: string;
+}): FlagProvider {
+  const envProvider =
+    options.flagsJson === undefined
+      ? createEnvFlagProvider()
+      : createEnvFlagProvider({ flagsJson: options.flagsJson });
+  const posthogProvider =
+    options.posthogApiKey !== undefined &&
+    options.posthogApiKey !== "" &&
+    options.posthogHost !== undefined
+      ? createPostHogFlagProvider({
+          apiKey: options.posthogApiKey,
+          host: options.posthogHost,
+        })
+      : undefined;
+
+  return {
+    async isEnabled(flag, context) {
+      if (!hasFlagName(flag)) {
+        return false;
+      }
+      const provider = posthogProvider ?? envProvider;
+      return resolveFlag(provider, flag, context);
+    },
+  };
+}
+
+function createAnalyticsPort(options: { posthogApiKey?: string; posthogHost?: string }): {
+  sink: AnalyticsSink;
+  repoSink: RepoAnalyticsSink;
+} {
+  if (
+    options.posthogApiKey !== undefined &&
+    options.posthogApiKey !== "" &&
+    options.posthogHost !== undefined
+  ) {
+    const repoSink = createPostHogAnalyticsSink({
+      apiKey: options.posthogApiKey,
+      host: options.posthogHost,
+    });
+    return {
+      repoSink,
+      sink: {
+        capture(event, properties) {
+          return repoSink.capture(event, properties);
+        },
+      },
+    };
+  }
+
+  const repoSink = createNoopAnalyticsSink();
+  return {
+    repoSink,
+    sink: {
+      capture(event, properties) {
+        return repoSink.capture(event, properties);
+      },
+    },
+  };
+}
+
+export type AppPortsHandle = {
+  ports: CtxPorts;
+  /** Flush buffered PostHog captures before process exit. */
+  closeAnalytics: () => Promise<void>;
+};
+
 export function createAppPorts(options: {
   appEnv: string;
   redisUrl: string;
   emailMailer: EmailMailer;
-}): CtxPorts {
+  posthogApiKey?: string;
+  posthogHost?: string;
+  flagsJson?: string;
+}): AppPortsHandle {
   const events = createInProcessEventBus();
   let jobs: ReturnType<typeof createBullMqJobQueue> | undefined;
+  const { sink: analytics, repoSink } = createAnalyticsPort(options);
+  subscribeToAnalytics(events, repoSink);
 
   return {
-    appEnv: options.appEnv,
-    clock: createSystemClock(),
-    ids: createUuidIdGenerator(),
-    events,
-    jobs: {
-      enqueue(name, payload, opts) {
-        jobs ??= createBullMqJobQueue({ redisUrl: options.redisUrl });
-        return jobs.enqueue(name, payload, opts);
+    ports: {
+      appEnv: options.appEnv,
+      clock: createSystemClock(),
+      ids: createUuidIdGenerator(),
+      events,
+      jobs: {
+        enqueue(name, payload, opts) {
+          jobs ??= createBullMqJobQueue({ redisUrl: options.redisUrl });
+          return jobs.enqueue(name, payload, opts);
+        },
+        async close() {
+          if (jobs !== undefined) {
+            await jobs.close();
+          }
+        },
       },
-      async close() {
-        if (jobs !== undefined) {
-          await jobs.close();
-        }
-      },
+      mailer: adaptEmailMailer(options.emailMailer),
+      files: createNoopFileStore(),
+      flags: createFlagPort(options),
+      analytics,
     },
-    mailer: adaptEmailMailer(options.emailMailer),
-    files: createNoopFileStore(),
-    flags: createNoopFlagProvider(),
-    analytics: createNoopAnalyticsSink(),
+    closeAnalytics: () => repoSink.shutdown(),
   };
 }

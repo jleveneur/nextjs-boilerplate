@@ -223,8 +223,8 @@ image-size: ## Fail if local app images exceed Phase 11 budgets
 ## Local dependencies (Docker)
 ## ----------------------------------------------------------------------------
 
-deps-up: ## Start Postgres, Redis, MinIO, Mailpit, OTel, Jaeger
-	$(COMPOSE) up -d postgres redis minio minio-init mailpit jaeger otel-collector
+deps-up: ## Start Postgres, Redis, MinIO, Mailpit, OTel, Jaeger, Prometheus, Grafana
+	$(COMPOSE) up -d postgres redis minio minio-init mailpit jaeger otel-collector prometheus grafana
 	@$(MAKE) db-wait
 	@until $(COMPOSE) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
 

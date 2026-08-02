@@ -1,0 +1,59 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Queue waiting jobs",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(bullmq_queue_waiting) by (queue)",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "title": "Job duration p95",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(bullmq_job_duration_bucket[5m])) by (le, queue))",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "id": 3,
+      "title": "DLQ / failed jobs",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(increase(bullmq_job_failed_total[5m])) by (queue)",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["worker", "queue"],
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Queue — worker",
+  "uid": "queue-worker",
+  "version": 1
+}

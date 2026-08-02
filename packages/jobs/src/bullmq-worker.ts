@@ -2,12 +2,14 @@
  * Short-lived / long-running BullMQ worker bound to the job registry.
  *
  * Exhausted attempts and terminal errors are moved to `${queueName}-dlq`.
+ * Trace context is restored from the job envelope before the handler runs.
  */
 
 import { Queue, UnrecoverableError, Worker, type Job } from "bullmq";
 import { Redis } from "ioredis";
 
 import { isJobName, parseJobPayload } from "./registry.ts";
+import { unwrapJobData, withJobTraceContext } from "./trace-envelope.ts";
 import type { CreateBullMqWorkerOptions, DeadLetterRecord } from "./types.ts";
 
 const DEFAULT_QUEUE = "default";
@@ -35,6 +37,7 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
   });
 
   async function moveToDeadLetter(job: Job, failedReason: string): Promise<void> {
+    const { payload } = unwrapJobData(job.data);
     await dlq.add(job.name, job.data, {
       jobId: `dlq-${job.id ?? job.name}-${String(job.attemptsMade)}`,
       removeOnComplete: { count: 1000 },
@@ -48,7 +51,7 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
       jobId: job.id ?? job.name,
       attemptsMade: job.attemptsMade,
       failedReason,
-      payload: job.data,
+      payload,
     };
 
     await options.onDeadLetter?.(record);
@@ -61,34 +64,37 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
         throw new UnrecoverableError(`Unknown job name: ${job.name}`);
       }
 
+      const { payload: rawPayload, trace } = unwrapJobData(job.data);
       const meta = {
         jobId: job.id ?? job.name,
         attemptsMade: job.attemptsMade,
       };
 
-      // Exhaustive switch keeps payload/handler pairing sound as jobs are added.
-      switch (job.name) {
-        case "email.send": {
-          const payload = parseJobPayload(job.name, job.data);
-          await options.handlers[job.name](payload, meta);
-          return;
+      await withJobTraceContext(job.name, trace, async () => {
+        // Exhaustive switch keeps payload/handler pairing sound as jobs are added.
+        switch (job.name) {
+          case "email.send": {
+            const payload = parseJobPayload(job.name, rawPayload);
+            await options.handlers[job.name](payload, meta);
+            return;
+          }
+          case "invoice.voided.notify": {
+            const payload = parseJobPayload(job.name, rawPayload);
+            await options.handlers[job.name](payload, meta);
+            return;
+          }
+          case "image.derive": {
+            const payload = parseJobPayload(job.name, rawPayload);
+            await options.handlers[job.name](payload, meta);
+            return;
+          }
+          case "asset.reconcile-orphans": {
+            const payload = parseJobPayload(job.name, rawPayload);
+            await options.handlers[job.name](payload, meta);
+            return;
+          }
         }
-        case "invoice.voided.notify": {
-          const payload = parseJobPayload(job.name, job.data);
-          await options.handlers[job.name](payload, meta);
-          return;
-        }
-        case "image.derive": {
-          const payload = parseJobPayload(job.name, job.data);
-          await options.handlers[job.name](payload, meta);
-          return;
-        }
-        case "asset.reconcile-orphans": {
-          const payload = parseJobPayload(job.name, job.data);
-          await options.handlers[job.name](payload, meta);
-          return;
-        }
-      }
+      });
     },
     {
       connection,

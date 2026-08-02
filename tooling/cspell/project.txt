@@ -99,14 +99,19 @@ apikey
 otel
 otlp
 opentelemetry
+tracestate
+Millis
 pino
 grafana
 jaeger
 jaegertracing
 libc
 linuxmusl
+LLEN
 exposedbydefault
 prometheus
+percentunit
+reqps
 loki
 tempo
 trivy
@@ -149,6 +154,7 @@ slugified
 passwordless
 autocapture
 frontmatter
+pageleave
 codegen
 codemods
 lockfiles
@@ -244,6 +250,7 @@ relitigated
 # --- Identifiers exported by this repository or its dependencies ------------
 # Real API names, so they appear in prose and in code and cannot be reworded.
 unbrand # @repo/types: recovers the base type behind a Brand
+unsubscribers
 unstub # Vitest: unstubEnvs / unstubGlobals
 rediss # TLS Redis URL scheme (redis:// vs rediss://)
 whsec # Stripe webhook secret prefix

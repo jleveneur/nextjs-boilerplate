@@ -17,6 +17,7 @@
   "dependencies": {
     "@hono/node-server": "catalog:",
     "@hono/zod-openapi": "catalog:",
+    "@repo/analytics": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/contracts": "workspace:*",
@@ -25,8 +26,10 @@
     "@repo/email": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/errors": "workspace:*",
+    "@repo/flags": "workspace:*",
     "@repo/jobs": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/observability": "workspace:*",
     "@repo/trpc": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",

@@ -1,6 +1,17 @@
+import {
+  createNoopAnalyticsSink,
+  createPostHogAnalyticsSink,
+  subscribeToAnalytics,
+} from "@repo/analytics";
 import type { Ctx, CtxPorts, DomainEvent, EventBus, EventHandler } from "@repo/core";
 import { createDb, type Database, type SqlClient } from "@repo/db";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
+import {
+  createEnvFlagProvider,
+  createPostHogFlagProvider,
+  hasFlagName,
+  resolveFlag,
+} from "@repo/flags";
 import {
   createBullMqJobQueue,
   createBullMqWorker,
@@ -8,7 +19,8 @@ import {
   type BullMqWorker,
   type JobHandlers,
 } from "@repo/jobs";
-import { createLogger, type Logger } from "@repo/logger";
+import { createLogger, runWithLogger, type Logger } from "@repo/logger";
+import { captureUnexpectedException, getTraceContext } from "@repo/observability";
 import { createFileStore } from "@repo/storage";
 import type { Actor } from "@repo/types";
 import { Redis } from "ioredis";
@@ -31,6 +43,7 @@ export type AppContainer = {
   /** Shared Redis for idempotency keys (not BullMQ's connection). */
   idempotencyRedis: Redis;
   buildCtx: (actor: Actor) => Ctx;
+  closeAnalytics: () => Promise<void>;
 };
 
 function createEmailMailer(): EmailMailer {
@@ -80,10 +93,13 @@ function adaptEmailMailer(mailer: EmailMailer): CtxPorts["mailer"] {
 }
 
 export function buildContainer(): AppContainer {
+  const release = env.SENTRY_RELEASE ?? process.env["GITHUB_SHA"];
   const logger = createLogger({
     service: "worker",
     env: env.APP_ENV,
     level: env.LOG_LEVEL,
+    ...(release !== undefined ? { version: release } : {}),
+    getTraceContext,
   });
 
   const { db, client: sql } = createDb({
@@ -106,22 +122,47 @@ export function buildContainer(): AppContainer {
     maxRetriesPerRequest: 1,
   });
 
+  const events = createInProcessEventBus();
+  const analyticsSink =
+    env.POSTHOG_API_KEY !== undefined && env.POSTHOG_HOST !== undefined
+      ? createPostHogAnalyticsSink({
+          apiKey: env.POSTHOG_API_KEY,
+          host: env.POSTHOG_HOST,
+        })
+      : createNoopAnalyticsSink();
+  subscribeToAnalytics(events, analyticsSink);
+
+  const envFlags =
+    env.FLAGS_JSON === undefined
+      ? createEnvFlagProvider()
+      : createEnvFlagProvider({ flagsJson: env.FLAGS_JSON });
+  const posthogFlags =
+    env.POSTHOG_API_KEY !== undefined && env.POSTHOG_HOST !== undefined
+      ? createPostHogFlagProvider({
+          apiKey: env.POSTHOG_API_KEY,
+          host: env.POSTHOG_HOST,
+        })
+      : undefined;
+
   const ports: CtxPorts = {
     appEnv: env.APP_ENV,
     clock: { now: () => new Date() },
     ids: createUuidIdGenerator(),
-    events: createInProcessEventBus(),
+    events,
     jobs,
     mailer: adaptEmailMailer(emailMailer),
     files,
     flags: {
-      isEnabled() {
-        return Promise.resolve(false);
+      isEnabled(flag, context) {
+        if (!hasFlagName(flag)) {
+          return Promise.resolve(false);
+        }
+        return resolveFlag(posthogFlags ?? envFlags, flag, context);
       },
     },
     analytics: {
-      capture() {
-        return Promise.resolve();
+      capture(event, properties) {
+        return analyticsSink.capture(event, properties);
       },
     },
   };
@@ -146,7 +187,40 @@ export function buildContainer(): AppContainer {
 
   const worker = createBullMqWorker({
     redisUrl: env.REDIS_URL,
-    handlers,
+    handlers: {
+      "email.send": async (payload, meta) => {
+        const jobLogger = logger.child({
+          jobId: meta.jobId,
+          jobName: "email.send",
+          attempt: meta.attemptsMade,
+        });
+        await runWithLogger(jobLogger, () => handlers["email.send"](payload, meta));
+      },
+      "invoice.voided.notify": async (payload, meta) => {
+        const jobLogger = logger.child({
+          jobId: meta.jobId,
+          jobName: "invoice.voided.notify",
+          attempt: meta.attemptsMade,
+        });
+        await runWithLogger(jobLogger, () => handlers["invoice.voided.notify"](payload, meta));
+      },
+      "image.derive": async (payload, meta) => {
+        const jobLogger = logger.child({
+          jobId: meta.jobId,
+          jobName: "image.derive",
+          attempt: meta.attemptsMade,
+        });
+        await runWithLogger(jobLogger, () => handlers["image.derive"](payload, meta));
+      },
+      "asset.reconcile-orphans": async (payload, meta) => {
+        const jobLogger = logger.child({
+          jobId: meta.jobId,
+          jobName: "asset.reconcile-orphans",
+          attempt: meta.attemptsMade,
+        });
+        await runWithLogger(jobLogger, () => handlers["asset.reconcile-orphans"](payload, meta));
+      },
+    },
     concurrency: 2,
     onDeadLetter(record) {
       logger.error(
@@ -160,6 +234,13 @@ export function buildContainer(): AppContainer {
         },
         "job moved to dead-letter queue",
       );
+      captureUnexpectedException(new Error(record.failedReason), {
+        extra: {
+          jobId: record.jobId,
+          jobName: record.jobName,
+          attemptsMade: record.attemptsMade,
+        },
+      });
     },
   });
 
@@ -173,5 +254,6 @@ export function buildContainer(): AppContainer {
     worker,
     idempotencyRedis,
     buildCtx,
+    closeAnalytics: () => analyticsSink.shutdown(),
   };
 }

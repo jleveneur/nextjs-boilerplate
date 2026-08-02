@@ -5,6 +5,7 @@ import {
   toProblemDetails,
   type AppError,
 } from "@repo/errors";
+import { captureUnexpectedException } from "@repo/observability";
 import type { ErrorHandler } from "hono";
 
 import type { ApiEnv } from "../app.ts";
@@ -44,12 +45,21 @@ function coerceAppError(error: unknown): AppError {
 export const errorHandler: ErrorHandler<ApiEnv> = (error, c) => {
   const requestId = c.get("requestId") ?? "unknown";
   const appError: AppError = coerceAppError(error);
+  const actor = c.get("actor");
 
   if (!appError.expose || appError.severity !== "expected") {
     c.get("container").logger.error(
       { err: appError, requestId, code: appError.code },
       appError.message,
     );
+    if (appError.severity === "unexpected") {
+      captureUnexpectedException(appError, {
+        requestId,
+        userId: actor?.userId,
+        organizationId: actor?.organizationId,
+        extra: { code: appError.code },
+      });
+    }
   } else {
     c.get("container").logger.warn(
       { requestId, code: appError.code, context: appError.context },

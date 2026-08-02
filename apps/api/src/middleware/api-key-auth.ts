@@ -16,6 +16,7 @@ function bearerToken(authorization: string | undefined): string | undefined {
 /**
  * Resolve an {@link Actor} from `Authorization: Bearer <api_key>` and build
  * the core {@link Ctx}. Public `/v1` routes require this; webhooks do not.
+ * API key verify bumps usage counters for deprecation queries (§5 Q6).
  */
 export const apiKeyAuthMiddleware: MiddlewareHandler<ApiEnv> = async (c, next) => {
   const container = c.get("container");
@@ -29,14 +30,17 @@ export const apiKeyAuthMiddleware: MiddlewareHandler<ApiEnv> = async (c, next) =
     throw new UnauthorizedError({ message: "Invalid API key" });
   }
 
+  const requestId = c.get("requestId");
+  const logger = container.logger.child({
+    requestId,
+    userId: actor.userId,
+    organizationId: actor.organizationId,
+  });
+
   const ctx: Ctx = {
     actor,
     db: container.db,
-    logger: container.logger.child({
-      requestId: c.get("requestId"),
-      userId: actor.userId,
-      organizationId: actor.organizationId,
-    }),
+    logger,
     ports: container.ports,
   };
 

@@ -15,6 +15,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
+    "@opentelemetry/api": "catalog:",
     "bullmq": "catalog:",
     "ioredis": "catalog:",
     "server-only": "0.0.1",

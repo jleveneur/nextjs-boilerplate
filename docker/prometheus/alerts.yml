@@ -1,0 +1,27 @@
+# Local alert rules — each annotation links to a runbook in docs/runbooks/.
+groups:
+  - name: repo-services
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_duration_count{http_status_code=~"5.."}[5m]))
+            /
+            sum(rate(http_server_duration_count[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: HTTP 5xx rate above 5% for five minutes
+          runbook_url: https://github.com/your-org/your-repo/blob/main/docs/runbooks/high-error-rate.md
+
+      - alert: QueueBacklogGrowing
+        expr: |
+          increase(bullmq_queue_waiting[15m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: BullMQ waiting jobs growing — worker may be stalled
+          runbook_url: https://github.com/your-org/your-repo/blob/main/docs/runbooks/queue-backlog.md

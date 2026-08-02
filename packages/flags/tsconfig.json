@@ -1,0 +1,9 @@
+{
+  "extends": "@repo/tsconfig/library.json",
+  "compilerOptions": {
+    // Server entries need Node types; browser-safety of shared registry exports
+    // is enforced by the export split and by server-only on the server entry.
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "vitest.config.ts"]
+}

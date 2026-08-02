@@ -25,10 +25,11 @@ export const rateLimitMiddleware: MiddlewareHandler<ApiEnv> = async (c, next) =>
   const now = Date.now();
   const windowStartMs = now - (now % (WINDOW_SECONDS * 1000));
 
+  // `buildCacheKey` forbids `:` inside the `key` segment (it is the delimiter).
   const cacheKey = {
     namespace: "api-rate-limit",
     version: 1,
-    key: `${fingerprint}:${String(windowStartMs)}`,
+    key: `${fingerprint}-${String(windowStartMs)}`,
   };
 
   const existing = await cache.get<WindowState>(cacheKey);

@@ -1,6 +1,7 @@
 export { auth } from "./auth.ts";
 export { base, logLevels } from "./base.ts";
 export { db } from "./db.ts";
+export { featureFlags } from "./flags.ts";
 export { otel } from "./otel.ts";
 export { posthog, posthogClient } from "./posthog.ts";
 export { publicApp } from "./public.ts";

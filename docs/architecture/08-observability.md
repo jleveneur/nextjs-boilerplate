@@ -281,7 +281,25 @@ The acceptance criteria, written as questions an engineer must be able to answer
 5. Signup conversion dropped 10 %. → Segment the PostHog funnel by release, flag variant, and
    cohort.
 6. "Is anyone still using API v1 endpoint X?" → Per-key endpoint usage, so deprecation is
-   communicated to specific customers rather than announced blindly.
+   communicated to specific customers rather than announced blindly. Better Auth
+   `verifyApiKey` increments `apikey.request_count` and updates `last_request` on each
+   successful validation — query those columns (or expose a small admin read) to rank keys
+   by traffic before deprecating a route.
 
 If any of these requires SSH-ing into a box and grepping, the observability setup has failed and
 gets fixed rather than worked around.
+
+### Walkthrough (acceptance)
+
+| #   | Question                                 | Where to look locally                                                                     |
+| --- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`55443`), Sentry issue, `ctx.actor` in tRPC context      |
+| 2   | p95 latency doubled after deploy         | Grafana RED dashboard (`55448`), compare `service.version` / Sentry `release` tags        |
+| 3   | Job retrying for an hour                 | Worker logs (`jobId`, `attempt`), Jaeger job span linked via envelope `traceparent`       |
+| 4   | Emails not arriving                      | Domain event → outbox table → `email.send` job → Resend span in trace                     |
+| 5   | Signup conversion dropped                | PostHog funnel; segment by `release` property and flag variant from server bootstrap      |
+| 6   | Who still uses REST endpoint X?          | `apikey.request_count` / `last_request` via Better Auth `verifyApiKey` (see `@repo/auth`) |
+
+**Local URLs** (after `make deps-up`): Jaeger `http://127.0.0.1:55443`, Prometheus
+`http://127.0.0.1:55447`, Grafana `http://127.0.0.1:55448` (admin/admin). Enable
+`OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:55445` in `.env`.

@@ -1,5 +1,16 @@
 import { createEnv } from "@repo/env/shared";
-import { base, db, redis, resend, s3, smtp } from "@repo/env/presets";
+import {
+  base,
+  db,
+  featureFlags,
+  otel,
+  posthog,
+  redis,
+  resend,
+  s3,
+  sentry,
+  smtp,
+} from "@repo/env/presets";
 import { z } from "zod";
 
 const worker = z.object({
@@ -15,7 +26,7 @@ const worker = z.object({
  * process is not tied to the Next.js client firewall.
  */
 export const env = createEnv({
-  server: [base, db, redis, s3, resend, smtp, worker],
+  server: [base, db, redis, s3, resend, smtp, otel, sentry, posthog, featureFlags, worker],
   skipValidation:
     process.env["SKIP_ENV_VALIDATION"] === "1" || process.env["SKIP_ENV_VALIDATION"] === "true",
   runtimeEnv: {
@@ -35,6 +46,17 @@ export const env = createEnv({
     EMAIL_FROM: process.env["EMAIL_FROM"],
     SMTP_URL: process.env["SMTP_URL"],
     MAILPIT_API_URL: process.env["MAILPIT_API_URL"],
+    OTEL_ENABLED: process.env["OTEL_ENABLED"],
+    OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
+    SENTRY_ENABLED: process.env["SENTRY_ENABLED"],
+    // Prefer per-service DSN when the monorepo shares one `.env`.
+    SENTRY_DSN: process.env["SENTRY_DSN_WORKER"] ?? process.env["SENTRY_DSN"],
+    SENTRY_ENVIRONMENT: process.env["SENTRY_ENVIRONMENT"],
+    SENTRY_RELEASE: process.env["SENTRY_RELEASE"],
+    POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
+    POSTHOG_HOST: process.env["POSTHOG_HOST"],
+    FLAGS_JSON: process.env["FLAGS_JSON"],
     WORKER_PORT: process.env["WORKER_PORT"],
     OUTBOX_POLL_MS: process.env["OUTBOX_POLL_MS"],
     SKIP_ENV_VALIDATION: process.env["SKIP_ENV_VALIDATION"],

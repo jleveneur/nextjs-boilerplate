@@ -7,6 +7,7 @@ import { createDb, type Database } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
 import { createLogger, type Logger } from "@repo/logger";
+import { getTraceContext } from "@repo/observability";
 
 import { env } from "../env/server.ts";
 import { createAppPorts } from "./ports.ts";
@@ -30,6 +31,7 @@ export type AppContainer = {
   auth: Auth;
   ports: CtxPorts;
   emailMailer: EmailMailer;
+  closeAnalytics: () => Promise<void>;
 };
 
 function createEmailMailer(): EmailMailer {
@@ -40,10 +42,13 @@ function createEmailMailer(): EmailMailer {
 }
 
 function buildContainer(): AppContainer {
+  const release = env.SENTRY_RELEASE ?? process.env["GITHUB_SHA"];
   const logger = createLogger({
     service: "web",
     env: env.APP_ENV,
     level: env.LOG_LEVEL,
+    ...(release !== undefined ? { version: release } : {}),
+    getTraceContext,
   });
 
   const { db } = createDb({
@@ -114,10 +119,13 @@ function buildContainer(): AppContainer {
     },
   });
 
-  const ports = createAppPorts({
+  const { ports, closeAnalytics } = createAppPorts({
     appEnv: env.APP_ENV,
     redisUrl: env.REDIS_URL,
     emailMailer,
+    ...(env.POSTHOG_API_KEY !== undefined ? { posthogApiKey: env.POSTHOG_API_KEY } : {}),
+    ...(env.POSTHOG_HOST !== undefined ? { posthogHost: env.POSTHOG_HOST } : {}),
+    ...(env.FLAGS_JSON !== undefined ? { flagsJson: env.FLAGS_JSON } : {}),
     s3: {
       endpoint: env.S3_ENDPOINT,
       region: env.S3_REGION,
@@ -127,7 +135,7 @@ function buildContainer(): AppContainer {
     },
   });
 
-  return { db, logger, auth, ports, emailMailer };
+  return { db, logger, auth, ports, emailMailer, closeAnalytics };
 }
 
 const globalForContainer = globalThis as typeof globalThis & {
