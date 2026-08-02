@@ -201,9 +201,9 @@ provider account.
 
 Deliverables:
 
-- One-shot **migrate** image and `compose.prod` migrate-then-roll (`depends_on:
-service_completed_successfully`) so `make prod-up` applies schema without a host-side
-  `make db-migrate`
+- One-shot **migrate** job (api image + `node dist/migrate.mjs`) and `compose.prod`
+  migrate-then-roll (`depends_on: service_completed_successfully`) so `make prod-up` applies
+  schema without a host-side `make db-migrate`
 - Runtime **environment catalog** and placeholder `.env.staging.example` /
   `.env.production.example` derived from `@repo/env` presets
 - Agnostic deploy / rollback runbook ([docs/runbooks/deploy.md](../runbooks/deploy.md)): pull SHA
@@ -215,7 +215,7 @@ service_completed_successfully`) so `make prod-up` applies schema without a host
 **Out of scope:** provisioning a real fleet, ACME/DNS, provider modules, encrypted secret trees,
 staging/production hostnames.
 
-**Status:** implemented — see `docker/migrate.Dockerfile`, `docker/compose.prod.yaml`,
+**Status:** implemented — see `docker/api.Dockerfile` (migrate entry), `docker/compose.prod.yaml`,
 `.env.staging.example`, `.env.production.example`, [docs/runbooks/deploy.md](../runbooks/deploy.md),
 and the Phase 13 sections of [09](./09-environment-and-secrets.md) / [11](./11-infrastructure-and-deployment.md).
 

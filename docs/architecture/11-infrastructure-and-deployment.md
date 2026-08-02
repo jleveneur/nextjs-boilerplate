@@ -69,9 +69,9 @@ patches traced libvips paths because Next standalone file-tracing often drops th
 
 **Local prod-like stack** (`docker/compose.prod.yaml`) runs Traefik on HTTP with Docker labels
 routing to the built `web` / `api` images; the worker stays internal; a one-shot `migrate`
-service applies schema before apps start. GHCR publish is Phase 12; the portable deploy sequence
-is Phase 13 ([docs/runbooks/deploy.md](../runbooks/deploy.md)). Host ACME/TLS is an adopter
-concern, not shipped here.
+service runs the **api** image with `node dist/migrate.mjs` before apps start. GHCR publish is
+Phase 12; the portable deploy sequence is Phase 13 ([docs/runbooks/deploy.md](../runbooks/deploy.md)).
+Host ACME/TLS is an adopter concern, not shipped here.
 
 ### The build/run split for Next.js
 
@@ -97,11 +97,11 @@ Volumes are named and persistent; `make db-reset` removes them explicitly.
 
 Images go to **GitHub Container Registry** (same permissions model as the repo, no extra vendor).
 
-Tagging: `ghcr.io/<owner>/{web,api,worker,migrate}:<git-sha>` always (owner lowercased), plus
-`:v1.2.3` on release via retag-without-rebuild. Adopters may add moving pointers (`:staging`,
-`:production`) in their own CD — those are not required by this repo. **The SHA tag is what
-deploys**; named tags are for humans, because a mutable tag in a deploy command means you cannot
-say what is running.
+Tagging: `ghcr.io/<owner>/{web,api,worker}:<git-sha>` always (owner lowercased), plus
+`:v1.2.3` on release via retag-without-rebuild. Migrate uses the api image
+(`node dist/migrate.mjs`). Adopters may add moving pointers (`:staging`, `:production`) in their
+own CD — those are not required by this repo. **The SHA tag is what deploys**; named tags are for
+humans, because a mutable tag in a deploy command means you cannot say what is running.
 
 Published by `.github/workflows/publish.yml` on every merge to `main`. Local `make images` keeps
 provenance/SBOM off so size budgets measure the runnable layers only.
@@ -145,8 +145,8 @@ What the boilerplate **does** guarantee:
 
 | Contract                         | Where                                                          |
 | -------------------------------- | -------------------------------------------------------------- |
-| Multi-arch OCI images by git SHA | `publish.yml` → GHCR `{web,api,worker,migrate}:<sha>`          |
-| Migrate before apps              | `docker/migrate.Dockerfile` + `compose.prod` / runbook         |
+| Multi-arch OCI images by git SHA | `publish.yml` → GHCR `{web,api,worker}:<sha>`                  |
+| Migrate before apps              | api image `node dist/migrate.mjs` + `compose.prod` / runbook   |
 | Typed runtime config             | `@repo/env` presets; see [09](./09-environment-and-secrets.md) |
 | Local proof of the shape         | `make prod-up` (Traefik + migrate-then-roll on a laptop)       |
 | Portable deploy sequence         | [docs/runbooks/deploy.md](../runbooks/deploy.md)               |
@@ -210,7 +210,7 @@ Documented end-to-end in [docs/runbooks/deploy.md](../runbooks/deploy.md):
 
 1. Ensure images for the git SHA exist in GHCR (published on merge to `main`).
 2. **Backups**: confirm a recent database backup / PITR timestamp (adopter's DB provider).
-3. **Migrate**: run the migrate image to completion.
+3. **Migrate**: run the api image with `node dist/migrate.mjs` to completion.
 4. **Roll** web → api → worker; wait for healthy before continuing.
 5. **Smoke test**: health + one read path (and a cheap write if safe).
 6. **Watch**: error rate and latency for a short window.

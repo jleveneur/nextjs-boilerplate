@@ -1,16 +1,18 @@
 /**
- * Host CLI: apply pending Drizzle migrations.
+ * Production migrate entry for the api OCI image.
  *
- * Migrations never run on application boot — this script, or the api image
- * migrate entry (`node dist/migrate.mjs`), is the only path that applies them.
+ * Same image as the API server; CD / compose override the command to
+ * `node dist/migrate.mjs` and wait for exit 0 before rolling apps.
+ * Migrations never run when the default CMD starts the HTTP server.
  */
 
 import { fileURLToPath } from "node:url";
 
-import { loadDbEnv, runMigrations } from "./run-migrations.ts";
+import { loadDbEnv, runMigrations } from "@repo/db/migrate";
 
 async function main(): Promise<void> {
   const env = loadDbEnv();
+  // Bundled to /app/dist/migrate.mjs; SQL is copied to /app/migrations.
   const migrationsFolder = fileURLToPath(new URL("../migrations", import.meta.url));
   await runMigrations({
     databaseUrl: env.DATABASE_URL,

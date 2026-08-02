@@ -16,6 +16,7 @@ export default mergeConfig(
         exclude: [
           "src/index.ts",
           "src/migrate.ts",
+          "src/run-migrations.ts",
           "src/env.ts",
           "src/schema/**",
           "src/seeds/**",

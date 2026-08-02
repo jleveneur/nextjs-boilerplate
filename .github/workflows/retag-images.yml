@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, api, worker, migrate]
+        app: [web, api, worker]
 
     steps:
       - name: Image coordinates

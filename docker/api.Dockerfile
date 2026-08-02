@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # Production image for @repo/api — turbo prune + tsdown bundle.
+# Also the migrate job: `node dist/migrate.mjs` (SQL at /app/migrations).
 # Shape: docs/architecture/11-infrastructure-and-deployment.md
 
 ARG NODE_IMAGE=node:24-alpine@sha256:f70403e87646dc51b45295f4b8b70cdad0b63d2297c4c9899119b03f7af7a6b3
@@ -38,6 +39,8 @@ COPY --from=base /usr/local/bin/node /usr/local/bin/node
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder --chown=app:nodejs /app/apps/api/dist ./dist
+# Sibling of dist/ so migrate.mjs resolves ../migrations via import.meta.url.
+COPY --from=builder --chown=app:nodejs /app/packages/db/migrations ./migrations
 USER app
 EXPOSE 3001
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \

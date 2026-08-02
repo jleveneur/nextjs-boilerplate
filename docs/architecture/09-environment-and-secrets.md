@@ -176,7 +176,7 @@ the presets it imports. Placeholder files:
 | `APP_URL`   | runtime | Canonical origin, no trailing slash                         |
 | `LOG_LEVEL` | runtime | Default `info`                                              |
 
-### Database (`db` preset) — web, api, worker, migrate
+### Database (`db` preset) — web, api (incl. migrate job), worker
 
 | Variable             | Kind           | Notes                                         |
 | -------------------- | -------------- | --------------------------------------------- |

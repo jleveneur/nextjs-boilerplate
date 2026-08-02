@@ -210,11 +210,10 @@ lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
 # shipping in the runnable image config we care about for budgets.
 DOCKER_BUILD := docker build --provenance=false --sbom=false
 
-images: ## Build web/api/worker/migrate images tagged *:local
+images: ## Build web/api/worker images tagged *:local
 	$(DOCKER_BUILD) -f docker/web.Dockerfile -t repo-web:local .
 	$(DOCKER_BUILD) -f docker/api.Dockerfile -t repo-api:local .
 	$(DOCKER_BUILD) -f docker/worker.Dockerfile -t repo-worker:local .
-	$(DOCKER_BUILD) -f docker/migrate.Dockerfile -t repo-migrate:local .
 	$(MAKE) image-size
 
 image-size: ## Fail if local app images exceed Phase 11 budgets

@@ -221,7 +221,7 @@ current when the decisions were made.
 | Containers             | Docker + Compose                                                                                    |
 | Local reverse proxy    | Traefik v3 in `compose.prod` (example only)                                                         |
 | Registry               | GitHub Container Registry (`:sha` images)                                                           |
-| Migrations             | One-shot `migrate` image; never on app boot                                                         |
+| Migrations             | One-shot job: api image + `node dist/migrate.mjs`; never on app boot                                |
 | Host / DNS / TLS / IaC | Bring-your-own — see [11 §3](./11-infrastructure-and-deployment.md#3-bring-your-own-infrastructure) |
 | Object storage API     | S3-compatible (R2, MinIO, …)                                                                        |
 | Postgres               | PostgreSQL 18 (any host; Neon is one option)                                                        |

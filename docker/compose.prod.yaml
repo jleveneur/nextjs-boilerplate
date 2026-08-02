@@ -1,7 +1,7 @@
 # Local production-like stack: Traefik + built app images + shared deps.
 # CI publishes multi-arch images to GHCR as
-# ghcr.io/<owner>/{web,api,worker,migrate}:<sha> (Phase 12).
-# This file proves migrate-then-roll and the reverse-proxy shape on a laptop
+# ghcr.io/<owner>/{web,api,worker}:<sha> (Phase 12). Migrate = api image +
+# `node dist/migrate.mjs`. This file proves migrate-then-roll and the reverse-proxy shape on a laptop
 # with locally built tags. Host TLS, DNS, and provider IaC are out of scope —
 # see docs/runbooks/deploy.md for the portable deploy sequence.
 
@@ -91,12 +91,17 @@ services:
       retries: 30
 
   # One-shot: apply pending Drizzle migrations before any app starts.
-  # Adopters run the same image in CD: `docker compose run --rm migrate`.
+  # Same OCI image as `api`; command overrides the HTTP server entry.
+  # Adopters: `docker compose run --rm migrate` or
+  # `docker run --rm … ghcr.io/<owner>/api:<sha> node dist/migrate.mjs`.
   migrate:
-    image: repo-migrate:local
+    image: repo-api:local
     build:
       context: ..
-      dockerfile: docker/migrate.Dockerfile
+      dockerfile: docker/api.Dockerfile
+    command: ["node", "dist/migrate.mjs"]
+    healthcheck:
+      disable: true
     environment:
       NODE_ENV: production
       APP_ENV: staging

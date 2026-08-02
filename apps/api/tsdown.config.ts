@@ -1,9 +1,9 @@
 import { defineConfig } from "tsdown";
 
 /**
- * Bundle the API into a single ESM artifact for the Docker runner stage.
- * Workspace packages and npm deps are inlined so the image needs no
- * workspace node_modules — only `node dist/index.mjs`.
+ * Bundle the API (and the one-shot migrate CLI) into ESM artifacts for the
+ * Docker runner stage. Workspace packages and npm deps are inlined so the
+ * image needs no workspace node_modules — only `dist/*.mjs` (+ SQL for migrate).
  * `server-only` is stubbed (Node process, not an RSC boundary).
  * Treeshake is off: bundling better-auth's organization plugin with treeshake
  * produced `Export 'getOrgAdapter' is not defined in module` at runtime.
@@ -13,7 +13,7 @@ import { defineConfig } from "tsdown";
  * (workspace packages), which fails inside the Docker prune build.
  */
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: ["src/index.ts", "src/migrate.ts"],
   format: ["esm"],
   platform: "node",
   target: "node24",

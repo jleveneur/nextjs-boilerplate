@@ -159,16 +159,17 @@ people work — they batch changes into bigger PRs, which is worse for everythin
 | Release tag `v*`    | Retag the same `:sha` images to `:vX.Y.Z` (`retag-images.yml`)                                            |
 | Manual dispatch     | Re-run publish for an arbitrary SHA (break-glass)                                                         |
 
-Phase 12 stops at immutable registry artifacts (`web`, `api`, `worker`, `migrate`). Deploying those
+Phase 12 stops at immutable registry artifacts (`web`, `api`, `worker`). Deploying those
 SHA tags to a host is **bring-your-own CD** — see [docs/runbooks/deploy.md](../runbooks/deploy.md)
-and Phase 13 (deployability) in [14](./14-implementation-plan.md).
+and Phase 13 (deployability) in [14](./14-implementation-plan.md). Migrate is the api image with
+`node dist/migrate.mjs`, not a fourth artifact.
 
 **CI is the only thing that builds release artifacts.** No local `docker push`; registry write
 permission belongs to the workflow identity only. Otherwise the provenance chain — this image came
 from this commit, which passed these checks — is broken, and it is exactly what you need during an
 incident.
 
-Image coordinates: `ghcr.io/<owner>/{web,api,worker,migrate}:<git-sha>`. Owner is lowercased. Local
+Image coordinates: `ghcr.io/<owner>/{web,api,worker}:<git-sha>`. Owner is lowercased. Local
 `make images` / `make prod-up` still use `repo-*:local` tags.
 
 ---

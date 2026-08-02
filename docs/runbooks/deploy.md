@@ -10,7 +10,7 @@ Local proof of the same shape: `make prod-up` (Traefik + migrate-then-roll on a 
 
 ## Prerequisites
 
-- Images published for the git SHA: `ghcr.io/<owner>/{web,api,worker,migrate}:<sha>`
+- Images published for the git SHA: `ghcr.io/<owner>/{web,api,worker}:<sha>`
   (owner lowercased; published by `.github/workflows/publish.yml` on merge to `main`)
 - Runtime secrets available to the orchestrator (see `.env.staging.example` /
   `.env.production.example` and [09 §5](../architecture/09-environment-and-secrets.md#5-runtime-variable-catalog))
@@ -20,12 +20,13 @@ Local proof of the same shape: `make prod-up` (Traefik + migrate-then-roll on a 
 
 ## Sequence
 
-1. **Pull** the four images for the target SHA (or let the orchestrator pull on start).
-2. **Migrate** — run the migrate image to completion with `DATABASE_URL` (pool size `1` is enough).
-   Exit code must be `0` before any app starts.
+1. **Pull** the three images for the target SHA (or let the orchestrator pull on start).
+2. **Migrate** — run the **api** image with the migrate command to completion (`DATABASE_URL`,
+   pool size `1` is enough). Exit code must be `0` before any app starts.
    ```bash
    docker run --rm --env-file .env.deploy \
-     ghcr.io/<owner>/migrate:<sha>
+     ghcr.io/<owner>/api:<sha> \
+     node dist/migrate.mjs
    ```
    Compose equivalent: `docker compose run --rm migrate` (see `docker/compose.prod.yaml`).
 3. **Roll** services, waiting for healthchecks between steps when possible:
@@ -85,8 +86,11 @@ Example (fill in your numbers):
 These are illustrations, not requirements of this repository.
 
 1. **Single host + Docker Compose + reverse proxy** — closest to `docker/compose.prod.yaml`; add TLS and DNS outside the repo.
-2. **Kubernetes** — Deployments for web/api/worker, Job for migrate, Ingress or Gateway API for routing.
-3. **Edge web + container backend** — host `apps/web` on an edge platform; run `api`/`worker`/`migrate` on containers. Align `APP_URL`, cookie domain, and `BETTER_AUTH_URL`.
+2. **Kubernetes** — Deployments for web/api/worker, Job using the api image with
+   `node dist/migrate.mjs`, Ingress or Gateway API for routing.
+3. **Edge web + container backend** — host `apps/web` on an edge platform; run `api`/`worker`
+   on containers (migrate Job uses the api image). Align `APP_URL`, cookie domain, and
+   `BETTER_AUTH_URL`.
 
 Provider modules (OpenTofu, Ansible, Cloudflare, host Traefik static config) stay in the adopter's
 ops repo if desired — see [11 §3](../architecture/11-infrastructure-and-deployment.md#3-bring-your-own-infrastructure).

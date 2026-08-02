@@ -307,11 +307,9 @@ here is designed to make that feel wrong.
 ```
 docker/
 ├── web.Dockerfile
-├── api.Dockerfile
+├── api.Dockerfile            # HTTP server + migrate entry (`node dist/migrate.mjs`)
 ├── worker.Dockerfile         # docs.Dockerfile lands with apps/docs (Phase 15)
 ├── compose.yaml              # Local dev dependencies (postgres, redis, minio, mailpit, otel, jaeger)
-├── migrate.Dockerfile        # One-shot Drizzle migrate job (CD + compose.prod)
-├── web.Dockerfile / api.Dockerfile / worker.Dockerfile
 ├── compose.prod.yaml         # Local prod-like: Traefik + migrate-then-roll + local tags
 ├── compose.test.yaml         # Ephemeral services for CI integration tests
 ├── compose.e2e.yaml          # Test deps + built web image for Playwright
@@ -322,7 +320,7 @@ docker/
 Dockerfiles live centrally, not per-app, so cross-cutting changes (base image bump, CVE patch,
 build-cache strategy) are one review in one folder. See
 [11](./11-infrastructure-and-deployment.md). CI publishes
-`ghcr.io/<owner>/{web,api,worker,migrate}:<sha>`.
+`ghcr.io/<owner>/{web,api,worker}:<sha>`. Migrate is the api image with a different command.
 
 ---
 
@@ -379,7 +377,7 @@ pnpm _and_ Docker.
 make setup            # Install toolchain, deps, .env, start services, migrate, seed
 make dev              # Services + all apps in watch mode
 make check            # Everything CI runs, locally, in the same order
-make images           # Build web/api/worker/migrate images and assert size budgets
+make images           # Build web/api/worker images and assert size budgets
 make e2e              # Playwright against the built web image
 make e2e-host         # Fast Playwright against next start (local loops)
 make db-reset         # Drop, migrate, seed
