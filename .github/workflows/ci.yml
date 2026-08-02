@@ -265,6 +265,11 @@ jobs:
         with:
           turbo_team: ${{ vars.TURBO_TEAM }}
       - name: Build api, worker, and web (source maps)
+        env:
+          # Match docker/web.Dockerfile — layout flag bootstrap imports server env.
+          SKIP_ENV_VALIDATION: "1"
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_APP_ENV: production
         run: |
           pnpm --filter @repo/api --filter @repo/worker build
           pnpm --filter @repo/web build
