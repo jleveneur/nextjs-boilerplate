@@ -1,6 +1,6 @@
 {
   "name": "@repo/jobs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Job name registry, Zod payload schemas, JobQueue port, and BullMQ adapter.",
   "type": "module",
