@@ -158,6 +158,16 @@ catalog:
   "@hono/zod-openapi": 1.5.1
   "@hono/node-server": 2.0.12
   "@scalar/hono-api-reference": 0.11.12
+  "@scalar/nextjs-api-reference": 0.11.12
+
+  # --- Documentation site (Fumadocs) -------------------------------------
+  fumadocs-core: 16.13.0
+  fumadocs-ui: 16.13.0
+  fumadocs-mdx: 15.2.2
+  "@types/mdx": 2.0.13
+  lucide-react: 0.575.0
+  mermaid: 11.12.0
+  takumi-js: 2.5.4
 
   # --- Design system -----------------------------------------------------
   clsx: 2.1.1
@@ -188,5 +198,9 @@ minimumReleaseAgeExclude:
   - bullmq@5.81.3
   - "@scalar/client-side-rendering@0.3.5"
   - "@scalar/hono-api-reference@0.11.12"
+  - "@scalar/nextjs-api-reference@0.11.12"
   - "@scalar/schemas@0.8.0"
   - "@scalar/types@0.17.0"
+  - fumadocs-core@16.13.0
+  - fumadocs-ui@16.13.0
+  - fumadocs-mdx@15.2.2

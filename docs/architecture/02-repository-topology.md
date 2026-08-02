@@ -149,9 +149,11 @@ choose not to use it.
 
 ### `apps/docs`
 
-Fumadocs site. Sources MDX from `docs/` where useful, renders ADRs, and embeds the Scalar API
-reference generated from `apps/api/openapi.json`. Documentation the team already writes becomes
-the published site, so there is only one copy.
+Fumadocs site on port **3003**. `scripts/prepare-content.ts` syncs
+`docs/{architecture,adr,runbooks}` into gitignored MDX at build/dev time; hand-written guides
+(`getting-started`, `contributing`) live under `content/docs/`. Embeds the Scalar API reference
+from the committed `apps/api/openapi.json`. Documentation the team already writes becomes the
+published site, so there is only one copy. Image: `docker/docs.Dockerfile` → `repo-docs`.
 
 ---
 
@@ -308,7 +310,8 @@ here is designed to make that feel wrong.
 docker/
 ├── web.Dockerfile
 ├── api.Dockerfile            # HTTP server + migrate entry (`node dist/migrate.mjs`)
-├── worker.Dockerfile         # docs.Dockerfile lands with apps/docs (Phase 15)
+├── worker.Dockerfile
+├── docs.Dockerfile           # Fumadocs site (architecture, ADRs, runbooks, OpenAPI)
 ├── compose.yaml              # Local dev dependencies (postgres, redis, minio, mailpit, otel, jaeger, prometheus, grafana)
 ├── compose.prod.yaml         # Local prod-like: Traefik + migrate-then-roll + local tags
 ├── compose.test.yaml         # Ephemeral services for CI integration tests
@@ -322,7 +325,7 @@ docker/
 Dockerfiles live centrally, not per-app, so cross-cutting changes (base image bump, CVE patch,
 build-cache strategy) are one review in one folder. See
 [11](./11-infrastructure-and-deployment.md). CI publishes
-`ghcr.io/<owner>/{web,api,worker}:<sha>`. Migrate is the api image with a different command.
+`ghcr.io/<owner>/{web,api,worker,docs}:<sha>`. Migrate is the api image with a different command.
 
 ---
 
@@ -379,7 +382,8 @@ pnpm _and_ Docker.
 make setup            # Install toolchain, deps, .env, start services, migrate, seed
 make dev              # Services + all apps in watch mode
 make check            # Everything CI runs, locally, in the same order
-make images           # Build web/api/worker images and assert size budgets
+make images           # Build web/api/worker/docs images and assert size budgets
+
 make e2e              # Playwright against the built web image
 make e2e-host         # Fast Playwright against next start (local loops)
 make db-reset         # Drop, migrate, seed

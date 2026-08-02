@@ -101,7 +101,8 @@ Volumes are named and persistent; `make db-reset` removes them explicitly.
 
 Images go to **GitHub Container Registry** (same permissions model as the repo, no extra vendor).
 
-Tagging: `ghcr.io/<owner>/{web,api,worker}:<git-sha>` always (owner lowercased), plus
+Tagging: `ghcr.io/<owner>/{web,api,worker,docs}:<git-sha>` always (owner lowercased), plus
+
 `:v1.2.3` on release via retag-without-rebuild. Migrate uses the api image
 (`node dist/migrate.mjs`). Adopters may add moving pointers (`:staging`, `:production`) in their
 own CD — those are not required by this repo. **The SHA tag is what deploys**; named tags are for
@@ -133,7 +134,8 @@ flowchart LR
     EDGE["DNS / CDN / WAF<br/>optional"] --> TR["Reverse proxy<br/>TLS + routing"]
     TR -->|"app.example.com"| WEB["web:3000"]
     TR -->|"api.example.com"| API["api:3001"]
-    TR -->|"docs.example.com"| DOCS["docs:3002"]
+    TR -->|"docs.example.com"| DOCS["docs:3003"]
+
 ```
 
 Useful middleware ideas regardless of proxy: security headers, rate limiting, compression, and
@@ -151,7 +153,7 @@ What the boilerplate **does** guarantee:
 
 | Contract                         | Where                                                          |
 | -------------------------------- | -------------------------------------------------------------- |
-| Multi-arch OCI images by git SHA | `publish.yml` → GHCR `{web,api,worker}:<sha>`                  |
+| Multi-arch OCI images by git SHA | `publish.yml` → GHCR `{web,api,worker,docs}:<sha>`             |
 | Migrate before apps              | api image `node dist/migrate.mjs` + `compose.prod` / runbook   |
 | Typed runtime config             | `@repo/env` presets; see [09](./09-environment-and-secrets.md) |
 | Local proof of the shape         | `make prod-up` (Traefik + migrate-then-roll on a laptop)       |

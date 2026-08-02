@@ -1,0 +1,51 @@
+---
+title: Getting started
+description: Install the monorepo, start local dependencies, and run the apps.
+---
+
+Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 11+, and
+[Docker](https://docs.docker.com/get-docker/). `make help` lists every target.
+
+## Install
+
+```bash
+make setup       # install, root `.env`, `apps/docs/.env`, deps, migrate, seed
+make check       # format, lint, typecheck, layers, tests — same gates as CI
+```
+
+Or step by step:
+
+```bash
+pnpm install
+cp .env.example .env
+cp apps/docs/.env.example apps/docs/.env   # docs site (port 3003)
+make deps-up     # Postgres, Redis, MinIO, Mailpit, OTel/Jaeger, …
+make db-migrate
+make db-seed     # optional demo data
+```
+
+Configuration is validated by `@repo/env` — never read `process.env` outside
+that package. The docs app only needs the public preset in `apps/docs/.env`.
+
+## Run the apps
+
+```bash
+pnpm --filter @repo/web dev      # http://127.0.0.1:3000
+pnpm --filter @repo/api dev      # http://127.0.0.1:3001
+pnpm --filter @repo/worker dev   # health on :3002
+pnpm --filter @repo/docs dev     # this site on :3003
+```
+
+Or build images and run the prod-like stack:
+
+```bash
+make images
+make prod-up     # Traefik on :8080 — web at localhost, docs at docs.localhost
+```
+
+## Where to read next
+
+1. [Architecture overview](/docs/architecture/README) — reading order for the design docs
+2. [Principles](/docs/architecture/01-principles-and-constraints) — what is optimised for
+3. [Package graph](/docs/architecture/03-package-graph-and-boundaries) — layer rules
+4. [API reference](/api-reference) — public REST `/v1`

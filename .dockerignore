@@ -25,3 +25,6 @@ apps/**/vitest*.ts
 **/*.spec.ts
 **/*.md
 !README.md
+# Docs site content source (Phase 15) — prepare-content reads these at build.
+!docs/**/*.md
+!apps/api/openapi.json

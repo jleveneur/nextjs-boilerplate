@@ -4,10 +4,10 @@ A production-grade monorepo foundation: typed end to end, self-hostable, and
 cloud-agnostic. Built to be the starting point for real products rather than a
 demo.
 
-**Status:** under construction. The architecture is settled and documented; the
-implementation is landing in reviewable phases. See
+**Status:** Phase 15 docs live. Architecture, ADRs, runbooks, and the OpenAPI
+reference ship from [`apps/docs`](apps/docs). See
 [the implementation plan](docs/architecture/14-implementation-plan.md) for what
-exists today and what is next.
+is next.
 
 ---
 
@@ -17,9 +17,14 @@ Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 11+, and
 [Docker](https://docs.docker.com/get-docker/). `make help` lists everything.
 
 ```bash
-pnpm install     # dependencies and Git hooks
-make check       # every quality gate — the same set CI runs
+make setup            # install, root `.env`, `apps/docs/.env`, deps, migrate, seed
+make check            # every quality gate — the same set CI runs
+pnpm --filter @repo/docs dev   # docs site → http://localhost:3003/docs
 ```
+
+Apps: `pnpm --filter @repo/web dev` (3000), `@repo/api` (3001), `@repo/worker` (3002).
+With `make prod-up`, Traefik on `:8080` serves docs at
+[http://docs.localhost:8080](http://docs.localhost:8080).
 
 ---
 
@@ -52,6 +57,7 @@ The load-bearing ideas:
 
 | Read this                                                                        | For                                                 |
 | -------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Local docs site (`pnpm --filter @repo/docs dev`)                                 | Architecture, ADRs, runbooks, API reference         |
 | [Architecture overview](docs/architecture/README.md)                             | The whole design, in reading order                  |
 | [Principles and constraints](docs/architecture/01-principles-and-constraints.md) | What is optimised for, and what is deliberately not |
 | [Repository topology](docs/architecture/02-repository-topology.md)               | What lives where                                    |
@@ -61,16 +67,19 @@ The load-bearing ideas:
 | [ADRs](docs/adr/README.md)                                                       | Decisions, with their alternatives and consequences |
 | [AGENTS.md](AGENTS.md)                                                           | Rules for AI coding agents                          |
 
+Authorship stays in [`docs/`](docs/) — the site syncs that tree at build time. Getting
+started and contribution guides live only under `apps/docs/content/docs/`.
+
 ---
 
 ## Layout
 
 ```
-apps/        Deployable units (web, api, workers)
+apps/        Deployable units (web, api, worker, docs)
 packages/    Shared libraries, arranged in layers
 tooling/     Build, lint, and type configuration
 docker/      Images and Compose stacks (incl. local prod-like)
-docs/        Architecture, ADRs, and runbooks
+docs/        Architecture, ADRs, and runbooks (source of truth for the docs site)
 scripts/     Repository automation, with its own tests
 ```
 
@@ -85,6 +94,7 @@ make typecheck   # tsc --noEmit across the workspace
 make test        # unit tests
 make layers      # assert the layer boundaries hold
 make format      # apply Oxfmt
+make images      # build web/api/worker/docs images and assert size budgets
 ```
 
 Git hooks run a fast subset before each commit and push. They are a convenience —

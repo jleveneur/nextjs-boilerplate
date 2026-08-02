@@ -38,6 +38,7 @@ zustand
 superjson
 prosemirror
 recharts
+takumi
 mintlify
 valibot
 arktype

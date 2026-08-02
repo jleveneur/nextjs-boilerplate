@@ -1,7 +1,8 @@
 name: Publish images
 
 # Build multi-arch app images and push to GHCR on every merge to main.
-# Tags: ghcr.io/<owner>/{web,api,worker}:<git-sha>
+# Tags: ghcr.io/<owner>/{web,api,worker,docs}:<git-sha>
+
 # Each platform builds natively (amd64 / ubuntu-24.04-arm) — no QEMU.
 # Emulated arm64 previously hung worker on `pnpm install` with:
 #   qemu: uncaught target signal 4 (Illegal instruction)
@@ -46,6 +47,8 @@ jobs:
             file: docker/api.Dockerfile
           - name: worker
             file: docker/worker.Dockerfile
+          - name: docs
+            file: docker/docs.Dockerfile
         platform:
           - name: amd64
             target: linux/amd64
@@ -138,7 +141,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, api, worker]
+        app: [web, api, worker, docs]
 
     steps:
       - name: Image name (lowercase)

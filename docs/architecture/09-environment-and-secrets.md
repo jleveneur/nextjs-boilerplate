@@ -221,8 +221,8 @@ the presets it imports. Placeholder files:
 
 | Variable                                           | Kind           | Notes                                       |
 | -------------------------------------------------- | -------------- | ------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL`                              | **build-time** | Baked into the web image                    |
-| `NEXT_PUBLIC_APP_ENV`                              | **build-time** | Baked into the web image                    |
+| `NEXT_PUBLIC_APP_URL`                              | **build-time** | Baked into the web / docs images            |
+| `NEXT_PUBLIC_APP_ENV`                              | **build-time** | Baked into the web / docs images            |
 | `NEXT_PUBLIC_POSTHOG_*` / `NEXT_PUBLIC_SENTRY_DSN` | **build-time** | Only when those client presets are composed |
 
 ### Observability / payments presets (composed when wired — Phase 14/17)

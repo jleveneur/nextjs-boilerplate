@@ -60,7 +60,9 @@ setup: ## Idempotent clean-machine bootstrap (tools, deps, .env, services, migra
 	@docker info >/dev/null 2>&1 || (echo "Docker daemon is not running" && exit 1)
 	pnpm install
 	@if [ ! -f .env ]; then cp .env.example .env; echo "Created .env from .env.example"; fi
+	@if [ ! -f apps/docs/.env ]; then cp apps/docs/.env.example apps/docs/.env; echo "Created apps/docs/.env from apps/docs/.env.example"; fi
 	$(MAKE) deps-up
+
 	$(MAKE) db-migrate
 	$(MAKE) db-seed
 	@printf '\nSetup complete. Next: make dev\n\n'
@@ -210,11 +212,13 @@ lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
 # shipping in the runnable image config we care about for budgets.
 DOCKER_BUILD := docker build --provenance=false --sbom=false
 
-images: ## Build web/api/worker images tagged *:local
+images: ## Build web/api/worker/docs images tagged *:local
 	$(DOCKER_BUILD) -f docker/web.Dockerfile -t repo-web:local .
 	$(DOCKER_BUILD) -f docker/api.Dockerfile -t repo-api:local .
 	$(DOCKER_BUILD) -f docker/worker.Dockerfile -t repo-worker:local .
+	$(DOCKER_BUILD) -f docker/docs.Dockerfile -t repo-docs:local .
 	$(MAKE) image-size
+
 
 image-size: ## Fail if local app images exceed Phase 11 budgets
 	node --experimental-strip-types scripts/check-image-size.ts

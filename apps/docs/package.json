@@ -1,0 +1,44 @@
+{
+  "name": "@repo/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fumadocs documentation site — architecture, ADRs, runbooks, and OpenAPI reference.",
+  "type": "module",
+  "scripts": {
+    "prepare-content": "node --experimental-strip-types ./scripts/prepare-content.ts",
+    "predev": "pnpm prepare-content",
+    "prebuild": "pnpm prepare-content",
+    "dev": "next dev --port 3003",
+    "build": "next build",
+    "start": "next start --port 3003",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/env": "workspace:*",
+    "@scalar/nextjs-api-reference": "catalog:",
+    "fumadocs-core": "catalog:",
+    "fumadocs-mdx": "catalog:",
+    "fumadocs-ui": "catalog:",
+    "lucide-react": "catalog:",
+    "mermaid": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "takumi-js": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/mdx": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  },
+  "repo": {
+    "layer": 4,
+    "runtime": "node"
+  }
+}

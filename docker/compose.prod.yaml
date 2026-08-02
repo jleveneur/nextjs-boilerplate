@@ -1,9 +1,9 @@
 # Local production-like stack: Traefik + built app images + shared deps.
 # CI publishes multi-arch images to GHCR as
-# ghcr.io/<owner>/{web,api,worker}:<sha> (Phase 12). Migrate = api image +
+# ghcr.io/<owner>/{web,api,worker,docs}:<sha>. Migrate = api image +
 # `node dist/migrate.mjs`. This file proves migrate-then-roll and the reverse-proxy shape on a laptop
-# with locally built tags. Host TLS, DNS, and provider IaC are out of scope —
-# see docs/runbooks/deploy.md for the portable deploy sequence.
+# with locally built tags (docs at Host(`docs.localhost`)). Host TLS, DNS, and provider IaC are out of
+# scope — see docs/runbooks/deploy.md for the portable deploy sequence.
 
 name: repo-prod
 
@@ -187,6 +187,28 @@ services:
       - traefik.http.routers.api.entrypoints=web
       - traefik.http.routers.api.priority=100
       - traefik.http.services.api.loadbalancer.server.port=3001
+
+  docs:
+    image: repo-docs:local
+    build:
+      context: ..
+      dockerfile: docker/docs.Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: http://docs.localhost:8080
+        NEXT_PUBLIC_APP_ENV: staging
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      APP_ENV: staging
+      NEXT_PUBLIC_APP_URL: http://docs.localhost:8080
+      NEXT_PUBLIC_APP_ENV: staging
+      PORT: "3003"
+      HOSTNAME: 0.0.0.0
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.docs.rule=Host(`docs.localhost`)
+      - traefik.http.routers.docs.entrypoints=web
+      - traefik.http.services.docs.loadbalancer.server.port=3003
 
   worker:
     image: repo-worker:local

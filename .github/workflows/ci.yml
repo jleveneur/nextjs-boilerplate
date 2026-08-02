@@ -48,6 +48,7 @@ jobs:
               - 'apps/**'
               - 'packages/**'
               - 'docker/**'
+              - 'docs/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'package.json'
@@ -249,6 +250,14 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: repo-worker:local
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          format: table
+      - name: Scan docs image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: repo-docs:local
           severity: HIGH,CRITICAL
           exit-code: "1"
           ignore-unfixed: true

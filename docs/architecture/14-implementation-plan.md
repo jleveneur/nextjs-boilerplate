@@ -174,10 +174,10 @@ SIGTERM drains cleanly.
 Three runtime Dockerfiles (`web`, `api`, `worker`) with `turbo prune`, multi-stage builds, non-root
 users, and healthchecks; `compose.yaml` (deps + OTel/Jaeger), `compose.prod.yaml` (local Traefik +
 app images), `compose.test.yaml`, `compose.e2e.yaml`; and `make setup` / `make e2e` / `make images`.
-`docs.Dockerfile` waits for Phase 15 (`apps/docs`).
+`docs.Dockerfile` lands with Phase 15 (`apps/docs`).
 
 **Done when** linux/amd64 images stay under the size budgets in `scripts/check-image-size.ts`
-(web 260 / api 165 / worker 190 MB uncompressed), `make setup` works on a clean machine, and the
+(web 260 / api 165 / worker 190 / docs 260 MB uncompressed), `make setup` works on a clean machine, and the
 E2E suite passes against the built web image (CI) rather than `next start`.
 
 ## Phase 12 — CI/CD
@@ -237,9 +237,15 @@ can be answered in minutes, verified by walking through them.
 
 ## Phase 15 — Documentation site
 
-`apps/docs` with Fumadocs, rendering the architecture documents and ADRs, embedding the Scalar
-reference, plus getting-started and contribution guides. The root `README.md` is written last, when
-there is something true to describe.
+**Status:** implemented — `apps/docs` (Fumadocs 16.13 on Next 16) syncs
+`docs/{architecture,adr,runbooks}` via `prepare-content`, ships getting-started and
+contributing guides, embeds Scalar from `apps/api/openapi.json` at `/api-reference`,
+and publishes as `repo-docs` (port **3003**, Traefik `docs.localhost` in
+`compose.prod.yaml`).
+
+**Done when** `make check` is green, `pnpm --filter @repo/docs build` succeeds, the
+docs image stays under budget, and the site serves architecture, ADRs, guides, Mermaid,
+search, and `/api-reference` locally.
 
 ## Phase 16 — Hardening
 
