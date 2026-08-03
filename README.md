@@ -4,9 +4,10 @@ A production-grade monorepo foundation: typed end to end, self-hostable, and
 cloud-agnostic. Built to be the starting point for real products rather than a
 demo.
 
-**Status:** Phase 16 hardening live. Docs site at [`apps/docs`](apps/docs); load
-(k6), ZAP, restore-drill, and security review under `perf/` and `docs/security/`.
-See [the implementation plan](docs/architecture/14-implementation-plan.md).
+**Status:** Foundation complete through Phase 17 (payments + UI widgets). Docs at
+[`apps/docs`](apps/docs); Stripe billing via `@repo/payments`; hardening evidence
+under `perf/` and `docs/security/`. See
+[the implementation plan](docs/architecture/14-implementation-plan.md).
 
 ---
 
