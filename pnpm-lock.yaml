@@ -514,6 +514,9 @@ importers:
       '@repo/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@repo/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
       '@repo/flags':
         specifier: workspace:*
         version: link:../../packages/flags
