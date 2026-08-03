@@ -260,6 +260,28 @@ export function buildContainer(): AppContainer {
         },
       });
     },
+    onDeadLetterError({ record, stage, error }) {
+      logger.error(
+        {
+          err: error,
+          queueName: record.queueName,
+          dlqName: record.dlqName,
+          jobName: record.jobName,
+          jobId: record.jobId,
+          attemptsMade: record.attemptsMade,
+          deadLetterStage: stage,
+        },
+        "failed to process job dead-lettering",
+      );
+      captureUnexpectedException(error, {
+        extra: {
+          jobId: record.jobId,
+          jobName: record.jobName,
+          attemptsMade: record.attemptsMade,
+          deadLetterStage: stage,
+        },
+      });
+    },
   });
 
   return {
