@@ -1,8 +1,11 @@
 name: Publish images
 
-# Build multi-arch app images and push to GHCR on every merge to main.
+# Post-merge release artifacts for every push to main (and workflow_dispatch):
+#   - multi-arch app images → GHCR as :sha
+#   - Sentry source maps for that same SHA (parallel job; skipped if token unset)
+#
 # Tags: ghcr.io/<owner>/{web,api,worker,docs}:<git-sha>
-
+#
 # Each platform builds natively (amd64 / ubuntu-24.04-arm) — no QEMU.
 # Emulated arm64 previously hung worker on `pnpm install` with:
 #   qemu: uncaught target signal 4 (Illegal instruction)
@@ -28,6 +31,64 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  # Same SHA as the GHCR tags — not a CI gate, and never on PRs.
+  sentry-sourcemaps:
+    name: Sentry source maps
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
+      - name: Build api, worker, and web (source maps)
+        env:
+          # Match docker/web.Dockerfile — layout flag bootstrap imports server env.
+          SKIP_ENV_VALIDATION: "1"
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_APP_ENV: production
+        run: |
+          pnpm --filter @repo/api --filter @repo/worker build
+          pnpm --filter @repo/web build
+      - name: Upload source maps to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT_API: ${{ vars.SENTRY_PROJECT_API }}
+          SENTRY_PROJECT_WORKER: ${{ vars.SENTRY_PROJECT_WORKER }}
+          SENTRY_PROJECT_WEB: ${{ vars.SENTRY_PROJECT_WEB }}
+        run: |
+          if [ -z "${SENTRY_AUTH_TOKEN:-}" ]; then
+            echo "SENTRY_AUTH_TOKEN unset — skipping source map upload."
+            exit 0
+          fi
+          if [ -z "${SENTRY_ORG:-}" ]; then
+            echo "SENTRY_ORG unset — skipping source map upload."
+            exit 0
+          fi
+          release="${GITHUB_SHA}"
+          curl -sSL https://github.com/getsentry/sentry-cli/releases/download/2.42.2/sentry-cli-Linux-x86_64 \
+            -o /usr/local/bin/sentry-cli
+          chmod +x /usr/local/bin/sentry-cli
+          upload() {
+            local project="$1"
+            local dist_dir="$2"
+            if [ -z "${project:-}" ]; then
+              echo "Project unset — skipping ${dist_dir}."
+              return 0
+            fi
+            sentry-cli sourcemaps upload \
+              --org "$SENTRY_ORG" \
+              --project "$project" \
+              --release "$release" \
+              "$dist_dir"
+          }
+          upload "$SENTRY_PROJECT_API" apps/api/dist
+          upload "$SENTRY_PROJECT_WORKER" apps/worker/dist
+          upload "$SENTRY_PROJECT_WEB" apps/web/.next/static
+
   build:
     name: Build ${{ matrix.app.name }} (${{ matrix.platform.name }})
     runs-on: ${{ matrix.platform.runner }}

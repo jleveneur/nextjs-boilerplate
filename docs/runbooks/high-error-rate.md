@@ -38,4 +38,5 @@ customer reports of failures.
 
 - Add or extend integration tests for the failing path.
 - Ensure new endpoints have RED metrics visible on the dashboard before full rollout.
-- Every release should have Sentry source maps uploaded when `SENTRY_AUTH_TOKEN` is set in CI.
+- Every `main` commit should have Sentry source maps uploaded when `SENTRY_AUTH_TOKEN` is set
+  (`publish.yml`, same SHA as the GHCR image tags).
