@@ -26,6 +26,7 @@ export {
   markOutboxPublished,
   type OutboxClaimRow,
 } from "./repositories/outbox.repository.ts";
+export { findOrganizationOwnerEmail } from "./repositories/organization.repository.ts";
 export * from "./schema/index.ts";
 export { scopedWhere, tenantFilter, type TenantCtx, type TenantScopedTable } from "./tenant.ts";
 export {
