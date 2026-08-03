@@ -6,8 +6,10 @@
   "type": "module",
   "scripts": {
     "prepare-content": "node --experimental-strip-types ./scripts/prepare-content.ts",
-    "predev": "pnpm prepare-content",
-    "prebuild": "pnpm prepare-content",
+    "prepare-source": "pnpm prepare-content && fumadocs-mdx",
+    "predev": "pnpm prepare-source",
+    "prebuild": "pnpm prepare-source",
+    "pretypecheck": "pnpm prepare-source",
     "dev": "next dev --port 3003",
     "build": "next build",
     "start": "next start --port 3003",
