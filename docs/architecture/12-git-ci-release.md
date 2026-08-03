@@ -155,12 +155,12 @@ people work — they batch changes into bigger PRs, which is worse for everythin
 
 ## 4. Continuous deployment
 
-| Trigger             | Action                                                                                                                                                     |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR opened/updated   | CI (+ CodeQL)                                                                                                                                              |
-| PR merged to `main` | Publish multi-arch images to GHCR as `:sha` with SBOM + provenance (`publish.yml`: native amd64/arm64 runners, then manifest merge); Changesets version PR |
-| Release tag `v*`    | Retag the same `:sha` images to `:vX.Y.Z` (`retag-images.yml`)                                                                                             |
-| Manual dispatch     | Re-run publish for an arbitrary SHA (break-glass)                                                                                                          |
+| Trigger             | Action                                                                                                                                                                                                |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR opened/updated   | CI (+ CodeQL)                                                                                                                                                                                         |
+| PR merged to `main` | Publish multi-arch images to GHCR as `:sha` with SBOM + provenance (`publish.yml`: native amd64/arm64 runners, then manifest merge) and upload Sentry source maps for that SHA; Changesets version PR |
+| Release tag `v*`    | Retag the same `:sha` images to `:vX.Y.Z` (`retag-images.yml`)                                                                                                                                        |
+| Manual dispatch     | Re-run publish for an arbitrary SHA (break-glass)                                                                                                                                                     |
 
 Phase 12 stops at immutable registry artifacts (`web`, `api`, `worker`). Deploying those
 SHA tags to a host is **bring-your-own CD** — see [docs/runbooks/deploy.md](../runbooks/deploy.md)

@@ -150,10 +150,11 @@ Sentry receives **unexpected** errors only. Expected domain errors (`ValidationE
 `NotFoundError`, `ForbiddenError`) are logged and never reported, because an alert channel with
 false positives is an alert channel nobody reads.
 
-Configuration: source maps uploaded from CI and **not** publicly served; release tagged with the
-git SHA so regressions are attributable to a deploy; `tracesSampleRate` aligned with OTel
-sampling; `beforeSend` scrubbing PII; user context limited to a hashed user id and tenant id;
-trace ids attached so a Sentry issue links to its distributed trace.
+Configuration: source maps uploaded from [`publish.yml`](../../.github/workflows/publish.yml)
+on pushes to `main` (same SHA as GHCR tags; not on PRs) and **not** publicly served; release
+tagged with the git SHA so regressions are attributable to a deploy; `tracesSampleRate` aligned
+with OTel sampling; `beforeSend` scrubbing PII; user context limited to a hashed user id and
+tenant id; trace ids attached so a Sentry issue links to its distributed trace.
 
 Alerting is on symptoms, not causes: error-rate spikes, new issue types in a release, p95 latency
 regressions, queue depth growth, DLQ arrivals, and failed deploys. Every alert must be actionable
