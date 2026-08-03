@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 
 import { AppProviders } from "../../components/providers.tsx";
 import { routing } from "../../i18n/routing.ts";
-import { getBootstrappedFlags } from "../../server/flag-bootstrap.ts";
 
 // oxlint-disable-next-line import/no-unassigned-import -- Next.css entry
 import "../../styles/globals.css";
@@ -40,13 +39,12 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   setRequestLocale(locale);
   const messages = await getMessages();
-  const initialFlags = await getBootstrappedFlags();
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <body>
         <NextIntlClientProvider messages={messages}>
-          <AppProviders initialFlags={initialFlags}>{children}</AppProviders>
+          <AppProviders>{children}</AppProviders>
         </NextIntlClientProvider>
       </body>
     </html>
