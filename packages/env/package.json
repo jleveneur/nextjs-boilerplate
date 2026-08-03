@@ -1,6 +1,6 @@
 {
   "name": "@repo/env",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Zod-validated environment schemas with server/client split and composable presets. Sole process.env reader.",
   "type": "module",
