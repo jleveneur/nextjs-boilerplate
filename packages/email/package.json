@@ -23,7 +23,7 @@
     "nodemailer": "catalog:",
     "react": "catalog:",
     "resend": "catalog:",
-    "server-only": "0.0.1"
+    "server-only": "catalog:"
   },
   "devDependencies": {
     "@react-email/ui": "6.9.1",
