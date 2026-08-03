@@ -1521,7 +1521,11 @@ importers:
 
   tooling/oxlint: {}
 
-  tooling/tailwind: {}
+  tooling/tailwind:
+    dependencies:
+      tailwindcss:
+        specifier: 'catalog:'
+        version: 4.3.3
 
   tooling/typescript: {}
 

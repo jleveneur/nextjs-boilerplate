@@ -12,6 +12,9 @@
     "./theme.css": "./theme.css",
     "./animations.css": "./animations.css"
   },
+  "dependencies": {
+    "tailwindcss": "catalog:"
+  },
   "repo": {
     "layer": "tooling",
     "runtime": "build"
