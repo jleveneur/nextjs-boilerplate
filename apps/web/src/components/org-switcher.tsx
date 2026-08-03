@@ -4,6 +4,7 @@ import {
   Button,
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -80,7 +81,9 @@ export function OrgSwitcher({ currentSlug }: Props) {
         {current?.name ?? t("switchOrg")}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
-        <DropdownMenuLabel>{t("switchOrg")}</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("switchOrg")}</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {orgs.length === 0 ? (
           <DropdownMenuItem disabled>{t("noOrganizations")}</DropdownMenuItem>

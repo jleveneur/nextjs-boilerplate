@@ -18,10 +18,6 @@ export function crossFieldProblems(env: Readonly<Record<string, unknown>>): stri
     problems.push("OTEL_EXPORTER_OTLP_ENDPOINT: required when OTEL_ENABLED is true");
   }
 
-  if (env["TRIGGER_ENABLED"] === true && env["TRIGGER_SECRET_KEY"] === undefined) {
-    problems.push("TRIGGER_SECRET_KEY: required when TRIGGER_ENABLED is true");
-  }
-
   if (env["SENTRY_ENABLED"] === true && env["SENTRY_DSN"] === undefined) {
     problems.push("SENTRY_DSN: required when SENTRY_ENABLED is true");
   }

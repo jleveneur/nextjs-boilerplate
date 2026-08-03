@@ -1,6 +1,6 @@
 # 0007 — Split background work between BullMQ and Trigger.dev
 
-- **Status:** Accepted _(validated 2026-07-30, open question Q2)_
+- **Status:** Superseded by [ADR-0009](./0009-bullmq-only-background-work.md)
 - **Date:** 2026-07-30
 - **Deciders:** platform engineering
 - **Related:** [06 §6 — Jobs](../architecture/06-data-and-storage.md#6-jobs)

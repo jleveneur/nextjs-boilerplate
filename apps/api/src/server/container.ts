@@ -104,6 +104,7 @@ function buildContainer(): AppContainer {
     ...(env.POSTHOG_API_KEY !== undefined ? { posthogApiKey: env.POSTHOG_API_KEY } : {}),
     ...(env.POSTHOG_HOST !== undefined ? { posthogHost: env.POSTHOG_HOST } : {}),
     ...(env.FLAGS_JSON !== undefined ? { flagsJson: env.FLAGS_JSON } : {}),
+    ...(env.STRIPE_SECRET_KEY !== undefined ? { stripeSecretKey: env.STRIPE_SECRET_KEY } : {}),
   });
 
   const cache = createCache({

@@ -1,12 +1,13 @@
 import { test } from "@playwright/test";
 
 /**
- * Journeys that need extra harnesses in this phase:
- * - OAuth: mocked IdP at the network boundary (Phase 11/CI polish)
+ * Journeys that need extra harnesses:
+ * - OAuth: mocked IdP at the network boundary
  * - Passkey: WebAuthn virtual authenticator fixture
  * - 2FA enroll: TOTP secret extraction + authenticator
  * - File upload: no product upload surface yet
- * - Stripe checkout: Phase 17
+ *
+ * Stripe Checkout: see `billing-stripe.spec.ts` (skips without test keys).
  */
 test.describe("deferred journeys", () => {
   test.skip("oauth mocked sign-in", () => {});

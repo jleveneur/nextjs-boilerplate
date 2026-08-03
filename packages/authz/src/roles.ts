@@ -14,6 +14,7 @@ const memberPermissions: readonly Action[] = [
   PERMISSIONS["invoice:read"],
   PERMISSIONS["invoice:update"],
   PERMISSIONS["invoice:export"],
+  PERMISSIONS["billing:read"],
   PERMISSIONS["apiKey:list"],
   PERMISSIONS["asset:create"],
   PERMISSIONS["asset:read"],
@@ -28,6 +29,7 @@ const adminPermissions: readonly Action[] = [
   PERMISSIONS["invitation:create"],
   PERMISSIONS["invitation:cancel"],
   PERMISSIONS["invoice:void"],
+  PERMISSIONS["billing:manage"],
   PERMISSIONS["apiKey:create"],
   PERMISSIONS["apiKey:revoke"],
 ];

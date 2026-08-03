@@ -24,6 +24,7 @@ import {
   resolveFlag,
 } from "@repo/flags";
 import { createBullMqJobQueue } from "@repo/jobs";
+import { createNoopPaymentGateway, createStripePaymentGateway } from "@repo/payments";
 import type { AssetId, InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
 import { generateUuidV7 } from "@repo/utils";
 
@@ -209,11 +210,16 @@ export function createAppPorts(options: {
   posthogApiKey?: string;
   posthogHost?: string;
   flagsJson?: string;
+  stripeSecretKey?: string;
 }): AppPortsHandle {
   const events = createInProcessEventBus();
   let jobs: ReturnType<typeof createBullMqJobQueue> | undefined;
   const { sink: analytics, repoSink } = createAnalyticsPort(options);
   subscribeToAnalytics(events, repoSink);
+  const payments =
+    options.stripeSecretKey === undefined || options.stripeSecretKey === ""
+      ? createNoopPaymentGateway()
+      : createStripePaymentGateway({ secretKey: options.stripeSecretKey });
 
   return {
     ports: {
@@ -236,6 +242,7 @@ export function createAppPorts(options: {
       files: createNoopFileStore(),
       flags: createFlagPort(options),
       analytics,
+      payments,
     },
     closeAnalytics: () => repoSink.shutdown(),
   };

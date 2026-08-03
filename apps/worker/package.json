@@ -25,6 +25,7 @@
     "@repo/jobs": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/observability": "workspace:*",
+    "@repo/payments": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",

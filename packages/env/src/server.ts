@@ -36,6 +36,7 @@ export {
   smtp,
   shared,
   stripe,
+  stripeClient,
   appEnvs,
   nodeEnvs,
   type AppEnv,

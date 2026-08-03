@@ -137,5 +137,37 @@ describe("core test ports", () => {
     await expect(ports.flags.isEnabled("x")).resolves.toBe(false);
     await expect(ports.analytics.capture("evt")).resolves.toBeUndefined();
     expect(ports.clock.now().toISOString()).toBe("2026-01-15T12:00:00.000Z");
+    await expect(ports.payments.listCatalogPrices()).resolves.toEqual([]);
+    await expect(
+      ports.payments.createCustomer({
+        organizationId: "org",
+        email: undefined,
+        name: undefined,
+      }),
+    ).rejects.toThrow(/not configured/i);
+    await expect(
+      ports.payments.createCheckoutSession({
+        organizationId: "org",
+        priceId: "price_1",
+        successUrl: "https://example.com/ok",
+        cancelUrl: "https://example.com/cancel",
+        customerId: undefined,
+        customerEmail: undefined,
+      }),
+    ).rejects.toThrow(/not configured/i);
+    await expect(
+      ports.payments.createBillingPortalSession({
+        customerId: "cus_1",
+        returnUrl: "https://example.com",
+      }),
+    ).rejects.toThrow(/not configured/i);
+    expect(
+      ports.payments.constructWebhookEvent({
+        payload: "{}",
+        signatureHeader: undefined,
+        webhookSecret: "whsec_x",
+      }),
+    ).toBeUndefined();
+    expect(ports.payments.parseSubscriptionEvent("{}")).toBeUndefined();
   });
 });

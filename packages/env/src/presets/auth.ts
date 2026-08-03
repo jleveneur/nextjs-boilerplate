@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { booleanString, emptyToUndefined } from "../coerce.ts";
+import { emptyToUndefined } from "../coerce.ts";
 
 /**
- * Authentication and durable-jobs secrets.
+ * Authentication secrets.
  *
  * `BETTER_AUTH_SECRET` must be at least 32 characters — Better Auth refuses to
  * start with less, so catching it here fails the boot instead of the first
@@ -19,6 +19,4 @@ export const auth = z.object({
   GITHUB_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   GOOGLE_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   GOOGLE_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
-  TRIGGER_ENABLED: booleanString.default(false),
-  TRIGGER_SECRET_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
 });

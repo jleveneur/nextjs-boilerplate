@@ -406,21 +406,15 @@ vendor-coupled.
 **Operational note:** requires Redis `maxmemory-policy: noeviction`. An evicting Redis silently drops
 jobs, which is the single most common BullMQ production failure.
 
-### Trigger.dev 4.5 (optional)
+### Trigger.dev 4.5 (dropped)
 
-**Why** Durable execution: multi-step workflows that survive restarts, wait for hours or days without
-holding a process, and offer per-run observability and replay. Apache 2.0 and self-hostable via
-Docker Compose, so it does not violate the no-lock-in principle.
-**Instead of** _Temporal_ — the gold standard for durable execution and considerably heavier to
-self-host (database cluster plus Elasticsearch plus multiple services). _Inngest_ — comparable model,
-weaker self-hosting story. _BullMQ alone_ — cannot express checkpointed waits, which is the entire
-point.
-**Health** Active, well-funded, Apache 2.0.
-**Cost to be explicit about** Self-hosting wants roughly 3+ vCPU / 6+ GB for the webapp and 4+ vCPU /
-8+ GB per worker machine, and the self-hosted build omits warm starts, auto-scaling, and checkpoints.
-That is a real operational bill for a boilerplate, which is why it is **optional and disabled by
-default** (Q2).
-**Exit** Low as configured — the app is separable and core only knows the port.
+**Why it was considered:** Durable execution for multi-step workflows that survive restarts and
+wait for hours or days without holding a process.
+**Decision:** Dropped — no durable-workflow workload has emerged, and `apps/tasks` was never
+scaffolded. BullMQ alone is sufficient for the foundation; see
+[ADR-0009](../adr/0009-bullmq-only-background-work.md).
+**Revisit if:** Durable workflows become central — evaluate Trigger.dev, Temporal, or Inngest and
+write a superseding ADR.
 
 ### `@aws-sdk/client-s3`
 
@@ -459,9 +453,13 @@ they render to plain HTML.
 
 **Why** The only realistic choice for global card payments, subscriptions, tax, and invoicing.
 Best-in-class documentation, test mode, and webhook tooling.
+**Wired** `@repo/payments` (`createStripePaymentGateway`) — catalog, Checkout `mode: subscription`,
+Customer Portal, `webhooks.constructEvent`, entitlement metadata. Prefer restricted keys (`rk_`) in
+production; test keys rejected when `APP_ENV=production`.
 **Instead of** _Paddle / Lemon Squeezy_ — merchant-of-record models that remove sales-tax burden and
 are genuinely better for small SaaS; less flexible and higher fees. _Braintree / Adyen_ —
-enterprise-oriented. _Polar_ — promising for developer products, younger.
+enterprise-oriented. _Polar_ — promising for developer products, younger. _Metronome / usage billing_
+— not in scope; SaaS subscriptions only.
 **Health** The industry standard.
 **Exit** High in practice — payment providers are the stickiest integration in any product. Mitigated
 by keeping Stripe behind the `PaymentGateway` port and never letting Stripe types into `@repo/core`.
@@ -731,7 +729,7 @@ Things a repo like this often includes, and why this one does not.
 | **Axios**                                      | Native `fetch` is universal in Node 24 and the browser.                                                                                                                                                                                                                           |
 | **Moment.js**                                  | Deprecated by its own maintainers.                                                                                                                                                                                                                                                |
 | **A separate feature-flag vendor**             | PostHog provides flags, and our interface makes the provider swappable.                                                                                                                                                                                                           |
-| **A separate cron service**                    | BullMQ repeatable jobs and Trigger.dev schedules cover it.                                                                                                                                                                                                                        |
+| **A separate cron service**                    | BullMQ repeatable jobs cover scheduled work.                                                                                                                                                                                                                                      |
 | **`uuid`**                                     | Postgres 18 has native `uuidv7()`; the application-side generator is a few lines using `node:crypto`.                                                                                                                                                                             |
 | **A logging SaaS SDK**                         | Pino writes JSON to stdout; shipping is the platform's job, which keeps the aggregator swappable.                                                                                                                                                                                 |
 
@@ -753,7 +751,7 @@ is not".
 | R6  | **TanStack Table v9 is in beta.**                                                                                                                                  | Low        | Stay on stable v8; v9 is evaluated when it ships. Confined to `@repo/ui/table`.                                                                                                                                                                                                                                           |
 | R7  | **Better Auth moves fast** (1.6.25, with 1.7 in RC).                                                                                                               | Medium     | Pin exactly, read changelogs, and treat minor upgrades as reviewed PRs with the auth E2E suite as the gate. Auth tables are ours, so a bad release is a hold, not an outage.                                                                                                                                              |
 | R8  | **Next.js majors are disruptive** (the 15→16 `middleware`→`proxy` rename is the current example, and `middleware.ts` still compiles while silently doing nothing). | Medium     | Business logic is outside `apps/web`, so a Next migration is one app. Majors get a dedicated PR, the official codemods, and an explicit check that deprecated file conventions are actually gone.                                                                                                                         |
-| R9  | **Trigger.dev self-hosting is operationally expensive** and omits Cloud-only features (warm starts, auto-scaling, checkpoints).                                    | Low        | Optional and disabled by default; BullMQ covers the common cases.                                                                                                                                                                                                                                                         |
+| R9  | **Durable workflows may need a platform later** (dunning, multi-day sequences). BullMQ cannot checkpoint waits.                                                    | Low        | No current workload; revisit per [ADR-0009](../adr/0009-bullmq-only-background-work.md) if durable execution becomes central.                                                                                                                                                                                             |
 | R10 | **Zod is used everywhere** — contracts, env, forms, API, jobs.                                                                                                     | Medium     | Accepted deliberately. A migration would be large but mechanical, and the alternative (a weaker validation abstraction) is worse in the place we depend on most.                                                                                                                                                          |
 | R11 | **Vendor concentration**: Cloudflare provides DNS, CDN, WAF, and object storage.                                                                                   | Medium     | Each is individually replaceable (S3 API for storage, any DNS provider, any CDN), and none is imported in application code. Documented as a known concentration rather than pretended away.                                                                                                                               |
 | R12 | **Sharp is a native module.**                                                                                                                                      | Low        | Worker base image and architecture are pinned; multi-arch images are built and tested.                                                                                                                                                                                                                                    |

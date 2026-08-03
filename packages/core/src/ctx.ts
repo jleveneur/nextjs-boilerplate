@@ -18,6 +18,7 @@ import type {
   IdGenerator,
   JobQueue,
   Mailer,
+  PaymentGateway,
 } from "./ports/index.ts";
 
 export type CtxPorts = {
@@ -31,6 +32,7 @@ export type CtxPorts = {
   files: FileStore;
   flags: FlagProvider;
   analytics: AnalyticsSink;
+  payments: PaymentGateway;
 };
 
 export type Ctx = {

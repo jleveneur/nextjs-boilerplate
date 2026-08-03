@@ -17,9 +17,7 @@ export type EnqueueResult = {
 };
 
 /**
- * JobQueue port. Lives here until `@repo/core` re-exports it in Phase 6.
- *
- * Core only sees this surface — never BullMQ or Trigger.dev types.
+ * JobQueue port. Core re-exports this surface — never BullMQ queue types.
  */
 export type JobQueue = {
   enqueue<N extends JobName>(

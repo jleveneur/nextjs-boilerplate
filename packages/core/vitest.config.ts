@@ -34,6 +34,8 @@ export default mergeConfig(
           "src/billing/billing.repository.ts",
           "src/billing/billing.mapper.ts",
           "src/billing/index.ts",
+          "src/subscription/subscription.repository.ts",
+          "src/subscription/index.ts",
           "src/**/*.test.ts",
           "src/**/*.integration.test.ts",
           "src/**/*.d.ts",

@@ -4,7 +4,8 @@ export { db } from "./db.ts";
 export { featureFlags } from "./flags.ts";
 export { otel } from "./otel.ts";
 export { posthog, posthogClient } from "./posthog.ts";
-export { publicApp } from "./public.ts";
+export { publicApp, stripeClient } from "./public.ts";
+
 export { redis } from "./redis.ts";
 export { resend } from "./resend.ts";
 export { s3 } from "./s3.ts";

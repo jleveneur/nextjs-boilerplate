@@ -34,7 +34,7 @@ Two rules govern the order:
 | 14  | Observability wiring     | OTel end-to-end, Sentry, PostHog, flags, dashboards, alerts       | 13         |
 | 15  | Documentation site       | `apps/docs` with Fumadocs, ADRs, embedded API reference           | 9          |
 | 16  | Hardening                | Load tests, a11y audit, security review, runbooks, DR drill       | 14         |
-| 17  | Optional modules         | Payments, Trigger.dev, advanced UI widgets                        | 16         |
+| 17  | Optional modules         | Payments, advanced UI widgets                                     | 16         |
 
 Phases 7 and 9 can run in parallel with their neighbours once their dependencies land.
 
@@ -44,9 +44,10 @@ Phases 7 and 9 can run in parallel with their neighbours once their dependencies
 
 Not code, but a real phase: five choices change the shape of what gets built.
 
-Answer **Q1–Q5** in the [index](./README.md#7-open-questions-requiring-your-decision), then move
+Answer **Q1–Q5** in the [index](./README.md#7-validated-decisions), then move
 ADRs [0006](../adr/0006-organization-scoped-multi-tenancy.md),
-[0007](../adr/0007-split-background-work-bullmq-triggerdev.md), and
+[0007](../adr/0007-split-background-work-bullmq-triggerdev.md) (later superseded by
+[0009](../adr/0009-bullmq-only-background-work.md)), and
 [0008](../adr/0008-drizzle-version-selection.md) from Proposed to Accepted (or rewrite them to match
 the decisions taken).
 
@@ -259,10 +260,25 @@ evidence templates in `docs/security/accessibility-audit.md` and `docs/runbooks/
 saturation is recorded in [scaling.md](../runbooks/scaling.md), security checklist links to
 automated evidence, stub runbooks are complete, and `make restore-drill` / `make check` are green.
 
-## Phase 17 — Optional modules
+## Phase 17 — Payments + UI widgets
 
-Per Q2 and Q5: `@repo/payments` with Stripe (catalog sync, checkout, portal, webhooks, entitlements),
-`apps/tasks` with Trigger.dev, and the advanced UI widgets if the product needs them.
+**Status: implemented.** Trigger.dev was never scaffolded; background work is BullMQ-only
+([ADR-0009](../adr/0009-bullmq-only-background-work.md)).
+
+| Deliverable                     | Notes                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `@repo/payments`                | Stripe catalog, Checkout subscription sessions, Customer Portal, webhook construct, entitlement metadata      |
+| Core `PaymentGateway` port      | Customer ensure, checkout/portal, webhook apply → subscription + entitlement rows; job `stripe.event.process` |
+| Transport                       | API `POST /webhooks/stripe`; tRPC `billing.catalog                                                            | syncCatalog | subscription | checkout | portal`; web `/[orgSlug]/billing`behind`new-billing-portal` |
+| `@repo/ui/chart\|editor\|table` | Recharts / Tiptap / TanStack Table; design-system gallery; home bundle forbids heavy imports                  |
+
+**Done when**
+
+1. `make check` green
+2. Signed Stripe test event → BullMQ job → subscription/entitlement row (unit/fixtures; optional Stripe CLI drill in [`packages/payments/README.md`](../../packages/payments/README.md))
+3. Checkout + portal session creation against Stripe test mode or mocked gateway in unit tests; E2E skips without keys
+4. Design-system shows chart/editor/table; marketing `/` bundle budget still holds
+5. ADR-0009 accepted; `TRIGGER_*` env and Trigger docs path removed
 
 ---
 

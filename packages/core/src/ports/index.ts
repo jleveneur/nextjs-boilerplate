@@ -6,3 +6,8 @@ export type { FlagContext, FlagProvider } from "./flags.ts";
 export type { IdGenerator } from "./id-generator.ts";
 export type { EnqueueOptions, EnqueueResult, JobQueue } from "./job-queue.ts";
 export type { Mailer, SendEmailInput, SendEmailResult } from "./mailer.ts";
+export type {
+  ParsedSubscriptionEvent,
+  PaymentGateway,
+  PaymentWebhookEvent,
+} from "./payment-gateway.ts";

@@ -82,16 +82,17 @@ relevant, not replaced), **Superseded** (replaced — links forward to the repla
 
 ## Index
 
-| ADR                                                       | Title                                                               | Status   |
-| --------------------------------------------------------- | ------------------------------------------------------------------- | -------- |
-| [0001](./0001-record-architecture-decisions.md)           | Record architecture decisions                                       | Accepted |
-| [0002](./0002-layered-monorepo-with-pnpm-enforcement.md)  | Layered monorepo with boundaries enforced by pnpm                   | Accepted |
-| [0003](./0003-one-domain-core-two-transports.md)          | One domain core behind two API transports                           | Accepted |
-| [0004](./0004-native-typescript-toolchain.md)             | Adopt the native toolchain: TypeScript 7, Oxlint, Oxfmt             | Accepted |
-| [0005](./0005-better-auth-with-rbac-and-policies.md)      | Better Auth with database sessions, RBAC plus record-level policies | Accepted |
-| [0006](./0006-organization-scoped-multi-tenancy.md)       | Organization-scoped multi-tenancy on a shared schema                | Accepted |
-| [0007](./0007-split-background-work-bullmq-triggerdev.md) | Split background work between BullMQ and Trigger.dev                | Accepted |
-| [0008](./0008-drizzle-version-selection.md)               | Drizzle ORM version selection (0.45 vs 1.0-rc)                      | Accepted |
+| ADR                                                       | Title                                                               | Status                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [0001](./0001-record-architecture-decisions.md)           | Record architecture decisions                                       | Accepted                                                    |
+| [0002](./0002-layered-monorepo-with-pnpm-enforcement.md)  | Layered monorepo with boundaries enforced by pnpm                   | Accepted                                                    |
+| [0003](./0003-one-domain-core-two-transports.md)          | One domain core behind two API transports                           | Accepted                                                    |
+| [0004](./0004-native-typescript-toolchain.md)             | Adopt the native toolchain: TypeScript 7, Oxlint, Oxfmt             | Accepted                                                    |
+| [0005](./0005-better-auth-with-rbac-and-policies.md)      | Better Auth with database sessions, RBAC plus record-level policies | Accepted                                                    |
+| [0006](./0006-organization-scoped-multi-tenancy.md)       | Organization-scoped multi-tenancy on a shared schema                | Accepted                                                    |
+| [0007](./0007-split-background-work-bullmq-triggerdev.md) | Split background work between BullMQ and Trigger.dev                | Superseded by [0009](./0009-bullmq-only-background-work.md) |
+| [0008](./0008-drizzle-version-selection.md)               | Drizzle ORM version selection (0.45 vs 1.0-rc)                      | Accepted                                                    |
+| [0009](./0009-bullmq-only-background-work.md)             | BullMQ-only background work                                         | Accepted                                                    |
 
 ### Decisions recorded in the architecture documents
 

@@ -107,7 +107,7 @@ flowchart LR
     BROWSER["Browser<br/>TanStack Query"] -->|"POST /api/trpc"| TRPC["tRPC router<br/>@repo/trpc"]
     THIRD["Third-party client"] -->|"GET /v1/…"| REST["Hono routes<br/>apps/api"]
     STRIPE["Stripe"] -->|webhook| WH["apps/api/webhooks"]
-    QUEUE["BullMQ / Trigger.dev"] --> CONS["apps/worker consumers"]
+    QUEUE["BullMQ"] --> CONS["apps/worker consumers"]
     FORM["HTML form"] -->|Server Action| SA["apps/web actions"]
 
     TRPC --> CORE["@repo/core services"]
@@ -320,7 +320,6 @@ The one place we _do_ return values instead of throwing: Server Actions, which r
 | `web`    | Next standalone server, Node 24                         | `/api/health` (liveness), `/api/health/ready` (DB + Redis) | SIGTERM → stop accepting, drain, exit                                |
 | `api`    | Hono on `@hono/node-server`                             | `/health`, `/health/ready`                                 | Same                                                                 |
 | `worker` | Long-running Node process, no HTTP except a health port | `/health` on an internal port                              | SIGTERM → stop pulling jobs, finish in-flight (bounded), close Redis |
-| `tasks`  | Trigger.dev runner                                      | Platform-managed                                           | Platform-managed                                                     |
 | `docs`   | Static export or Next server                            | `/health`                                                  | —                                                                    |
 
 Graceful shutdown is implemented on day one, not retrofitted: without it, every deploy drops

@@ -10,6 +10,7 @@ import {
   s3,
   sentry,
   smtp,
+  stripe,
 } from "@repo/env/presets";
 import { z } from "zod";
 
@@ -26,7 +27,7 @@ const worker = z.object({
  * process is not tied to the Next.js client firewall.
  */
 export const env = createEnv({
-  server: [base, db, redis, s3, resend, smtp, otel, sentry, posthog, featureFlags, worker],
+  server: [base, db, redis, s3, resend, smtp, otel, sentry, posthog, featureFlags, stripe, worker],
   skipValidation:
     process.env["SKIP_ENV_VALIDATION"] === "1" || process.env["SKIP_ENV_VALIDATION"] === "true",
   runtimeEnv: {
@@ -57,6 +58,8 @@ export const env = createEnv({
     POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
     POSTHOG_HOST: process.env["POSTHOG_HOST"],
     FLAGS_JSON: process.env["FLAGS_JSON"],
+    STRIPE_SECRET_KEY: process.env["STRIPE_SECRET_KEY"],
+    STRIPE_WEBHOOK_SECRET: process.env["STRIPE_WEBHOOK_SECRET"],
     WORKER_PORT: process.env["WORKER_PORT"],
     OUTBOX_POLL_MS: process.env["OUTBOX_POLL_MS"],
     SKIP_ENV_VALIDATION: process.env["SKIP_ENV_VALIDATION"],

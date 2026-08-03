@@ -23,6 +23,11 @@ vi.mock("@repo/core", async (importOriginal) => {
     getInvoice: vi.fn(),
     listInvoicesForOrg: vi.fn(),
     voidInvoice: vi.fn(),
+    listBillingCatalog: vi.fn(),
+    syncBillingCatalog: vi.fn(),
+    getOrganizationSubscription: vi.fn(),
+    startCheckout: vi.fn(),
+    openBillingPortal: vi.fn(),
     requestUpload: vi.fn(),
     confirmUpload: vi.fn(),
   };
@@ -98,6 +103,11 @@ describe("billing router via createCaller", () => {
     vi.mocked(core.getInvoice).mockReset();
     vi.mocked(core.listInvoicesForOrg).mockReset();
     vi.mocked(core.voidInvoice).mockReset();
+    vi.mocked(core.listBillingCatalog).mockReset();
+    vi.mocked(core.syncBillingCatalog).mockReset();
+    vi.mocked(core.getOrganizationSubscription).mockReset();
+    vi.mocked(core.startCheckout).mockReset();
+    vi.mocked(core.openBillingPortal).mockReset();
   });
 
   it("requires authentication for org procedures", async () => {
@@ -162,6 +172,34 @@ describe("billing router via createCaller", () => {
 
     const result = await caller.billing.list({ limit: 20 });
     expect(result.data).toHaveLength(1);
+  });
+
+  it("reads catalog and subscription", async () => {
+    vi.mocked(core.listBillingCatalog).mockResolvedValue([]);
+    vi.mocked(core.getOrganizationSubscription).mockResolvedValue(null);
+    const caller = createCaller(makeCtx(makeActor("member")));
+
+    await expect(caller.billing.catalog()).resolves.toEqual([]);
+    await expect(caller.billing.subscription()).resolves.toBeNull();
+  });
+
+  it("syncs catalog, starts checkout, and opens the portal", async () => {
+    vi.mocked(core.syncBillingCatalog).mockResolvedValue({ count: 2 });
+    vi.mocked(core.startCheckout).mockResolvedValue({ url: "https://checkout.test" });
+    vi.mocked(core.openBillingPortal).mockResolvedValue({ url: "https://portal.test" });
+    const caller = createCaller(makeCtx(makeActor("owner")));
+
+    await expect(caller.billing.syncCatalog()).resolves.toEqual({ count: 2 });
+    await expect(
+      caller.billing.checkout({
+        priceId: "price_1",
+        successUrl: "https://app.test/ok",
+        cancelUrl: "https://app.test/cancel",
+      }),
+    ).resolves.toEqual({ url: "https://checkout.test" });
+    await expect(caller.billing.portal({ returnUrl: "https://app.test" })).resolves.toEqual({
+      url: "https://portal.test",
+    });
   });
 });
 

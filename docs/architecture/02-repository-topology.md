@@ -55,7 +55,6 @@ apps/
 ├── web/          Next.js 16 — the product. RSC UI, tRPC handler, auth handler, Server Actions.
 ├── api/          Hono — public REST /v1, OpenAPI document, Scalar reference, inbound webhooks.
 ├── worker/       Node service — BullMQ consumers, repeatable schedules.
-├── tasks/        Trigger.dev tasks — durable workflows. Optional; disabled by default.
 └── docs/         Fumadocs — public documentation site, embeds the API reference.
 ```
 
@@ -143,12 +142,6 @@ apps/worker/
 Consumers are transports too: parse the payload with the shared Zod contract, resolve a system
 actor, call a core service. Retry/backoff policy is declared per queue, and a dead-letter queue
 plus alert is mandatory for every queue.
-
-### `apps/tasks` (optional)
-
-Trigger.dev requires its own project root with `trigger.config.ts`. Isolating it means the rest
-of the repo has no `@trigger.dev/*` dependency and the app can be deleted in one commit if you
-choose not to use it.
 
 ### `apps/docs`
 

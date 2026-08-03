@@ -167,24 +167,23 @@ current when the decisions were made.
 
 ### Backend
 
-| Concern           | Choice                     | Version                       |
-| ----------------- | -------------------------- | ----------------------------- |
-| Private API       | tRPC                       | 11.18.0                       |
-| Public API        | Hono + `@hono/zod-openapi` | 4.12.32 / 1.5.1               |
-| API reference UI  | Scalar                     | 0.11.11                       |
-| Auth              | Better Auth                | 1.6.25                        |
-| Database          | PostgreSQL                 | 18.x                          |
-| ORM               | Drizzle ORM                | 0.45.2 (see open question Q1) |
-| Migrations        | drizzle-kit                | 0.31.10                       |
-| Schema bridge     | drizzle-zod                | 0.8.3                         |
-| Cache             | Redis (via ioredis)        | 5.11.1                        |
-| Queues            | BullMQ                     | 5.81.2                        |
-| Durable workflows | Trigger.dev                | 4.5.8 (optional)              |
-| Object storage    | S3 API (R2 / MinIO)        | —                             |
-| Images            | Sharp                      | 0.35.3                        |
-| Email delivery    | Resend                     | 6.18.1                        |
-| Email templates   | React Email                | 1.0.12                        |
-| Payments          | Stripe                     | 22.3.2                        |
+| Concern          | Choice                     | Version                       |
+| ---------------- | -------------------------- | ----------------------------- |
+| Private API      | tRPC                       | 11.18.0                       |
+| Public API       | Hono + `@hono/zod-openapi` | 4.12.32 / 1.5.1               |
+| API reference UI | Scalar                     | 0.11.11                       |
+| Auth             | Better Auth                | 1.6.25                        |
+| Database         | PostgreSQL                 | 18.x                          |
+| ORM              | Drizzle ORM                | 0.45.2 (see open question Q1) |
+| Migrations       | drizzle-kit                | 0.31.10                       |
+| Schema bridge    | drizzle-zod                | 0.8.3                         |
+| Cache            | Redis (via ioredis)        | 5.11.1                        |
+| Queues           | BullMQ                     | 5.81.2                        |
+| Object storage   | S3 API (R2 / MinIO)        | —                             |
+| Images           | Sharp                      | 0.35.3                        |
+| Email delivery   | Resend                     | 6.18.1                        |
+| Email templates  | React Email                | 1.0.12                        |
+| Payments         | Stripe                     | 22.3.2                        |
 
 ### Observability
 
@@ -256,7 +255,6 @@ flowchart TB
         RES["Resend"]
         PH["PostHog"]
         SEN["Sentry"]
-        TRG["Trigger.dev optional"]
     end
 
     CF --> TR
@@ -283,7 +281,6 @@ flowchart TB
     WEB --> PH
     WEB --> SEN
     API --> SEN
-    WORKER --> TRG
 
     OTEL["OTel Collector"]
     WEB --> OTEL
@@ -318,7 +315,7 @@ the executive summary.
 | Database             | PostgreSQL 18, single schema, UUIDv7 keys                                          | Time-sortable keys, boring and portable schema                                                        |
 | Migrations           | drizzle-kit generate → reviewed SQL → applied by a CD job                          | Never on app boot, never `push` outside local                                                         |
 | Multi-tenancy        | Shared schema + `organization_id` + scoped query helpers, RLS as optional defence  | Simplest model that scales; RLS interacts badly with poolers                                          |
-| Jobs                 | BullMQ for throughput, Trigger.dev for durable workflows, shared payload contracts | Split by workload class, not by a leaky abstraction                                                   |
+| Jobs                 | BullMQ only, shared payload contracts via `@repo/jobs`                             | No durable-workflow workload yet; see [ADR-0009](../adr/0009-bullmq-only-background-work.md)          |
 | Storage              | S3 API only, presigned direct uploads                                              | R2 in prod and MinIO locally with identical code                                                      |
 | Config               | Hand-rolled Zod env module                                                         | ~80 lines beats a dependency; we need custom composition anyway                                       |
 | Secrets              | Injected at deploy; SOPS + age is one adopter pattern                              | Boilerplate stays host-agnostic; no encrypted secret tree required                                    |
@@ -345,11 +342,13 @@ work** with a defined trigger (v1 GA), recorded in
 [ADR-0008](../adr/0008-drizzle-version-selection.md) and risk register R4. If v1 reaches GA before
 Phase 3 begins, we adopt it from the start instead.
 
-**Q2 — Trigger.dev: scaffolded, disabled by default.** ✅
-`apps/tasks` exists with `TRIGGER_ENABLED=false`, so the repository boots, tests, and deploys with
-no `@trigger.dev/*` dependency. BullMQ covers the common cases; the two are split by workload
-class ([06 §6](./06-data-and-storage.md#6-jobs),
-[ADR-0007](../adr/0007-split-background-work-bullmq-triggerdev.md)).
+**Q2 — Background work: BullMQ only; Trigger.dev dropped.** ✅
+No durable-workflow workload has emerged, and `apps/tasks` was never scaffolded. BullMQ covers all
+current jobs via `apps/worker`; the `JobQueue` port and transactional outbox remain
+([06 §6](./06-data-and-storage.md#6-jobs),
+[ADR-0009](../adr/0009-bullmq-only-background-work.md), superseding
+[ADR-0007](../adr/0007-split-background-work-bullmq-triggerdev.md)). Revisit if durable workflows
+become central.
 
 **Q3 — Multi-tenancy: organization-scoped from day one.** ✅
 `organization_id` on every tenant-scoped table, isolation enforced primarily by the `TenantCtx`
@@ -363,8 +362,8 @@ without special-casing ([11 §5](./11-infrastructure-and-deployment.md#5-deploym
 
 **Q5 — Product surface: auth + organizations + settings, plus one worked vertical slice.** ✅
 The slice exercises every layer (tRPC + REST + policy + job + storage + both test levels) and
-becomes the reference implementation every future feature is copied from. Stripe billing is
-deferred to Phase 17.
+becomes the reference implementation every future feature is copied from. Phase 17 adds Stripe
+SaaS billing (`@repo/payments`) and `@repo/ui` chart/editor/table widgets.
 
 ---
 

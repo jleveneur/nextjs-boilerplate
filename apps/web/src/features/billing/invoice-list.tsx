@@ -58,7 +58,12 @@ export function InvoiceList({ orgSlug }: Props) {
       </div>
 
       {newBillingPortal ? (
-        <p className="text-muted-foreground text-sm">{t("newPortalHint")}</p>
+        <p className="text-muted-foreground text-sm">
+          {t("newPortalHint")}{" "}
+          <Link className="underline" href={`/${orgSlug}/billing`}>
+            Billing
+          </Link>
+        </p>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">

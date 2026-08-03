@@ -16,6 +16,7 @@ import {
 const statement = {
   ...defaultStatements,
   invoice: ["create", "read", "update", "void", "export"],
+  billing: ["read", "manage"],
   apiKey: ["create", "revoke", "list"],
 } as const;
 
@@ -23,18 +24,21 @@ export const ac = createAccessControl(statement);
 
 export const owner = ac.newRole({
   invoice: ["create", "read", "update", "void", "export"],
+  billing: ["read", "manage"],
   apiKey: ["create", "revoke", "list"],
   ...ownerAc.statements,
 });
 
 export const admin = ac.newRole({
   invoice: ["create", "read", "update", "void", "export"],
+  billing: ["read", "manage"],
   apiKey: ["create", "revoke", "list"],
   ...adminAc.statements,
 });
 
 export const member = ac.newRole({
   invoice: ["create", "read", "update", "export"],
+  billing: ["read"],
   apiKey: ["list"],
   ...memberAc.statements,
 });

@@ -30,7 +30,18 @@ export {
   type InvoiceVoidedPayload,
 } from "./billing/index.ts";
 export type { Ctx, CtxPorts } from "./ctx.ts";
+export {
+  applyStripeSubscriptionEvent,
+  enqueueStripeWebhookEvent,
+  getOrganizationSubscription,
+  listBillingCatalog,
+  openBillingPortal,
+  organizationHasEntitlement,
+  startCheckout,
+  syncBillingCatalog,
+} from "./subscription/index.ts";
 export { mapOutboxEventToJob, type MappedJob } from "./outbox/map-event-to-job.ts";
+
 export {
   relayOutboxBatch,
   type RelayOutboxBatchOptions,
@@ -56,9 +67,13 @@ export type {
   JobQueue,
   Mailer,
   ObjectHead,
+  ParsedSubscriptionEvent,
+  PaymentGateway,
+  PaymentWebhookEvent,
   PresignedGet,
   PresignedPut,
   SendEmailInput,
   SendEmailResult,
 } from "./ports/index.ts";
+
 export { systemActorForOrganization } from "./system-actor.ts";

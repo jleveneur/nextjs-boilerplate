@@ -19,8 +19,10 @@ import {
   type BullMqWorker,
 } from "@repo/jobs";
 import { createLogger } from "@repo/logger";
+import { createNoopPaymentGateway } from "@repo/payments";
 import { createFileStore, derivativeObjectKey, type FileStore } from "@repo/storage";
 import type { Actor, OrganizationId, UserId } from "@repo/types";
+
 import { eq } from "drizzle-orm";
 import { Redis } from "ioredis";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -93,6 +95,7 @@ function makeCtx(actor: Actor, db: Database, files: FileStore): Ctx {
       files,
       flags: { isEnabled: () => Promise.resolve(false) },
       analytics: { capture: () => Promise.resolve() },
+      payments: createNoopPaymentGateway(),
     },
   };
 }
@@ -145,6 +148,7 @@ describe("phase 10 worker proofs", () => {
         "invoice.voided.notify": () => Promise.resolve(),
         "image.derive": createImageDeriveHandler({ buildCtx, files, idempotencyRedis }),
         "asset.reconcile-orphans": () => Promise.resolve(),
+        "stripe.event.process": () => Promise.resolve(),
       },
     });
     await worker.waitUntilReady();
@@ -272,6 +276,7 @@ describe("phase 10 worker proofs", () => {
         "invoice.voided.notify": () => Promise.resolve(),
         "image.derive": () => Promise.resolve(),
         "asset.reconcile-orphans": () => Promise.resolve(),
+        "stripe.event.process": () => Promise.resolve(),
       },
     });
     await drainWorker.waitUntilReady();

@@ -6,7 +6,7 @@ import { base } from "./base.ts";
 import { db } from "./db.ts";
 import { otel } from "./otel.ts";
 import { posthog, posthogClient } from "./posthog.ts";
-import { publicApp } from "./public.ts";
+import { publicApp, stripeClient } from "./public.ts";
 import { redis } from "./redis.ts";
 import { resend } from "./resend.ts";
 import { s3 } from "./s3.ts";
@@ -39,8 +39,8 @@ describe("presets", () => {
         SENTRY_ENABLED: "false",
         BETTER_AUTH_SECRET: "s".repeat(32),
         BETTER_AUTH_URL: "https://staging.example.com",
-        TRIGGER_ENABLED: "false",
         STRIPE_SECRET_KEY: "sk_live_abc",
+
         STRIPE_WEBHOOK_SECRET: "whsec_abc",
       },
     });
@@ -77,17 +77,28 @@ describe("presets", () => {
 
   it("accepts client analytics and error-tracking presets", () => {
     const env = createEnv({
-      client: [publicApp, posthogClient, sentryClient],
+      client: [publicApp, posthogClient, sentryClient, stripeClient],
       runtimeEnv: {
         NEXT_PUBLIC_APP_URL: "https://app.example.com",
         NEXT_PUBLIC_APP_ENV: "production",
         NEXT_PUBLIC_POSTHOG_KEY: "phc_x",
         NEXT_PUBLIC_POSTHOG_HOST: "https://eu.posthog.com",
         NEXT_PUBLIC_SENTRY_DSN: "https://a@b.ingest.sentry.io/1",
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_abc",
       },
     });
 
     expect(env.NEXT_PUBLIC_POSTHOG_KEY).toBe("phc_x");
+    expect(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY).toBe("pk_test_abc");
+  });
+
+  it("rejects a non-pk Stripe publishable key", () => {
+    expect(() =>
+      createEnv({
+        client: [stripeClient],
+        runtimeEnv: { NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "sk_test_abc" },
+      }),
+    ).toThrow(/pk_/);
   });
 
   it("treats empty optional strings as absent", () => {

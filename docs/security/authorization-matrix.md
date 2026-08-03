@@ -22,11 +22,14 @@ impersonating ([07 — auth](../architecture/07-auth.md)).
 | `invoice:update`      | yes    | yes   | yes   |
 | `invoice:void`        |        | yes   | yes   |
 | `invoice:export`      | yes    | yes   | yes   |
+| `billing:read`        | yes    | yes   | yes   |
+| `billing:manage`      |        | yes   | yes   |
 | `apiKey:create`       |        | yes   | yes   |
-| `apiKey:revoke`       |        | yes   | yes   |
-| `apiKey:list`         | yes    | yes   | yes   |
-| `asset:create`        | yes    | yes   | yes   |
-| `asset:read`          | yes    | yes   | yes   |
+
+| `apiKey:revoke` | | yes | yes |
+| `apiKey:list` | yes | yes | yes |
+| `asset:create` | yes | yes | yes |
+| `asset:read` | yes | yes | yes |
 
 REST/tRPC must produce the same outcomes for the same `Actor` —
 [`apps/api/src/authz-parity.integration.test.ts`](../../apps/api/src/authz-parity.integration.test.ts).

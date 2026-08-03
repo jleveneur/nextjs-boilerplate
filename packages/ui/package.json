@@ -8,7 +8,10 @@
     ".": "./src/index.ts",
     "./icons": "./src/icons/index.ts",
     "./motion": "./src/motion/index.ts",
-    "./sonner": "./src/sonner/index.ts"
+    "./sonner": "./src/sonner/index.ts",
+    "./chart": "./src/chart/index.ts",
+    "./editor": "./src/editor/index.ts",
+    "./table": "./src/table/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -19,9 +22,14 @@
     "@base-ui/react": "catalog:",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "@tiptap/pm": "catalog:",
+    "@tiptap/react": "catalog:",
+    "@tiptap/starter-kit": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "motion": "catalog:",
+    "recharts": "catalog:",
     "sonner": "catalog:",
     "tailwind-merge": "catalog:"
   },

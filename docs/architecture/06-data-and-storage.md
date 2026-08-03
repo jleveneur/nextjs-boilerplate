@@ -246,37 +246,19 @@ Rules:
 
 ## 6. Jobs
 
-### Two systems, split by workload class
+**BullMQ on Redis** is the sole background-work system. Short, high-throughput, latency-sensitive
+jobs — send email, generate image derivatives, deliver webhooks, reindex, invalidate cache,
+repeatable schedules — run in `apps/worker`.
 
-BullMQ and Trigger.dev overlap, and picking one arbitrarily would be worse than either. The
-split is by workload characteristics, which is a property of the work rather than a matter of
-taste:
-
-|                | **BullMQ**                                                                   | **Trigger.dev**                                                                                   |
-| -------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Use for        | Short (< 30 s), high-throughput, latency-sensitive work                      | Long, multi-step, durable workflows                                                               |
-| Examples       | Send email, generate derivatives, deliver webhook, reindex, invalidate cache | Dunning sequences, onboarding drips, large exports, nightly reconciliation, anything with `wait`  |
-| Infrastructure | Redis we already run for cache                                               | Self-hosted platform (Postgres + Redis + workers) or Trigger.dev Cloud                            |
-| Guarantee      | At-least-once, our retry policy                                              | Durable execution with checkpoints and resumable waits                                            |
-| Observability  | Our logs/traces + a Bull board                                               | Per-run UI with replay                                                                            |
-| Ops cost       | Near zero (marginal to existing Redis)                                       | Real: the self-hosted stack wants ~3 vCPU/6 GB for the webapp and ~4 vCPU/8 GB per worker machine |
-
-The deciding question: **does this work need to survive process restarts mid-flight and wait for
-hours or days?** If yes, Trigger.dev's durable execution is worth its operational cost. If no,
-BullMQ is strictly simpler.
-
-Why not force one abstraction over both: durable execution semantics (checkpointed waits,
-resumable state) cannot be emulated on BullMQ, so a shared interface would either be BullMQ's
-interface (losing what Trigger.dev is for) or a leaky pretence. Instead, what is shared is the
-part that genuinely should be:
+ADR-0007 considered a split with Trigger.dev for durable multi-step workflows; that path was
+never scaffolded and is superseded by [ADR-0009](../adr/0009-bullmq-only-background-work.md).
+Revisit with a new ADR if durable workflows (multi-day sequences, checkpointed waits, resumable
+exports) become central.
 
 **`@repo/jobs` owns contracts, not execution.** A job name registry plus a Zod payload schema per
-job. Both systems consume the same contracts, both validate payloads on both ends, and payload
-changes are type errors on the producer side. Either system can be removed without touching
-`@repo/core`, because core only calls the injected `JobQueue` port.
-
-Trigger.dev is **optional and disabled by default** (`TRIGGER_ENABLED=false`), so the repo boots
-and passes CI with no Trigger dependency. See open question Q2.
+job. Producers and consumers validate payloads on both ends; payload changes are type errors on the
+producer side. `@repo/core` only calls the injected `JobQueue` port, so the queue backend can
+change without touching business logic.
 
 ### Reliability rules
 

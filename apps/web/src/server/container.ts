@@ -75,6 +75,7 @@ function buildContainer(): AppContainer {
     ...(env.POSTHOG_API_KEY !== undefined ? { posthogApiKey: env.POSTHOG_API_KEY } : {}),
     ...(env.POSTHOG_HOST !== undefined ? { posthogHost: env.POSTHOG_HOST } : {}),
     ...(env.FLAGS_JSON !== undefined ? { flagsJson: env.FLAGS_JSON } : {}),
+    ...(env.STRIPE_SECRET_KEY !== undefined ? { stripeSecretKey: env.STRIPE_SECRET_KEY } : {}),
     s3: {
       endpoint: env.S3_ENDPOINT,
       region: env.S3_REGION,

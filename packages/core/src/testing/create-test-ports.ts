@@ -5,7 +5,11 @@ import { createInMemoryEventBus } from "./in-memory-event-bus.ts";
 import { createInMemoryFileStore } from "./in-memory-file-store.ts";
 import { createInMemoryJobQueue } from "./in-memory-job-queue.ts";
 import { createInMemoryMailer } from "./in-memory-mailer.ts";
-import { createNoopAnalyticsSink, createNoopFlagProvider } from "./noop-ports.ts";
+import {
+  createNoopAnalyticsSink,
+  createNoopFlagProvider,
+  createNoopPaymentGateway,
+} from "./noop-ports.ts";
 import { createSequenceIdGenerator } from "./uuid-id-generator.ts";
 
 export type TestPorts = CtxPorts & {
@@ -27,5 +31,6 @@ export function createTestPorts(): TestPorts {
     files: createInMemoryFileStore(),
     flags: createNoopFlagProvider(),
     analytics: createNoopAnalyticsSink(),
+    payments: createNoopPaymentGateway(),
   };
 }

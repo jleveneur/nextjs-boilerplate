@@ -21,6 +21,7 @@ import {
 } from "@repo/jobs";
 import { createLogger, runWithLogger, type Logger } from "@repo/logger";
 import { captureUnexpectedException, getTraceContext } from "@repo/observability";
+import { createNoopPaymentGateway, createStripePaymentGateway } from "@repo/payments";
 import { createFileStore } from "@repo/storage";
 import type { Actor } from "@repo/types";
 import { Redis } from "ioredis";
@@ -29,6 +30,7 @@ import { createAssetReconcileHandler } from "./consumers/asset-reconcile.ts";
 import { createEmailSendHandler } from "./consumers/email-send.ts";
 import { createImageDeriveHandler } from "./consumers/image-derive.ts";
 import { createInvoiceVoidedNotifyHandler } from "./consumers/invoice-voided-notify.ts";
+import { createStripeEventProcessHandler } from "./consumers/stripe-event-process.ts";
 import { env } from "./env.ts";
 import { createUuidIdGenerator } from "./ports.ts";
 
@@ -144,6 +146,11 @@ export function buildContainer(): AppContainer {
         })
       : undefined;
 
+  const payments =
+    env.STRIPE_SECRET_KEY === undefined || env.STRIPE_SECRET_KEY === ""
+      ? createNoopPaymentGateway()
+      : createStripePaymentGateway({ secretKey: env.STRIPE_SECRET_KEY });
+
   const ports: CtxPorts = {
     appEnv: env.APP_ENV,
     clock: { now: () => new Date() },
@@ -165,6 +172,7 @@ export function buildContainer(): AppContainer {
         return analyticsSink.capture(event, properties);
       },
     },
+    payments,
   };
 
   const buildCtx = (actor: Actor): Ctx => ({
@@ -183,6 +191,7 @@ export function buildContainer(): AppContainer {
     }),
     "image.derive": createImageDeriveHandler({ buildCtx, files, idempotencyRedis }),
     "asset.reconcile-orphans": createAssetReconcileHandler({ buildCtx }),
+    "stripe.event.process": createStripeEventProcessHandler({ buildCtx }),
   };
 
   const worker = createBullMqWorker({
@@ -220,8 +229,17 @@ export function buildContainer(): AppContainer {
         });
         await runWithLogger(jobLogger, () => handlers["asset.reconcile-orphans"](payload, meta));
       },
+      "stripe.event.process": async (payload, meta) => {
+        const jobLogger = logger.child({
+          jobId: meta.jobId,
+          jobName: "stripe.event.process",
+          attempt: meta.attemptsMade,
+        });
+        await runWithLogger(jobLogger, () => handlers["stripe.event.process"](payload, meta));
+      },
     },
     concurrency: 2,
+
     onDeadLetter(record) {
       logger.error(
         {

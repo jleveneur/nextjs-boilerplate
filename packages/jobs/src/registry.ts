@@ -1,7 +1,7 @@
 /**
  * Job name registry and Zod payload schemas.
  *
- * Both BullMQ and (optional) Trigger.dev consume these contracts. Payloads are
+ * BullMQ producers and consumers share these contracts. Payloads are
  * identifiers, not documents — handlers re-read current state.
  */
 
@@ -12,6 +12,7 @@ export const JOB_NAMES = {
   invoiceVoidedNotify: "invoice.voided.notify",
   imageDerive: "image.derive",
   assetReconcileOrphans: "asset.reconcile-orphans",
+  stripeEventProcess: "stripe.event.process",
 } as const;
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
@@ -43,6 +44,12 @@ export const jobPayloadSchemas = {
      * When omitted, the handler defaults to now minus 24 hours.
      */
     olderThanIso: z.string().datetime().optional(),
+  }),
+  "stripe.event.process": z.object({
+    eventId: z.string().min(1),
+    eventType: z.string().min(1),
+    /** Full Stripe event JSON (already signature-verified at the edge). */
+    payloadJson: z.string().min(1),
   }),
 } as const satisfies Record<JobName, z.ZodType>;
 

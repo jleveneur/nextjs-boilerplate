@@ -11,6 +11,7 @@ const member: readonly Permission[] = [
   "invoice:read",
   "invoice:update",
   "invoice:export",
+  "billing:read",
   "apiKey:list",
 ];
 
@@ -23,6 +24,7 @@ const admin: readonly Permission[] = [
   "invitation:create",
   "invitation:cancel",
   "invoice:void",
+  "billing:manage",
   "apiKey:create",
   "apiKey:revoke",
 ];

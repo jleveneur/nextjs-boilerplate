@@ -104,17 +104,6 @@ describe("createEnv", () => {
         runtimeEnv: {
           BETTER_AUTH_SECRET: "x".repeat(32),
           BETTER_AUTH_URL: "http://localhost:3000",
-          TRIGGER_ENABLED: "true",
-        },
-      }),
-    ).toThrow(/TRIGGER_SECRET_KEY/);
-
-    expect(() =>
-      createEnv({
-        server: [auth],
-        runtimeEnv: {
-          BETTER_AUTH_SECRET: "x".repeat(32),
-          BETTER_AUTH_URL: "http://localhost:3000",
           GITHUB_CLIENT_ID: "gh-id",
         },
       }),

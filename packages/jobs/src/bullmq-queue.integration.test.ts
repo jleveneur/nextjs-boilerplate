@@ -35,6 +35,7 @@ describe("createBullMqJobQueue", () => {
         "invoice.voided.notify": () => Promise.resolve(),
         "image.derive": () => Promise.resolve(),
         "asset.reconcile-orphans": () => Promise.resolve(),
+        "stripe.event.process": () => Promise.resolve(),
       },
     });
     await worker.waitUntilReady();

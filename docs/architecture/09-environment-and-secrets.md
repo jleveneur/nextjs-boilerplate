@@ -58,8 +58,8 @@ variables, and nothing is required to hold credentials it never uses.
   that bug ships silently.
 - **Semantic validation, not just presence.** `DATABASE_URL` must parse as a `postgres://` URL,
   `APP_URL` must be a valid absolute URL, secrets have minimum lengths.
-- **Cross-field refinements.** If `TRIGGER_ENABLED=true`, then `TRIGGER_SECRET_KEY` is required.
-  This is where a hand-rolled module earns its place.
+- **Cross-field refinements.** Example: if `OTEL_ENABLED=true`, then `OTEL_EXPORTER_OTLP_ENDPOINT`
+  is required. This is where a hand-rolled module earns its place.
 - **Production-only strictness.** `refine`s that reject development defaults when `APP_ENV` is
   `production`: no `localhost` URLs, no `dev-` prefixed secrets, no `test` Stripe keys. This
   single check catches the most embarrassing class of deploy mistake.
@@ -192,12 +192,11 @@ the presets it imports. Placeholder files:
 
 ### Auth (`auth`) — web, api
 
-| Variable                                 | Kind           | Notes                                  |
-| ---------------------------------------- | -------------- | -------------------------------------- |
-| `BETTER_AUTH_SECRET`                     | runtime secret | ≥ 32 characters                        |
-| `BETTER_AUTH_URL`                        | runtime        | Usually same origin as the web app     |
-| `GITHUB_*` / `GOOGLE_*`                  | runtime secret | Optional; providers skipped when unset |
-| `TRIGGER_ENABLED` / `TRIGGER_SECRET_KEY` | runtime        | Optional durable-jobs gate             |
+| Variable                | Kind           | Notes                                  |
+| ----------------------- | -------------- | -------------------------------------- |
+| `BETTER_AUTH_SECRET`    | runtime secret | ≥ 32 characters                        |
+| `BETTER_AUTH_URL`       | runtime        | Usually same origin as the web app     |
+| `GITHUB_*` / `GOOGLE_*` | runtime secret | Optional; providers skipped when unset |
 
 ### Email (`resend` + optional `smtp`) — web, api, worker
 

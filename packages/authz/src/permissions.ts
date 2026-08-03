@@ -18,7 +18,10 @@ export const PERMISSIONS = {
   "invoice:update": "invoice:update",
   "invoice:void": "invoice:void",
   "invoice:export": "invoice:export",
+  "billing:read": "billing:read",
+  "billing:manage": "billing:manage",
   "apiKey:create": "apiKey:create",
+
   "apiKey:revoke": "apiKey:revoke",
   "apiKey:list": "apiKey:list",
   "asset:create": "asset:create",
