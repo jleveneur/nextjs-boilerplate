@@ -52,6 +52,7 @@ export {
   type OutboxRow,
   type WriteOutboxEventInput,
 } from "./outbox/write-outbox-event.ts";
+export { writeAuditLog, type WriteAuditLogInput } from "./write-audit-log.ts";
 export type {
   AnalyticsSink,
   Clock,

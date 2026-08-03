@@ -22,6 +22,7 @@ import { encodeCursor } from "@repo/utils";
 
 import type { Ctx } from "../ctx.ts";
 import { writeOutboxEvent } from "../outbox/write-outbox-event.ts";
+import { writeAuditLog } from "../write-audit-log.ts";
 import { invoiceVoidedEvent, INVOICE_VOIDED } from "./billing.events.ts";
 import { toInvoiceDto } from "./billing.mapper.ts";
 import { assertCanVoidInvoice } from "./billing.policy.ts";
@@ -134,6 +135,16 @@ export async function voidInvoice(ctx: Ctx, input: VoidInvoiceInput): Promise<In
     if (updated === null) {
       throw new NotFoundError({ resource: "invoice", id: input.invoiceId });
     }
+
+    await writeAuditLog(scoped, {
+      action: "invoice.voided",
+      resourceType: "invoice",
+      resourceId: updated.id,
+      metadata: {
+        previous_status: existing.status,
+        status: updated.status,
+      },
+    });
 
     const outboxId = ctx.ports.ids.outboxId();
     const event = invoiceVoidedEvent(
