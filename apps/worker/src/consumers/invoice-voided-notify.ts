@@ -1,24 +1,15 @@
+import { asOrganizationId, asUserId } from "@repo/contracts";
 import type { Ctx } from "@repo/core";
 import type { Mailer as EmailMailer } from "@repo/email";
 import type { JobHandler } from "@repo/jobs";
-import type { Actor, OrganizationId, UserId } from "@repo/types";
+import type { Actor, OrganizationId } from "@repo/types";
 import type { Redis } from "ioredis";
 
 import { claimJobIdempotency } from "../idempotency.ts";
 
-function brandOrganizationId(id: string): OrganizationId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- job payload brand
-  return id as OrganizationId;
-}
-
-function brandUserId(id: string): UserId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- sentinel brand
-  return id as UserId;
-}
-
 function systemActor(organizationId: OrganizationId): Actor {
   return {
-    userId: brandUserId("01900000-0000-7000-8000-000000000000"),
+    userId: asUserId("01900000-0000-7000-8000-000000000000"),
     organizationId,
     role: "owner",
     permissions: [],
@@ -37,7 +28,7 @@ export function createInvoiceVoidedNotifyHandler(options: {
       return;
     }
 
-    const ctx = options.buildCtx(systemActor(brandOrganizationId(payload.organizationId)));
+    const ctx = options.buildCtx(systemActor(asOrganizationId(payload.organizationId)));
     // Notify path: durable side effect is an email keyed on the outbox id.
     // Recipient is the org's operational inbox placeholder until product wiring.
     await options.mailer.send({

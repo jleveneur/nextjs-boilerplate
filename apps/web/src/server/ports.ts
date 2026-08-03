@@ -4,6 +4,7 @@ import {
   subscribeToAnalytics,
   type AnalyticsSink as RepoAnalyticsSink,
 } from "@repo/analytics";
+import { asAssetId, asInvoiceId, asOrganizationId, asOutboxId, asUserId } from "@repo/contracts";
 import type {
   AnalyticsSink,
   Clock,
@@ -18,35 +19,9 @@ import type { Mailer as EmailMailer } from "@repo/email";
 import { createBullMqJobQueue } from "@repo/jobs";
 import { createNoopPaymentGateway, createStripePaymentGateway } from "@repo/payments";
 import { createFileStore } from "@repo/storage";
-import type { AssetId, InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
 import { generateUuidV7 } from "@repo/utils";
 
 import { createFlagPort } from "./flag-bootstrap.ts";
-
-function brandInvoiceId(id: string): InvoiceId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
-  return id as InvoiceId;
-}
-
-function brandAssetId(id: string): AssetId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
-  return id as AssetId;
-}
-
-function brandOrganizationId(id: string): OrganizationId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
-  return id as OrganizationId;
-}
-
-function brandUserId(id: string): UserId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
-  return id as UserId;
-}
-
-function brandOutboxId(id: string): OutboxId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
-  return id as OutboxId;
-}
 
 export function createSystemClock(): Clock {
   return { now: () => new Date() };
@@ -55,11 +30,11 @@ export function createSystemClock(): Clock {
 export function createUuidIdGenerator(): IdGenerator {
   return {
     uuidV7: () => generateUuidV7(),
-    invoiceId: () => brandInvoiceId(generateUuidV7()),
-    assetId: () => brandAssetId(generateUuidV7()),
-    organizationId: () => brandOrganizationId(generateUuidV7()),
-    userId: () => brandUserId(generateUuidV7()),
-    outboxId: () => brandOutboxId(generateUuidV7()),
+    invoiceId: () => asInvoiceId(generateUuidV7()),
+    assetId: () => asAssetId(generateUuidV7()),
+    organizationId: () => asOrganizationId(generateUuidV7()),
+    userId: () => asUserId(generateUuidV7()),
+    outboxId: () => asOutboxId(generateUuidV7()),
   };
 }
 
