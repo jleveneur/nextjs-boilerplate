@@ -544,9 +544,6 @@ importers:
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@repo/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       '@sentry/browser':
         specifier: 'catalog:'
         version: 10.69.0
@@ -674,9 +671,6 @@ importers:
       '@repo/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@repo/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       bullmq:
         specifier: 'catalog:'
         version: 5.81.3(supports-color@7.2.0)

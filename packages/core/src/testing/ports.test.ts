@@ -1,14 +1,44 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  adaptEmailMailer,
+  createInProcessEventBus,
+  createSystemClock,
+  createUuidIdGenerator,
+} from "../ports/index.ts";
 import { createTestPorts } from "./create-test-ports.ts";
 import { createFakeClock } from "./fake-clock.ts";
 import { createInMemoryEventBus } from "./in-memory-event-bus.ts";
 import { createInMemoryFileStore } from "./in-memory-file-store.ts";
 import { createInMemoryJobQueue } from "./in-memory-job-queue.ts";
 import { createInMemoryMailer } from "./in-memory-mailer.ts";
-import { createSequenceIdGenerator, createUuidIdGenerator } from "./uuid-id-generator.ts";
+import { createSequenceIdGenerator } from "./uuid-id-generator.ts";
 
 describe("core test ports", () => {
+  it("creates production composition-root ports", async () => {
+    expect(createSystemClock().now()).toBeInstanceOf(Date);
+
+    const bus = createInProcessEventBus();
+    const seen: string[] = [];
+    bus.subscribe("created", (event) => {
+      seen.push(event.type);
+    });
+    await bus.emit({ type: "created", payload: {}, occurredAt: new Date() });
+    expect(seen).toEqual(["created"]);
+
+    const sent: string[] = [];
+    const mailer = adaptEmailMailer({
+      send(input) {
+        sent.push(input.html);
+        return Promise.resolve({ id: "email-id" });
+      },
+    });
+    await expect(
+      mailer.send({ to: "a@example.com", subject: "Hi", html: "<p>Hi</p>" }),
+    ).resolves.toEqual({ id: "email-id" });
+    expect(sent).toEqual(["<p>Hi</p>"]);
+  });
+
   it("advances and sets a fake clock", () => {
     const clock = createFakeClock(new Date("2026-01-01T00:00:00.000Z"));
     clock.advanceMs(60_000);

@@ -1,9 +1,12 @@
+import { createAnalyticsSink, subscribeToAnalytics } from "@repo/analytics";
 import {
-  createNoopAnalyticsSink,
-  createPostHogAnalyticsSink,
-  subscribeToAnalytics,
-} from "@repo/analytics";
-import type { Ctx, CtxPorts, DomainEvent, EventBus, EventHandler } from "@repo/core";
+  adaptEmailMailer,
+  createInProcessEventBus,
+  createSystemClock,
+  createUuidIdGenerator,
+  type Ctx,
+  type CtxPorts,
+} from "@repo/core";
 import { createDb, type Database, type SqlClient } from "@repo/db";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
 import {
@@ -21,7 +24,7 @@ import {
 } from "@repo/jobs";
 import { createLogger, runWithLogger, type Logger } from "@repo/logger";
 import { captureUnexpectedException, getTraceContext } from "@repo/observability";
-import { createNoopPaymentGateway, createStripePaymentGateway } from "@repo/payments";
+import { createPaymentGateway } from "@repo/payments";
 import { createFileStore } from "@repo/storage";
 import type { Actor } from "@repo/types";
 import { Redis } from "ioredis";
@@ -32,7 +35,6 @@ import { createImageDeriveHandler } from "./consumers/image-derive.ts";
 import { createInvoiceVoidedNotifyHandler } from "./consumers/invoice-voided-notify.ts";
 import { createStripeEventProcessHandler } from "./consumers/stripe-event-process.ts";
 import { env } from "./env.ts";
-import { createUuidIdGenerator } from "./ports.ts";
 
 export type AppContainer = {
   db: Database;
@@ -53,45 +55,6 @@ function createEmailMailer(): EmailMailer {
     return createSmtpMailer({ smtpUrl: env.SMTP_URL, from: env.EMAIL_FROM });
   }
   return createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM });
-}
-
-function createInProcessEventBus(): EventBus {
-  const handlers = new Map<string, Set<EventHandler>>();
-
-  return {
-    async emit(event: DomainEvent) {
-      const set = handlers.get(event.type);
-      if (set === undefined) {
-        return;
-      }
-      await Promise.all([...set].map(async (handler) => handler(event)));
-    },
-    subscribe(type: string, handler: EventHandler) {
-      let set = handlers.get(type);
-      if (set === undefined) {
-        set = new Set();
-        handlers.set(type, set);
-      }
-      set.add(handler);
-      return () => {
-        set?.delete(handler);
-      };
-    },
-  };
-}
-
-function adaptEmailMailer(mailer: EmailMailer): CtxPorts["mailer"] {
-  return {
-    async send(input) {
-      return mailer.send({
-        to: input.to,
-        subject: input.subject,
-        html: input.html,
-        ...(input.headers === undefined ? {} : { headers: input.headers }),
-        ...(input.replyTo === undefined ? {} : { replyTo: input.replyTo }),
-      });
-    },
-  };
 }
 
 export function buildContainer(): AppContainer {
@@ -125,13 +88,10 @@ export function buildContainer(): AppContainer {
   });
 
   const events = createInProcessEventBus();
-  const analyticsSink =
-    env.POSTHOG_API_KEY !== undefined && env.POSTHOG_HOST !== undefined
-      ? createPostHogAnalyticsSink({
-          apiKey: env.POSTHOG_API_KEY,
-          host: env.POSTHOG_HOST,
-        })
-      : createNoopAnalyticsSink();
+  const analyticsSink = createAnalyticsSink({
+    apiKey: env.POSTHOG_API_KEY,
+    host: env.POSTHOG_HOST,
+  });
   subscribeToAnalytics(events, analyticsSink);
 
   const envFlags =
@@ -146,14 +106,11 @@ export function buildContainer(): AppContainer {
         })
       : undefined;
 
-  const payments =
-    env.STRIPE_SECRET_KEY === undefined || env.STRIPE_SECRET_KEY === ""
-      ? createNoopPaymentGateway()
-      : createStripePaymentGateway({ secretKey: env.STRIPE_SECRET_KEY });
+  const payments = createPaymentGateway({ secretKey: env.STRIPE_SECRET_KEY });
 
   const ports: CtxPorts = {
     appEnv: env.APP_ENV,
-    clock: { now: () => new Date() },
+    clock: createSystemClock(),
     ids: createUuidIdGenerator(),
     events,
     jobs,

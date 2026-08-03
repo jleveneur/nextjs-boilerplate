@@ -20,3 +20,18 @@ export type SendEmailResult = {
 export type Mailer = {
   send(input: SendEmailInput): Promise<SendEmailResult>;
 };
+
+/** Adapt a React-capable mailer to core's HTML-only mailer port. */
+export function adaptEmailMailer(mailer: Mailer): Mailer {
+  return {
+    async send(input) {
+      return mailer.send({
+        to: input.to,
+        subject: input.subject,
+        html: input.html,
+        ...(input.headers === undefined ? {} : { headers: input.headers }),
+        ...(input.replyTo === undefined ? {} : { replyTo: input.replyTo }),
+      });
+    },
+  };
+}
