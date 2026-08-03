@@ -37,4 +37,22 @@ describe("createCache (redis)", () => {
     await cache.del(key);
     await expect(cache.get(key)).resolves.toBeUndefined();
   });
+
+  it("atomically sets a value only once", async () => {
+    const key = {
+      namespace: "integration-claim",
+      version: 1,
+      key: `claim-${Date.now()}`,
+      ttlSeconds: 30,
+    };
+
+    const claims = await Promise.all([
+      cache.setIfAbsent(key, "first"),
+      cache.setIfAbsent(key, "second"),
+    ]);
+
+    expect(claims.filter(Boolean)).toHaveLength(1);
+    await expect(cache.get<string>(key)).resolves.toBe(claims[0] ? "first" : "second");
+    await cache.del(key);
+  });
 });
