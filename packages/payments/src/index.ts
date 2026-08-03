@@ -4,7 +4,9 @@ import "server-only";
 export { entitlementKeysFromMetadata } from "./entitlements.ts";
 export { createNoopPaymentGateway } from "./noop-gateway.ts";
 export {
+  createPaymentGateway,
   createStripePaymentGateway,
+  type CreatePaymentGatewayOptions,
   type CreateStripePaymentGatewayOptions,
 } from "./stripe-gateway.ts";
 export type {

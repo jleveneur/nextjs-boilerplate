@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createNoopPaymentGateway } from "./noop-gateway.ts";
+import { createPaymentGateway } from "./stripe-gateway.ts";
 
 describe("createNoopPaymentGateway", () => {
   const gateway = createNoopPaymentGateway();
@@ -41,5 +42,12 @@ describe("createNoopPaymentGateway", () => {
       }),
     ).toBeUndefined();
     expect(gateway.parseSubscriptionEvent("{}")).toBeUndefined();
+  });
+});
+
+describe("createPaymentGateway", () => {
+  it("defaults to the no-op gateway without a Stripe secret", async () => {
+    const gateway = createPaymentGateway({ secretKey: "" });
+    await expect(gateway.listCatalogPrices()).resolves.toEqual([]);
   });
 });

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { capture } from "./capture.ts";
 import { createMemoryAnalyticsSink } from "./memory-sink.ts";
 import { createNoopAnalyticsSink } from "./noop-sink.ts";
+import { createAnalyticsSink } from "./posthog-sink.ts";
 import { subscribeToAnalytics, type AnalyticsEventBus } from "./domain-subscriber.ts";
 
 function createTestBus(): AnalyticsEventBus & {
@@ -99,6 +100,14 @@ describe("createNoopAnalyticsSink", () => {
   it("flush and shutdown are no-ops", async () => {
     const sink = createNoopAnalyticsSink();
     await expect(sink.flush()).resolves.toBeUndefined();
+    await expect(sink.shutdown()).resolves.toBeUndefined();
+  });
+});
+
+describe("createAnalyticsSink", () => {
+  it("defaults to a no-op sink without complete PostHog configuration", async () => {
+    const sink = createAnalyticsSink({ apiKey: "", host: "https://example.com" });
+    await expect(sink.capture("ignored")).resolves.toBeUndefined();
     await expect(sink.shutdown()).resolves.toBeUndefined();
   });
 });
