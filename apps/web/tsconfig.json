@@ -1,5 +1,10 @@
 {
   "extends": "@repo/tsconfig/next.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",

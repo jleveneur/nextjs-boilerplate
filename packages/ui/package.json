@@ -11,7 +11,10 @@
     "./sonner": "./src/sonner/index.ts",
     "./chart": "./src/chart/index.ts",
     "./editor": "./src/editor/index.ts",
-    "./table": "./src/table/index.ts"
+    "./table": "./src/table/index.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./hooks/*": "./src/hooks/*.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
