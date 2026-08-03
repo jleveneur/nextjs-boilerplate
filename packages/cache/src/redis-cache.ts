@@ -63,6 +63,18 @@ export function createCache(options: CreateCacheOptions): Cache {
       const softTtl = Math.max(1, Math.floor(input.ttlSeconds / 2));
       return backend.write(key, encodeEnvelope(value, softTtl), input.ttlSeconds);
     },
+    async setIfAbsent(input: CacheSetOptions, value: unknown): Promise<boolean> {
+      const key = buildCacheKey(options.appEnv, input);
+      const softTtl = Math.max(1, Math.floor(input.ttlSeconds / 2));
+      const result = await redis.set(
+        key,
+        encodeEnvelope(value, softTtl),
+        "EX",
+        input.ttlSeconds,
+        "NX",
+      );
+      return result === "OK";
+    },
     async del(input: CacheKeyInput): Promise<void> {
       await redis.del(buildCacheKey(options.appEnv, input));
     },
