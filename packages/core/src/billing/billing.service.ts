@@ -15,7 +15,7 @@ import {
   type ListInvoicesOutput,
   type VoidInvoiceInput,
 } from "@repo/contracts";
-import { withTransaction, type TenantCtx } from "@repo/db";
+import { findOrganizationOwnerEmail, withTransaction, type TenantCtx } from "@repo/db";
 import { NotFoundError, ValidationError } from "@repo/errors";
 import type { OrganizationId } from "@repo/types";
 import { encodeCursor } from "@repo/utils";
@@ -42,6 +42,15 @@ function tenantCtx(ctx: Ctx): TenantCtx {
     organizationId: ctx.actor.organizationId,
     db: ctx.tx ?? ctx.db,
   };
+}
+
+export async function resolveInvoiceVoidedRecipientEmail(ctx: Ctx): Promise<string | null> {
+  authorize(ctx.actor, PERMISSIONS["billing:read"], {
+    organizationId: ctx.actor.organizationId,
+  });
+
+  // Organizations have no billing contact yet; an active owner is the pragmatic recipient.
+  return findOrganizationOwnerEmail(tenantCtx(ctx));
 }
 
 export async function createInvoice(ctx: Ctx, input: CreateInvoiceInput): Promise<Invoice> {
