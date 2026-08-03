@@ -1,13 +1,7 @@
-# @repo/env
+# @repo/ui
 
-## 0.0.2
+## 0.1.0
 
-### Patch Changes
+### Minor Changes
 
 - 268f531: Phase 17: Stripe Billing via `@repo/payments` (checkout, portal, webhooks, entitlements), billing permissions/jobs, and `@repo/ui` chart/editor/table exports. Trigger.dev path removed (BullMQ-only, ADR-0009).
-
-## 0.0.1
-
-### Patch Changes
-
-- 33d9c53: Document that `SKIP_ENV_VALIDATION` participates in the Turborepo build hash so Docker image builds and remote cache stay consistent.

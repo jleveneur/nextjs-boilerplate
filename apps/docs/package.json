@@ -1,6 +1,6 @@
 {
   "name": "@repo/docs",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Fumadocs documentation site — architecture, ADRs, runbooks, and OpenAPI reference.",
   "type": "module",
