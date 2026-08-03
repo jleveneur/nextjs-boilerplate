@@ -13,6 +13,8 @@ const member: readonly Permission[] = [
   "invoice:export",
   "billing:read",
   "apiKey:list",
+  "asset:create",
+  "asset:read",
 ];
 
 const admin: readonly Permission[] = [

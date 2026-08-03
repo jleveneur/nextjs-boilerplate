@@ -27,14 +27,15 @@ function permissionsFromApiKeyRecord(raw: unknown): readonly Permission[] | unde
 
   if (typeof raw === "string") {
     try {
-      return permissionsFromApiKeyRecord(JSON.parse(raw) as unknown);
+      const parsed: unknown = JSON.parse(raw);
+      return permissionsFromApiKeyRecord(parsed);
     } catch {
-      return undefined;
+      return [];
     }
   }
 
-  if (typeof raw !== "object") {
-    return undefined;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    return [];
   }
 
   const record = Object.fromEntries(Object.entries(raw));
@@ -114,8 +115,13 @@ export async function resolveActorFromApiKey(
 
   const organizationId = result.key.referenceId;
   const role = input.fallbackRole ?? "member";
+  const rolePermissions = permissionsForOrganizationRole(role);
   const fromKey = permissionsFromApiKeyRecord(result.key.permissions);
-  const permissions = fromKey ?? permissionsForOrganizationRole(role);
+  const requestedPermissions = fromKey === undefined ? undefined : new Set(fromKey);
+  const permissions =
+    requestedPermissions === undefined
+      ? rolePermissions
+      : rolePermissions.filter((permission) => requestedPermissions.has(permission));
 
   // Org-owned keys store the creating user in metadata (set at creation time).
   const metadata = result.key.metadata;
