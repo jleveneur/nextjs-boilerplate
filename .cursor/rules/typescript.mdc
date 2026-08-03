@@ -45,5 +45,7 @@ function getMembers(organizationId: OrganizationId) {}
 
 - `import type { Foo }` for type-only imports.
 - Money is an integer in minor units, never a float.
-- No `process.env` outside `@repo/env`.
+- No ad hoc `process.env` reads in libraries. App env modules select values and
+  pass them to `createEnv`; process-edge entry points and test tooling may read
+  only their boundary metadata or controls.
 - Prefer `satisfies` over annotation when you want inference kept.

@@ -10,7 +10,11 @@
 2. **Validated once, at the edge of the process.** Invalid configuration fails at build or boot,
    never at the first request that happens to need it.
 3. **Typed at every access site.** `env.DATABASE_URL` is `string`, not `string | undefined`.
-4. **`process.env` is accessed in exactly one package.** Everywhere else imports `@repo/env`.
+4. **Runtime application configuration is read at composition roots.** Each app's env module
+   selects values from `process.env` and passes them to `createEnv`; libraries receive validated,
+   typed configuration rather than reading ambient state. Process-edge framework, build, and
+   composition entry points may read platform metadata such as `NEXT_RUNTIME` or `GITHUB_SHA`,
+   and tests and tooling may read their own harness controls.
 5. **Server and client configuration are physically separate**, so a secret cannot reach the
    browser by mistake.
 6. **The same artifact runs in every environment.** Behaviour differences come from values, so
@@ -45,11 +49,18 @@ Each app composes the presets it needs:
 // illustrative — apps/worker
 export const env = createEnv({
   server: [base, db, redis, s3, resend, otel],
+  runtimeEnv: {
+    DATABASE_URL: process.env["DATABASE_URL"],
+    // ...the other keys this process accepts
+  },
 })
 ```
 
 This is the payoff of composition over one monolithic schema: an app fails fast on _its_ missing
-variables, and nothing is required to hold credentials it never uses.
+variables, and nothing is required to hold credentials it never uses. Explicit `runtimeEnv`
+objects also make the accepted boundary visible at the app entry point. `createEnv` can default
+to `process.env` for server-side callers, but applications use explicit objects so configuration
+does not become an ad hoc ambient dependency.
 
 ### Validation rules
 

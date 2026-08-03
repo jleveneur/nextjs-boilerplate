@@ -62,8 +62,9 @@ Stateless JWTs are rejected for browser sessions because the property people wan
 
 Security defaults that ship enabled: rate limiting on all auth endpoints (per IP and per
 identifier), constant-time responses on login and password reset to resist user enumeration,
-single-use tokens with short expiry, secure cookie attributes, CSRF protection on state-changing
-form posts, and an audit log entry for every authentication event.
+single-use tokens with short expiry, secure cookie attributes, and CSRF protection on
+state-changing form posts. Authentication-event audit writes are not wired yet; see
+[Audit log](#audit-log).
 
 ### Where session verification happens
 
@@ -178,19 +179,19 @@ of tests that need a database and a session.
    unauthorized callers.
 5. **UI checks are duplicated, never trusted.** The same permission constants drive both, so they
    cannot drift.
-6. **Every denial is logged** with actor, action, and resource — denials are a leading indicator of
-   both bugs and attacks.
+6. **Denials should be logged at the transport boundary** with actor, action, and resource —
+   denials are a leading indicator of both bugs and attacks. That dedicated denial wiring is
+   pending; `@repo/authz` currently returns typed decisions without performing I/O.
 7. **Policy coverage is asserted**: a test enumerates every registered action and fails if one has
    no policy, which is how an action added without a rule gets caught rather than defaulting to
    whatever the resolver forgot.
 
 ### Impersonation and support access
 
-Support access uses Better Auth's admin impersonation: time-boxed, requiring a reason, producing
-a distinct session flagged `isImpersonating`, fully audit-logged, and visibly banner-marked in
-the UI. Impersonated sessions are barred from destructive actions (deleting an organization,
-rotating API keys). A support tool that silently grants full account access is an insider-risk
-and compliance problem; making it noisy and bounded is the point.
+Better Auth's admin impersonation can produce a distinct session, and the resolved actor preserves
+its `isImpersonating` flag. `@repo/authz` bars impersonated actors from destructive actions.
+Reason capture, a dedicated support UI and banner, and audit-log writes are not implemented yet;
+they remain requirements before impersonation is exposed as a supported operator workflow.
 
 ---
 
@@ -200,7 +201,7 @@ and compliance problem; making it noisy and bounded is the point.
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | Credential    | API key: displayed once, stored as a SHA-256 hash with a short lookup prefix                                                      |
 | Format        | `sk_live_<random>` / `sk_test_<random>` — prefixes make keys greppable in leak scanning and obvious in support tickets            |
-| Scoping       | Per organization, with an explicit permission subset — a key never has more authority than the role that created it               |
+| Scoping       | Intended invariant: per organization, with effective permissions equal to the key scope ∩ creator role                            |
 | Expiry        | Optional, encouraged; the dashboard warns about non-expiring keys                                                                 |
 | Rotation      | Overlapping keys supported so rotation needs no downtime                                                                          |
 | Revocation    | Immediate; keys are cached in Redis with a short TTL and evicted on revoke                                                        |
@@ -209,6 +210,10 @@ and compliance problem; making it noisy and bounded is the point.
 Keys resolve to the same `Actor` shape as a session, which means **`@repo/core` cannot tell
 whether it is serving the web app or a third party**, and therefore cannot apply weaker rules to
 one of them. That is the entire benefit of a shared actor abstraction.
+
+The main-branch resolver does not yet enforce the intended intersection: it uses a key's explicit
+scope directly (or falls back to role permissions). Treat the intersection as the required design,
+not as a currently enforced guarantee, until the authorization fix and its parity tests land.
 
 ---
 
@@ -226,15 +231,18 @@ The concrete failure modes this design is built against:
 | User enumeration                                                      | Constant-time, identical responses on login/reset/signup                                                                |
 | CSRF                                                                  | `SameSite` cookies + Better Auth CSRF protection on form posts; tRPC requires a custom header                           |
 | Leaked API key                                                        | Prefixed keys are detected by Gitleaks and provider leak scanners; revocation is instant; scopes bound the blast radius |
-| Insider access                                                        | Impersonation is time-boxed, reasoned, audit-logged, and restricted                                                     |
+| Insider access                                                        | Destructive actions are blocked while impersonating; reason capture, support UI, and audit wiring remain required       |
 | Webhook forgery                                                       | HMAC signature + timestamp window + event-id replay check                                                               |
 | Open redirect after login                                             | `returnTo` validated against a same-origin allowlist                                                                    |
 
 ### Audit log
 
-Append-only table recording actor, action, resource, tenant, IP, user agent, request id, and a
-redacted diff, for: authentication events, permission and role changes, membership changes, API
-key lifecycle, impersonation, billing changes, destructive deletes, and cross-tenant system
-access. Writes are in the same transaction as the change they describe, so the log cannot
-disagree with the data. It is queryable by tenant for customer-facing audit features, and
-retained 12 months by default.
+**Schema-ready, not operational.** The initial migration includes an `audit_log` table with
+tenant, actor, action, resource, metadata, and timestamp fields, but application services do not
+write audit rows yet. Authentication events, permission and role changes, membership changes,
+API-key lifecycle, impersonation, billing changes, destructive deletes, and cross-tenant system
+access are therefore not currently recorded there.
+
+When wiring is added, writes must share the transaction of the change they describe, metadata
+must be redacted, and tenant querying and retention need explicit implementation. Until then,
+the schema is preparation for an audit feature, not evidence that a complete audit trail exists.
