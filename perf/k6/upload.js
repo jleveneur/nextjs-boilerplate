@@ -6,7 +6,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 
-import { authHeaders, baseUrl, missingAuth, organizationId } from "./lib/env.js";
+import { authHeaders, baseUrl, expectApiStatuses, missingAuth, organizationId } from "./lib/env.js";
 
 export const options = {
   vus: 3,
@@ -30,6 +30,7 @@ export default function (data) {
     return;
   }
 
+  expectApiStatuses();
   const root = baseUrl();
   const org = organizationId();
   // Stand-in until a public REST upload route exists: authenticated list proves

@@ -25,4 +25,19 @@ Environment:
 | `ORGANIZATION_ID` | unset                              | Tenant for `/v1/organizations/...`    |
 | `K6_IMAGE`        | `grafana/k6:1.3.0`                 | Override to pin/bump the runner image |
 
+Authenticated keys must include `metadata.userId` (required by
+`resolveActorFromApiKey`). Create via session:
+
+```bash
+# after sign-in cookie jar is set:
+curl -sS -b cookies.txt -c cookies.txt \
+  -H 'Content-Type: application/json' -H 'Origin: http://localhost:8080' \
+  -X POST http://localhost:8080/api/auth/api-key/create \
+  -d "{\"name\":\"k6\",\"organizationId\":\"$ORG\",\"metadata\":{\"userId\":\"$USER_ID\"}}"
+```
+
+Default key permissions are `invoice:read` only — `write-heavy` expects **403**
+unless you mint a server-side key with write permissions. App-level rate limit is
+**60 req/min/key** (`apps/api`); Better Auth’s built-in key counter is disabled.
+
 Saturation findings live in [`docs/runbooks/scaling.md`](../../docs/runbooks/scaling.md).

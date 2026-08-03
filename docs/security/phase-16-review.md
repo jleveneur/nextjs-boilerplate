@@ -37,6 +37,7 @@ API response ([`apps/api/src/middleware/security-headers.ts`](../../apps/api/src
 
 ## Findings / accepted risks
 
-| ID  | Severity | Finding                                  | Disposition |
-| --- | -------- | ---------------------------------------- | ----------- |
-| —   | —        | _(none recorded in Phase 16 automation)_ | —           |
+| ID    | Severity | Finding                                                                                       | Disposition                                                                                     |
+| ----- | -------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| P16-1 | Medium   | Better Auth API-key plugin defaulted to **10 req/day** and surfaced as HTTP 401 when exceeded | Fixed: `rateLimit.enabled: false` in `@repo/auth`; app limiter remains 60 req/min in `apps/api` |
+| P16-2 | Low      | Org API keys without `metadata.userId` resolve as invalid (`resolveActorFromApiKey`)          | Documented in `perf/k6/README.md`; creators must set `metadata.userId`                          |

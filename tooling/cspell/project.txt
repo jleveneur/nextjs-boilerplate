@@ -50,6 +50,7 @@ playwright
 axe
 axllent
 k6
+autooff
 mailpit
 HSTS
 zap

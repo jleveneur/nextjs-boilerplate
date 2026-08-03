@@ -9,45 +9,45 @@ complete this checklist for each release that changes primary UI
 
 ## Evidence
 
-| Field       | Value           |
-| ----------- | --------------- |
-| Date (UTC)  |                 |
-| Auditor     |                 |
-| Build / SHA |                 |
-| Environment | local / staging |
-| Overall     | pass / fail     |
+| Field       | Value                                                         |
+| ----------- | ------------------------------------------------------------- |
+| Date (UTC)  | 2026-08-03                                                    |
+| Auditor     | automated (Playwright keyboard-auth + axe); screen reader TBD |
+| Build / SHA | post-`f77c37a` Phase 16 follow-up (see git history)           |
+| Environment | local (`apps/web` Playwright webServer / prod-like compose)   |
+| Overall     | **pass** for automated keyboard + axe; screen reader not run  |
 
 ---
 
 ## Keyboard
 
-| Check                                                             | Result | Notes |
-| ----------------------------------------------------------------- | ------ | ----- |
-| Sign-in: Tab order reaches email, password, submit; visible focus |        |       |
-| Sign-up: same                                                     |        |       |
-| Primary authenticated view: skip/nav landmarks usable             |        |       |
-| Dialogs/menus (if present): Escape closes; focus returns          |        |       |
-| No keyboard trap                                                  |        |       |
+| Check                                                             | Result | Notes                                                                   |
+| ----------------------------------------------------------------- | ------ | ----------------------------------------------------------------------- |
+| Sign-in: Tab order reaches email, password, submit; visible focus | pass   | `e2e/keyboard-auth.spec.ts` — Tab reaches Sign in; axe WCAG 2.2 AA      |
+| Sign-up: same                                                     | pass   | same spec                                                               |
+| Primary authenticated view: skip/nav landmarks usable             | —      | not covered by keyboard-auth smoke (no authenticated shell in this run) |
+| Dialogs/menus (if present): Escape closes; focus returns          | —      | no dialogs on auth surfaces exercised                                   |
+| No keyboard trap                                                  | pass   | Tab reaches submit without trap on sign-in / sign-up / magic-link       |
 
 ---
 
 ## Screen reader (VoiceOver / NVDA / TalkBack)
 
-| Check                                                             | Result | Notes |
-| ----------------------------------------------------------------- | ------ | ----- |
-| Page title and main landmark announced                            |        |       |
-| Form labels and errors associated                                 |        |       |
-| Auth errors announced on submit failure                           |        |       |
-| Dynamic updates (toasts) announced without stealing focus wrongly |        |       |
+| Check                                                             | Result  | Notes                                   |
+| ----------------------------------------------------------------- | ------- | --------------------------------------- |
+| Page title and main landmark announced                            | not run | requires human VoiceOver / NVDA session |
+| Form labels and errors associated                                 | not run |                                         |
+| Auth errors announced on submit failure                           | not run |                                         |
+| Dynamic updates (toasts) announced without stealing focus wrongly | not run |                                         |
 
 ---
 
 ## Other
 
-| Check                                       | Result | Notes |
-| ------------------------------------------- | ------ | ----- |
-| 200% zoom / reflow usable on sign-in        |        |       |
-| Meaning not by color alone on status badges |        |       |
+| Check                                       | Result  | Notes                         |
+| ------------------------------------------- | ------- | ----------------------------- |
+| 200% zoom / reflow usable on sign-in        | not run | manual                        |
+| Meaning not by color alone on status badges | not run | no badges on auth smoke paths |
 
 ---
 
@@ -56,3 +56,5 @@ complete this checklist for each release that changes primary UI
 | ID  | WCAG | Severity | Description | Follow-up |
 | --- | ---- | -------- | ----------- | --------- |
 |     |      |          |             |           |
+
+Automated run (2026-08-03): `pnpm --filter @repo/web exec playwright test e2e/keyboard-auth.spec.ts` — **3 passed**.

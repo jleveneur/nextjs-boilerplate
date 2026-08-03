@@ -130,6 +130,11 @@ export function createAuth(options: CreateAuthOptions) {
         references: "organization",
         defaultPrefix: apiKeyPrefixForEnv(options.appEnv),
         enableMetadata: true,
+        // Better Auth defaults to 10 req/day and returns 401 when exceeded.
+        // Per-key throttling for `/v1` lives in apps/api (60 req/min).
+        rateLimit: {
+          enabled: false,
+        },
         permissions: {
           defaultPermissions: {
             invoice: ["read"],
@@ -137,6 +142,7 @@ export function createAuth(options: CreateAuthOptions) {
           },
         },
       }),
+
       twoFactor({
         issuer: options.appName ?? "app",
         allowPasswordless: true,

@@ -12,8 +12,10 @@ concurrency:
   group: nightly-hardening
   cancel-in-progress: true
 
+# id-token: write — Turborepo remote cache via OIDC (same as ci.yml).
 permissions:
   contents: read
+  id-token: write
 
 env:
   TURBO_TELEMETRY_DISABLED: 1

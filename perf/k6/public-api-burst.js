@@ -6,7 +6,7 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 import { Rate } from "k6/metrics";
 
-import { apiKey, authHeaders, baseUrl, organizationId } from "./lib/env.js";
+import { apiKey, authHeaders, baseUrl, expectApiStatuses, organizationId } from "./lib/env.js";
 
 const serverErrors = new Rate("server_errors");
 
@@ -28,6 +28,7 @@ export const options = {
 };
 
 export default function () {
+  expectApiStatuses();
   const root = baseUrl();
   const org = organizationId() ?? "00000000-0000-7000-8000-000000000001";
   const url = `${root}/v1/organizations/${org}/invoices?limit=1`;

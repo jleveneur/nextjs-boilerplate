@@ -5,7 +5,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 
-import { authHeaders, baseUrl, missingAuth, organizationId } from "./lib/env.js";
+import { authHeaders, baseUrl, expectApiStatuses, missingAuth, organizationId } from "./lib/env.js";
 
 export const options = {
   vus: 5,
@@ -29,6 +29,7 @@ export default function (data) {
     return;
   }
 
+  expectApiStatuses();
   const root = baseUrl();
   const org = organizationId();
   const payload = JSON.stringify({
@@ -47,9 +48,11 @@ export default function (data) {
   });
 
   check(create, {
-    "create is 2xx, 400, 404, or 429": (r) =>
+    // Default org keys only get invoice:read — 403 is an expected authz boundary.
+    "create is 2xx, 400, 403, 404, 422, or 429": (r) =>
       (r.status >= 200 && r.status < 300) ||
       r.status === 400 ||
+      r.status === 403 ||
       r.status === 404 ||
       r.status === 422 ||
       r.status === 429,

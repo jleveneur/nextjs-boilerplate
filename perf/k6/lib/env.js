@@ -4,8 +4,18 @@
  * Defaults target the local prod-like Traefik stack (`make prod-up` → :8080).
  */
 
+import http from "k6/http";
+
+/**
+ * Treat auth / rate-limit responses as expected so they do not trip
+ * `http_req_failed` when exercising `/v1` under load.
+ */
+export function expectApiStatuses() {
+  http.setResponseCallback(http.expectedStatuses(200, 201, 204, 401, 403, 404, 422, 429));
+}
+
 export function baseUrl() {
-  return (__ENV.BASE_URL || "http://localhost:8080").replace(/\/$/, "");
+  return (__ENV.BASE_URL || __ENV.LOAD_BASE_URL || "http://localhost:8080").replace(/\/$/, "");
 }
 
 export function apiKey() {

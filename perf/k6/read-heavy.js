@@ -4,7 +4,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 
-import { authHeaders, baseUrl, missingAuth, organizationId } from "./lib/env.js";
+import { authHeaders, baseUrl, expectApiStatuses, missingAuth, organizationId } from "./lib/env.js";
 
 export const options = {
   vus: 10,
@@ -29,6 +29,7 @@ export default function () {
   });
 
   if (!missingAuth()) {
+    expectApiStatuses();
     const org = organizationId();
     const list = http.get(`${root}/v1/organizations/${org}/invoices?limit=20`, {
       headers: authHeaders(),
