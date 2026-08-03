@@ -93,8 +93,9 @@ These fail CI, so there is no version of "just for now":
   data loss.
 - **No secrets in code, tests, fixtures, or commit messages.** Gitleaks blocks
   commits and CI scans history.
-- **No `process.env` outside `@repo/env`.** Configuration is validated once, at
-  the edge, and typed thereafter.
+- **No ad hoc `process.env` reads in libraries.** Composition-root env modules
+  select runtime values and pass them to `createEnv`; process-edge entry points
+  and tests/tooling may read only their own boundary metadata or controls.
 - **Validate every external input with Zod** at the boundary — request bodies,
   webhook payloads, environment, third-party responses.
 - **Money is an integer in minor units.** Never a float.

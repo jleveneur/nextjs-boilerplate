@@ -24,8 +24,10 @@ make db-migrate
 make db-seed     # optional demo data
 ```
 
-Configuration is validated by `@repo/env` — never read `process.env` outside
-that package. The docs app only needs the public preset in `apps/docs/.env`.
+Configuration is validated by `@repo/env`. App env modules select the
+`process.env` values they accept and pass them to `createEnv`; reusable libraries
+consume typed configuration rather than ambient state. The docs app only needs
+the public preset in `apps/docs/.env`.
 
 ## Run the apps
 

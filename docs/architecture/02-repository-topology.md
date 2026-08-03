@@ -217,17 +217,17 @@ mobile app or CLI) without importing a Next.js app.
 `@repo/ui` may import only Layer 0. It never learns that a database exists.
 
 Heavy dependencies are isolated behind subpath exports so they cannot be pulled into the base
-bundle by accident. Chart / editor / table are **deferred** until a product surface needs them;
-the Next bundle-budget gate on `apps/web` keeps them off `/` when they land:
+bundle by accident. Chart / editor / table are implemented and exercised by the design-system
+gallery; the Next bundle-budget gate on `apps/web` keeps them off `/`:
 
 ```
 @repo/ui          → primitives (button, input, dialog, …)
 @repo/ui/icons    → HugeIcons wrapper
 @repo/ui/motion   → Motion wrappers
 @repo/ui/sonner   → Toaster
-@repo/ui/chart    → Recharts (deferred)
-@repo/ui/editor   → Tiptap (deferred)
-@repo/ui/table    → TanStack Table (deferred)
+@repo/ui/chart    → Recharts
+@repo/ui/editor   → Tiptap
+@repo/ui/table    → TanStack Table
 ```
 
 ### Cross-cutting
