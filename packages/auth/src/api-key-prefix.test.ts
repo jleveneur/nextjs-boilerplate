@@ -23,6 +23,8 @@ describe("role permissions", () => {
     for (const permission of member) {
       expect(owner).toContain(permission);
     }
+    expect(member).toContain("asset:create");
+    expect(member).toContain("asset:read");
     expect(owner).toContain("organization:delete");
   });
 });
