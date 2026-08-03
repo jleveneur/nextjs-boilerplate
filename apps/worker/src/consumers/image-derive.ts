@@ -1,21 +1,12 @@
+import { asAssetId, asOrganizationId } from "@repo/contracts";
 import { markAssetFailed, markAssetReady, systemActorForOrganization, type Ctx } from "@repo/core";
 import { findAssetById } from "@repo/db";
 import { TerminalJobError, type JobHandler } from "@repo/jobs";
 import { derivativeObjectKey, deriveImageVariants, type FileStore } from "@repo/storage";
-import type { Actor, AssetId, OrganizationId } from "@repo/types";
+import type { Actor } from "@repo/types";
 import type { Redis } from "ioredis";
 
 import { claimJobIdempotency } from "../idempotency.ts";
-
-function brandOrganizationId(id: string): OrganizationId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- job payload brand
-  return id as OrganizationId;
-}
-
-function brandAssetId(id: string): AssetId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- job payload brand
-  return id as AssetId;
-}
 
 export function createImageDeriveHandler(options: {
   buildCtx: (actor: Actor) => Ctx;
@@ -28,8 +19,8 @@ export function createImageDeriveHandler(options: {
       return;
     }
 
-    const organizationId = brandOrganizationId(payload.organizationId);
-    const assetId = brandAssetId(payload.assetId);
+    const organizationId = asOrganizationId(payload.organizationId);
+    const assetId = asAssetId(payload.assetId);
     const ctx = options.buildCtx(systemActorForOrganization(organizationId));
 
     const row = await findAssetById({ organizationId, db: ctx.db }, assetId);

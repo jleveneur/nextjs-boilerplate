@@ -44,3 +44,43 @@ export const invitationIdSchema = uuidV7Id<InvitationId>();
 export const assetIdSchema = uuidV7Id<AssetId>();
 export const outboxIdSchema = uuidV7Id<OutboxId>();
 export const invoiceIdSchema = uuidV7Id<InvoiceId>();
+
+/** Validate and brand a UUIDv7 at a trust boundary. */
+export function asOrganizationId(id: string): OrganizationId {
+  return organizationIdSchema.parse(id);
+}
+
+/** Validate and brand a UUIDv7 at a trust boundary. */
+export function asUserId(id: string): UserId {
+  return userIdSchema.parse(id);
+}
+
+/** Validate and brand a UUIDv7 at a trust boundary. */
+export function asMemberId(id: string): MemberId {
+  return memberIdSchema.parse(id);
+}
+
+/** Validate and brand a UUIDv7 at a trust boundary. */
+export function asSessionId(id: string): SessionId {
+  return sessionIdSchema.parse(id);
+}
+
+/** Validate and brand a UUIDv7 at a trust boundary. */
+export function asInvitationId(id: string): InvitationId {
+  return invitationIdSchema.parse(id);
+}
+
+/** Validate and brand a UUIDv7 at a trust boundary. */
+export function asAssetId(id: string): AssetId {
+  return assetIdSchema.parse(id);
+}
+
+/** Validate and brand a UUIDv7 at a trust boundary. */
+export function asOutboxId(id: string): OutboxId {
+  return outboxIdSchema.parse(id);
+}
+
+/** Validate and brand a UUIDv7 at a trust boundary. */
+export function asInvoiceId(id: string): InvoiceId {
+  return invoiceIdSchema.parse(id);
+}
