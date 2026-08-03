@@ -2,9 +2,12 @@
 import "server-only";
 
 export {
+  ASSET_ERROR_CODES,
   ASSET_CONFIRMED,
+  AssetDerivationInputMissingError,
   assetConfirmedEvent,
   confirmUpload,
+  deriveAssetVariants,
   markAssetFailed,
   markAssetReady,
   reconcileOrphanAssets,

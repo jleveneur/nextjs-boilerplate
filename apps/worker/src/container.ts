@@ -189,7 +189,7 @@ export function buildContainer(): AppContainer {
       mailer: emailMailer,
       idempotencyRedis,
     }),
-    "image.derive": createImageDeriveHandler({ buildCtx, files, idempotencyRedis }),
+    "image.derive": createImageDeriveHandler({ buildCtx, idempotencyRedis }),
     "asset.reconcile-orphans": createAssetReconcileHandler({ buildCtx }),
     "stripe.event.process": createStripeEventProcessHandler({ buildCtx }),
   };
