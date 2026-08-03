@@ -146,7 +146,7 @@ describe("phase 10 worker proofs", () => {
           idempotencyRedis,
         }),
         "invoice.voided.notify": () => Promise.resolve(),
-        "image.derive": createImageDeriveHandler({ buildCtx, files, idempotencyRedis }),
+        "image.derive": createImageDeriveHandler({ buildCtx, idempotencyRedis }),
         "asset.reconcile-orphans": () => Promise.resolve(),
         "stripe.event.process": () => Promise.resolve(),
       },
