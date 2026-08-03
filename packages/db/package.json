@@ -29,7 +29,7 @@
     "@repo/utils": "workspace:*",
     "drizzle-orm": "catalog:",
     "postgres": "catalog:",
-    "server-only": "0.0.1"
+    "server-only": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
