@@ -5,8 +5,16 @@ alwaysApply: true
 
 # Verification
 
-`make check` is the gate. It runs format, lint (type-aware), typecheck, layer
-boundaries, spelling, dead-code detection, and tests — the same set CI runs.
+`make check` is the fast local gate. It runs format checking, type-aware lint,
+typechecking, layer and flag-expiry checks, spelling, dead-code detection, script
+tests, unit tests, and the web bundle budget.
+
+It is not the full CI gate. CI runs overlapping checks in parallel and adds
+history- and service-dependent work such as secret and commit scanning,
+changesets, OpenAPI drift, container builds and scans, integration tests,
+Playwright, Lighthouse, and CodeQL. Reproduce relevant paths with
+`make openapi-check`, `make images`, `make test-integration`, `make e2e`, or
+`make lighthouse`; some require Docker and `make deps-up-test`.
 
 Faster individual loops: `make lint`, `make typecheck`, `make test`, `make layers`.
 

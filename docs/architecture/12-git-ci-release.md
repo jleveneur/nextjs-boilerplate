@@ -89,7 +89,16 @@ secret is compromised the instant it is pushed, so catching it in CI is already 
 
 ## 3. Continuous integration
 
-Fast, parallel, and reproducible locally via `make check`.
+`make check` is the fast local pre-push gate: formatting, type-aware lint, full
+typechecking, layer and flag-expiry checks, spelling, dead-code detection, script and unit tests,
+and the web bundle budget. It is not a complete local reproduction of CI.
+
+CI runs an overlapping set in parallel (with affected typechecks and unit tests on PRs), then adds
+history- and environment-dependent gates: secret and commit scanning, changeset policy, OpenAPI
+drift, container builds and vulnerability scans, API and worker integration tests, Playwright,
+Lighthouse, and CodeQL. Focused local targets include `make openapi-check`, `make images`,
+`make test-integration`, `make e2e`, and `make lighthouse`; some require Docker and
+`make deps-up-test`. There is intentionally no monolithic local target for hosted CI policy checks.
 
 ```mermaid
 flowchart TB
