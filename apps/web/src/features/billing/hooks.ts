@@ -1,7 +1,6 @@
 "use client";
 
 import type { ListInvoicesInput } from "@repo/contracts";
-import type { InvoiceId } from "@repo/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "../../trpc/react.ts";
@@ -9,11 +8,6 @@ import { useTRPC } from "../../trpc/react.ts";
 export function useInvoiceList(input: ListInvoicesInput = { limit: 50 }) {
   const trpc = useTRPC();
   return useQuery(trpc.billing.list.queryOptions(input));
-}
-
-export function useInvoice(invoiceId: InvoiceId) {
-  const trpc = useTRPC();
-  return useQuery(trpc.billing.get.queryOptions({ invoiceId }));
 }
 
 export function useCreateInvoice() {
