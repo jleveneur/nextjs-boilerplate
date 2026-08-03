@@ -73,15 +73,19 @@ jobs:
           path: .tmp/zap/
           if-no-files-found: ignore
 
+      # Run even if ZAP failed — restore-drill is independent of the scan report.
       - name: Start deps Postgres for restore drill
+        if: success() || failure()
         run: make deps-up
 
       - name: Migrate local app DB
+        if: success() || failure()
         run: make db-migrate
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55432/app
 
       - name: Restore drill
+        if: success() || failure()
         run: make restore-drill
 
       - name: Tear down

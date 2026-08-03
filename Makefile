@@ -304,9 +304,11 @@ load: ## Run k6 scenarios via Docker (grafana/k6) against LOAD_BASE_URL
 
 
 zap: ## OWASP ZAP baseline against ZAP_DOCKER_TARGET (Traefik on host :8080)
-	# /zap/wrk must be writable (ZAP writes reports / plan artifacts there).
+	# /zap/wrk must be writable by the container `zap` user (CI runners need a+rwx).
 	mkdir -p .tmp/zap
+	chmod 777 .tmp/zap
 	cp "$(CURDIR)/perf/zap/rules.tsv" .tmp/zap/rules.tsv
+	chmod 666 .tmp/zap/rules.tsv
 	docker run --rm \
 		--add-host=host.docker.internal:host-gateway \
 		-v "$(CURDIR)/.tmp/zap:/zap/wrk" \
@@ -314,6 +316,7 @@ zap: ## OWASP ZAP baseline against ZAP_DOCKER_TARGET (Traefik on host :8080)
 		zap-baseline.py -t "$(ZAP_DOCKER_TARGET)" -c /zap/wrk/rules.tsv -I -m 1 -T 5 \
 			--autooff -w /zap/wrk/report.md || \
 		{ echo "ZAP exited non-zero — see .tmp/zap/report.md"; exit 1; }
+
 
 
 
