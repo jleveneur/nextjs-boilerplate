@@ -29,7 +29,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createEmailSendHandler } from "./consumers/email-send.ts";
 import { createImageDeriveHandler } from "./consumers/image-derive.ts";
-import { claimJobIdempotency } from "./idempotency.ts";
+import { beginJobIdempotency } from "./idempotency.ts";
 import { assertRedisNoEviction } from "./redis-policy.ts";
 
 const PNG_1X1 = Uint8Array.from(
@@ -245,7 +245,9 @@ describe("phase 10 worker proofs", () => {
     await handler(payload, { jobId: "2", attemptsMade: 1 });
 
     expect(mailer.sent).toHaveLength(1);
-    await expect(claimJobIdempotency(idempotencyRedis, key)).resolves.toBe(false);
+    await expect(beginJobIdempotency(idempotencyRedis, key)).resolves.toEqual({
+      status: "completed",
+    });
   });
 
   it("drains an in-flight job on worker.close before resolving", async () => {
