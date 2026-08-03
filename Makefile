@@ -1,9 +1,8 @@
 # Top-level entry point for common tasks.
 #
-# Make is the stable interface: `make check` means the same thing in a terminal,
-# in a hook, and in CI, even when the command underneath changes. Targets stay
-# thin wrappers — the logic lives in package scripts and configs, so nothing here
-# is a second implementation that can disagree with them.
+# Make is the stable interface for local workflows and the commands CI composes.
+# Targets stay thin wrappers — the logic lives in package scripts and configs,
+# so nothing here is a second implementation that can disagree with them.
 #
 # Run `make` or `make help` for the list.
 
@@ -76,12 +75,11 @@ dev: ## Start dependency containers and all apps in watch mode
 ## ----------------------------------------------------------------------------
 ## Quality gates
 ##
-## `check` is what CI runs and what you run before pushing. It is deliberately
-## one command: a gate people have to remember the parts of is a gate that gets
-## partially run.
+## `check` is the fast local pre-push gate. CI runs overlapping targets in
+## parallel and adds policy, integration, browser, and container-image gates.
 ## ----------------------------------------------------------------------------
 
-check: ## Run every quality gate (what CI runs)
+check: ## Run the fast local quality gate (not full CI)
 	pnpm check
 	$(MAKE) bundle-budget
 
