@@ -63,7 +63,8 @@ Stateless JWTs are rejected for browser sessions because the property people wan
 Security defaults that ship enabled: rate limiting on all auth endpoints (per IP and per
 identifier), constant-time responses on login and password reset to resist user enumeration,
 single-use tokens with short expiry, secure cookie attributes, CSRF protection on state-changing
-form posts, and an audit log entry for every authentication event.
+form posts. Authentication-event audit wiring remains part of the incomplete coverage described
+below.
 
 ### Where session verification happens
 
@@ -187,10 +188,11 @@ of tests that need a database and a session.
 ### Impersonation and support access
 
 Support access uses Better Auth's admin impersonation: time-boxed, requiring a reason, producing
-a distinct session flagged `isImpersonating`, fully audit-logged, and visibly banner-marked in
-the UI. Impersonated sessions are barred from destructive actions (deleting an organization,
-rotating API keys). A support tool that silently grants full account access is an insider-risk
-and compliance problem; making it noisy and bounded is the point.
+a distinct session flagged `isImpersonating`, and visibly banner-marked in the UI. Impersonated
+sessions are barred from destructive actions (deleting an organization, rotating API keys).
+Audit call sites for impersonation remain to be implemented. A support tool that silently grants
+full account access is an insider-risk and compliance problem; making it noisy and bounded is the
+point.
 
 ---
 
@@ -226,15 +228,20 @@ The concrete failure modes this design is built against:
 | User enumeration                                                      | Constant-time, identical responses on login/reset/signup                                                                |
 | CSRF                                                                  | `SameSite` cookies + Better Auth CSRF protection on form posts; tRPC requires a custom header                           |
 | Leaked API key                                                        | Prefixed keys are detected by Gitleaks and provider leak scanners; revocation is instant; scopes bound the blast radius |
-| Insider access                                                        | Impersonation is time-boxed, reasoned, audit-logged, and restricted                                                     |
+| Insider access                                                        | Impersonation is time-boxed, reasoned, and restricted; audit wiring remains incomplete                                  |
 | Webhook forgery                                                       | HMAC signature + timestamp window + event-id replay check                                                               |
 | Open redirect after login                                             | `returnTo` validated against a same-origin allowlist                                                                    |
 
 ### Audit log
 
-Append-only table recording actor, action, resource, tenant, IP, user agent, request id, and a
-redacted diff, for: authentication events, permission and role changes, membership changes, API
-key lifecycle, impersonation, billing changes, destructive deletes, and cross-tenant system
-access. Writes are in the same transaction as the change they describe, so the log cannot
-disagree with the data. It is queryable by tenant for customer-facing audit features, and
-retained 12 months by default.
+The append-only `audit_log` table records the tenant, nullable actor user, action, resource type
+and id, metadata, and creation time. `@repo/core` provides `writeAuditLog`, which uses the active
+transaction when one is present and records system actors without a user id. Invoice voiding
+currently writes `invoice.voided` in the same transaction as the invoice update.
+
+Coverage is intentionally incomplete. Authentication events, permission and role changes,
+membership changes, Better Auth API-key lifecycle events, impersonation, other billing changes,
+destructive deletes, and cross-tenant system access still need call sites. Customer-facing
+queries and retention enforcement are also not implemented. IP address, user agent, request id,
+and redacted diffs have no dedicated columns; a caller may include appropriately redacted values
+in `metadata`.

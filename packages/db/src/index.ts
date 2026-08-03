@@ -13,6 +13,11 @@ export {
   type SqlClient,
 } from "./client.ts";
 export {
+  insertAuditLog,
+  type AuditLogRow,
+  type InsertAuditLogInput,
+} from "./repositories/audit-log.repository.ts";
+export {
   findAssetById,
   insertAsset,
   listStalePendingAssets,
