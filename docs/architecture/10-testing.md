@@ -185,18 +185,15 @@ Anti-flake rules, which matter more than the test list:
 every major page in E2E; keyboard-only traversal asserted on primary flows. Violations fail CI.
 Target: WCAG 2.2 AA.
 
-**Load — k6.** Not in the PR pipeline; run nightly against staging and before any release expected
-to change performance. Scenarios: authenticated read-heavy browsing, write-heavy mutation, file
-upload, and a public API burst against rate limits. Thresholds are asserted so the run passes or
-fails rather than producing numbers nobody reads: p95 latency, error rate, and throughput floors.
-The most valuable output is not a headline RPS figure but the **saturation point** — where the
-database pool, the event loop, or queue depth becomes the limit — because that determines the
-scaling runbook.
+**Load — k6.** Not in the PR pipeline. Scenarios live in [`perf/k6/`](../../perf/k6/) and run via
+`make load` (Docker `grafana/k6`, default `LOAD_BASE_URL=http://host.docker.internal:8080` after
+`make prod-up`) and `.github/workflows/nightly-hardening.yml`. Scenarios: health, public API burst,
+read-heavy, write-heavy and upload (soft-skip without `API_KEY`). Thresholds assert p95 latency and
+error rate. The saturation point is recorded in [scaling.md](../runbooks/scaling.md).
 
-**Security.** Automated in CI: Gitleaks for secrets, `pnpm audit` plus Renovate for vulnerable
-dependencies, GitHub CodeQL for static analysis, Trivy for container images, and OWASP ZAP baseline
-against staging nightly. Authorization is the security test that matters most, and it lives in the
-unit and integration suites.
+**Security.** Automated in PR CI: Gitleaks, Renovate/`pnpm audit`, CodeQL, Trivy. OWASP ZAP
+baseline nightly (`make zap`, `perf/zap/rules.tsv`). Authorization remains the security test that
+matters most — see [docs/security/](../security/phase-16-review.md).
 
 ---
 

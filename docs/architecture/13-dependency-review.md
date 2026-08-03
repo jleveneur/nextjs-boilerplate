@@ -649,14 +649,26 @@ _Manual auditing only_ — necessary for the other 60 %, but does not scale to e
 **Health** Deque-maintained, the reference implementation.
 **Exit** Very low.
 
-### k6
+### k6 (Docker — `grafana/k6`)
 
 **Why** Load tests written in JavaScript with thresholds that pass or fail, so a load test is a
-gate rather than a report nobody reads. Runs as a single binary in CI.
+gate rather than a report nobody reads. Scripts are not Node modules — they run on k6's Go JS
+runtime. We invoke the official `grafana/k6` image via `make load` (same pattern as ZAP), so
+neither a host binary nor an npm fake is required.
 **Instead of** _Artillery_ — comparable, YAML-first. _JMeter_ — heavyweight, XML. _Locust_ — Python,
-which adds a language to the repo.
+which adds a language to the repo. _A pnpm/TypeScript script_ — cannot drive k6 VUs; Node is the
+wrong runtime.
 **Health** Grafana Labs, actively developed.
-**Exit** Very low — nightly scenarios, not in the PR path.
+**Exit** Very low — nightly scenarios, not in the PR path (`perf/k6/`, `make load`).
+
+### OWASP ZAP (Docker)
+
+**Why** Baseline spider + passive scan against a running origin catches missing headers and common
+misconfigurations without a full penetration engagement. Shipped as the official
+`zaproxy/zap-stable` Docker Hub image — not an npm dependency.
+**Instead of** _Burp_ — manual/commercial. _Nikto_ — noisier, less tuned for SPAs.
+**Health** OWASP flagship, active.
+**Exit** Very low — `make zap` + nightly workflow; rule overrides in `perf/zap/rules.tsv`.
 
 ---
 

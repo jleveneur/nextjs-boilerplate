@@ -249,11 +249,15 @@ search, and `/api-reference` locally.
 
 ## Phase 16 — Hardening
 
-k6 scenarios with asserted thresholds, and the **saturation point identified and documented** — the
-most valuable output, because it determines the scaling runbook. Full manual accessibility audit with
-a keyboard and a screen reader. Security review (authorization matrix, tenant isolation, secret
-handling, headers, ZAP baseline). All runbooks written. A **restore drill actually performed**, not
-described.
+**Status:** implemented — `perf/k6` + `make load`, ZAP baseline (`make zap`),
+`.github/workflows/nightly-hardening.yml`, API security headers, `docs/security/*` review and
+authz matrix, expanded axe/keyboard E2E, completed runbooks (disk, connections, scaling, backup,
+restore), and `make restore-drill`. Manual screen-reader audit and production PITR drills use
+evidence templates in `docs/security/accessibility-audit.md` and `docs/runbooks/restore.md`.
+
+**Done when** k6 thresholds pass against the prod-like stack, ZAP baseline is wired nightly,
+saturation is recorded in [scaling.md](../runbooks/scaling.md), security checklist links to
+automated evidence, stub runbooks are complete, and `make restore-drill` / `make check` are green.
 
 ## Phase 17 — Optional modules
 

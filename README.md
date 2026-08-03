@@ -4,10 +4,9 @@ A production-grade monorepo foundation: typed end to end, self-hostable, and
 cloud-agnostic. Built to be the starting point for real products rather than a
 demo.
 
-**Status:** Phase 15 docs live. Architecture, ADRs, runbooks, and the OpenAPI
-reference ship from [`apps/docs`](apps/docs). See
-[the implementation plan](docs/architecture/14-implementation-plan.md) for what
-is next.
+**Status:** Phase 16 hardening live. Docs site at [`apps/docs`](apps/docs); load
+(k6), ZAP, restore-drill, and security review under `perf/` and `docs/security/`.
+See [the implementation plan](docs/architecture/14-implementation-plan.md).
 
 ---
 
@@ -79,7 +78,8 @@ apps/        Deployable units (web, api, worker, docs)
 packages/    Shared libraries, arranged in layers
 tooling/     Build, lint, and type configuration
 docker/      Images and Compose stacks (incl. local prod-like)
-docs/        Architecture, ADRs, and runbooks (source of truth for the docs site)
+docs/        Architecture, ADRs, runbooks, security review
+perf/        k6 load scenarios + ZAP baseline (nightly, not PR CI)
 scripts/     Repository automation, with its own tests
 ```
 
@@ -95,6 +95,9 @@ make test        # unit tests
 make layers      # assert the layer boundaries hold
 make format      # apply Oxfmt
 make images      # build web/api/worker/docs images and assert size budgets
+make load        # k6 via Docker (make prod-up first; needs Docker)
+make zap         # OWASP ZAP baseline (Docker)
+make restore-drill  # Postgres dump → scratch → migrate → smoke
 ```
 
 Git hooks run a fast subset before each commit and push. They are a convenience —

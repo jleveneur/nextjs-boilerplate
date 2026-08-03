@@ -44,6 +44,9 @@ blob-report/
 *.dec.yml
 *.decrypted
 
+# ZAP / hardening scratch output
+.tmp/
+
 # Local tooling caches
 .cache/
 .eslintcache

@@ -7,7 +7,9 @@
     "typeAware": true
   },
   // Extends does not always merge ignorePatterns into the root config.
-  "ignorePatterns": ["**/next-env.d.ts"],
+  // k6 scripts use the k6 runtime (`k6/*`, `__ENV`) — not typechecked by the repo tsc graph.
+  "ignorePatterns": ["**/next-env.d.ts", "perf/k6/**"],
+
   "overrides": [
     {
       // Composition roots and process bootstraps legitimately write to stdout

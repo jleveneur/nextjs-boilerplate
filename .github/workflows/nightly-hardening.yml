@@ -1,0 +1,89 @@
+name: Nightly hardening
+
+# Phase 16 — k6, ZAP baseline, and restore-drill against an ephemeral prod-like
+# stack. Not a PR gate (docs/architecture/10-testing.md).
+
+on:
+  schedule:
+    - cron: "27 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-hardening
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  DO_NOT_TRACK: 1
+  BASE_URL: http://127.0.0.1:8080
+  LOAD_BASE_URL: http://host.docker.internal:8080
+  ZAP_DOCKER_TARGET: http://host.docker.internal:8080
+
+jobs:
+  hardening:
+    name: Load, ZAP, restore drill
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
+
+      - name: Build app images
+        run: make images
+
+      - name: Start prod-like stack
+        run: |
+          docker compose -f docker/compose.prod.yaml up -d --no-build
+          for i in $(seq 1 60); do
+            if curl -sf "$BASE_URL/api/health" >/dev/null \
+              && curl -sf "$BASE_URL/health" >/dev/null; then
+              echo "Stack healthy"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Stack failed to become healthy"
+          docker compose -f docker/compose.prod.yaml ps
+          docker compose -f docker/compose.prod.yaml logs --tail=80
+          exit 1
+
+      - name: k6 load suite (Docker grafana/k6)
+        run: make load
+        env:
+          LOAD_BASE_URL: ${{ env.LOAD_BASE_URL }}
+
+      - name: OWASP ZAP baseline
+        run: make zap
+        env:
+          ZAP_DOCKER_TARGET: ${{ env.ZAP_DOCKER_TARGET }}
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: zap-baseline-report
+          path: .tmp/zap/
+          if-no-files-found: ignore
+
+      - name: Start deps Postgres for restore drill
+        run: make deps-up
+
+      - name: Migrate local app DB
+        run: make db-migrate
+        env:
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55432/app
+
+      - name: Restore drill
+        run: make restore-drill
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker compose -f docker/compose.prod.yaml down --remove-orphans || true
+          make deps-down || true

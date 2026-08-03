@@ -18,11 +18,13 @@ SHELL := bash
         typecheck typecheck-affected spell knip layers bundle-budget openapi-check \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
+        load zap restore-drill \
         changeset clean clean-all \
         deps-up deps-up-test deps-up-test-worker deps-down \
         prod-up prod-down \
         db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push \
         email dev
+
 
 # Do not `include .env` here: Make treats `//` as a comment, which truncates
 # URLs like APP_URL=http://…. Scripts load `.env` via Node `--env-file` instead.
@@ -265,6 +267,60 @@ prod-up: ## Build, migrate, then start the local production-like stack (Traefik 
 
 prod-down: ## Stop the local production-like stack
 	-$(COMPOSE_PROD) down
+
+## ----------------------------------------------------------------------------
+## Hardening (Phase 16) — not part of `make check` / PR CI
+## ----------------------------------------------------------------------------
+
+# Host-facing Traefik origin (curl from the laptop / CI runner).
+BASE_URL ?= http://localhost:8080
+# Origin as seen from k6/ZAP containers (host-gateway; Docker Desktop resolves it).
+LOAD_BASE_URL ?= http://host.docker.internal:8080
+ZAP_DOCKER_TARGET ?= $(LOAD_BASE_URL)
+# Pin the official Grafana image — k6 is a Go runtime, not a Node package.
+K6_IMAGE ?= grafana/k6:1.3.0
+# Docker Hub — see https://www.zaproxy.org/docs/docker/about/
+ZAP_IMAGE ?= zaproxy/zap-stable:latest
+
+
+
+# k6 scripts are JS but run inside the k6 binary (Docker). Not executable via pnpm/Node.
+define K6_RUN
+	docker run --rm \
+		--add-host=host.docker.internal:host-gateway \
+		-v "$(CURDIR)/perf/k6:/scripts:ro" \
+		-e BASE_URL="$(LOAD_BASE_URL)" \
+		-e API_KEY \
+		-e ORGANIZATION_ID \
+		$(K6_IMAGE) run /scripts/$(1)
+endef
+
+load: ## Run k6 scenarios via Docker (grafana/k6) against LOAD_BASE_URL
+	$(call K6_RUN,health.js)
+	$(call K6_RUN,public-api-burst.js)
+	$(call K6_RUN,read-heavy.js)
+	$(call K6_RUN,write-heavy.js)
+	$(call K6_RUN,upload.js)
+
+
+zap: ## OWASP ZAP baseline against ZAP_DOCKER_TARGET (Traefik on host :8080)
+	# /zap/wrk must be writable (ZAP writes reports / plan artifacts there).
+	mkdir -p .tmp/zap
+	cp "$(CURDIR)/perf/zap/rules.tsv" .tmp/zap/rules.tsv
+	docker run --rm \
+		--add-host=host.docker.internal:host-gateway \
+		-v "$(CURDIR)/.tmp/zap:/zap/wrk" \
+		$(ZAP_IMAGE) \
+		zap-baseline.py -t "$(ZAP_DOCKER_TARGET)" -c /zap/wrk/rules.tsv -I -m 1 -T 5 \
+			--autooff -w /zap/wrk/report.md || \
+		{ echo "ZAP exited non-zero — see .tmp/zap/report.md"; exit 1; }
+
+
+
+
+
+restore-drill: ## pg_dump → scratch DB → migrate → smoke (local Postgres)
+	node --experimental-strip-types --env-file=$(CURDIR)/$(ENV_FILE) scripts/restore-drill.ts
 
 ## ----------------------------------------------------------------------------
 ## Database

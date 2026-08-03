@@ -49,7 +49,14 @@ vitest
 playwright
 axe
 axllent
+k6
 mailpit
+HSTS
+zap
+zaproxy
+
+
+
 mailpit's
 minio
 minioadmin

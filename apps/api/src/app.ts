@@ -10,7 +10,9 @@ import {
   idempotencyMiddleware,
   rateLimitMiddleware,
   requestIdMiddleware,
+  securityHeadersMiddleware,
 } from "./middleware/index.ts";
+
 import { registerInvoiceRoutes } from "./routes/v1/invoices.ts";
 import type { AppContainer } from "./server/container.ts";
 import { registerStripeWebhook } from "./webhooks/stripe.ts";
@@ -36,6 +38,7 @@ export function createApp(container: AppContainer): OpenAPIHono<ApiEnv> {
     c.set("container", container);
     await next();
   });
+  app.use("*", securityHeadersMiddleware);
   app.use("*", requestIdMiddleware);
   app.onError(errorHandler);
 

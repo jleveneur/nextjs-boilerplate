@@ -34,4 +34,4 @@ Symptoms: Prometheus alert `QueueBacklogGrowing`, Grafana **Queue — worker** s
 
 - Integration tests for each job handler (see `apps/worker` proofs).
 - Alert on DLQ growth, not only queue depth.
-- Document expected queue throughput after load tests (Phase 16).
+- Expected throughput and saturation levers: [scaling.md](./scaling.md).

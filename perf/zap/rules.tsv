@@ -1,0 +1,13 @@
+# OWASP ZAP baseline ignore / threshold overrides (Phase 16).
+# Format: https://www.zaproxy.org/docs/docker/baseline-scan/
+# id	threshold	description / justification
+# FAIL = fail the scan; IGNORE = do not fail (document why).
+10010	IGNORE	Cookie No HttpOnly on locale/session edges during unauth spider — Better Auth session cookies set HttpOnly; residual Set-Cookie noise from redirects
+10021	IGNORE	X-Content-Type-Options may be absent on some static Next assets outside proxy matcher — app HTML gets nosniff via apps/web proxy; API sets headers in middleware
+10020	IGNORE	X-Frame-Options same as above for static assets; HTML and API covered
+10037	IGNORE	X-Powered-By from Next.js in local/prod-compose — strip at adopter edge (Traefik/CDN) when deploying
+10038	IGNORE	CSP Header Not Set — adopter/reverse-proxy concern (docs/security); boilerplate does not ship a default CSP
+10055	IGNORE	CSP (alternate rule id) — same justification as 10038
+10063	IGNORE	Permissions-Policy absent on some Next static/404 responses; API sets Permissions-Policy; HTML covered via web proxy where configured
+10098	IGNORE	Cross-Domain Misconfiguration noise on local Traefik Host rules
+90004	IGNORE	Insufficient Site Isolation Against Spectre Vulnerability — browser/platform; out of app control

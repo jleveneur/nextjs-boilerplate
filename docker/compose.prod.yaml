@@ -152,7 +152,9 @@ services:
         condition: service_healthy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.web.rule=Host(`localhost`) || Host(`127.0.0.1`)
+      # host.docker.internal: k6/ZAP containers reaching Traefik on the host.
+      - traefik.http.routers.web.rule=Host(`localhost`) || Host(`127.0.0.1`) || Host(`host.docker.internal`)
+
       - traefik.http.routers.web.entrypoints=web
       - traefik.http.services.web.loadbalancer.server.port=3000
 
@@ -183,9 +185,16 @@ services:
         condition: service_healthy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.api.rule=(Host(`localhost`) || Host(`127.0.0.1`)) && PathPrefix(`/v1`)
+      - traefik.http.routers.api.rule=(Host(`localhost`) || Host(`127.0.0.1`) || Host(`host.docker.internal`)) && PathPrefix(`/v1`)
       - traefik.http.routers.api.entrypoints=web
       - traefik.http.routers.api.priority=100
+      - traefik.http.routers.api.service=api
+      # Health for load tests / probes (not under /v1).
+      - traefik.http.routers.api-health.rule=(Host(`localhost`) || Host(`127.0.0.1`) || Host(`host.docker.internal`)) && (Path(`/health`) || Path(`/health/ready`))
+
+      - traefik.http.routers.api-health.entrypoints=web
+      - traefik.http.routers.api-health.priority=100
+      - traefik.http.routers.api-health.service=api
       - traefik.http.services.api.loadbalancer.server.port=3001
 
   docs:

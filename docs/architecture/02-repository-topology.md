@@ -10,8 +10,11 @@
 ├── packages/                # Everything reusable. Where the code actually lives.
 ├── tooling/                 # Shared build/lint/test configuration, published to nobody.
 ├── docker/                  # Dockerfiles + compose stacks (deps, prod-like, test, e2e).
-├── docs/                    # Architecture, ADRs, runbooks (this folder).
+├── docs/                    # Architecture, ADRs, runbooks, security review (this folder).
+├── perf/                    # k6 load scenarios + ZAP baseline config (not PR CI).
+├── scripts/                 # Repo automation (layers, restore-drill, budgets, …).
 ├── .github/                 # Workflows, templates, CODEOWNERS.
+
 ├── .cursor/rules/           # Machine-readable architecture rules for AI agents.
 ├── .vscode/                 # Recommended settings + extensions.
 ├── Makefile                 # The single human entry point.
@@ -383,9 +386,11 @@ make setup            # Install toolchain, deps, .env, start services, migrate, 
 make dev              # Services + all apps in watch mode
 make check            # Everything CI runs, locally, in the same order
 make images           # Build web/api/worker/docs images and assert size budgets
-
 make e2e              # Playwright against the built web image
 make e2e-host         # Fast Playwright against next start (local loops)
+make load             # k6 via Docker grafana/k6 (needs Docker + prod-up)
+make zap              # OWASP ZAP baseline (Docker) against Traefik
+make restore-drill    # pg_dump → scratch DB → migrate → smoke
 make db-reset         # Drop, migrate, seed
 make email            # React Email preview server
 make prod-up          # Local Traefik + migrate-then-roll + app images

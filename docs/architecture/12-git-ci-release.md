@@ -144,6 +144,9 @@ Practices that keep it honest:
 - **CodeQL** runs as its own required workflow so its duration does not dominate the aggregate CI
   wall-clock.
 - **Trivy** fails the images job (and the publish workflow) on HIGH/CRITICAL findings.
+- **Nightly hardening** (`.github/workflows/nightly-hardening.yml`) runs k6 (`make load`), OWASP
+  ZAP baseline (`make zap`), and `make restore-drill` against an ephemeral prod-like stack — not a
+  PR gate ([10](./10-testing.md)).
 
 Duration target: **under 6 minutes** for a typical PR. CI slower than a coffee break changes how
 people work — they batch changes into bigger PRs, which is worse for everything.
