@@ -17,6 +17,7 @@
     "@hono/node-server": "catalog:",
     "@repo/analytics": "workspace:*",
     "@repo/authz": "workspace:*",
+    "@repo/contracts": "workspace:*",
     "@repo/core": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/email": "workspace:*",

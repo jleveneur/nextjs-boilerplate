@@ -644,6 +644,9 @@ importers:
       '@repo/authz':
         specifier: workspace:*
         version: link:../../packages/authz
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@repo/core':
         specifier: workspace:*
         version: link:../../packages/core

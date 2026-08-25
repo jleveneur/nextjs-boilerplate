@@ -1,3 +1,4 @@
+import { asOrganizationId } from "@repo/contracts";
 import {
   resolveInvoiceVoidedRecipientEmail,
   systemActorForOrganization,
@@ -5,7 +6,7 @@ import {
 } from "@repo/core";
 import type { Mailer as EmailMailer } from "@repo/email";
 import { TerminalJobError, type JobHandler } from "@repo/jobs";
-import type { Actor, OrganizationId } from "@repo/types";
+import type { Actor } from "@repo/types";
 import type { Redis } from "ioredis";
 
 import {
@@ -13,11 +14,6 @@ import {
   completeJobIdempotency,
   releaseJobIdempotency,
 } from "../idempotency.ts";
-
-function brandOrganizationId(id: string): OrganizationId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- job payload brand
-  return id as OrganizationId;
-}
 
 export function createInvoiceVoidedNotifyHandler(options: {
   buildCtx: (actor: Actor) => Ctx;
@@ -33,7 +29,7 @@ export function createInvoiceVoidedNotifyHandler(options: {
       throw new Error("idempotency lease held");
     }
 
-    const organizationId = brandOrganizationId(payload.organizationId);
+    const organizationId = asOrganizationId(payload.organizationId);
     const ctx = options.buildCtx(systemActorForOrganization(organizationId));
 
     try {
