@@ -113,4 +113,23 @@ describe("idempotencyMiddleware", () => {
     expect(handler).toHaveBeenCalledOnce();
     await cache.close();
   });
+
+  it("requires a key before invoking a mutating route", async () => {
+    const cache = createMemoryCache("test");
+    const handler = vi.fn((c: Context<ApiEnv>) => Promise.resolve(c.json({ created: true }, 201)));
+    const app = createTestApp(cache, handler);
+
+    const response = await app.request("/mutation", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ value: 1 }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      message: "Idempotency-Key header is required for mutating requests",
+    });
+    expect(handler).not.toHaveBeenCalled();
+    await cache.close();
+  });
 });
