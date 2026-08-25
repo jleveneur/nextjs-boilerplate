@@ -18,7 +18,7 @@
     "@opentelemetry/api": "catalog:",
     "bullmq": "catalog:",
     "ioredis": "catalog:",
-    "server-only": "0.0.1",
+    "server-only": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
