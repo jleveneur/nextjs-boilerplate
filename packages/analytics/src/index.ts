@@ -7,7 +7,9 @@ export type { AnalyticsDomainEvent, AnalyticsEventBus } from "./domain-subscribe
 export { createMemoryAnalyticsSink, type RecordedAnalyticsEvent } from "./memory-sink.ts";
 export { createNoopAnalyticsSink } from "./noop-sink.ts";
 export {
+  createAnalyticsSink,
   createPostHogAnalyticsSink,
+  type CreateAnalyticsSinkOptions,
   type CreatePostHogAnalyticsSinkOptions,
 } from "./posthog-sink.ts";
 export type { AnalyticsSink } from "./types.ts";

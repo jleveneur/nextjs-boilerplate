@@ -6,6 +6,7 @@ import type { MiddlewareHandler } from "hono";
 import type { ApiEnv } from "../app.ts";
 
 const IDEMPOTENCY_TTL_SECONDS = 60 * 60 * 24;
+const IDEMPOTENCY_PENDING_TTL_SECONDS = 60 * 5;
 const HEADER = "idempotency-key";
 
 type StoredResponse = {
@@ -14,6 +15,13 @@ type StoredResponse = {
   body: string;
   contentType: string;
 };
+
+type PendingResponse = {
+  bodyHash: string;
+  pending: true;
+};
+
+type IdempotencyEntry = PendingResponse | StoredResponse;
 
 function isMutation(method: string): boolean {
   return method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
@@ -57,11 +65,25 @@ export const idempotencyMiddleware: MiddlewareHandler<ApiEnv> = async (c, next) 
   };
 
   const cache = c.get("container").cache;
-  const stored = await cache.get<StoredResponse>(cacheKey);
-  if (stored !== undefined) {
+  const claimed = await cache.setIfAbsent(
+    { ...cacheKey, ttlSeconds: IDEMPOTENCY_PENDING_TTL_SECONDS },
+    { bodyHash, pending: true } satisfies PendingResponse,
+  );
+  if (!claimed) {
+    const stored = await cache.get<IdempotencyEntry>(cacheKey);
+    if (stored === undefined) {
+      throw new ConflictError({
+        message: "A request with this Idempotency-Key is already being processed; retry later",
+      });
+    }
     if (stored.bodyHash !== bodyHash) {
       throw new ConflictError({
         message: "Idempotency-Key was reused with a different request body",
+      });
+    }
+    if ("pending" in stored) {
+      throw new ConflictError({
+        message: "A request with this Idempotency-Key is already being processed; retry later",
       });
     }
     c.res = new Response(stored.body, {

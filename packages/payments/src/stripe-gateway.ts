@@ -7,6 +7,7 @@ import { randomBytes } from "node:crypto";
 import Stripe from "stripe";
 
 import { entitlementKeysFromMetadata } from "./entitlements.ts";
+import { createNoopPaymentGateway } from "./noop-gateway.ts";
 import { parseStripeSubscription } from "./parse-subscription.ts";
 import type {
   CatalogPrice,
@@ -18,6 +19,17 @@ import type {
 export type CreateStripePaymentGatewayOptions = {
   secretKey: string;
 };
+
+export type CreatePaymentGatewayOptions = {
+  secretKey?: string | undefined;
+};
+
+/** Select Stripe when configured, otherwise return the no-op gateway. */
+export function createPaymentGateway(options: CreatePaymentGatewayOptions): PaymentGateway {
+  return options.secretKey === undefined || options.secretKey === ""
+    ? createNoopPaymentGateway()
+    : createStripePaymentGateway({ secretKey: options.secretKey });
+}
 
 function integrationIdentifier(): string {
   return `repo-checkout-${randomBytes(4).toString("hex")}`;
