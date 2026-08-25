@@ -9,4 +9,4 @@ export {
 } from "./in-memory-job-queue.ts";
 export { createInMemoryMailer, type InMemoryMailer } from "./in-memory-mailer.ts";
 export { createNoopAnalyticsSink, createNoopFlagProvider } from "./noop-ports.ts";
-export { createSequenceIdGenerator, createUuidIdGenerator } from "./uuid-id-generator.ts";
+export { createSequenceIdGenerator } from "./uuid-id-generator.ts";
