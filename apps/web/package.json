@@ -23,6 +23,7 @@
     "@repo/db": "workspace:*",
     "@repo/email": "workspace:*",
     "@repo/env": "workspace:*",
+    "@repo/errors": "workspace:*",
     "@repo/flags": "workspace:*",
     "@repo/i18n": "workspace:*",
     "@repo/jobs": "workspace:*",
