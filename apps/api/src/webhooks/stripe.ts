@@ -7,6 +7,7 @@ import type { ApiEnv } from "../app.ts";
 import { env } from "../env.ts";
 
 const REPLAY_TTL_SECONDS = 60 * 60 * 24 * 7;
+const PENDING_TTL_SECONDS = 60 * 5;
 
 // Placeholder tenant for edge enqueue (job payload carries the real event).
 // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- well-known sentinel
@@ -43,8 +44,11 @@ export function registerStripeWebhook(app: OpenAPIHono<ApiEnv>): void {
       key: event.id,
     };
 
-    const seen = await container.cache.get<true>(cacheKey);
-    if (seen === true) {
+    const claimed = await container.cache.setIfAbsent(
+      { ...cacheKey, ttlSeconds: PENDING_TTL_SECONDS },
+      true,
+    );
+    if (!claimed) {
       return c.json({ received: true, replay: true }, 200);
     }
 

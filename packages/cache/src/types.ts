@@ -29,6 +29,8 @@ export type CacheGetOrSetOptions<T> = CacheSetOptions & {
 export type Cache = {
   get<T>(input: CacheKeyInput): Promise<T | undefined>;
   set(input: CacheSetOptions, value: unknown): Promise<void>;
+  /** Atomically write only when the key does not already exist. */
+  setIfAbsent(input: CacheSetOptions, value: unknown): Promise<boolean>;
   del(input: CacheKeyInput): Promise<void>;
   getOrSet<T>(input: CacheGetOrSetOptions<T>): Promise<T>;
   /** Close underlying connections. No-op for in-memory fakes. */

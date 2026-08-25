@@ -6,8 +6,9 @@
  * that a general-purpose library makes awkward. See
  * docs/architecture/09-environment-and-secrets.md.
  *
- * This is the **only** module in the repository that reads `process.env`.
- * Everywhere else imports a typed `env` object an app created with this function.
+ * This module provides the default server-side `process.env` reader. Apps
+ * normally pass an explicit `runtimeEnv` object from their composition-root env
+ * module; libraries consume the resulting typed object instead of ambient config.
  */
 
 import { z, type output } from "zod";
@@ -191,12 +192,11 @@ function pick(source: RuntimeEnv, keys: readonly string[]): Record<string, strin
  * Reads `process.env`.
  *
  * Isolated so the rest of the file can be reasoned about without ambient access,
- * and so tests can assert this is the single read site by stubbing it through
- * `runtimeEnv` instead.
+ * and so tests can avoid ambient state by supplying `runtimeEnv` instead.
  */
 function readProcessEnv(): RuntimeEnv {
-  // This is the repository's sole authorised process.env access. Everywhere else
-  // imports a typed `env` object.
+  // Server-side convenience fallback. App composition roots normally provide
+  // an explicit runtimeEnv object so their accepted keys remain visible.
   return process.env;
 }
 

@@ -19,7 +19,7 @@
     "@repo/utils": "workspace:*",
     "posthog-js": "catalog:",
     "posthog-node": "catalog:",
-    "server-only": "0.0.1",
+    "server-only": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

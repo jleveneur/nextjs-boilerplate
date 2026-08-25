@@ -12,14 +12,28 @@ say so.
 
 ## 1. Before you finish
 
-Run this. It is what CI runs, so a green result here means CI will agree:
+Run the fast local gate before reporting work complete:
 
 ```bash
 make check
 ```
 
-Do not report work as complete without it. If a check fails for a reason you
-believe is pre-existing, verify that claim on a clean tree rather than assuming.
+It runs formatting, type-aware lint, typechecking, layer and flag-expiry checks,
+spelling, dead-code detection, script tests, unit tests, and the web bundle
+budget. A green result is necessary, but does not predict that full CI will pass.
+CI runs overlapping checks in parallel (using affected typechecks and unit tests
+on PRs) and adds history- and service-dependent gates: secret and commit scans,
+changesets, OpenAPI drift, container builds and scans, integration tests,
+Playwright, Lighthouse, and CodeQL.
+
+Use the relevant Make targets when reproducing those CI paths locally:
+`make openapi-check`, `make images`, `make test-integration`, `make e2e`, and
+`make lighthouse`. Some require Docker and `make deps-up-test`; there is
+intentionally no single local command that reproduces all CI policy and hosted
+runner checks.
+
+If a failure looks pre-existing, confirm that on a clean tree instead of
+assuming.
 
 Individual gates, for a faster loop: `make format`, `make lint`, `make typecheck`,
 `make test`, `make layers`, `make spell`, `make knip`.
@@ -93,8 +107,9 @@ These fail CI, so there is no version of "just for now":
   data loss.
 - **No secrets in code, tests, fixtures, or commit messages.** Gitleaks blocks
   commits and CI scans history.
-- **No `process.env` outside `@repo/env`.** Configuration is validated once, at
-  the edge, and typed thereafter.
+- **No ad hoc `process.env` reads in libraries.** Composition-root env modules
+  select runtime values and pass them to `createEnv`; process-edge entry points
+  and tests/tooling may read only their own boundary metadata or controls.
 - **Validate every external input with Zod** at the boundary — request bodies,
   webhook payloads, environment, third-party responses.
 - **Money is an integer in minor units.** Never a float.

@@ -232,12 +232,12 @@ describe("voidInvoice", () => {
     );
   });
 
-  it("forbids a member without invoice:void", async () => {
-    vi.mocked(repository.findInvoiceById).mockResolvedValue(openRow());
-
+  it("forbids a member without invoice:void before loading the invoice", async () => {
     await expect(voidInvoice(makeCtx(makeActor("member")), { invoiceId })).rejects.toBeInstanceOf(
       ForbiddenError,
     );
+    expect(repository.findInvoiceById).not.toHaveBeenCalled();
+    expect(repository.updateInvoiceStatus).not.toHaveBeenCalled();
   });
 
   it("returns not found when the invoice is missing", async () => {

@@ -19,9 +19,10 @@
     "@better-auth/api-key": "catalog:",
     "@better-auth/passkey": "catalog:",
     "@repo/types": "workspace:*",
+    "@repo/utils": "workspace:*",
     "better-auth": "catalog:",
     "ioredis": "catalog:",
-    "server-only": "0.0.1"
+    "server-only": "catalog:"
   },
   "devDependencies": {
     "@repo/authz": "workspace:*",
