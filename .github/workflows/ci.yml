@@ -1,10 +1,9 @@
 name: CI
 
-# Every gate here is also a `make` target, so anything CI rejects can be
-# reproduced locally with one command. See docs/architecture/12-git-ci-release.md.
-#
-# Jobs run in parallel rather than as one `make check`: a developer wants to know
-# every problem from one push, not the first one alphabetically.
+# CI composes repository commands and focused `make` targets. It is broader than
+# the fast local `make check` gate; see docs/architecture/12-git-ci-release.md.
+# Jobs run in parallel so a developer sees every problem from one push, not just
+# the first one alphabetically.
 
 on:
   pull_request:
