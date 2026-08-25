@@ -6,8 +6,13 @@
 import { Writable } from "node:stream";
 
 import { permissionsForRole } from "@repo/authz";
-import { confirmUpload, relayOutboxBatch, requestUpload, type Ctx } from "@repo/core";
-import { createUuidIdGenerator } from "@repo/core/testing";
+import {
+  confirmUpload,
+  createUuidIdGenerator,
+  relayOutboxBatch,
+  requestUpload,
+  type Ctx,
+} from "@repo/core";
 import { createDb, findAssetById, type Database } from "@repo/db";
 import { asset, outbox } from "@repo/db/schema";
 import { createFactories, setupDbIntegrationTests } from "@repo/db/testing";
@@ -29,7 +34,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createEmailSendHandler } from "./consumers/email-send.ts";
 import { createImageDeriveHandler } from "./consumers/image-derive.ts";
-import { claimJobIdempotency } from "./idempotency.ts";
+import { beginJobIdempotency } from "./idempotency.ts";
 import { assertRedisNoEviction } from "./redis-policy.ts";
 
 const PNG_1X1 = Uint8Array.from(
@@ -245,7 +250,9 @@ describe("phase 10 worker proofs", () => {
     await handler(payload, { jobId: "2", attemptsMade: 1 });
 
     expect(mailer.sent).toHaveLength(1);
-    await expect(claimJobIdempotency(idempotencyRedis, key)).resolves.toBe(false);
+    await expect(beginJobIdempotency(idempotencyRedis, key)).resolves.toEqual({
+      status: "completed",
+    });
   });
 
   it("drains an in-flight job on worker.close before resolving", async () => {

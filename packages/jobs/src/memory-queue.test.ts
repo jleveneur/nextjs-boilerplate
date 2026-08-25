@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createLazyBullMqJobQueue } from "./bullmq-queue.ts";
 import { createMemoryJobQueue } from "./memory-queue.ts";
 
 describe("createMemoryJobQueue", () => {
@@ -44,5 +45,12 @@ describe("createMemoryJobQueue", () => {
     queue.clear();
     expect(queue.jobs).toHaveLength(0);
     await queue.close();
+  });
+});
+
+describe("createLazyBullMqJobQueue", () => {
+  it("closes without opening an unused Redis connection", async () => {
+    const queue = createLazyBullMqJobQueue({ redisUrl: "redis://127.0.0.1:1" });
+    await expect(queue.close()).resolves.toBeUndefined();
   });
 });

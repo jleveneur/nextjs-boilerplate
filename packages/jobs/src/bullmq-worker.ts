@@ -8,6 +8,7 @@
 import { Queue, UnrecoverableError, Worker, type Job } from "bullmq";
 import { Redis } from "ioredis";
 
+import { moveToDeadLetter } from "./dead-letter.ts";
 import { createBullMqMetrics } from "./metrics.ts";
 import { isJobName, parseJobPayload } from "./registry.ts";
 import { unwrapJobData, withJobTraceContext } from "./trace-envelope.ts";
@@ -15,6 +16,12 @@ import type { CreateBullMqWorkerOptions, DeadLetterRecord } from "./types.ts";
 
 const DEFAULT_QUEUE = "default";
 const DEFAULT_ATTEMPTS = 5;
+
+function normalizeError(error: unknown): Error {
+  return error instanceof Error
+    ? error
+    : new Error("Failed to process dead-letter job", { cause: error });
+}
 
 export type BullMqWorker = {
   readonly queueName: string;
@@ -43,14 +50,8 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
     ...(options.prefix === undefined ? {} : { prefix: options.prefix }),
   });
 
-  async function moveToDeadLetter(job: Job, failedReason: string): Promise<void> {
+  async function deadLetterJob(job: Job, failedReason: string): Promise<void> {
     const { payload } = unwrapJobData(job.data);
-    await dlq.add(job.name, job.data, {
-      jobId: `dlq-${job.id ?? job.name}-${String(job.attemptsMade)}`,
-      removeOnComplete: { count: 1000 },
-      removeOnFail: { count: 5000 },
-    });
-
     const record: DeadLetterRecord = {
       queueName,
       dlqName,
@@ -61,7 +62,20 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
       payload,
     };
 
-    await options.onDeadLetter?.(record);
+    await moveToDeadLetter({
+      record,
+      enqueue: async () => {
+        await dlq.add(job.name, job.data, {
+          jobId: `dlq-${job.id ?? job.name}-${String(job.attemptsMade)}`,
+          removeOnComplete: { count: 1000 },
+          removeOnFail: { count: 5000 },
+        });
+      },
+      ...(options.onDeadLetter === undefined ? {} : { onDeadLetter: options.onDeadLetter }),
+      ...(options.onDeadLetterError === undefined
+        ? {}
+        : { onDeadLetterError: options.onDeadLetterError }),
+    });
   }
 
   const worker = new Worker(
@@ -129,8 +143,10 @@ export function createBullMqWorker(options: CreateBullMqWorkerOptions): BullMqWo
 
     metricsHandle.recordFailure(queueName, job.name);
 
-    void moveToDeadLetter(job, error.message).catch(() => {
-      // DLQ move failures are logged by the composition root if onDeadLetter throws.
+    // BullMQ event listeners return void, so route all asynchronous failures to
+    // the worker's error event instead of leaving a rejected promise unobserved.
+    void deadLetterJob(job, error.message).catch((deadLetterError: unknown) => {
+      worker.emit("error", normalizeError(deadLetterError));
     });
   });
 

@@ -166,9 +166,10 @@ pooling model. Types are a cheaper, more reliable primary control.
 
 ### Cross-tenant access
 
-Admin and support paths that must cross tenants use an explicit `SystemCtx`, a separate repository
-function, and an audit-log entry. The escape hatch exists, is named, and is logged — rather than
-being an ambient capability.
+The intended pattern for admin and support paths that must cross tenants is an explicit system
+actor, a separate repository function, and an audit-log entry rather than an ambient capability.
+The audit table schema exists, but no cross-tenant support path or audit writer is implemented
+yet. Any such path must add the capability and its transactional audit write together.
 
 ---
 

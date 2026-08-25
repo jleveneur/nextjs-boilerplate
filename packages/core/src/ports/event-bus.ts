@@ -20,3 +20,28 @@ export type EventBus = {
   emit(event: DomainEvent): Promise<void>;
   subscribe(type: string, handler: EventHandler): () => void;
 };
+
+export function createInProcessEventBus(): EventBus {
+  const handlers = new Map<string, Set<EventHandler>>();
+
+  return {
+    async emit(event) {
+      const eventHandlers = handlers.get(event.type);
+      if (eventHandlers === undefined) {
+        return;
+      }
+      await Promise.all([...eventHandlers].map(async (handler) => handler(event)));
+    },
+    subscribe(type, handler) {
+      let eventHandlers = handlers.get(type);
+      if (eventHandlers === undefined) {
+        eventHandlers = new Set();
+        handlers.set(type, eventHandlers);
+      }
+      eventHandlers.add(handler);
+      return () => {
+        eventHandlers.delete(handler);
+      };
+    },
+  };
+}

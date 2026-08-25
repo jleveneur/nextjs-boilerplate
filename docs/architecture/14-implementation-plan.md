@@ -129,9 +129,9 @@ job, and unit tests run with no database.
 
 `@repo/ui`: Tailwind 4 CSS-first theme in `tooling/tailwind` with tokens as CSS variables; `cn()`;
 shadcn/ui initialised on Base UI (`@base-ui/react` 1.6.0 — note the package rename); the core
-primitives; the HugeIcons wrapper; Motion primitives; Sonner. Chart / editor / table subpaths are
-deferred until product needs them. Plus a minimal `apps/web` with a `/design-system` gallery (full
-product web surface is Phase 8).
+primitives; the HugeIcons wrapper; Motion primitives; Sonner. Chart / editor / table subpaths were
+deferred from this phase and delivered in Phase 17. Plus a minimal `apps/web` with a
+`/design-system` gallery (full product web surface is Phase 8).
 
 **Done when** every component has behaviour and axe tests, a test proves `@repo/ui` has no `node:*` in
 its transitive graph, and the bundle-budget check is in place so a heavy dependency cannot leak into
@@ -265,12 +265,12 @@ automated evidence, stub runbooks are complete, and `make restore-drill` / `make
 **Status: implemented.** Trigger.dev was never scaffolded; background work is BullMQ-only
 ([ADR-0009](../adr/0009-bullmq-only-background-work.md)).
 
-| Deliverable                     | Notes                                                                                                         |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `@repo/payments`                | Stripe catalog, Checkout subscription sessions, Customer Portal, webhook construct, entitlement metadata      |
-| Core `PaymentGateway` port      | Customer ensure, checkout/portal, webhook apply → subscription + entitlement rows; job `stripe.event.process` |
-| Transport                       | API `POST /webhooks/stripe`; tRPC `billing.catalog                                                            | syncCatalog | subscription | checkout | portal`; web `/[orgSlug]/billing`behind`new-billing-portal` |
-| `@repo/ui/chart\|editor\|table` | Recharts / Tiptap / TanStack Table; design-system gallery; home bundle forbids heavy imports                  |
+| Deliverable                         | Notes                                                                                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/payments`                    | Stripe catalog, Checkout subscription sessions, Customer Portal, webhook construct, entitlement metadata                                 |
+| Core `PaymentGateway` port          | Customer ensure, checkout/portal, webhook apply → subscription + entitlement rows; job `stripe.event.process`                            |
+| Transport                           | API `POST /webhooks/stripe`; tRPC `billing.{catalog,syncCatalog,subscription,checkout,portal}`; flag-gated panel at `/[orgSlug]/billing` |
+| `@repo/ui/chart`, `editor`, `table` | Recharts / Tiptap / TanStack Table; design-system gallery; home bundle forbids heavy imports                                             |
 
 **Done when**
 

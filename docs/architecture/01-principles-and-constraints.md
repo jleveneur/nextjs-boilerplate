@@ -101,22 +101,22 @@ repo and reviewed in the same PR as the change they describe.
 
 These are not preferences; treat them as compile errors.
 
-| #   | Constraint                                                                                                                        | Enforced by                                                     |
-| --- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| C1  | No business logic in a React component, route handler, tRPC resolver, or Server Action. They orchestrate only.                    | Review + layering; resolvers are expected to be under ~15 lines |
-| C2  | No database access outside `packages/db` and `packages/core`.                                                                     | pnpm cannot resolve `@repo/db` where it is not declared         |
-| C3  | No `process.env` access outside `packages/env`.                                                                                   | Lint rule + review                                              |
-| C4  | No secret may reach the client bundle. Client env vars must be `NEXT_PUBLIC_`-prefixed and declared in the client schema.         | Split env schemas + CI check                                    |
-| C5  | Authorization is never inferred from routing. Every core service that touches tenant data takes an `actor` and consults a policy. | Review + policy-coverage test                                   |
-| C6  | Every tenant-scoped query filters by `organization_id`.                                                                           | Scoped query helpers; RLS optional as defence                   |
-| C7  | Migrations are reviewed SQL committed to Git, applied by an explicit job.                                                         | CD pipeline; `push` is local-only                               |
-| C8  | No cyclic dependency between packages, ever.                                                                                      | `turbo` graph + CI check                                        |
-| C9  | `packages/ui` must not import any server-side package.                                                                            | Layering + `exports` map                                        |
-| C10 | Every log line is structured; no `console.*` in application code.                                                                 | Lint rule                                                       |
-| C11 | Every error crossing a transport boundary has a stable machine-readable code.                                                     | `AppError` type + transport mappers                             |
-| C12 | No `any`, no `as` casts to unrelated types, no non-null `!` in application code.                                                  | Oxlint type-aware rules                                         |
-| C13 | Every public REST change is reflected in the OpenAPI document, which is generated — never hand-written.                           | Spec is derived from Zod schemas; CI diffs it                   |
-| C14 | CI is the only thing that builds release artifacts. No local `docker push`.                                                       | Registry permissions                                            |
+| #   | Constraint                                                                                                                                                                                   | Enforced by                                                     |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| C1  | No business logic in a React component, route handler, tRPC resolver, or Server Action. They orchestrate only.                                                                               | Review + layering; resolvers are expected to be under ~15 lines |
+| C2  | No database access outside `packages/db` and `packages/core`.                                                                                                                                | pnpm cannot resolve `@repo/db` where it is not declared         |
+| C3  | Runtime config is selected in app env modules and passed to `createEnv`; libraries never read `process.env` ad hoc. Process-edge metadata and test/tooling controls are boundary exceptions. | Review + env schema boundaries                                  |
+| C4  | No secret may reach the client bundle. Client env vars must be `NEXT_PUBLIC_`-prefixed and declared in the client schema.                                                                    | Split env schemas + CI check                                    |
+| C5  | Authorization is never inferred from routing. Every core service that touches tenant data takes an `actor` and consults a policy.                                                            | Review + policy-coverage test                                   |
+| C6  | Every tenant-scoped query filters by `organization_id`.                                                                                                                                      | Scoped query helpers; RLS optional as defence                   |
+| C7  | Migrations are reviewed SQL committed to Git, applied by an explicit job.                                                                                                                    | CD pipeline; `push` is local-only                               |
+| C8  | No cyclic dependency between packages, ever.                                                                                                                                                 | `turbo` graph + CI check                                        |
+| C9  | `packages/ui` must not import any server-side package.                                                                                                                                       | Layering + `exports` map                                        |
+| C10 | Every log line is structured; no `console.*` in application code.                                                                                                                            | Lint rule                                                       |
+| C11 | Every error crossing a transport boundary has a stable machine-readable code.                                                                                                                | `AppError` type + transport mappers                             |
+| C12 | No `any`, no `as` casts to unrelated types, no non-null `!` in application code.                                                                                                             | Oxlint type-aware rules                                         |
+| C13 | Every public REST change is reflected in the OpenAPI document, which is generated — never hand-written.                                                                                      | Spec is derived from Zod schemas; CI diffs it                   |
+| C14 | CI is the only thing that builds release artifacts. No local `docker push`.                                                                                                                  | Registry permissions                                            |
 
 ---
 

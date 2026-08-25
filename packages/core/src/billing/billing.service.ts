@@ -115,6 +115,10 @@ export async function listInvoicesForOrg(
 }
 
 export async function voidInvoice(ctx: Ctx, input: VoidInvoiceInput): Promise<Invoice> {
+  authorize(ctx.actor, PERMISSIONS["invoice:void"], {
+    organizationId: ctx.actor.organizationId,
+  });
+
   return withTransaction(ctx.db, async (tx) => {
     const scoped: Ctx = { ...ctx, tx };
     const tenant = tenantCtx(scoped);
