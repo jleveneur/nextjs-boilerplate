@@ -1,5 +1,15 @@
 # @repo/payments
 
+## 0.2.0
+
+### Minor Changes
+
+- 4b216be: Expose shared production port factories for application composition roots.
+
+### Patch Changes
+
+- 771731a: Resolve `server-only` through the workspace catalog so every server-boundary package shares one version.
+
 ## 0.1.0
 
 ### Minor Changes

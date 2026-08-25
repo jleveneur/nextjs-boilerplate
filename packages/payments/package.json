@@ -1,6 +1,6 @@
 {
   "name": "@repo/payments",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Stripe adapter: catalog, checkout, portal, webhook verify, entitlement mapping.",
   "type": "module",

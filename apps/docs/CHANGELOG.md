@@ -1,5 +1,13 @@
 # @repo/docs
 
+## 0.0.2
+
+### Patch Changes
+
+- Updated dependencies [771731a]
+- Updated dependencies [0bbf3ff]
+  - @repo/env@0.0.3
+
 ## 0.0.1
 
 ### Patch Changes

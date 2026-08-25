@@ -1,6 +1,6 @@
 {
   "name": "@repo/analytics",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Typed product-event registry and server/client capture adapters (PostHog).",
   "type": "module",
