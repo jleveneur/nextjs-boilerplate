@@ -18,19 +18,18 @@ import { createParityApp, type ParityDb } from "./testing/parity-app.ts";
 
 const { withTestTransaction } = setupDbIntegrationTests();
 
-function brandUserId(id: string): UserId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- test brand
-  return id as UserId;
-}
-
 function brandInvoiceId(id: string): InvoiceId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- test brand
   return id as InvoiceId;
 }
 
-function makeActor(role: "owner" | "member", organizationId: OrganizationId): Actor {
+function makeActor(
+  role: "owner" | "member",
+  organizationId: OrganizationId,
+  userId: UserId,
+): Actor {
   return {
-    userId: brandUserId("01900000-0000-7000-8000-0000000000aa"),
+    userId,
     organizationId,
     role,
     permissions: permissionsForOrganizationRole(role),
@@ -143,8 +142,12 @@ describe("tRPC vs REST authz parity (ADR-0003)", () => {
       });
 
       const ports = createTestPorts();
-      const owner = makeActor("owner", org.id);
-      const member = makeActor("member", org.id);
+      // Persisted users, not synthetic ids: voiding writes an audit row whose
+      // actor_user_id is a foreign key into "user".
+      const ownerUser = await factories.makeUser();
+      const memberUser = await factories.makeUser();
+      const owner = makeActor("owner", org.id, ownerUser.id);
+      const member = makeActor("member", org.id, memberUser.id);
 
       const memberTrpc = await trpcVoidOutcome(member, db, ports, memberTrpcInvoice.id);
       const memberRest = await restVoidOutcome(member, db, ports, org.id, memberRestInvoice.id);

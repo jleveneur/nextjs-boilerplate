@@ -237,12 +237,15 @@ The concrete failure modes this design is built against:
 
 ### Audit log
 
-**Schema-ready, not operational.** The initial migration includes an `audit_log` table with
-tenant, actor, action, resource, metadata, and timestamp fields, but application services do not
-write audit rows yet. Authentication events, permission and role changes, membership changes,
-API-key lifecycle, impersonation, billing changes, destructive deletes, and cross-tenant system
-access are therefore not currently recorded there.
+The append-only `audit_log` table records the tenant, nullable actor user, action, resource type
+and id, metadata, and creation time. `@repo/core` provides `writeAuditLog`, which uses the active
+transaction when one is present and records system actors without a user id. Invoice voiding is
+the first wired call site: it writes `invoice.voided` in the same transaction as the invoice
+update.
 
-When wiring is added, writes must share the transaction of the change they describe, metadata
-must be redacted, and tenant querying and retention need explicit implementation. Until then,
-the schema is preparation for an audit feature, not evidence that a complete audit trail exists.
+Coverage is otherwise incomplete. Authentication events, permission and role changes, membership
+changes, Better Auth API-key lifecycle events, impersonation, other billing changes, destructive
+deletes, and cross-tenant system access still need call sites. Metadata redaction is the caller's
+responsibility, and customer-facing querying and retention enforcement are not implemented. IP
+address, user agent, request id, and redacted diffs have no dedicated columns; a caller may
+include appropriately redacted values in `metadata`.

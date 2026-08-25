@@ -11,6 +11,7 @@ import { encodeCursor } from "@repo/utils";
 
 import type { Ctx } from "../ctx.ts";
 import { createTestPorts, type TestPorts } from "../testing/create-test-ports.ts";
+import * as audit from "../write-audit-log.ts";
 import { InvoiceAlreadyPaidError, InvoiceAlreadyVoidError } from "./billing.errors.ts";
 import * as repository from "./billing.repository.ts";
 import { createInvoice, getInvoice, listInvoicesForOrg, voidInvoice } from "./billing.service.ts";
@@ -34,6 +35,10 @@ vi.mock("../outbox/write-outbox-event.ts", () => ({
       eventType: "invoice.voided",
     }),
   ),
+}));
+
+vi.mock("../write-audit-log.ts", () => ({
+  writeAuditLog: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("@repo/db", async (importOriginal) => {
@@ -200,9 +205,10 @@ describe("voidInvoice", () => {
   beforeEach(() => {
     vi.mocked(repository.findInvoiceById).mockReset();
     vi.mocked(repository.updateInvoiceStatus).mockReset();
+    vi.mocked(audit.writeAuditLog).mockReset();
   });
 
-  it("voids an open invoice, emits, and enqueues notify via subscriber", async () => {
+  it("voids and audits an open invoice, then emits and enqueues notify", async () => {
     const row = openRow();
     vi.mocked(repository.findInvoiceById).mockResolvedValue(row);
     vi.mocked(repository.updateInvoiceStatus).mockResolvedValue({ ...row, status: "void" });
@@ -214,6 +220,21 @@ describe("voidInvoice", () => {
     expect(ctx.ports.events.emitted).toHaveLength(1);
     expect(ctx.ports.jobs.jobs).toHaveLength(1);
     expect(ctx.ports.jobs.jobs[0]?.name).toBe("invoice.voided.notify");
+    expect(audit.writeAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({ actor: ctx.actor, tx: expect.anything() }),
+      {
+        action: "invoice.voided",
+        resourceType: "invoice",
+        resourceId: invoiceId,
+        metadata: {
+          previous_status: "open",
+          status: "void",
+        },
+      },
+    );
+    expect(vi.mocked(audit.writeAuditLog).mock.calls[0]?.[0].tx).toBe(
+      vi.mocked(repository.updateInvoiceStatus).mock.calls[0]?.[0].db,
+    );
   });
 
   it("refuses a paid invoice", async () => {
