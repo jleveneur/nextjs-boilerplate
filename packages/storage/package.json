@@ -18,7 +18,7 @@
     "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/s3-request-presigner": "catalog:",
     "@repo/utils": "workspace:*",
-    "server-only": "0.0.1",
+    "server-only": "catalog:",
     "sharp": "catalog:"
   },
   "devDependencies": {
