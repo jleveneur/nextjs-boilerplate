@@ -55,6 +55,12 @@ export type DeadLetterRecord = {
   payload: unknown;
 };
 
+export type DeadLetterErrorContext = {
+  record: DeadLetterRecord;
+  stage: "enqueue" | "notify";
+  error: unknown;
+};
+
 export type CreateBullMqWorkerOptions = {
   redisUrl: string;
   handlers: JobHandlers;
@@ -70,4 +76,9 @@ export type CreateBullMqWorkerOptions = {
    * terminal error). Composition roots log / alert from here.
    */
   onDeadLetter?: (record: DeadLetterRecord) => void | Promise<void>;
+  /**
+   * Called when adding a job to the dead-letter queue or notifying
+   * `onDeadLetter` fails. If omitted, the failure is emitted by the worker.
+   */
+  onDeadLetterError?: (context: DeadLetterErrorContext) => void | Promise<void>;
 };
