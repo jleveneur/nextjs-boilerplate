@@ -24,7 +24,7 @@ export type Actor = {
   userId: UserId;
   organizationId: OrganizationId;
   role: OrganizationRole;
-  /** Effective grants for this actor (role defaults ∩ API-key subset). */
+  /** Role defaults for sessions; role defaults ∩ the explicit API-key subset for keys. */
   permissions: readonly Permission[];
   /** Cross-tenant / support path — never from a normal session. */
   isSystem: boolean;
