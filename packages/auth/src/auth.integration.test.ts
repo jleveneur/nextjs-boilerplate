@@ -1,6 +1,7 @@
 import { can, PERMISSIONS } from "@repo/authz";
 import * as dbSchema from "@repo/db/schema";
 import { setupDbIntegrationTests } from "@repo/db/testing";
+import { isUuidV7 } from "@repo/utils";
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 
@@ -134,6 +135,9 @@ describe("@repo/auth integration", () => {
 
     const sessionAfter = await auth.api.getSession({ headers: activeHeaders });
     expect(sessionAfter?.session.activeOrganizationId).toBe(personal?.id);
+    expect(isUuidV7(sessionAfter?.user.id ?? "")).toBe(true);
+    expect(isUuidV7(sessionAfter?.session.id ?? "")).toBe(true);
+    expect(isUuidV7(personal?.id ?? "")).toBe(true);
 
     const sessionActor = await resolveActor({ auth, headers: activeHeaders });
     expect(sessionActor).toBeDefined();

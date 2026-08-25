@@ -6,8 +6,13 @@
 import { Writable } from "node:stream";
 
 import { permissionsForRole } from "@repo/authz";
-import { confirmUpload, relayOutboxBatch, requestUpload, type Ctx } from "@repo/core";
-import { createUuidIdGenerator } from "@repo/core/testing";
+import {
+  confirmUpload,
+  createUuidIdGenerator,
+  relayOutboxBatch,
+  requestUpload,
+  type Ctx,
+} from "@repo/core";
 import { createDb, findAssetById, type Database } from "@repo/db";
 import { asset, outbox } from "@repo/db/schema";
 import { createFactories, setupDbIntegrationTests } from "@repo/db/testing";

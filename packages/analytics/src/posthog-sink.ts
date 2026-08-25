@@ -4,7 +4,13 @@
 
 import { PostHog } from "posthog-node";
 
+import { createNoopAnalyticsSink } from "./noop-sink.ts";
 import type { AnalyticsSink } from "./types.ts";
+
+export type CreateAnalyticsSinkOptions = {
+  apiKey?: string | undefined;
+  host?: string | undefined;
+};
 
 export type CreatePostHogAnalyticsSinkOptions = {
   apiKey: string;
@@ -48,4 +54,11 @@ export function createPostHogAnalyticsSink(
       return client.shutdown();
     },
   };
+}
+
+/** Select the configured production sink, defaulting to a no-op sink. */
+export function createAnalyticsSink(options: CreateAnalyticsSinkOptions): AnalyticsSink {
+  return options.apiKey === undefined || options.apiKey === "" || options.host === undefined
+    ? createNoopAnalyticsSink()
+    : createPostHogAnalyticsSink({ apiKey: options.apiKey, host: options.host });
 }

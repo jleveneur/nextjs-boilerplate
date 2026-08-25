@@ -17,6 +17,20 @@ describe("createMemoryCache", () => {
     await cache.close();
   });
 
+  it("atomically sets a value only once", async () => {
+    const cache = createMemoryCache("local");
+    const key = { namespace: "claim", version: 1, key: "request-1", ttlSeconds: 60 };
+
+    const claims = await Promise.all([
+      cache.setIfAbsent(key, "first"),
+      cache.setIfAbsent(key, "second"),
+    ]);
+
+    expect(claims).toEqual([true, false]);
+    await expect(cache.get<string>(key)).resolves.toBe("first");
+    await cache.close();
+  });
+
   it("getOrSet computes once on a miss", async () => {
     const cache = createMemoryCache("local");
     const factory = vi.fn(() => Promise.resolve("value"));

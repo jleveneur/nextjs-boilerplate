@@ -67,3 +67,20 @@ export function createBullMqJobQueue(options: CreateBullMqJobQueueOptions): Bull
     },
   };
 }
+
+/** Defer opening Redis until the first enqueue call. */
+export function createLazyBullMqJobQueue(options: CreateBullMqJobQueueOptions): JobQueue {
+  let queue: BullMqJobQueue | undefined;
+
+  return {
+    enqueue(name, payload, enqueueOptions) {
+      queue ??= createBullMqJobQueue(options);
+      return queue.enqueue(name, payload, enqueueOptions);
+    },
+    async close() {
+      if (queue !== undefined) {
+        await queue.close();
+      }
+    },
+  };
+}
