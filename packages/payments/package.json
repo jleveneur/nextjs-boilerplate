@@ -14,7 +14,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "server-only": "0.0.1",
+    "server-only": "catalog:",
     "stripe": "catalog:"
   },
   "devDependencies": {
