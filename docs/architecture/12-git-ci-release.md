@@ -224,10 +224,17 @@ flowchart LR
 CI fails a PR that changes a package's public surface without a changeset (`changeset status
 --since=origin/main`). Changes confined to apps, tests, docs, or config need none.
 
-The Release workflow opens the Version Packages PR with `GITHUB_TOKEN`. Repository setting
-**Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull
-requests** must be enabled, or the push of `changeset-release/main` succeeds and the PR create
-step fails.
+The Release workflow opens the Version Packages PR with a GitHub App installation token, not
+`GITHUB_TOKEN`. A PR authored by `github-actions[bot]` is treated as coming from a first-time
+contributor under **Actions → General → Approval for running fork pull request workflows from
+contributors**, so its checks stop at `action_required` until a maintainer approves them by hand.
+Because `CI` is a required status check, such a PR can never merge on its own. An installation
+token is short-lived and scoped to this repository, which a personal access token is not.
+
+This requires a GitHub App installed on the repository with **Contents: read and write** and
+**Pull requests: read and write**, its id in the `RELEASE_APP_ID` variable and its private key in
+the `RELEASE_APP_PRIVATE_KEY` secret. The app must also be exempt from any ruleset that would
+block it from pushing `changeset-release/main`.
 
 ### Semver applied to internal packages
 

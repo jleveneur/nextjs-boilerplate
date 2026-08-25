@@ -30,19 +30,33 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      # Push the version branch and its commits.
-      contents: write
-      # Open and update the version pull request.
-      pull-requests: write
+      # Writing is done with the app installation token, not GITHUB_TOKEN, so the
+      # default token only needs to read this repository.
+      contents: read
       # Optional Vercel Turborepo remote cache OIDC.
       id-token: write
 
     steps:
+      # The version PR must be authored by something other than the default
+      # GITHUB_TOKEN. A PR opened by `github-actions[bot]` counts as a first-time
+      # contributor under the repository's fork-PR approval policy, so its checks
+      # sit at `action_required` until a maintainer clicks Approve — and `CI` is a
+      # required check, so the PR can never merge on its own. An installation
+      # token is short-lived and scoped to this repository, unlike a PAT.
+      - name: Mint an app installation token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Changesets compares against the base branch to work out which
           # packages changed, which needs more than a shallow clone.
           fetch-depth: 0
+          # Persist the app token so the version branch is pushed as the app.
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: ./.github/actions/setup
         with:
@@ -63,4 +77,4 @@ jobs:
           # refreshed in the same commit or the version PR fails its own CI.
           setupGitUser: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
