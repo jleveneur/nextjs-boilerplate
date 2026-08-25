@@ -21,6 +21,7 @@ export { TerminalJobError, isTerminalJobError } from "./terminal-error.ts";
 export type {
   CreateBullMqJobQueueOptions,
   CreateBullMqWorkerOptions,
+  DeadLetterErrorContext,
   DeadLetterRecord,
   EnqueueOptions,
   EnqueueResult,

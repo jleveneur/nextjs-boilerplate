@@ -246,6 +246,9 @@ catalogs:
     resend:
       specifier: 6.18.1
       version: 6.18.1
+    server-only:
+      specifier: 0.0.1
+      version: 0.0.1
     sonner:
       specifier: 2.0.7
       version: 2.0.7
@@ -514,6 +517,9 @@ importers:
       '@repo/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@repo/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
       '@repo/flags':
         specifier: workspace:*
         version: link:../../packages/flags
@@ -584,7 +590,7 @@ importers:
         specifier: 'catalog:'
         version: 7.83.0(react@19.2.8)
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
       superjson:
         specifier: 'catalog:'
@@ -727,7 +733,7 @@ importers:
         specifier: 'catalog:'
         version: 5.6.0
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
       zod:
         specifier: 'catalog:'
@@ -763,6 +769,9 @@ importers:
       '@repo/types':
         specifier: workspace:*
         version: link:../types
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../utils
       better-auth:
         specifier: 'catalog:'
         version: 1.6.25(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(kysely@0.29.4)(postgres@3.4.9))(next@16.2.12(@opentelemetry/api@1.9.1)(@playwright/test@1.62.0)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10)
@@ -770,7 +779,7 @@ importers:
         specifier: 'catalog:'
         version: 5.11.1(supports-color@7.2.0)
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
     devDependencies:
       '@repo/authz':
@@ -810,7 +819,7 @@ importers:
         specifier: workspace:*
         version: link:../types
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
     devDependencies:
       '@repo/tsconfig':
@@ -835,7 +844,7 @@ importers:
         specifier: 'catalog:'
         version: 5.11.1(supports-color@7.2.0)
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
     devDependencies:
       '@repo/tsconfig':
@@ -918,7 +927,7 @@ importers:
         specifier: 'catalog:'
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(kysely@0.29.4)(postgres@3.4.9)
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
     devDependencies:
       '@repo/tsconfig':
@@ -958,7 +967,7 @@ importers:
         specifier: 'catalog:'
         version: 3.4.9
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
     devDependencies:
       '@repo/tsconfig':
@@ -1007,7 +1016,7 @@ importers:
         specifier: 'catalog:'
         version: 6.18.1(@react-email/render@2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
     devDependencies:
       '@react-email/ui':
@@ -1047,7 +1056,7 @@ importers:
   packages/env:
     dependencies:
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
       zod:
         specifier: 'catalog:'
@@ -1103,7 +1112,7 @@ importers:
         specifier: 'catalog:'
         version: 5.6.0
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
       zod:
         specifier: 'catalog:'
@@ -1158,7 +1167,7 @@ importers:
         specifier: 'catalog:'
         version: 5.11.1(supports-color@7.2.0)
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
       zod:
         specifier: 'catalog:'
@@ -1189,7 +1198,7 @@ importers:
         specifier: 'catalog:'
         version: 10.3.1
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
     devDependencies:
       '@repo/tsconfig':
@@ -1250,7 +1259,7 @@ importers:
         specifier: 'catalog:'
         version: 10.69.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.221.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
     devDependencies:
       '@repo/tsconfig':
@@ -1275,7 +1284,7 @@ importers:
   packages/payments:
     dependencies:
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
       stripe:
         specifier: 'catalog:'
@@ -1312,7 +1321,7 @@ importers:
         specifier: workspace:*
         version: link:../utils
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
       sharp:
         specifier: 0.35.3
@@ -1364,7 +1373,7 @@ importers:
         specifier: 'catalog:'
         version: 11.18.0(typescript@7.0.2)
       server-only:
-        specifier: 0.0.1
+        specifier: 'catalog:'
         version: 0.0.1
       superjson:
         specifier: 'catalog:'
