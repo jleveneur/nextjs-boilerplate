@@ -26,6 +26,7 @@ export {
   InvoiceAlreadyVoidError,
   invoiceVoidedEvent,
   listInvoicesForOrg,
+  resolveInvoiceVoidedRecipientEmail,
   subscribeInvoiceVoidedNotify,
   voidInvoice,
   type InvoiceResource,

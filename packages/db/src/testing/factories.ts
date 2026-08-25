@@ -71,7 +71,10 @@ export function createFactories(db: DbExecutor) {
         .values({
           id,
           name: overrides.name ?? "Test Org",
-          slug: overrides.slug ?? `org-${id.slice(0, 8)}`,
+          // The full id, not a prefix: a UUIDv7's leading 8 hex chars are the top
+          // 32 bits of its millisecond timestamp, so they are identical for every org
+          // created within the same ~65s window and collide on uq_organization__slug.
+          slug: overrides.slug ?? `org-${id}`,
           ...overrides,
         })
         .returning();
