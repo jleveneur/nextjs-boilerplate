@@ -1,7 +1,11 @@
 // oxlint-disable-next-line import/no-unassigned-import
 import "server-only";
 
-export { createBullMqJobQueue, type BullMqJobQueue } from "./bullmq-queue.ts";
+export {
+  createBullMqJobQueue,
+  createLazyBullMqJobQueue,
+  type BullMqJobQueue,
+} from "./bullmq-queue.ts";
 export { createBullMqWorker, type BullMqWorker } from "./bullmq-worker.ts";
 export { createBullMqMetrics, type BullMqMetrics } from "./metrics.ts";
 export {

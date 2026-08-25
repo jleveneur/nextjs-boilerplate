@@ -1,5 +1,4 @@
 import type { AssetId, InvoiceId, OrganizationId, OutboxId, UserId } from "@repo/types";
-import { generateUuidV7 } from "@repo/utils";
 
 import type { IdGenerator } from "../ports/id-generator.ts";
 
@@ -26,18 +25,6 @@ function brandUserId(id: string): UserId {
 function brandOutboxId(id: string): OutboxId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- port brand constructor
   return id as OutboxId;
-}
-
-/** Production-shaped generator (real UUIDv7s). */
-export function createUuidIdGenerator(): IdGenerator {
-  return {
-    uuidV7: () => generateUuidV7(),
-    invoiceId: () => brandInvoiceId(generateUuidV7()),
-    assetId: () => brandAssetId(generateUuidV7()),
-    organizationId: () => brandOrganizationId(generateUuidV7()),
-    userId: () => brandUserId(generateUuidV7()),
-    outboxId: () => brandOutboxId(generateUuidV7()),
-  };
 }
 
 /** Deterministic sequence for unit tests. */
