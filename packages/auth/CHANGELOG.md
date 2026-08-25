@@ -1,5 +1,13 @@
 # @repo/auth
 
+## 0.1.2
+
+### Patch Changes
+
+- 667cefc: Generate Better Auth record IDs as UUIDv7 values.
+- 9df5461: Restrict explicit API-key permissions to the grants allowed by the key's organization role and include asset grants in auth role defaults.
+- 771731a: Resolve `server-only` through the workspace catalog so every server-boundary package shares one version.
+
 ## 0.1.1
 
 ### Patch Changes

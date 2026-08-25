@@ -1,6 +1,6 @@
 {
   "name": "@repo/cache",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Redis cache with mandatory namespaced keys, TTL, and stampede protection.",
   "type": "module",

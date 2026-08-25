@@ -1,5 +1,12 @@
 # @repo/env
 
+## 0.0.3
+
+### Patch Changes
+
+- 771731a: Resolve `server-only` through the workspace catalog so every server-boundary package shares one version.
+- 0bbf3ff: Correct package documentation to describe current behaviour: `createEnv` is a server-side `process.env` fallback rather than the repository's sole reader, and the audit-log table has no application writers wired yet.
+
 ## 0.0.2
 
 ### Patch Changes
