@@ -8,6 +8,7 @@ import { InvoiceList } from "../../../../../features/billing/invoice-list.tsx";
 
 type Props = {
   params: Promise<{ locale: string; orgSlug: string }>;
+  searchParams: Promise<{ status?: string | string[] }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -16,20 +17,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t("title") };
 }
 
-export default function InvoicesPage({ params }: Props) {
+export default function InvoicesPage({ params, searchParams }: Props) {
   return (
     <Suspense fallback={<InvoiceListFallback />}>
-      <InvoicesContent params={params} />
+      <InvoicesContent params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function InvoicesContent({ params }: Props) {
+async function InvoicesContent({ params, searchParams }: Props) {
   const { locale, orgSlug } = await params;
+  const { status: rawStatus } = await searchParams;
   setRequestLocale(locale);
 
-  // Client island: nuqs filters + TanStack Query over tRPC (request-dynamic).
-  return <InvoiceList orgSlug={orgSlug} />;
+  const status =
+    typeof rawStatus === "string" &&
+    (rawStatus === "draft" || rawStatus === "open" || rawStatus === "paid" || rawStatus === "void")
+      ? rawStatus
+      : "all";
+
+  return <InvoiceList orgSlug={orgSlug} status={status} />;
 }
 
 function InvoiceListFallback() {
