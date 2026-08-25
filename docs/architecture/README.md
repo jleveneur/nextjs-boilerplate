@@ -31,7 +31,7 @@ Being explicit about non-goals is what keeps a boilerplate from rotting into a f
 | A generic plugin system                        | Products fork this repo; they do not extend it via plugins. Convention replaces configuration.                                               |
 | Runtime-agnostic code (Deno/Bun/Workers)       | Node.js LTS only. Edge-compatible code is an explicit, narrow subset (see §Runtime boundaries).                                              |
 | 100 % test coverage                            | Coverage is a diagnostic, not a target. See [Testing](./10-testing.md).                                                                      |
-| An admin UI, CMS, or billing UI out of the box | Those are product decisions. The foundation ships the primitives (RBAC, Stripe adapter, storage) and no product surface beyond auth.         |
+| A generic admin UI or CMS                      | Those are product decisions. The foundation includes worked auth, invoice, and Stripe billing surfaces only as reference implementations.    |
 
 ---
 
@@ -362,8 +362,8 @@ without special-casing ([11 §5](./11-infrastructure-and-deployment.md#5-deploym
 
 **Q5 — Product surface: auth + organizations + settings, plus one worked vertical slice.** ✅
 The slice exercises every layer (tRPC + REST + policy + job + storage + both test levels) and
-becomes the reference implementation every future feature is copied from. Phase 17 adds Stripe
-SaaS billing (`@repo/payments`) and `@repo/ui` chart/editor/table widgets.
+becomes the reference implementation every future feature is copied from. Phase 17 added Stripe
+SaaS billing (`@repo/payments`) and the implemented `@repo/ui` chart/editor/table subpaths.
 
 ---
 

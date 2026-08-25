@@ -1,8 +1,9 @@
 /**
- * Append-only audit trail.
+ * Schema for the planned append-only audit trail.
  *
- * Rows are never updated or soft-deleted. Cross-tenant support paths that use
- * `SystemCtx` must write here — the escape hatch is named and logged.
+ * Application writers are not wired yet. When they are, rows must never be
+ * updated or soft-deleted, and cross-tenant support paths must write here in the
+ * same transaction as the change they describe.
  */
 
 import { index, jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";

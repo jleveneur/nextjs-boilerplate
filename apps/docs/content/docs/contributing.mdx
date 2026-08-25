@@ -49,6 +49,6 @@ before editing. Humans should prefer the architecture docs over that file.
 ## Non-negotiables (short list)
 
 - No `any`, no non-null assertions, no `console` in app code
-- No `process.env` outside `@repo/env`
+- No ad hoc `process.env` reads in libraries; app env modules feed `createEnv`
 - Validate external input with Zod at the boundary
 - Money is an integer in minor units; IDs are UUIDv7 branded types

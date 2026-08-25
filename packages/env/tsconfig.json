@@ -1,10 +1,10 @@
 {
   "extends": "@repo/tsconfig/library.json",
   "compilerOptions": {
-    // This package is the sole authorised reader of process.env, so it needs the
-    // Node ambient types. Browser-safety of the client/shared entries is enforced
-    // by the export split and by server-only on the server entry — not by omitting
-    // the type.
+    // createEnv provides a server-side process.env fallback, so this package needs
+    // the Node ambient types. Browser-safety of the client/shared entries is
+    // enforced by the export split and by server-only on the server entry — not
+    // by omitting the type.
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "vitest.config.ts"]
