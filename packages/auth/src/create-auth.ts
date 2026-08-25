@@ -8,6 +8,7 @@
 
 import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
+import { generateUuidV7 } from "@repo/utils";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, magicLink, organization, twoFactor } from "better-auth/plugins";
@@ -100,7 +101,7 @@ export function createAuth(options: CreateAuthOptions) {
     },
     advanced: {
       database: {
-        generateId: "uuid",
+        generateId: generateUuidV7,
       },
       // NODE_ENV=production defaults Secure cookies; those are dropped on plain
       // HTTP (local `next start`, Playwright). Match the public base URL.

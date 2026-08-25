@@ -4,7 +4,11 @@ import type { JobHandler } from "@repo/jobs";
 import type { Actor, OrganizationId, UserId } from "@repo/types";
 import type { Redis } from "ioredis";
 
-import { claimJobIdempotency } from "../idempotency.ts";
+import {
+  beginJobIdempotency,
+  completeJobIdempotency,
+  releaseJobIdempotency,
+} from "../idempotency.ts";
 
 function brandOrganizationId(id: string): OrganizationId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- job payload brand
@@ -32,27 +36,36 @@ export function createInvoiceVoidedNotifyHandler(options: {
   idempotencyRedis: Redis;
 }): JobHandler<"invoice.voided.notify"> {
   return async (payload) => {
-    const claimed = await claimJobIdempotency(options.idempotencyRedis, payload.idempotencyKey);
-    if (!claimed) {
+    const lease = await beginJobIdempotency(options.idempotencyRedis, payload.idempotencyKey);
+    if (lease.status === "completed") {
       return;
     }
+    if (lease.status === "in_progress") {
+      throw new Error("idempotency lease held");
+    }
 
-    const ctx = options.buildCtx(systemActor(brandOrganizationId(payload.organizationId)));
-    // Notify path: durable side effect is an email keyed on the outbox id.
-    // Recipient is the org's operational inbox placeholder until product wiring.
-    await options.mailer.send({
-      to: "billing-notify@example.com",
-      subject: `Invoice ${payload.invoiceId} voided`,
-      html: `<p>Invoice ${payload.invoiceId} was voided for ${String(payload.amountMinor)} minor units.</p>`,
-      headers: { "Idempotency-Key": payload.idempotencyKey },
-    });
-    ctx.logger.info(
-      {
-        invoiceId: payload.invoiceId,
-        organizationId: payload.organizationId,
-        idempotencyKey: payload.idempotencyKey,
-      },
-      "invoice.voided.notify completed",
-    );
+    try {
+      const ctx = options.buildCtx(systemActor(brandOrganizationId(payload.organizationId)));
+      // Notify path: durable side effect is an email keyed on the outbox id.
+      // Recipient is the org's operational inbox placeholder until product wiring.
+      await options.mailer.send({
+        to: "billing-notify@example.com",
+        subject: `Invoice ${payload.invoiceId} voided`,
+        html: `<p>Invoice ${payload.invoiceId} was voided for ${String(payload.amountMinor)} minor units.</p>`,
+        headers: { "Idempotency-Key": payload.idempotencyKey },
+      });
+      ctx.logger.info(
+        {
+          invoiceId: payload.invoiceId,
+          organizationId: payload.organizationId,
+          idempotencyKey: payload.idempotencyKey,
+        },
+        "invoice.voided.notify completed",
+      );
+      await completeJobIdempotency(options.idempotencyRedis, payload.idempotencyKey, lease.token);
+    } catch (error) {
+      await releaseJobIdempotency(options.idempotencyRedis, payload.idempotencyKey, lease.token);
+      throw error;
+    }
   };
 }

@@ -17,7 +17,7 @@
   "dependencies": {
     "@repo/utils": "workspace:*",
     "posthog-node": "catalog:",
-    "server-only": "0.0.1",
+    "server-only": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -72,6 +72,20 @@ export function createMemoryCache(appEnv: string): Cache {
       const softTtl = Math.max(1, Math.floor(input.ttlSeconds / 2));
       return backend.write(key, encodeEnvelope(value, softTtl), input.ttlSeconds);
     },
+    setIfAbsent(input: CacheSetOptions, value: unknown): Promise<boolean> {
+      const key = buildCacheKey(appEnv, input);
+      const existing = store.get(key);
+      if (existing !== undefined && existing.expiresAt > Date.now()) {
+        return Promise.resolve(false);
+      }
+
+      const softTtl = Math.max(1, Math.floor(input.ttlSeconds / 2));
+      store.set(key, {
+        value: encodeEnvelope(value, softTtl),
+        expiresAt: Date.now() + input.ttlSeconds * 1000,
+      });
+      return Promise.resolve(true);
+    },
     del(input: CacheKeyInput): Promise<void> {
       store.delete(buildCacheKey(appEnv, input));
       return Promise.resolve();
