@@ -20,6 +20,7 @@ import { createNoopMailer } from "@repo/email";
 import {
   createBullMqJobQueue,
   createBullMqWorker,
+  TerminalJobError,
   type BullMqJobQueue,
   type BullMqWorker,
 } from "@repo/jobs";
@@ -34,6 +35,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createEmailSendHandler } from "./consumers/email-send.ts";
 import { createImageDeriveHandler } from "./consumers/image-derive.ts";
+import { createInvoiceVoidedNotifyHandler } from "./consumers/invoice-voided-notify.ts";
 import { beginJobIdempotency } from "./idempotency.ts";
 import { assertRedisNoEviction } from "./redis-policy.ts";
 
@@ -150,7 +152,11 @@ describe("phase 10 worker proofs", () => {
           mailer,
           idempotencyRedis,
         }),
-        "invoice.voided.notify": () => Promise.resolve(),
+        "invoice.voided.notify": createInvoiceVoidedNotifyHandler({
+          buildCtx,
+          mailer,
+          idempotencyRedis,
+        }),
         "image.derive": createImageDeriveHandler({ buildCtx, idempotencyRedis }),
         "asset.reconcile-orphans": () => Promise.resolve(),
         "stripe.event.process": () => Promise.resolve(),
@@ -253,6 +259,58 @@ describe("phase 10 worker proofs", () => {
     await expect(beginJobIdempotency(idempotencyRedis, key)).resolves.toEqual({
       status: "completed",
     });
+  });
+
+  it("sends invoice voided notifications to an active organization owner", async () => {
+    const factories = createFactories(db);
+    const owner = await factories.makeUser({ email: "billing-owner@example.com" });
+    const org = await factories.makeOrganization();
+    await factories.makeMember({
+      organizationId: org.id,
+      userId: owner.id,
+      role: "owner",
+    });
+    const mailer = createNoopMailer();
+    const handler = createInvoiceVoidedNotifyHandler({
+      buildCtx: (actor) => makeCtx(actor, db, files),
+      mailer,
+      idempotencyRedis,
+    });
+
+    await handler(
+      {
+        invoiceId: "01900000-0000-7000-8000-000000000020",
+        organizationId: org.id,
+        amountMinor: 1_00,
+        idempotencyKey: `invoice-owner-${String(Date.now())}`,
+      },
+      { jobId: "invoice-owner", attemptsMade: 0 },
+    );
+
+    expect(mailer.sent).toHaveLength(1);
+    expect(mailer.sent[0]?.to).toBe("billing-owner@example.com");
+  });
+
+  it("fails terminally when an organization has no active owner", async () => {
+    const factories = createFactories(db);
+    const org = await factories.makeOrganization();
+    const handler = createInvoiceVoidedNotifyHandler({
+      buildCtx: (actor) => makeCtx(actor, db, files),
+      mailer: createNoopMailer(),
+      idempotencyRedis,
+    });
+
+    await expect(
+      handler(
+        {
+          invoiceId: "01900000-0000-7000-8000-000000000021",
+          organizationId: org.id,
+          amountMinor: 2_00,
+          idempotencyKey: `invoice-no-owner-${String(Date.now())}`,
+        },
+        { jobId: "invoice-no-owner", attemptsMade: 0 },
+      ),
+    ).rejects.toBeInstanceOf(TerminalJobError);
   });
 
   it("drains an in-flight job on worker.close before resolving", async () => {

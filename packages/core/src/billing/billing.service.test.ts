@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as DbModule from "@repo/db";
 import { permissionsForRole } from "@repo/authz";
+import { findOrganizationOwnerEmail } from "@repo/db";
 import { ForbiddenError, NotFoundError } from "@repo/errors";
 import { createLogger } from "@repo/logger";
 import type { Actor, InvoiceId, OrganizationId, UserId } from "@repo/types";
@@ -14,7 +15,13 @@ import { createTestPorts, type TestPorts } from "../testing/create-test-ports.ts
 import * as audit from "../write-audit-log.ts";
 import { InvoiceAlreadyPaidError, InvoiceAlreadyVoidError } from "./billing.errors.ts";
 import * as repository from "./billing.repository.ts";
-import { createInvoice, getInvoice, listInvoicesForOrg, voidInvoice } from "./billing.service.ts";
+import {
+  createInvoice,
+  getInvoice,
+  listInvoicesForOrg,
+  resolveInvoiceVoidedRecipientEmail,
+  voidInvoice,
+} from "./billing.service.ts";
 import { subscribeInvoiceVoidedNotify } from "./subscribe-invoice-voided.ts";
 
 vi.mock("./billing.repository.ts", async (importOriginal) => {
@@ -45,6 +52,7 @@ vi.mock("@repo/db", async (importOriginal) => {
   const actual = await importOriginal<typeof DbModule>();
   return {
     ...actual,
+    findOrganizationOwnerEmail: vi.fn(),
     withTransaction: <T>(_db: unknown, fn: (tx: unknown) => Promise<T>): Promise<T> => fn({}),
   };
 });
@@ -115,6 +123,32 @@ function openRow(overrides: Partial<repository.InvoiceRow> = {}): repository.Inv
     ...overrides,
   };
 }
+
+describe("resolveInvoiceVoidedRecipientEmail", () => {
+  beforeEach(() => {
+    vi.mocked(findOrganizationOwnerEmail).mockReset();
+  });
+
+  it("returns the organization's active owner email", async () => {
+    vi.mocked(findOrganizationOwnerEmail).mockResolvedValue("owner@example.com");
+    const ctx = makeCtx(makeActor("owner"));
+
+    await expect(resolveInvoiceVoidedRecipientEmail(ctx)).resolves.toBe("owner@example.com");
+    expect(findOrganizationOwnerEmail).toHaveBeenCalledWith({
+      organizationId: ctx.actor.organizationId,
+      db: ctx.db,
+    });
+  });
+
+  it("authorizes before reading the owner email", async () => {
+    const actor = { ...makeActor("owner"), permissions: [] };
+
+    await expect(resolveInvoiceVoidedRecipientEmail(makeCtx(actor))).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+    expect(findOrganizationOwnerEmail).not.toHaveBeenCalled();
+  });
+});
 
 describe("createInvoice", () => {
   beforeEach(() => {
