@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.26@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
 # Production image for @repo/docs — turbo prune + Next standalone output.
 # Shape: docs/architecture/11-infrastructure-and-deployment.md
 #
@@ -7,7 +7,7 @@
 # and Scalar can serve the OpenAPI snapshot.
 
 ARG NODE_IMAGE=node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43
-ARG ALPINE_IMAGE=alpine:3.24.1
+ARG ALPINE_IMAGE=alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 FROM ${NODE_IMAGE} AS base
 RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
