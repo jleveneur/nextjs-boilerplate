@@ -1,6 +1,6 @@
 {
   "name": "@repo/email",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Mailer port with Resend, SMTP (Mailpit), NoopMailer, and React Email templates.",
   "type": "module",
