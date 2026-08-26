@@ -112,7 +112,6 @@
   "editor.linkedEditing": true,
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
-    "package.json": "pnpm-lock.yaml, pnpm-workspace.yaml, .npmrc, turbo.json, knip.json, .nvmrc",
     "*.ts": "$(capture).test.ts, $(capture).spec.ts",
     "*.tsx": "$(capture).test.tsx, $(capture).spec.tsx"
   },
