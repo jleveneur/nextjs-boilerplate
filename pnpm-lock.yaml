@@ -25,8 +25,8 @@ catalogs:
       specifier: 1.6.25
       version: 1.6.25
     '@hono/node-server':
-      specifier: 2.0.12
-      version: 2.0.12
+      specifier: 2.1.1
+      version: 2.1.1
     '@hono/zod-openapi':
       specifier: 1.5.1
       version: 1.5.1
@@ -331,7 +331,7 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 'catalog:'
-        version: 2.0.12(hono@4.12.32)
+        version: 2.1.1(hono@4.12.32)
       '@hono/zod-openapi':
         specifier: 'catalog:'
         version: 1.5.1(hono@4.12.32)(zod@4.4.3)
@@ -634,7 +634,7 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 'catalog:'
-        version: 2.0.12(hono@4.12.32)
+        version: 2.1.1(hono@4.12.32)
       '@repo/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
@@ -2801,8 +2801,8 @@ packages:
   '@hexagon/base64@1.1.28':
     resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
 
-  '@hono/node-server@2.0.12':
-    resolution: {integrity: sha512-eWpQYr67tqJLeaSUl0Q+TquuYfUdTibpOJlUMV2FfUP7+KqCC5TufnwnlXL6mobZBJbGAYRd7ZvEBDCbLInjhg==}
+  '@hono/node-server@2.1.1':
+    resolution: {integrity: sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==}
     engines: {node: '>=20'}
     peerDependencies:
       hono: ^4
@@ -5962,9 +5962,6 @@ packages:
     resolution: {integrity: sha512-ABniFzqYYn64NUEgmHTb6JxEzAlpmPu4cpMFjMBlR6cJXqL+vd7K1ae/yrt+NhUduHkJWJqG4lbHbV2yp9el3w==}
     cpu: [x64]
     os: [win32]
-
-  '@yuku-toolchain/types@0.8.1':
-    resolution: {integrity: sha512-HcGEV3kOn9evBTm2ARYOFNKAI7sY9twQozCVd9EVdlsBlnKi0a2iv8xXxYVHFCBQpX3SvvPXBhk8lcK6NUTdNg==}
 
   '@yuku-toolchain/types@0.8.2':
     resolution: {integrity: sha512-ODYjxmbajkNCaONqd7dfIsH+h2ddRiI4YsSuQXy1Sg0ZSTvOETcNz5EiEIOqVSLnHDs1+r+b2yuS9eOw3ChguA==}
@@ -10261,9 +10258,6 @@ packages:
   yuku-analyzer@0.8.2:
     resolution: {integrity: sha512-DxQ0lHi+d4WlccjM7PCvZ9yDBHqLr4DiIW0g8enlx0OP4GowTjuFdJF3uhpl83be69a0/EMHLAYo6k5nSvw6/A==}
 
-  yuku-ast@0.8.1:
-    resolution: {integrity: sha512-+k1E2f08y0k1+vpdD1KUCzDh2JXvwirMa8YR2Jr7VCS4zAo3eT5A/HbJCqaVGd6idaPY0gwLM9C4seEY4h10Hw==}
-
   yuku-ast@0.8.2:
     resolution: {integrity: sha512-GIxDPIyxjAKmF7J2AwrMDt2oCn+PZ0i7e+CIrvt5Tf0LbBS+v/xdbaAF1sUwrbntDq4YqtF7l6OG0amg1qhxWA==}
 
@@ -11542,7 +11536,7 @@ snapshots:
 
   '@hexagon/base64@1.1.28': {}
 
-  '@hono/node-server@2.0.12(hono@4.12.32)':
+  '@hono/node-server@2.1.1(hono@4.12.32)':
     dependencies:
       hono: 4.12.32
 
@@ -14295,8 +14289,6 @@ snapshots:
 
   '@yuku-parser/binding-win32-x64@0.8.1':
     optional: true
-
-  '@yuku-toolchain/types@0.8.1': {}
 
   '@yuku-toolchain/types@0.8.2': {}
 
@@ -18125,7 +18117,7 @@ snapshots:
       get-tsconfig: 5.0.0-beta.5
       obug: 2.1.4
       rolldown: 1.2.1
-      yuku-ast: 0.8.1
+      yuku-ast: 0.8.2
       yuku-codegen: 0.8.1
       yuku-parser: 0.8.1
     optionalDependencies:
@@ -19125,17 +19117,13 @@ snapshots:
       '@yuku-analyzer/binding-win32-arm64': 0.8.2
       '@yuku-analyzer/binding-win32-x64': 0.8.2
 
-  yuku-ast@0.8.1:
-    dependencies:
-      '@yuku-toolchain/types': 0.8.1
-
   yuku-ast@0.8.2:
     dependencies:
       '@yuku-toolchain/types': 0.8.2
 
   yuku-codegen@0.8.1:
     dependencies:
-      '@yuku-toolchain/types': 0.8.1
+      '@yuku-toolchain/types': 0.8.2
     optionalDependencies:
       '@yuku-codegen/binding-darwin-arm64': 0.8.1
       '@yuku-codegen/binding-darwin-x64': 0.8.1
@@ -19151,8 +19139,8 @@ snapshots:
 
   yuku-parser@0.8.1:
     dependencies:
-      '@yuku-toolchain/types': 0.8.1
-      yuku-ast: 0.8.1
+      '@yuku-toolchain/types': 0.8.2
+      yuku-ast: 0.8.2
     optionalDependencies:
       '@yuku-parser/binding-darwin-arm64': 0.8.1
       '@yuku-parser/binding-darwin-x64': 0.8.1

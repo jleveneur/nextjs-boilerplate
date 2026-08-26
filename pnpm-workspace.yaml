@@ -166,7 +166,7 @@ catalog:
   # --- Public API (Hono) -------------------------------------------------
   hono: 4.12.32
   "@hono/zod-openapi": 1.5.1
-  "@hono/node-server": 2.0.12
+  "@hono/node-server": 2.1.1
   "@scalar/hono-api-reference": 0.11.12
   "@scalar/nextjs-api-reference": 0.11.12
 
