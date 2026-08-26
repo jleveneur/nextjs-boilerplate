@@ -95,6 +95,20 @@
       "platformAutomerge": true
     },
     {
+      // Almost every shared dependency's real version lives in the
+      // pnpm-workspace.yaml catalog, per AGENTS.md section 6, where Renovate
+      // gives it depType pnpm.catalog.default. The package.json entries beside
+      // it are the literal string "catalog:", which Renovate skips as
+      // unspecified-version. Without this rule the two depType rules above
+      // reach 12 of the 280 declared dependencies and nothing auto-merges.
+      "matchDepTypes": ["pnpm.catalog.default"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "catalog dependencies",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
       // Type definitions travel with the library they describe, so splitting
       // them produces a PR that cannot pass typecheck on its own.
       "matchPackageNames": ["@types/**"],
