@@ -98,10 +98,10 @@ catalog:
   # Pinned exactly, not caret-ranged: Vitest's type-testing mode is explicitly
   # experimental and documented as not following SemVer, and it is what verifies
   # the branded types in @repo/types.
-  vitest: 4.1.10
+  vitest: 4.1.11
   # Declared by every package that sets a coverage threshold: Vitest resolves the
   # provider from the project, not from its own installation.
-  "@vitest/coverage-v8": 4.1.10
+  "@vitest/coverage-v8": 4.1.11
 
   # --- Platform adapters -------------------------------------------------
   # Entries are added when the first package consumes them (Knip flags unused
