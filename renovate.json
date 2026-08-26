@@ -62,6 +62,19 @@
 
   "packageRules": [
     // ---------------------------------------------------------------------
+    // engines is a floor, not a selection. The global "pin" strategy above
+    // rewrote ">=24.0.0" to the newest published Node, which both means nothing
+    // as a minimum and contradicts .nvmrc and packageManager — the two files CI
+    // actually installs from. Every job then died in the setup action with
+    // ERR_PNPM_UNSUPPORTED_ENGINE. Keep the range shape and move it only when
+    // the supported floor genuinely moves, which is a decision worth reviewing.
+    // ---------------------------------------------------------------------
+    {
+      "matchDepTypes": ["engines"],
+      "rangeStrategy": "replace"
+    },
+
+    // ---------------------------------------------------------------------
     // Auto-merged: mechanical updates where a green CI run is genuine evidence
     // of safety, because the tools in question are what CI runs.
     // ---------------------------------------------------------------------
