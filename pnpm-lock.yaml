@@ -37,8 +37,8 @@ catalogs:
       specifier: 4.2.3
       version: 4.2.3
     '@hugeicons/react':
-      specifier: 1.1.9
-      version: 1.1.9
+      specifier: 1.1.10
+      version: 1.1.10
     '@lhci/cli':
       specifier: 0.15.1
       version: 0.15.1
@@ -1423,7 +1423,7 @@ importers:
         version: 4.2.3
       '@hugeicons/react':
         specifier: 'catalog:'
-        version: 1.1.9(react@19.2.8)
+        version: 1.1.10(react@19.2.8)
       '@tanstack/react-table':
         specifier: 'catalog:'
         version: 8.21.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -2828,8 +2828,8 @@ packages:
   '@hugeicons/core-free-icons@4.2.3':
     resolution: {integrity: sha512-fpiU0qFZkv4ABi23xJ2m4qNr0BBfuIaYjPboN8WDA6aj9D+OzXa7eykxKOpACZRuGbDz1U9S5DsNx1d5KNnsgA==}
 
-  '@hugeicons/react@1.1.9':
-    resolution: {integrity: sha512-O+lWSWjbijoAvMCxn4K2bQWCGN5+mP1y5j+X99j23mXMj+s0X25fs71T6t9YJLaBodwmZdaewD27dzS/PiboQw==}
+  '@hugeicons/react@1.1.10':
+    resolution: {integrity: sha512-9tAsd92yMVVGP+E+d8cM+wc0VnXuYZHNbWQi7TOe8k2neawmhiaFmVFbzyruejhOMa197/LbgvSED32ayUo3ZA==}
     peerDependencies:
       react: '>=16.0.0'
 
@@ -5962,9 +5962,6 @@ packages:
     resolution: {integrity: sha512-ABniFzqYYn64NUEgmHTb6JxEzAlpmPu4cpMFjMBlR6cJXqL+vd7K1ae/yrt+NhUduHkJWJqG4lbHbV2yp9el3w==}
     cpu: [x64]
     os: [win32]
-
-  '@yuku-toolchain/types@0.8.1':
-    resolution: {integrity: sha512-HcGEV3kOn9evBTm2ARYOFNKAI7sY9twQozCVd9EVdlsBlnKi0a2iv8xXxYVHFCBQpX3SvvPXBhk8lcK6NUTdNg==}
 
   '@yuku-toolchain/types@0.8.2':
     resolution: {integrity: sha512-ODYjxmbajkNCaONqd7dfIsH+h2ddRiI4YsSuQXy1Sg0ZSTvOETcNz5EiEIOqVSLnHDs1+r+b2yuS9eOw3ChguA==}
@@ -10261,9 +10258,6 @@ packages:
   yuku-analyzer@0.8.2:
     resolution: {integrity: sha512-DxQ0lHi+d4WlccjM7PCvZ9yDBHqLr4DiIW0g8enlx0OP4GowTjuFdJF3uhpl83be69a0/EMHLAYo6k5nSvw6/A==}
 
-  yuku-ast@0.8.1:
-    resolution: {integrity: sha512-+k1E2f08y0k1+vpdD1KUCzDh2JXvwirMa8YR2Jr7VCS4zAo3eT5A/HbJCqaVGd6idaPY0gwLM9C4seEY4h10Hw==}
-
   yuku-ast@0.8.2:
     resolution: {integrity: sha512-GIxDPIyxjAKmF7J2AwrMDt2oCn+PZ0i7e+CIrvt5Tf0LbBS+v/xdbaAF1sUwrbntDq4YqtF7l6OG0amg1qhxWA==}
 
@@ -11566,7 +11560,7 @@ snapshots:
 
   '@hugeicons/core-free-icons@4.2.3': {}
 
-  '@hugeicons/react@1.1.9(react@19.2.8)':
+  '@hugeicons/react@1.1.10(react@19.2.8)':
     dependencies:
       react: 19.2.8
 
@@ -14295,8 +14289,6 @@ snapshots:
 
   '@yuku-parser/binding-win32-x64@0.8.1':
     optional: true
-
-  '@yuku-toolchain/types@0.8.1': {}
 
   '@yuku-toolchain/types@0.8.2': {}
 
@@ -18125,7 +18117,7 @@ snapshots:
       get-tsconfig: 5.0.0-beta.5
       obug: 2.1.4
       rolldown: 1.2.1
-      yuku-ast: 0.8.1
+      yuku-ast: 0.8.2
       yuku-codegen: 0.8.1
       yuku-parser: 0.8.1
     optionalDependencies:
@@ -19125,17 +19117,13 @@ snapshots:
       '@yuku-analyzer/binding-win32-arm64': 0.8.2
       '@yuku-analyzer/binding-win32-x64': 0.8.2
 
-  yuku-ast@0.8.1:
-    dependencies:
-      '@yuku-toolchain/types': 0.8.1
-
   yuku-ast@0.8.2:
     dependencies:
       '@yuku-toolchain/types': 0.8.2
 
   yuku-codegen@0.8.1:
     dependencies:
-      '@yuku-toolchain/types': 0.8.1
+      '@yuku-toolchain/types': 0.8.2
     optionalDependencies:
       '@yuku-codegen/binding-darwin-arm64': 0.8.1
       '@yuku-codegen/binding-darwin-x64': 0.8.1
@@ -19151,8 +19139,8 @@ snapshots:
 
   yuku-parser@0.8.1:
     dependencies:
-      '@yuku-toolchain/types': 0.8.1
-      yuku-ast: 0.8.1
+      '@yuku-toolchain/types': 0.8.2
+      yuku-ast: 0.8.2
     optionalDependencies:
       '@yuku-parser/binding-darwin-arm64': 0.8.1
       '@yuku-parser/binding-darwin-x64': 0.8.1
