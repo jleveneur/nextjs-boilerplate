@@ -112,8 +112,8 @@ catalogs:
       specifier: 16.3.2
       version: 16.3.2
     '@testing-library/user-event':
-      specifier: 14.6.1
-      version: 14.6.1
+      specifier: 14.6.6
+      version: 14.6.6
     '@tiptap/pm':
       specifier: 3.29.0
       version: 3.29.0
@@ -1472,7 +1472,7 @@ importers:
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@testing-library/user-event':
         specifier: 'catalog:'
-        version: 14.6.1(@testing-library/dom@10.4.1)
+        version: 14.6.6(@testing-library/dom@10.4.1)
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -5234,8 +5234,8 @@ packages:
       '@types/react-dom':
         optional: true
 
-  '@testing-library/user-event@14.6.1':
-    resolution: {integrity: sha512-vq7fv0rnt+QTXgPxr5Hjc210p6YKq2kmdziLgnsZGgLJ9e6VAShx1pACLuRjd/AS/sr7phAR58OIIpf0LlmQNw==}
+  '@testing-library/user-event@14.6.6':
+    resolution: {integrity: sha512-Jbs9FpkkIDw8FgSc6kOVsOv8JuuqGAL7J4X1oot77JxAoDlkNn2GRkd0aYRVuQ+pVQAiHWVkE4rX/dkF5fBiCw==}
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
@@ -5962,9 +5962,6 @@ packages:
     resolution: {integrity: sha512-ABniFzqYYn64NUEgmHTb6JxEzAlpmPu4cpMFjMBlR6cJXqL+vd7K1ae/yrt+NhUduHkJWJqG4lbHbV2yp9el3w==}
     cpu: [x64]
     os: [win32]
-
-  '@yuku-toolchain/types@0.8.1':
-    resolution: {integrity: sha512-HcGEV3kOn9evBTm2ARYOFNKAI7sY9twQozCVd9EVdlsBlnKi0a2iv8xXxYVHFCBQpX3SvvPXBhk8lcK6NUTdNg==}
 
   '@yuku-toolchain/types@0.8.2':
     resolution: {integrity: sha512-ODYjxmbajkNCaONqd7dfIsH+h2ddRiI4YsSuQXy1Sg0ZSTvOETcNz5EiEIOqVSLnHDs1+r+b2yuS9eOw3ChguA==}
@@ -10261,9 +10258,6 @@ packages:
   yuku-analyzer@0.8.2:
     resolution: {integrity: sha512-DxQ0lHi+d4WlccjM7PCvZ9yDBHqLr4DiIW0g8enlx0OP4GowTjuFdJF3uhpl83be69a0/EMHLAYo6k5nSvw6/A==}
 
-  yuku-ast@0.8.1:
-    resolution: {integrity: sha512-+k1E2f08y0k1+vpdD1KUCzDh2JXvwirMa8YR2Jr7VCS4zAo3eT5A/HbJCqaVGd6idaPY0gwLM9C4seEY4h10Hw==}
-
   yuku-ast@0.8.2:
     resolution: {integrity: sha512-GIxDPIyxjAKmF7J2AwrMDt2oCn+PZ0i7e+CIrvt5Tf0LbBS+v/xdbaAF1sUwrbntDq4YqtF7l6OG0amg1qhxWA==}
 
@@ -13662,7 +13656,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.3(@types/react@19.2.18)
 
-  '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
+  '@testing-library/user-event@14.6.6(@testing-library/dom@10.4.1)':
     dependencies:
       '@testing-library/dom': 10.4.1
 
@@ -14295,8 +14289,6 @@ snapshots:
 
   '@yuku-parser/binding-win32-x64@0.8.1':
     optional: true
-
-  '@yuku-toolchain/types@0.8.1': {}
 
   '@yuku-toolchain/types@0.8.2': {}
 
@@ -18125,7 +18117,7 @@ snapshots:
       get-tsconfig: 5.0.0-beta.5
       obug: 2.1.4
       rolldown: 1.2.1
-      yuku-ast: 0.8.1
+      yuku-ast: 0.8.2
       yuku-codegen: 0.8.1
       yuku-parser: 0.8.1
     optionalDependencies:
@@ -19125,17 +19117,13 @@ snapshots:
       '@yuku-analyzer/binding-win32-arm64': 0.8.2
       '@yuku-analyzer/binding-win32-x64': 0.8.2
 
-  yuku-ast@0.8.1:
-    dependencies:
-      '@yuku-toolchain/types': 0.8.1
-
   yuku-ast@0.8.2:
     dependencies:
       '@yuku-toolchain/types': 0.8.2
 
   yuku-codegen@0.8.1:
     dependencies:
-      '@yuku-toolchain/types': 0.8.1
+      '@yuku-toolchain/types': 0.8.2
     optionalDependencies:
       '@yuku-codegen/binding-darwin-arm64': 0.8.1
       '@yuku-codegen/binding-darwin-x64': 0.8.1
@@ -19151,8 +19139,8 @@ snapshots:
 
   yuku-parser@0.8.1:
     dependencies:
-      '@yuku-toolchain/types': 0.8.1
-      yuku-ast: 0.8.1
+      '@yuku-toolchain/types': 0.8.2
+      yuku-ast: 0.8.2
     optionalDependencies:
       '@yuku-parser/binding-darwin-arm64': 0.8.1
       '@yuku-parser/binding-darwin-x64': 0.8.1
