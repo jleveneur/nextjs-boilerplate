@@ -160,7 +160,7 @@ catalog:
   "react-hook-form": 7.83.0
   "@hookform/resolvers": 5.2.2
   "@playwright/test": 1.62.0
-  "@axe-core/playwright": 4.12.1
+  "@axe-core/playwright": 4.13.0
   "@lhci/cli": 0.15.1
 
   # --- Public API (Hono) -------------------------------------------------
