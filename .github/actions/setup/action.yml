@@ -23,7 +23,7 @@ runs:
     # pnpm must exist before setup-node, or setup-node's pnpm cache has no
     # package manager to ask about the store location.
     - name: Install pnpm
-      uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
     # The Node version comes from .nvmrc so the local toolchain and CI cannot
     # drift apart. `cache: pnpm` keys the store cache on the lockfile.
@@ -46,7 +46,7 @@ runs:
     # policy for this repository (see docs/architecture/12-git-ci-release.md).
     - name: Enable Turborepo remote cache
       if: inputs.turbo_team != ''
-      uses: vercel/setup-turborepo-remote-cache-action@135046f5efcadb17337d9b29b8d5b4035ae64b10 # v1.0.0
+      uses: vercel/setup-turborepo-remote-cache-action@49d7b1b46ba4c9251e1977986bfe18336feabc8f # v1.1.0
       with:
         team: ${{ inputs.turbo_team }}
 
