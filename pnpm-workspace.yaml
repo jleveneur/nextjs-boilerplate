@@ -122,10 +122,11 @@ catalog:
   "@tiptap/react": 3.29.0
   "@tiptap/starter-kit": 3.29.0
   "@tiptap/pm": 3.29.0
-  "@react-email/components": 1.0.12
-
   "@react-email/render": 2.1.0
-  react-email: 6.9.1
+  # Components ship from the `react-email` package itself since the
+  # `@react-email/components` scope was deprecated; keep it and the preview
+  # app (`@react-email/ui`) on the same release line.
+  react-email: 6.9.2
   nodemailer: 9.0.3
   "@types/nodemailer": 8.0.1
   react: 19.2.8
