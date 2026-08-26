@@ -257,28 +257,38 @@ Renovate over Dependabot: monorepo-aware, groups related packages, understands p
 supports Dockerfiles, GitHub Actions, and OpenTofu providers in one tool, and its scheduling and
 auto-merge rules are far more expressive.
 
-Configuration intent:
+Configuration intent. The default is **auto-merge once CI is green**; the table lists the
+exceptions, which are the cases where a green CI run is not by itself evidence of safety.
 
-| Group                                                          | Schedule                                                              | Auto-merge             |
-| -------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------- |
-| Dev-dependency patch/minor (linters, formatters, test tooling) | Weekly, Monday morning                                                | Yes, if CI passes      |
-| Production-dependency patch                                    | Weekly                                                                | Yes, if CI passes      |
-| Production-dependency minor                                    | Weekly, grouped by ecosystem (React, TanStack, OTel, Drizzle, Sentry) | No — review            |
-| Major                                                          | Monthly, one PR per package, with the release notes in the body       | No — often an ADR      |
-| Security advisories                                            | Immediately, any day                                                  | Yes for patches        |
-| `@types/*`                                                     | Grouped with their runtime package                                    | Yes                    |
-| Docker base images                                             | Weekly (digest pinning)                                               | Yes after Trivy passes |
-| GitHub Actions                                                 | Monthly, SHA-pinned                                                   | No                     |
+| Group                                                    | Schedule                                              | Auto-merge             |
+| -------------------------------------------------------- | ----------------------------------------------------- | ---------------------- |
+| Dev-dependency patch/minor, grouped                      | Weekly, Monday before 6am                             | Yes, if CI passes      |
+| Catalog dependencies (`pnpm-workspace.yaml`) patch/minor | Weekly, grouped                                       | Yes, if CI passes      |
+| `@types/*` patch/minor, grouped                          | Weekly, grouped                                       | Yes, if CI passes      |
+| Production-dependency patch/minor                        | Weekly, grouped by ecosystem via `config:recommended` | Yes, if CI passes      |
+| Lockfile maintenance                                     | Weekly                                                | Yes, if CI passes      |
+| Docker base images (digest pinning)                      | Weekly                                                | Yes after Trivy passes |
+| GitHub Actions (SHA-pinned)                              | Weekly                                                | Yes, if CI passes      |
+| `typescript` + Oxc toolchain                             | Weekly, grouped                                       | No — review            |
+| Drizzle                                                  | Weekly, grouped                                       | No — review            |
+| Major                                                    | Dashboard approval, min. release age 14 days          | No — often an ADR      |
+| Security advisories                                      | Immediately, any day                                  | Yes                    |
 
-Guardrails: concurrent PR limit (5) so review does not drown; a **minimum release age of 3 days**
+Guardrails: a concurrent PR limit of 3 so review does not drown; a **minimum release age of 3 days**
 for non-security updates, which cheaply avoids the compromised-package and instantly-yanked-release
-windows; a lockfile-maintenance PR weekly; grouped monorepo releases (all `@opentelemetry/*`
-together) because splitting them produces broken intermediate states.
+windows; `rangeStrategy: pin` everywhere except `engines`, which is a supported floor rather than a
+selection; and grouped monorepo releases (all `@opentelemetry/*` together) because splitting them
+produces broken intermediate states.
 
-Ecosystem-specific pins requiring manual review: `next` + `react` majors, `typescript` (the
-toolchain tracks it — see the risk register in [13](./13-dependency-review.md)), `drizzle-orm`,
-`better-auth`, and `oxlint-tsgolint` (which is versioned against a specific TypeScript release, so
-it must move in lockstep with `typescript`).
+Majors are held behind **dependency-dashboard approval** rather than opened on a monthly schedule:
+nothing lands unreviewed, and nothing sits open competing for attention until someone asks for it.
+
+Requiring manual review: `typescript` (the toolchain tracks it — see
+[ADR-0004](../adr/0004-native-typescript-toolchain.md) and the risk register in
+[13](./13-dependency-review.md)), `oxlint-tsgolint` (versioned against a specific TypeScript
+release, so it moves in lockstep with `typescript`), and Drizzle
+([ADR-0008](../adr/0008-drizzle-version-selection.md)). Everything else, including `next`, `react`,
+and `better-auth`, is reviewed as a major rather than singled out by name.
 
 ---
 
