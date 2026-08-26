@@ -1,5 +1,12 @@
 # @repo/core
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [14f480c]
+  - @repo/jobs@0.4.0
+
 ## 0.2.0
 
 ### Minor Changes
