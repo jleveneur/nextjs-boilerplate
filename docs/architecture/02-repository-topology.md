@@ -26,7 +26,7 @@
 ├── .oxfmtrc.json            # Format config.
 ├── cspell.config.yaml       # Spell checker.
 ├── knip.json                # Unused code/dependency detection.
-├── renovate.json5           # Dependency updates.
+├── renovate.json            # Dependency updates.
 ├── .editorconfig
 ├── .gitattributes
 ├── .gitignore
