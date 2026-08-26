@@ -85,3 +85,6 @@ docker/data/
 
 # Ansible
 *.retry
+
+# Claude Code per-developer overrides. The shared project settings are committed.
+.claude/settings.local.json
