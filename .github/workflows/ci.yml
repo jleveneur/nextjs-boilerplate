@@ -204,8 +204,11 @@ jobs:
         with:
           turbo_team: ${{ vars.TURBO_TEAM }}
       - name: Require changeset for package surface changes
+        # No --depth here: a shallow fetch re-grafts origin/main to its tip and
+        # discards the ancestry fetch-depth: 0 just retrieved, so changeset
+        # status cannot find the merge base whenever this branch is behind main.
         run: |
-          git fetch origin main --depth=1
+          git fetch origin main
           pnpm changeset:status
 
   openapi:
