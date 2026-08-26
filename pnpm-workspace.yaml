@@ -171,7 +171,7 @@ catalog:
   "@scalar/nextjs-api-reference": 0.11.12
 
   # --- Documentation site (Fumadocs) -------------------------------------
-  fumadocs-core: 16.13.0
+  fumadocs-core: 16.15.0
   fumadocs-ui: 16.13.0
   fumadocs-mdx: 15.2.2
   "@types/mdx": 2.0.13
