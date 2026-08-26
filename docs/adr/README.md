@@ -93,6 +93,7 @@ relevant, not replaced), **Superseded** (replaced — links forward to the repla
 | [0007](./0007-split-background-work-bullmq-triggerdev.md) | Split background work between BullMQ and Trigger.dev                | Superseded by [0009](./0009-bullmq-only-background-work.md) |
 | [0008](./0008-drizzle-version-selection.md)               | Drizzle ORM version selection (0.45 vs 1.0-rc)                      | Accepted                                                    |
 | [0009](./0009-bullmq-only-background-work.md)             | BullMQ-only background work                                         | Accepted                                                    |
+| [0010](./0010-bullmq-6-pluggable-backends.md)             | BullMQ 6 and ioredis 6                                              | Accepted                                                    |
 
 ### Decisions recorded in the architecture documents
 

@@ -110,8 +110,8 @@ catalog:
   posthog-js: 1.408.0
   posthog-node: 5.6.0
   pino: 10.3.1
-  ioredis: 5.11.1
-  bullmq: 5.81.3
+  ioredis: 6.0.0
+  bullmq: 6.2.2
   "@aws-sdk/client-s3": 3.1116.0
   "@aws-sdk/s3-request-presigner": 3.1116.0
   sharp: 0.35.3
@@ -205,7 +205,7 @@ minimumReleaseAgeExclude:
   - "@aws-sdk/client-s3@3.1099.0"
   - "@aws-sdk/s3-request-presigner@3.1099.0"
   - "@types/react@19.2.18"
-  - bullmq@5.81.3
+  - bullmq@6.2.2
   - "@scalar/client-side-rendering@0.3.5"
   - "@scalar/hono-api-reference@0.11.12"
   - "@scalar/nextjs-api-reference@0.11.12"

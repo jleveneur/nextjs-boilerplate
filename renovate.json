@@ -87,6 +87,14 @@
       "automerge": false
     },
     {
+      // ADR-0010: BullMQ pinned ioredis as a hard dependency until v6, so a PR
+      // that moves one without the other is unmergeable by construction. Kept
+      // grouped so the bot cannot propose the split again.
+      "matchPackageNames": ["bullmq", "ioredis"],
+      "groupName": "bullmq + ioredis",
+      "automerge": false
+    },
+    {
       // ADR-0008: a Drizzle bump can change generated SQL, so it is always a
       // deliberate move.
       "matchPackageNames": ["drizzle-orm", "drizzle-kit", "drizzle-zod"],

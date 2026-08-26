@@ -385,17 +385,20 @@ bounded rather than repo-wide.
 still `0.45.2`, roughly a year after the v1 betas began. See Q1 in the
 [index](./README.md#7-open-questions-requiring-your-decision) and the risk register below.
 
-### ioredis 5.11
+### ioredis 6.0
 
-**Why** Mature Redis client with cluster support, pipelining, and Lua scripting. BullMQ requires it.
+**Why** Mature Redis client with cluster support, pipelining, and Lua scripting. BullMQ targets it.
 **Instead of** _node-redis_ — comparable; ioredis is what BullMQ targets, so using both means one
 connection library. _Upstash HTTP client_ — vendor-specific.
-**Health** Stable and ubiquitous.
+**Health** Stable and ubiquitous. v6 adds RESP3 and fixes a cluster `MOVED` prototype-pollution path.
 **Exit** Low — behind `@repo/cache`.
+**Version note:** coupled to BullMQ. Until BullMQ 6, ioredis was a hard `dependencies` pin inside
+BullMQ, so the two cannot be upgraded independently — Renovate groups them for that reason. See
+[ADR-0010](../adr/0010-bullmq-6-pluggable-backends.md).
 
-### BullMQ 5.81
+### BullMQ 6.2
 
-**Why** Redis-backed queues with retries, backoff, rate limiting, repeatable jobs, flows, and
+**Why** Redis-backed queues with retries, backoff, rate limiting, job schedulers, flows, and
 priorities. Redis is already present for caching, so the marginal infrastructure cost is zero.
 **Instead of** _pg-boss_ — Postgres-backed, one less service, lower throughput and fewer features;
 genuinely attractive if we ever want to drop Redis. _Graphile Worker_ — similar trade-off.
@@ -405,6 +408,9 @@ vendor-coupled.
 **Exit** Low-Medium — `@repo/core` only sees the `JobQueue` port.
 **Operational note:** requires Redis `maxmemory-policy: noeviction`. An evicting Redis silently drops
 jobs, which is the single most common BullMQ production failure.
+**Version note:** on v6 as of 2026-08-26, for the `IQueueBackend` abstraction and because v6 is what
+makes ioredis 6 adoptable. We stay on the Redis backend; the PostgreSQL backend is available but not
+adopted. See [ADR-0010](../adr/0010-bullmq-6-pluggable-backends.md).
 
 ### Trigger.dev 4.5 (dropped)
 
@@ -729,7 +735,7 @@ Things a repo like this often includes, and why this one does not.
 | **Axios**                                      | Native `fetch` is universal in Node 24 and the browser.                                                                                                                                                                                                                           |
 | **Moment.js**                                  | Deprecated by its own maintainers.                                                                                                                                                                                                                                                |
 | **A separate feature-flag vendor**             | PostHog provides flags, and our interface makes the provider swappable.                                                                                                                                                                                                           |
-| **A separate cron service**                    | BullMQ repeatable jobs cover scheduled work.                                                                                                                                                                                                                                      |
+| **A separate cron service**                    | BullMQ job schedulers cover scheduled work.                                                                                                                                                                                                                                       |
 | **`uuid`**                                     | Postgres 18 has native `uuidv7()`; the application-side generator is a few lines using `node:crypto`.                                                                                                                                                                             |
 | **A logging SaaS SDK**                         | Pino writes JSON to stdout; shipping is the platform's job, which keeps the aggregator swappable.                                                                                                                                                                                 |
 
