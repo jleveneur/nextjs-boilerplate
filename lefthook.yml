@@ -9,6 +9,13 @@ pre-commit:
   jobs:
     - name: format
       glob: "*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,css,md,yaml,yml}"
+      # Mirrors ignorePatterns in .oxfmtrc.json. oxfmt exits 2 when every file
+      # it was handed is ignored, so without this a lockfile-only commit — every
+      # lockfile-maintenance bump — fails a hook that had nothing to do.
+      exclude:
+        - "pnpm-lock.yaml"
+        - "**/*.generated.*"
+        - "**/openapi.json"
       run: pnpm exec oxfmt {staged_files}
       stage_fixed: true
 
