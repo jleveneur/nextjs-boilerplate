@@ -3,11 +3,6 @@ packages:
   - packages/*
   - tooling/*
 
-# Next still pulls sharp@0.34.x for image optimization; force the catalog
-# version so standalone tracing and Trivy see the patched libvips line.
-overrides:
-  sharp: 0.35.3
-
 # Install scripts execute arbitrary code, so pnpm blocks them by default and
 # every decision has to be explicit and reviewable. Each entry is a deliberate
 # answer, `false` included — an unanswered package makes `pnpm install` warn,
@@ -16,9 +11,12 @@ overrides:
 # Prefer `false`. Only grant `true` when a package genuinely cannot work without
 # running code at install time (native compilation, browser downloads).
 allowBuilds:
-  # lefthook ships prebuilt platform binaries as optional dependencies, so its
-  # postinstall — which links a binary into node_modules/.bin — is redundant.
-  # Verified: `lefthook version` resolves correctly with the script declined.
+  # lefthook's postinstall runs `lefthook install -f`. The root `prepare` script
+  # does the same job without an install-time code-execution grant, and skips
+  # `-f` so a local hook is not clobbered. Binary linking is unaffected: pnpm
+  # links node_modules/.bin/lefthook from the package's `bin` field, not from
+  # this script. Verified: hooks install and `lefthook version` resolves with
+  # the script declined.
   lefthook: false
   # drizzle-kit depends on esbuild to bundle its CLI. Without the install
   # script, the binary is missing and `drizzle-kit generate|migrate` fails.
@@ -50,23 +48,6 @@ allowBuilds:
 #
 # Versions verified against the npm registry on 2026-07-30.
 # ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# Peer dependency exceptions
-#
-# Narrowly scoped and dated. `strict-peer-dependencies=true` in .npmrc means an
-# unmet peer is an error, which is what we want — so every exception is written
-# down with the reason it is safe and the condition for deleting it.
-# ---------------------------------------------------------------------------
-peerDependencyRules:
-  allowedVersions:
-    # knip → oxc-parser / oxc-resolver ship wasm32-wasi bindings whose
-    # @napi-rs/wasm-runtime wants an @emnapi 2.x alpha. That binding is the
-    # fallback for platforms with no native binary, so it is never loaded on any
-    # platform we build for. Remove once oxc's wasm bindings track a stable
-    # @emnapi 2.
-    "@napi-rs/wasm-runtime>@emnapi/core": "1"
-    "@napi-rs/wasm-runtime>@emnapi/runtime": "1"
-
 # An entry is added when the first package consumes it, never in anticipation:
 # Knip reports unused catalog entries, and a catalog full of aspirations trains
 # people to ignore that report.
@@ -201,16 +182,7 @@ catalog:
   tailwindcss: 4.3.3
   "@tailwindcss/postcss": 4.3.3
 
+# Entries still inside pnpm's default release-age cutoff. Delete each one as
+# soon as it ages past the window — this list is a waiver, not a setting.
 minimumReleaseAgeExclude:
-  - "@aws-sdk/client-s3@3.1099.0"
-  - "@aws-sdk/s3-request-presigner@3.1099.0"
-  - "@types/react@19.2.18"
   - bullmq@6.2.2
-  - "@scalar/client-side-rendering@0.3.5"
-  - "@scalar/hono-api-reference@0.11.12"
-  - "@scalar/nextjs-api-reference@0.11.12"
-  - "@scalar/schemas@0.8.0"
-  - "@scalar/types@0.17.0"
-  - fumadocs-core@16.13.0
-  - fumadocs-ui@16.13.0
-  - fumadocs-mdx@15.2.2
