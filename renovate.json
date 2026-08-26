@@ -1,231 +1,112 @@
 // Dependency update policy. Implements the table in
 // docs/architecture/12-git-ci-release.md#6-dependency-updates--renovate.
 //
-// JSONC so the reasoning lives next to the rule. The goal is that routine,
-// low-risk updates land without a human, and everything else arrives as a small
-// reviewable PR with the release notes attached. A bot that opens thirty PRs a
-// week gets muted, and a muted bot is worse than no bot.
+// JSONC so the reasoning lives next to the rule. Default posture: everything
+// auto-merges once CI is green. Only the cases where a green CI run is *not*
+// evidence of safety are carved out below.
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
 
   "extends": [
     "config:recommended",
-    // One tracking issue listing everything pending, so the backlog is visible
-    // without leaving thirty PRs open.
+    // One tracking issue listing everything pending, and the gate that majors
+    // wait behind.
     ":dependencyDashboard",
     // Commit messages must satisfy commitlint, which CI enforces on every PR.
     ":semanticCommits",
-    // Keep the lockfile fresh even when no manifest changed, so transitive
-    // security fixes are not held back by an unrelated pin.
+    // A workflow runs with repository permissions, so a mutable ref is a
+    // supply-chain hole.
     "helpers:pinGitHubActionDigests"
   ],
 
   "timezone": "Europe/Paris",
-
-  // Outside working hours, so a merge queue full of bot PRs never competes with
-  // someone trying to ship.
-  "schedule": ["* 2-6 * * 1"],
+  "schedule": ["before 6am on monday"],
 
   // Exact versions everywhere: a range means CI and production can resolve
-  // differently, and the lockfile becomes the only record of what shipped.
+  // differently. See AGENTS.md section 6.
   "rangeStrategy": "pin",
 
-  // Supply-chain delay. Most malicious releases are found and yanked within a
-  // couple of days; waiting costs nothing on a weekly schedule and removes the
-  // window where a compromised release is auto-merged. Security updates below
-  // deliberately override this.
+  // Supply-chain delay: most malicious releases are found and yanked within a
+  // couple of days. Security updates override this.
   "minimumReleaseAge": "3 days",
 
-  // A cap on review load rather than a technical limit.
   "prConcurrentLimit": 8,
-  "prHourlyLimit": 4,
-
   "postUpdateOptions": ["pnpmDedupe"],
 
-  "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["* 2-6 * * 1"],
-    "automerge": true
-  },
+  "automerge": true,
+  "automergeType": "pr",
+  "platformAutomerge": true,
 
-  // Security fixes bypass the schedule and the release-age delay: the exposure
-  // window of a known advisory is worse than the risk the delay protects
-  // against.
+  "lockFileMaintenance": { "enabled": true, "automerge": true },
+
+  // Known advisories bypass the schedule and the release-age delay: the
+  // exposure window is worse than the risk the delay protects against.
   "vulnerabilityAlerts": {
     "enabled": true,
     "schedule": ["at any time"],
     "minimumReleaseAge": null,
-    "labels": ["security", "priority: high"],
-    "automerge": true,
-    "automergeType": "pr"
+    "labels": ["security", "priority: high"]
   },
 
   "packageRules": [
-    // ---------------------------------------------------------------------
-    // engines is a floor, not a selection. The global "pin" strategy above
-    // rewrote ">=24.0.0" to the newest published Node, which both means nothing
-    // as a minimum and contradicts .nvmrc and packageManager — the two files CI
-    // actually installs from. Every job then died in the setup action with
-    // ERR_PNPM_UNSUPPORTED_ENGINE. Keep the range shape and move it only when
-    // the supported floor genuinely moves, which is a decision worth reviewing.
-    // ---------------------------------------------------------------------
     {
+      // engines is a floor, not a selection. The global "pin" strategy would
+      // rewrite ">=24.0.0" to the newest published Node, contradicting .nvmrc
+      // and packageManager and failing every job with
+      // ERR_PNPM_UNSUPPORTED_ENGINE.
       "matchDepTypes": ["engines"],
       "rangeStrategy": "replace"
     },
-
-    // ---------------------------------------------------------------------
-    // Auto-merged: mechanical updates where a green CI run is genuine evidence
-    // of safety, because the tools in question are what CI runs.
-    // ---------------------------------------------------------------------
     {
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["patch", "minor"],
-      "groupName": "dev dependencies",
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
+      "groupName": "dev dependencies"
     },
     {
-      "matchDepTypes": ["dependencies"],
-      "matchUpdateTypes": ["patch"],
-      "groupName": "production patches",
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
-    },
-    {
-      // Almost every shared dependency's real version lives in the
-      // pnpm-workspace.yaml catalog, per AGENTS.md section 6, where Renovate
-      // gives it depType pnpm.catalog.default. The package.json entries beside
-      // it are the literal string "catalog:", which Renovate skips as
-      // unspecified-version. Without this rule the two depType rules above
-      // reach 12 of the 280 declared dependencies and nothing auto-merges.
+      // Shared dependencies live in the pnpm-workspace.yaml catalog, where
+      // Renovate gives them depType pnpm.catalog.default; the package.json
+      // entries beside them are the literal string "catalog:". Without this
+      // group they arrive one PR at a time.
       "matchDepTypes": ["pnpm.catalog.default"],
       "matchUpdateTypes": ["patch", "minor"],
-      "groupName": "catalog dependencies",
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
+      "groupName": "catalog dependencies"
     },
     {
-      // Type definitions travel with the library they describe, so splitting
+      // Type definitions travel with the library they describe, and splitting
       // them produces a PR that cannot pass typecheck on its own.
       "matchPackageNames": ["@types/**"],
       "matchUpdateTypes": ["patch", "minor"],
-      "groupName": "type definitions",
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
-    },
-
-    // ---------------------------------------------------------------------
-    // Grouped by ecosystem: these packages release in lockstep and are only
-    // coherent when upgraded together.
-    // ---------------------------------------------------------------------
-    {
-      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"],
-      "groupName": "react"
+      "groupName": "type definitions"
     },
     {
-      "matchPackageNames": ["next", "eslint-config-next", "@next/**"],
-      "groupName": "next.js"
+      // ADR-0004: tsgolint is built against a specific TypeScript release, so
+      // the two move together, and a TypeScript minor routinely surfaces new
+      // type errors in existing code.
+      "matchPackageNames": ["typescript", "oxlint-tsgolint", "oxlint", "oxfmt"],
+      "groupName": "typescript toolchain",
+      "automerge": false
     },
     {
-      "matchPackageNames": ["@tanstack/**"],
-      "groupName": "tanstack"
-    },
-    {
-      "matchPackageNames": ["@trpc/**"],
-      "groupName": "trpc"
-    },
-    {
+      // ADR-0008: a Drizzle bump can change generated SQL, so it is always a
+      // deliberate move.
       "matchPackageNames": ["drizzle-orm", "drizzle-kit", "drizzle-zod"],
-      "groupName": "drizzle"
-    },
-    {
-      "matchPackageNames": ["@opentelemetry/**"],
-      "groupName": "opentelemetry"
-    },
-    {
-      "matchPackageNames": ["@sentry/**"],
-      "groupName": "sentry"
-    },
-    {
-      "matchPackageNames": ["oxlint", "oxfmt", "oxlint-tsgolint"],
-      "groupName": "oxc toolchain",
-      // Pre-1.0 formatter and linter releases change output and rule sets, so a
-      // minor bump can rewrite files or fail the build. Reviewed, never merged
-      // by the bot. See the risk register in the dependency review.
+      "groupName": "drizzle",
       "automerge": false
     },
     {
-      "matchPackageNames": ["@base-ui/react"],
-      "groupName": "base ui",
-      "automerge": false
-    },
-
-    // ---------------------------------------------------------------------
-    // Never auto-merged.
-    // ---------------------------------------------------------------------
-    {
-      "matchUpdateTypes": ["major"],
-      // One PR per package, monthly, so a breaking change is reviewed on its own
-      // terms instead of buried in a group.
-      "schedule": ["* 2-6 1 * *"],
-      "automerge": false,
-      "labels": ["dependencies", "major"],
-      "minimumReleaseAge": "14 days"
-    },
-    {
-      // A workflow runs with repository permissions, so a mutable reference here
-      // is a supply-chain hole. Digests are pinned and updates are read, not
-      // trusted.
-      "matchManagers": ["github-actions"],
-      "groupName": "github actions",
-      "schedule": ["* 2-6 1 * *"],
-      "automerge": false,
+      // Digests only, gated by Trivy in the images job.
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "groupName": "docker images",
       "pinDigests": true
     },
     {
-      // The runtime the whole repo is built against. A Node major is a
-      // deliberate migration, not a dependency bump.
-      "matchPackageNames": ["node", "@types/node"],
+      // Reviewed on their own terms, and released from the dashboard rather
+      // than opened automatically.
       "matchUpdateTypes": ["major"],
       "automerge": false,
-      "labels": ["dependencies", "runtime"]
-    },
-    {
-      "matchPackageNames": ["typescript"],
-      // The compiler decides whether everything else builds, and TypeScript
-      // minors routinely surface new type errors in existing code.
-      "automerge": false,
-      "labels": ["dependencies", "typescript"]
-    },
-    {
-      "matchPackageNames": ["pnpm"],
-      // Changing the package manager version changes how the lockfile and
-      // node_modules layout are produced, which is what enforces layer
-      // boundaries. See ADR-0002.
-      "automerge": false
-    },
-    {
-      // Digests only after Trivy has gated the images job (and publish). A green
-      // CI run is evidence the new base is free of HIGH/CRITICAL findings we care
-      // about — matching docs/architecture/12-git-ci-release.md §6.
-      "matchManagers": ["dockerfile", "docker-compose"],
-      "groupName": "docker images",
-      "pinDigests": true,
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
-    },
-    {
-      // Database engine upgrades need a migration plan and a maintenance window.
-      "matchPackageNames": ["postgres", "redis", "valkey"],
-      "matchUpdateTypes": ["major", "minor"],
-      "automerge": false,
-      "labels": ["dependencies", "infrastructure"]
+      "dependencyDashboardApproval": true,
+      "labels": ["dependencies", "major"],
+      "minimumReleaseAge": "14 days"
     }
   ]
 }
