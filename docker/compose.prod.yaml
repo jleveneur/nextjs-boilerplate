@@ -9,7 +9,7 @@ name: repo-prod
 
 services:
   traefik:
-    image: traefik:v3.6
+    image: traefik:v3.7@sha256:5203c3f39ca70de6790d964624e042463ffbd57715bc82be155cf224c0dd5144
     restart: unless-stopped
     command:
       - --providers.docker=true
@@ -40,7 +40,7 @@ services:
       retries: 30
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
     restart: unless-stopped
     command: ["redis-server", "--maxmemory-policy", "noeviction"]
     healthcheck:
@@ -50,7 +50,7 @@ services:
       retries: 30
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:latest@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -66,7 +66,7 @@ services:
       start_period: 5s
 
   minio-init:
-    image: minio/mc:latest
+    image: minio/mc:latest@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     depends_on:
       minio:
         condition: service_started
@@ -79,7 +79,7 @@ services:
     restart: "no"
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:latest@sha256:c96991d9bef73594c246d89ca81411d4e916f03e76a7d2d72fa2ab5dd3c9ce24
     restart: unless-stopped
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1

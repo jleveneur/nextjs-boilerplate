@@ -28,7 +28,7 @@ services:
       retries: 30
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
     restart: unless-stopped
     ports:
       - "55434:6379"
@@ -41,7 +41,7 @@ services:
       retries: 30
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:latest@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     restart: unless-stopped
     ports:
       - "55436:9000"
@@ -61,7 +61,7 @@ services:
 
   # Creates the default bucket once MinIO is up. Credentials match .env.example.
   minio-init:
-    image: minio/mc:latest
+    image: minio/mc:latest@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     depends_on:
       minio:
         condition: service_started
@@ -74,7 +74,7 @@ services:
     restart: "no"
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:latest@sha256:c96991d9bef73594c246d89ca81411d4e916f03e76a7d2d72fa2ab5dd3c9ce24
     restart: unless-stopped
     ports:
       - "55438:1025"
@@ -90,7 +90,7 @@ services:
 
   # Observability sink for local loops (apps opt in via OTEL_* — Phase 14).
   jaeger:
-    image: jaegertracing/all-in-one:1.69.0
+    image: jaegertracing/all-in-one:1.76.0@sha256:ab6f1a1f0fb49ea08bcd19f6b84f6081d0d44b364b6de148e1798eb5816bacac
     restart: unless-stopped
     ports:
       - "55443:16686"
@@ -103,7 +103,7 @@ services:
       retries: 12
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.128.0
+    image: otel/opentelemetry-collector-contrib:0.159.0@sha256:1f2c54a30e713fac6b3ae77a1ec84010c2007e29ced8ec666214fc2f6739c1cc
     restart: unless-stopped
     command: ["--config=/etc/otelcol/config.yaml"]
     volumes:
@@ -117,7 +117,7 @@ services:
         condition: service_started
 
   prometheus:
-    image: prom/prometheus:v3.2.1
+    image: prom/prometheus:v3.14.0@sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -134,7 +134,7 @@ services:
         condition: service_started
 
   grafana:
-    image: grafana/grafana:11.5.2
+    image: grafana/grafana:11.6.16@sha256:d67af92050b8d93b393dc741864752a69c9da1ffa39c1bb9af49ad5d9e47d2c3
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: admin
