@@ -52,6 +52,12 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Latest main, not the SHA that triggered this run. Runs serialize on
+          # the concurrency group above, so a queued run can reach the changesets
+          # step after a version PR has already merged. Pinned to its trigger it
+          # would version a main where the changeset still exists and open a
+          # duplicate version PR; from main's tip it correctly finds none.
+          ref: main
           # Changesets compares against the base branch to work out which
           # packages changed, which needs more than a shallow clone.
           fetch-depth: 0
