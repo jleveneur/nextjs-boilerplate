@@ -117,7 +117,7 @@ catalog:
   sharp: 0.35.3
   resend: 6.18.1
   stripe: 22.3.0
-  recharts: 3.10.0
+  recharts: 3.10.1
   "@tanstack/react-table": 8.21.3
   "@tiptap/react": 3.29.0
   "@tiptap/starter-kit": 3.29.0
