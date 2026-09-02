@@ -35,7 +35,9 @@ RUN pnpm --filter @repo/api build \
 
 # Fresh Alpine + only the node binary — avoids shipping yarn/npm from the Node image.
 FROM ${ALPINE_IMAGE} AS runner
+# alpine:3.24.1 still ships OpenSSL 3.5.7; 3.5.8-r0 fixes CVE-2026-14456.
 RUN apk add --no-cache libstdc++ libgcc ca-certificates \
+    libcrypto3=3.5.8-r0 libssl3=3.5.8-r0 \
   && addgroup -S nodejs \
   && adduser -S app -G nodejs
 COPY --from=base /usr/local/bin/node /usr/local/bin/node
