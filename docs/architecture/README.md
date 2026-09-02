@@ -130,7 +130,7 @@ current when the decisions were made.
 | Concern             | Choice                      | Version |
 | ------------------- | --------------------------- | ------- |
 | Runtime             | Node.js LTS                 | 24.x    |
-| Package manager     | pnpm (via Corepack)         | 11.17.0 |
+| Package manager     | pnpm (via Corepack)         | 12.3.0  |
 | Monorepo            | Turborepo                   | 2.10.7  |
 | Language            | TypeScript (strict, native) | 7.0.2   |
 | Compat escape hatch | `@typescript/typescript6`   | 6.0.2   |

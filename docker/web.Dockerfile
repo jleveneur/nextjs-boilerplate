@@ -6,8 +6,9 @@ ARG NODE_IMAGE=node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275b
 ARG ALPINE_IMAGE=alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 FROM ${NODE_IMAGE} AS base
-RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
 WORKDIR /app
+COPY package.json ./
+RUN corepack enable && corepack prepare --activate
 
 FROM base AS pruner
 RUN apk add --no-cache libc6-compat

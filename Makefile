@@ -56,7 +56,7 @@ hooks: ## Reinstall Git hooks
 setup: ## Idempotent clean-machine bootstrap (tools, deps, .env, services, migrate, seed)
 	@command -v node >/dev/null || (echo "Node.js >= 24 is required" && exit 1)
 	@node -e "const [m]=process.versions.node.split('.').map(Number); if(m<24){console.error('Node.js >= 24 required, found',process.versions.node); process.exit(1)}"
-	@command -v pnpm >/dev/null || (echo "pnpm >= 11 is required (corepack enable)" && exit 1)
+	@command -v pnpm >/dev/null || (echo "pnpm >= 12 is required (corepack enable)" && exit 1)
 	@command -v docker >/dev/null || (echo "Docker is required" && exit 1)
 	@docker info >/dev/null 2>&1 || (echo "Docker daemon is not running" && exit 1)
 	pnpm install
