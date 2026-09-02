@@ -94,6 +94,7 @@ bullmq
 ioredis
 msgpackr
 protobufjs
+libcrypto
 libvips
 libstdc
 libgcc
