@@ -33,7 +33,7 @@ RUN pnpm --filter @repo/worker build \
 
 FROM ${NODE_IMAGE} AS sharp
 WORKDIR /sharp
-RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.3 \
+RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.4 \
   && rm -rf package.json package-lock.json /root/.npm /tmp/*
 
 FROM ${ALPINE_IMAGE} AS runner
