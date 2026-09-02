@@ -15,26 +15,26 @@ Two rules govern the order:
 
 ## Phase overview
 
-| #   | Phase                    | Delivers                                                          | Depends on |
-| --- | ------------------------ | ----------------------------------------------------------------- | ---------- |
-| 0   | Decisions                | Open questions answered, ADRs moved to Accepted                   | —          |
-| 1   | Skeleton & toolchain     | Monorepo, TypeScript 7, Oxlint, Oxfmt, hooks, `make check`        | 0          |
-| 2   | Foundation packages      | `types`, `utils`, `env`, `errors`, `contracts`, `i18n`, `testing` | 1          |
-| 3   | Data layer               | `db` with schema, migrations, seeds, real-Postgres test harness   | 2          |
-| 4   | Platform adapters        | `logger`, `cache`, `storage`, `email`, `jobs`, `observability`    | 3          |
-| 5   | Auth & authorization     | `auth`, `authz`, sign-up/in flows, organizations                  | 4          |
-| 6   | Domain core & tRPC       | `core`, `trpc`, the vertical slice                                | 5          |
-| 7   | Design system            | `ui` with Tailwind theme, shadcn/ui on Base UI, a11y tests        | 2          |
-| 8   | Web application          | `apps/web`: routing, i18n, theming, the slice's UI, E2E           | 6, 7       |
-| 9   | Public API               | `apps/api`: REST `/v1`, OpenAPI, Scalar, API keys, rate limits    | 6          |
-| 10  | Workers                  | `apps/worker`: BullMQ consumers, schedules, outbox relay          | 4, 6       |
-| 11  | Containers & local stack | Dockerfiles, compose stacks, `make` targets                       | 8, 9, 10   |
-| 12  | CI/CD                    | Full pipelines, image publishing, Changesets, Renovate            | 11         |
-| 13  | Deployability            | Migrate-then-roll, env contract, agnostic deploy runbook          | 12         |
-| 14  | Observability wiring     | OTel end-to-end, Sentry, PostHog, flags, dashboards, alerts       | 13         |
-| 15  | Documentation site       | `apps/docs` with Fumadocs, ADRs, embedded API reference           | 9          |
-| 16  | Hardening                | Load tests, a11y audit, security review, runbooks, DR drill       | 14         |
-| 17  | Optional modules         | Payments, advanced UI widgets                                     | 16         |
+| #   | Phase                     | Delivers                                                          | Depends on |
+| --- | ------------------------- | ----------------------------------------------------------------- | ---------- |
+| 0   | Decisions                 | Open questions answered, ADRs moved to Accepted                   | —          |
+| 1   | Skeleton & toolchain      | Monorepo, TypeScript 7, Oxlint, Oxfmt, hooks, `make check`        | 0          |
+| 2   | Foundation packages       | `types`, `utils`, `env`, `errors`, `contracts`, `i18n`, `testing` | 1          |
+| 3   | Data layer                | `db` with schema, migrations, seeds, real-Postgres test harness   | 2          |
+| 4   | Platform adapters         | `logger`, `cache`, `storage`, `email`, `jobs`, `observability`    | 3          |
+| 5   | Auth & authorization      | `auth`, `authz`, sign-up/in flows, organizations                  | 4          |
+| 6   | Domain core & private API | `core`, `orpc`, the vertical slice                                | 5          |
+| 7   | Design system             | `ui` with Tailwind theme, shadcn/ui on Base UI, a11y tests        | 2          |
+| 8   | Web application           | `apps/web`: routing, i18n, theming, the slice's UI, E2E           | 6, 7       |
+| 9   | Public API                | `apps/api`: REST `/v1`, OpenAPI, Scalar, API keys, rate limits    | 6          |
+| 10  | Workers                   | `apps/worker`: BullMQ consumers, schedules, outbox relay          | 4, 6       |
+| 11  | Containers & local stack  | Dockerfiles, compose stacks, `make` targets                       | 8, 9, 10   |
+| 12  | CI/CD                     | Full pipelines, image publishing, Changesets, Renovate            | 11         |
+| 13  | Deployability             | Migrate-then-roll, env contract, agnostic deploy runbook          | 12         |
+| 14  | Observability wiring      | OTel end-to-end, Sentry, PostHog, flags, dashboards, alerts       | 13         |
+| 15  | Documentation site        | `apps/docs` with Fumadocs, ADRs, embedded API reference           | 9          |
+| 16  | Hardening                 | Load tests, a11y audit, security review, runbooks, DR drill       | 14         |
+| 17  | Optional modules          | Payments, advanced UI widgets                                     | 16         |
 
 Phases 7 and 9 can run in parallel with their neighbours once their dependencies land.
 
@@ -115,14 +115,15 @@ can be created and a member invited, and a test proves an API key and a session 
 
 `@repo/core`: the `Ctx` type, the `ports/` definitions, the event bus, the outbox writer, and
 `shared/`. Then **the vertical slice** — one complete feature (per Q5, recommended option (b)) with
-service, policy, repository, errors, events, mapper, and both test levels. Then `@repo/trpc` with the
-layered procedures, the error formatter, and the slice's router.
+service, policy, repository, errors, events, mapper, and both test levels. Then `@repo/orpc` with the
+layered procedures, AppError mapping, and the slice's router ([ADR-0011](../adr/0011-orpc-private-api.md);
+this phase originally landed on tRPC 11).
 
 This phase produces the **reference implementation every future feature is copied from**, so it gets
 disproportionate review attention. Its file layout, naming, test structure, and error handling become
 the de facto standard whether or not anyone intends that.
 
-**Done when** the slice is callable over tRPC with authorization enforced, a domain event enqueues a
+**Done when** the slice is callable over oRPC with authorization enforced, a domain event enqueues a
 job, and unit tests run with no database.
 
 ## Phase 7 — Design system
@@ -142,7 +143,7 @@ the base bundle unnoticed.
 `apps/web`: route groups, `[locale]` routing with next-intl, `proxy.ts` (locale and cookie presence
 only — no authorization), theming, the full auth screens (password, OAuth, magic link, passkey, 2FA,
 invite), the app shell with the organization switcher, the billing invoice UI with TanStack Query over
-tRPC and nuqs for filters, error and loading boundaries, and the container/context composition roots.
+oRPC and nuqs for filters, error and loading boundaries, and the container/context composition roots.
 Playwright + axe and Lighthouse CI run against `make deps-up-test` + `next start` (image-level E2E
 stays Phase 11). Stripe checkout UI stays Phase 17.
 
@@ -157,7 +158,7 @@ error mapper), `/v1` billing invoice routes (snake_case), generated and committe
 skeleton (verify + replay id; processing stays Phase 17 with `@repo/payments`). Full OTel/Sentry wiring
 stays Phase 14.
 
-**Done when** the same operation is reachable over tRPC and REST with **identical authorization
+**Done when** the same operation is reachable over oRPC and REST with **identical authorization
 behaviour**, proven by a test — this is the assertion that validates
 [ADR-0003](../adr/0003-one-domain-core-two-transports.md).
 
@@ -269,7 +270,7 @@ automated evidence, stub runbooks are complete, and `make restore-drill` / `make
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `@repo/payments`                    | Stripe catalog, Checkout subscription sessions, Customer Portal, webhook construct, entitlement metadata                                 |
 | Core `PaymentGateway` port          | Customer ensure, checkout/portal, webhook apply → subscription + entitlement rows; job `stripe.event.process`                            |
-| Transport                           | API `POST /webhooks/stripe`; tRPC `billing.{catalog,syncCatalog,subscription,checkout,portal}`; flag-gated panel at `/[orgSlug]/billing` |
+| Transport                           | API `POST /webhooks/stripe`; oRPC `billing.{catalog,syncCatalog,subscription,checkout,portal}`; flag-gated panel at `/[orgSlug]/billing` |
 | `@repo/ui/chart`, `editor`, `table` | Recharts / Tiptap / TanStack Table; design-system gallery; home bundle forbids heavy imports                                             |
 
 **Done when**

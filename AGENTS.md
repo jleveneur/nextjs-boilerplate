@@ -52,7 +52,7 @@ construction. Enforced by `make layers` (see
 | 0         | Pure utilities, types, config schemas        | Nothing internal          |
 | 1         | Infrastructure adapters (db, storage, email) | Layer 0                   |
 | 2         | Domain and application logic                 | Layers 0–1                |
-| 3         | Transport (tRPC routers, REST handlers)      | Layers 0–2                |
+| 3         | Transport (oRPC procedures, REST handlers)   | Layers 0–2                |
 | 4         | Apps (deployable units)                      | Layers 0–3, `ui`          |
 | `ui`      | Design system                                | Layer 0 only              |
 | `tooling` | Build and lint configuration                 | Never imported at runtime |
@@ -79,7 +79,7 @@ function. If you cannot see which applies, stop and ask.
 Business logic lives in the domain/application layer and nowhere else. Transports
 translate; they do not decide.
 
-- **No database queries in a tRPC resolver, route handler, or Server Action.**
+- **No database queries in an oRPC procedure, route handler, or Server Action.**
   Call an application service.
 - **No business rules in a React component.** Components render state and raise
   events.

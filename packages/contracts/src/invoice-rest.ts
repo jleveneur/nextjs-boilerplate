@@ -1,7 +1,7 @@
 /**
  * Snake_case invoice wire shapes for the public REST API.
  *
- * tRPC and core keep camelCase ({@link invoiceSchema}); this module is the only
+ * oRPC and core keep camelCase ({@link invoiceSchema}); this module is the only
  * place casing changes for invoices.
  */
 

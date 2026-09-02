@@ -2,7 +2,7 @@ import { Suspense } from "react";
 
 import { invoiceIdSchema } from "@repo/contracts";
 import { canVoidInvoice } from "@repo/core";
-import { createCallerFactory } from "@repo/trpc";
+import { createCallerFactory } from "@repo/orpc";
 import { Skeleton } from "@repo/ui";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -10,7 +10,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { InvoiceDetail } from "../../../../../../features/billing/invoice-detail.tsx";
-import { createTrpcContext } from "../../../../../../server/context.ts";
+import { createOrpcContext } from "../../../../../../server/context.ts";
 import { appRouter } from "../../../../../../server/router.ts";
 
 type Props = {
@@ -42,7 +42,7 @@ async function InvoiceDetailContent({ params }: Props) {
     notFound();
   }
 
-  const context = await createTrpcContext(await headers());
+  const context = await createOrpcContext(await headers(), { organizationSlug: orgSlug });
   const invoice = await createCaller(context).billing.get({ invoiceId: parsed.data });
   const canVoid = context.actor !== null && canVoidInvoice(context.actor, invoice).allowed;
 

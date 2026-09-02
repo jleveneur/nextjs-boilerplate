@@ -7,7 +7,7 @@ import { defineConfig, mergeConfig } from "vitest/config";
 const root = path.dirname(fileURLToPath(import.meta.url));
 
 const base = defineLibraryConfig({
-  name: "@repo/trpc",
+  name: "@repo/orpc",
   coverage: { lines: 80, functions: 80, branches: 70, statements: 80 },
 });
 
@@ -23,8 +23,8 @@ export default mergeConfig(
       coverage: {
         exclude: [
           "src/index.ts",
-          // Procedure wiring exercised via createCaller; formatter/mapper unit-tested.
-          "src/trpc.ts",
+          // Procedure wiring exercised via createCaller; mapper unit-tested.
+          "src/procedures.ts",
           "src/root.ts",
           "src/context.ts",
           "src/**/*.test.ts",

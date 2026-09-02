@@ -94,6 +94,7 @@ relevant, not replaced), **Superseded** (replaced — links forward to the repla
 | [0008](./0008-drizzle-version-selection.md)               | Drizzle ORM version selection (0.45 vs 1.0-rc)                      | Accepted                                                    |
 | [0009](./0009-bullmq-only-background-work.md)             | BullMQ-only background work                                         | Accepted                                                    |
 | [0010](./0010-bullmq-6-pluggable-backends.md)             | BullMQ 6 and ioredis 6                                              | Accepted                                                    |
+| [0011](./0011-orpc-private-api.md)                        | oRPC for the private API                                            | Accepted                                                    |
 
 ### Decisions recorded in the architecture documents
 

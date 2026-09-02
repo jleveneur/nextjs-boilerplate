@@ -19,7 +19,7 @@ export const options = {
 
 export function setup() {
   if (missingAuth()) {
-    console.warn("upload: skip — set API_KEY and ORGANIZATION_ID (presign surface via tRPC/web)");
+    console.warn("upload: skip — set API_KEY and ORGANIZATION_ID (presign surface via oRPC/web)");
   }
   return { skip: missingAuth() };
 }

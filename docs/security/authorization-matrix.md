@@ -31,5 +31,5 @@ impersonating ([07 — auth](../architecture/07-auth.md)).
 | `asset:create` | yes | yes | yes |
 | `asset:read` | yes | yes | yes |
 
-REST/tRPC must produce the same outcomes for the same `Actor` —
+REST/oRPC must produce the same outcomes for the same `Actor` —
 [`apps/api/src/authz-parity.integration.test.ts`](../../apps/api/src/authz-parity.integration.test.ts).

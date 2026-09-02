@@ -2,7 +2,7 @@
  * RFC 9457 Problem Details for the public REST API.
  *
  * The transport sets the status line and `Content-Type: application/problem+json`;
- * this function builds the body. Keeping the mapping here means tRPC, Server
+ * this function builds the body. Keeping the mapping here means oRPC, Server
  * Actions, and jobs can each have their own shape without re-implementing the
  * expose/severity rules.
  */

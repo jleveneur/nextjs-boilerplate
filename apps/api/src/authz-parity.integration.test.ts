@@ -1,6 +1,6 @@
 /**
  * ADR-0003 proof: the same Actor + core service yields identical authorization
- * outcomes over tRPC and REST.
+ * outcomes over oRPC and REST.
  */
 
 import { describe, expect, it } from "vitest";
@@ -10,7 +10,7 @@ import { createTestPorts } from "@repo/core/testing";
 import { setupDbIntegrationTests } from "@repo/db/testing";
 import { ERROR_CODES, isAppError } from "@repo/errors";
 import { createLogger } from "@repo/logger";
-import { appRouter, createCallerFactory, type TrpcContext } from "@repo/trpc";
+import { appRouter, createCallerFactory, type OrpcContext } from "@repo/orpc";
 import type { Actor, InvoiceId, OrganizationId, UserId } from "@repo/types";
 import { Writable } from "node:stream";
 
@@ -37,16 +37,16 @@ function makeActor(
   };
 }
 
-function makeTrpcCtx(
+function makeOrpcCtx(
   actor: Actor,
-  db: TrpcContext["db"],
-  ports: TrpcContext["ports"],
-): TrpcContext {
+  db: OrpcContext["db"],
+  ports: OrpcContext["ports"],
+): OrpcContext {
   return {
     actor,
     db,
     logger: createLogger({
-      service: "trpc-parity-test",
+      service: "orpc-parity-test",
       env: "test",
       level: "error",
       destination: new Writable({
@@ -61,14 +61,14 @@ function makeTrpcCtx(
 
 const createCaller = createCallerFactory(appRouter);
 
-async function trpcVoidOutcome(
+async function orpcVoidOutcome(
   actor: Actor,
   db: ParityDb,
-  ports: TrpcContext["ports"],
+  ports: OrpcContext["ports"],
   invoiceId: string,
 ): Promise<{ ok: true } | { ok: false; code: string; httpStatus: number }> {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- test injects tx as Database
-  const caller = createCaller(makeTrpcCtx(actor, db as TrpcContext["db"], ports));
+  const caller = createCaller(makeOrpcCtx(actor, db as OrpcContext["db"], ports));
   try {
     await caller.billing.void({ invoiceId: brandInvoiceId(invoiceId) });
     return { ok: true };
@@ -84,7 +84,7 @@ async function trpcVoidOutcome(
 async function restVoidOutcome(
   actor: Actor,
   db: ParityDb,
-  ports: TrpcContext["ports"],
+  ports: OrpcContext["ports"],
   organizationId: string,
   invoiceId: string,
 ): Promise<{ ok: true } | { ok: false; code: string; httpStatus: number }> {
@@ -111,14 +111,14 @@ async function restVoidOutcome(
   return { ok: false, code, httpStatus: response.status };
 }
 
-describe("tRPC vs REST authz parity (ADR-0003)", () => {
+describe("oRPC vs REST authz parity (ADR-0003)", () => {
   it("forbids member void and allows owner void on both transports", async () => {
     await withTestTransaction(async ({ db, factories }) => {
       const org = await factories.makeOrganization();
       // Separate rows per transport so a successful void does not poison the other.
-      const memberTrpcInvoice = await factories.makeInvoice({
+      const memberRpcInvoice = await factories.makeInvoice({
         organizationId: org.id,
-        number: "INV-PARITY-M-TRPC",
+        number: "INV-PARITY-M-RPC",
         status: "open",
         amountMinor: 1000,
       });
@@ -128,9 +128,9 @@ describe("tRPC vs REST authz parity (ADR-0003)", () => {
         status: "open",
         amountMinor: 1000,
       });
-      const ownerTrpcInvoice = await factories.makeInvoice({
+      const ownerRpcInvoice = await factories.makeInvoice({
         organizationId: org.id,
-        number: "INV-PARITY-O-TRPC",
+        number: "INV-PARITY-O-RPC",
         status: "open",
         amountMinor: 2000,
       });
@@ -149,21 +149,21 @@ describe("tRPC vs REST authz parity (ADR-0003)", () => {
       const owner = makeActor("owner", org.id, ownerUser.id);
       const member = makeActor("member", org.id, memberUser.id);
 
-      const memberTrpc = await trpcVoidOutcome(member, db, ports, memberTrpcInvoice.id);
+      const memberRpc = await orpcVoidOutcome(member, db, ports, memberRpcInvoice.id);
       const memberRest = await restVoidOutcome(member, db, ports, org.id, memberRestInvoice.id);
 
-      expect(memberTrpc).toEqual({
+      expect(memberRpc).toEqual({
         ok: false,
         code: ERROR_CODES.FORBIDDEN,
         httpStatus: 403,
       });
-      expect(memberRest).toEqual(memberTrpc);
+      expect(memberRest).toEqual(memberRpc);
 
-      const ownerTrpc = await trpcVoidOutcome(owner, db, ports, ownerTrpcInvoice.id);
+      const ownerRpc = await orpcVoidOutcome(owner, db, ports, ownerRpcInvoice.id);
       const ownerRest = await restVoidOutcome(owner, db, ports, org.id, ownerRestInvoice.id);
 
-      expect(ownerTrpc).toEqual({ ok: true });
-      expect(ownerRest).toEqual(ownerTrpc);
+      expect(ownerRpc).toEqual({ ok: true });
+      expect(ownerRest).toEqual(ownerRpc);
     });
   });
 });

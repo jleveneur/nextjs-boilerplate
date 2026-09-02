@@ -164,9 +164,9 @@ which errors are thrown, since throw sites are not in the type signature.
 - **Server Components by default.** `"use client"` requires a reason: interactivity, browser
   APIs, or a client-only library. It marks a boundary, so push it as far down the tree as
   possible — a `"use client"` at the top of a page ships the whole page to the browser.
-- **Data fetching:** RSC for initial render; TanStack Query via tRPC for anything interactive,
+- **Data fetching:** RSC for initial render; TanStack Query via oRPC for anything interactive,
   paginated, or refetched. Do not fetch in `useEffect`.
-- **Mutations:** tRPC mutations for app interactions; Server Actions for progressively-enhanced
+- **Mutations:** oRPC mutations for app interactions; Server Actions for progressively-enhanced
   forms. Both delegate to `@repo/core` and both revalidate explicitly.
 - **Caching is explicit.** With `cacheComponents: true`, `use cache` is opt-in per boundary with
   a declared `cacheLife`, and invalidation uses tags (`revalidateTag(tag, profile)` for SWR
@@ -223,7 +223,7 @@ Detailed in [05](./05-runtime-and-api.md); the naming rules:
 - Query params: `snake_case` (REST public surface), consistent with the JSON body casing choice
   below.
 - JSON bodies: `snake_case` on the public REST surface (conventional for public APIs, and stable
-  regardless of internal renames); `camelCase` internally over tRPC. The mapping happens in one
+  regardless of internal renames); `camelCase` internally over oRPC. The mapping happens in one
   place, the REST serializer.
 - Pagination: cursor-based (`?limit=&cursor=`), returning `{ data, next_cursor }`. Offset
   pagination is not offered — it produces duplicates and skips under concurrent writes.

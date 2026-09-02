@@ -1,7 +1,7 @@
 /**
  * Invoice wire contracts for the billing vertical slice.
  *
- * Snake_case appears only on the public REST surface (Phase 9). tRPC and jobs
+ * Snake_case appears only on the public REST surface (Phase 9). oRPC and jobs
  * use these camelCase shapes.
  */
 

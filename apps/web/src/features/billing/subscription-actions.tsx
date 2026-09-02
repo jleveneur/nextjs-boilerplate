@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
 import { useRouter } from "../../i18n/navigation.ts";
-import { useTRPC } from "../../trpc/react.ts";
+import { orpc } from "../../orpc/query.ts";
 
 type SubscriptionActionsProps = {
   orgSlug: string;
@@ -15,11 +15,10 @@ type SubscriptionActionsProps = {
 export function SubscriptionActions({ orgSlug, hasSubscription }: SubscriptionActionsProps) {
   const locale = useLocale();
   const router = useRouter();
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const portal = useMutation(
-    trpc.billing.portal.mutationOptions({
+    orpc.billing.portal.mutationOptions({
       onSuccess: (result) => {
         window.location.assign(result.url);
       },
@@ -27,9 +26,9 @@ export function SubscriptionActions({ orgSlug, hasSubscription }: SubscriptionAc
   );
 
   const sync = useMutation(
-    trpc.billing.syncCatalog.mutationOptions({
+    orpc.billing.syncCatalog.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.billing.catalog.pathFilter());
+        await queryClient.invalidateQueries({ queryKey: orpc.billing.catalog.key() });
         router.refresh();
       },
     }),
@@ -74,9 +73,8 @@ type SubscribeButtonProps = {
 
 export function SubscribeButton({ orgSlug, priceId }: SubscribeButtonProps) {
   const locale = useLocale();
-  const trpc = useTRPC();
   const checkout = useMutation(
-    trpc.billing.checkout.mutationOptions({
+    orpc.billing.checkout.mutationOptions({
       onSuccess: (result) => {
         window.location.assign(result.url);
       },

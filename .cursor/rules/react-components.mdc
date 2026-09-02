@@ -35,7 +35,7 @@ export default async function ProjectPage({ params }: Props) {
   own API, no direct database access.
 - Forms use React Hook Form with a Zod resolver, sharing the schema with the
   server. Client validation is UX; the server validates again because it must.
-- Data mutations go through a Server Action or a tRPC mutation that calls an
+- Data mutations go through a Server Action or an oRPC mutation that calls an
   application service.
 
 ## Accessibility

@@ -205,7 +205,7 @@ means moving to S3, B2, or self-hosted MinIO is a config change.
 ```mermaid
 sequenceDiagram
     participant B as Browser
-    participant A as apps/web (tRPC)
+    participant A as apps/web (oRPC)
     participant S as @repo/storage
     participant R as R2 / MinIO
     participant W as apps/worker

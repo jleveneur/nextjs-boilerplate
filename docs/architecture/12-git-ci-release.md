@@ -330,6 +330,6 @@ services take an actor and authorize first, and the tenant-scoping requirement.
 
 This is genuine architecture work in 2026, not a novelty. Agents generate a large share of code,
 and an agent that does not know the boundaries will produce code that compiles, passes review at a
-glance, and quietly violates the layering — for example putting a Drizzle query in a tRPC resolver.
+glance, and quietly violates the layering — for example putting a Drizzle query in an oRPC procedure.
 The rules are versioned with the architecture they describe, and they are updated in the same PR
 whenever a convention changes.

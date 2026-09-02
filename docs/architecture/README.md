@@ -43,7 +43,7 @@ Being explicit about non-goals is what keeps a boilerplate from rotting into a f
 | 02  | [Repository topology](./02-repository-topology.md)                           | Folder structure, what each app and package is for                     |
 | 03  | [Package graph & boundaries](./03-package-graph-and-boundaries.md)           | Layering, allowed dependencies, how boundaries are enforced            |
 | 04  | [Conventions](./04-conventions.md)                                           | Naming, file layout, coding style, module conventions                  |
-| 05  | [Runtime architecture & API strategy](./05-runtime-and-api.md)               | Clean architecture in practice; tRPC vs REST; one core, two transports |
+| 05  | [Runtime architecture & API strategy](./05-runtime-and-api.md)               | Clean architecture in practice; oRPC vs REST; one core, two transports |
 | 06  | [Data, persistence & storage](./06-data-and-storage.md)                      | PostgreSQL, Drizzle, migrations, multi-tenancy, S3, caching            |
 | 07  | [Authentication & authorization](./07-auth.md)                               | Better Auth, sessions, API keys, RBAC + record-level policies          |
 | 08  | [Observability](./08-observability.md)                                       | Error handling, logging, tracing, analytics, feature flags             |
@@ -64,11 +64,11 @@ Everything else is detail. These five are the load-bearing walls.
 ### 3.1 One core, two transports
 
 Business logic lives in **`packages/core`**, organised by feature, and knows nothing about
-HTTP, tRPC, React, or Next.js. `apps/web` (tRPC + Server Actions) and `apps/api` (public
+HTTP, oRPC, React, or Next.js. `apps/web` (oRPC + Server Actions) and `apps/api` (public
 REST/OpenAPI) are _transports_ that validate input, resolve an actor, call a core service, and
 map errors to their wire format.
 
-This is the single most valuable property of the repo. It is what makes "private API with tRPC"
+This is the single most valuable property of the repo. It is what makes "private API with oRPC"
 and "public API with REST + OpenAPI" a non-duplicated requirement instead of two codebases
 that drift. See [05](./05-runtime-and-api.md).
 
@@ -169,7 +169,7 @@ current when the decisions were made.
 
 | Concern          | Choice                     | Version                       |
 | ---------------- | -------------------------- | ----------------------------- |
-| Private API      | tRPC                       | 11.18.0                       |
+| Private API      | oRPC                       | 1.15.0                        |
 | Public API       | Hono + `@hono/zod-openapi` | 4.12.32 / 1.5.1               |
 | API reference UI | Scalar                     | 0.11.11                       |
 | Auth             | Better Auth                | 1.6.25                        |
@@ -237,7 +237,7 @@ flowchart TB
 
     subgraph host["Host / Docker network"]
         TR["Reverse proxy<br/>routing + TLS"]
-        WEB["apps/web<br/>Next.js 16 — RSC, tRPC, Server Actions"]
+        WEB["apps/web<br/>Next.js 16 — RSC, oRPC, Server Actions"]
         API["apps/api<br/>Hono — REST /v1, OpenAPI, webhooks"]
         WORKER["apps/worker<br/>BullMQ consumers + schedulers"]
         DOCS["apps/docs<br/>Fumadocs"]
@@ -306,7 +306,7 @@ the executive summary.
 | Layering             | Numbered layers, downward-only deps                                                | Cheap to explain, impossible to violate accidentally under pnpm                                       |
 | Business logic       | `packages/core`, feature modules                                                   | One implementation behind both transports                                                             |
 | Dependency inversion | Ports only for side effects (email, storage, payments, jobs, clock)                | Inverting the ORM is a well-known anti-pattern; Drizzle _is_ the data layer                           |
-| Private API          | tRPC 11                                                                            | End-to-end types for a first-party client, no codegen step                                            |
+| Private API          | oRPC 1.15                                                                          | End-to-end types for a first-party client, no codegen step                                            |
 | Public API           | Hono + zod-openapi                                                                 | Spec generated from the same Zod schemas, so docs cannot drift                                        |
 | Errors               | Typed `AppError` hierarchy with stable codes, thrown in core, mapped at transports | Stable machine-readable contract, RFC 9457 on REST, no leaking internals                              |
 | Result types         | Rejected (`neverthrow`)                                                            | Viral generics across every layer for a benefit exceptions already give us at the boundary            |
@@ -361,7 +361,7 @@ Built and tested first because it is the strictly harder target; Vercel for `app
 without special-casing ([11 §5](./11-infrastructure-and-deployment.md#5-deployment-strategy)).
 
 **Q5 — Product surface: auth + organizations + settings, plus one worked vertical slice.** ✅
-The slice exercises every layer (tRPC + REST + policy + job + storage + both test levels) and
+The slice exercises every layer (oRPC + REST + policy + job + storage + both test levels) and
 becomes the reference implementation every future feature is copied from. Phase 17 added Stripe
 SaaS billing (`@repo/payments`) and the implemented `@repo/ui` chart/editor/table subpaths.
 

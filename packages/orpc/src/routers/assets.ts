@@ -10,16 +10,16 @@ import {
 } from "@repo/contracts";
 import { confirmUpload, requestUpload } from "@repo/core";
 
-import { createTRPCRouter, orgProcedure } from "../trpc.ts";
+import { orgProcedure } from "../procedures.ts";
 
-export const assetsRouter = createTRPCRouter({
+export const assetsRouter = {
   requestUpload: orgProcedure
     .input(requestUploadInputSchema)
     .output(requestUploadOutputSchema)
-    .mutation(({ ctx, input }) => requestUpload(ctx.serviceCtx, input)),
+    .handler(({ context, input }) => requestUpload(context.serviceCtx, input)),
 
   confirmUpload: orgProcedure
     .input(confirmUploadInputSchema)
     .output(assetSchema)
-    .mutation(({ ctx, input }) => confirmUpload(ctx.serviceCtx, input)),
-});
+    .handler(({ context, input }) => confirmUpload(context.serviceCtx, input)),
+};

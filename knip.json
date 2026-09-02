@@ -34,7 +34,7 @@
     "packages/core": {
       "entry": ["vitest.server-only-stub.ts"]
     },
-    "packages/trpc": {
+    "packages/orpc": {
       "entry": ["vitest.server-only-stub.ts"]
     },
     "apps/web": {
