@@ -13,7 +13,7 @@ under `perf/` and `docs/security/`. See
 
 ## Quick start
 
-Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 11+, and
+Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
 [Docker](https://docs.docker.com/get-docker/). `make help` lists everything.
 
 ```bash

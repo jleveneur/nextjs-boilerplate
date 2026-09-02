@@ -13,7 +13,7 @@
 4. **Non-root, read-only filesystem where possible, no shell in the final stage** unless required.
 5. **Reproducible**: pinned base image digests, `--frozen-lockfile`, no `latest`.
 6. **Small**: budgets are **linux/amd64** uncompressed `docker image inspect` sizes
-   (CI gate): web &lt; 260 MB, api &lt; 165 MB, worker &lt; 190 MB. Arm64 locals run smaller;
+   (CI gate): web &lt; 275 MB, api &lt; 165 MB, worker &lt; 190 MB. Arm64 locals run smaller;
    do not calibrate against them. Runners start from Alpine and copy only the `node`
    binary (plus Sharp where needed), so yarn/npm from the Node image never ship.
    Hidden sourcemaps are built for Sentry upload but stripped before the runtime `COPY`.

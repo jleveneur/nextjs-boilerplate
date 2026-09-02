@@ -29,16 +29,21 @@ _Deno_ — excellent design, smallest npm-adjacent ecosystem of the three.
 **Health** Long-term OpenJS governance. The safest possible choice.
 **Exit** High for the runtime itself, but nothing in our code is Node-specific beyond adapters.
 
-### pnpm 11
+### pnpm 12
 
 **Why** Isolated `node_modules` is load-bearing architecture, not a preference: it makes undeclared
 imports physically unresolvable, which is how our layer boundaries are enforced
 ([03](./03-package-graph-and-boundaries.md#31-pnpm-isolated-node_modules--physical-enforcement)).
-Plus catalogs for single-source version pinning, content-addressed store, and speed.
+Plus catalogs for single-source version pinning, a content-addressed store, and a native Rust CLI
+that keeps the pnpm 11 command surface and lockfile format.
 **Instead of** _npm_ — hoists by default, so boundaries are unenforceable and phantom dependencies are
 invisible until they break. _Yarn_ — Plug'n'Play is powerful but breaks tools that expect real
-files; Yarn 1 is unmaintained. _Bun install_ — fast, less mature workspace semantics.
-**Health** The de facto standard for monorepos; used by Vue, Vite, Prisma, Next.js itself.
+files; Yarn 1 is unmaintained. _Bun install_ — fast, less mature workspace semantics. _Staying on
+pnpm 11_ — compatible, but the 11 line is now maintenance while 12 is the rewrite the project is
+standardizing on.
+**Health** The de facto standard for monorepos; used by Vue, Vite, Prisma, Next.js itself. 12.x is
+stable (2026-08-26); `latest` on npm still points at 11, so the pin is an exact `packageManager`
+version rather than a dist-tag.
 **Exit** Low mechanically, but the boundary guarantee is lost — so this is a deliberately sticky choice.
 
 ### Turborepo 2.10

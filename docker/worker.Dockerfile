@@ -6,8 +6,9 @@ ARG NODE_IMAGE=node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275b
 ARG ALPINE_IMAGE=alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 FROM ${NODE_IMAGE} AS base
-RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
 WORKDIR /app
+COPY package.json ./
+RUN corepack enable && corepack prepare --activate
 
 FROM base AS pruner
 RUN apk add --no-cache libc6-compat
@@ -36,7 +37,9 @@ RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.3 \
   && rm -rf package.json package-lock.json /root/.npm /tmp/*
 
 FROM ${ALPINE_IMAGE} AS runner
+# alpine:3.24.1 still ships OpenSSL 3.5.7; 3.5.8-r0 fixes CVE-2026-14456.
 RUN apk add --no-cache libstdc++ libgcc ca-certificates \
+    libcrypto3=3.5.8-r0 libssl3=3.5.8-r0 \
   && addgroup -S nodejs \
   && adduser -S app -G nodejs
 COPY --from=base /usr/local/bin/node /usr/local/bin/node

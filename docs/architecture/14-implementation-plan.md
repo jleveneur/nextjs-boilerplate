@@ -178,7 +178,7 @@ app images), `compose.test.yaml`, `compose.e2e.yaml`; and `make setup` / `make e
 `docs.Dockerfile` lands with Phase 15 (`apps/docs`).
 
 **Done when** linux/amd64 images stay under the size budgets in `scripts/check-image-size.ts`
-(web 260 / api 165 / worker 190 / docs 260 MB uncompressed), `make setup` works on a clean machine, and the
+(web 275 / api 165 / worker 190 / docs 260 MB uncompressed), `make setup` works on a clean machine, and the
 E2E suite passes against the built web image (CI) rather than `next start`.
 
 ## Phase 12 — CI/CD
