@@ -17,11 +17,12 @@ const MiB = 1024 * 1024;
 /**
  * Headroom over slimmed linux/amd64 CI measurements (~10%).
  * API raised after Phase 14 OTel/Sentry (maps stay out of the image; JS still grew).
+ * Web raised after pnpm 12 + OpenSSL 3.5.8 (265 MB measured on linux/amd64).
  * Docs shares the web-class budget (Next standalone + Alpine); calibrate after
  * the first amd64 CI measure if needed.
  */
 const budgets: ReadonlyArray<{ tag: string; maxBytes: number }> = [
-  { tag: "repo-web:local", maxBytes: 260 * MiB },
+  { tag: "repo-web:local", maxBytes: 275 * MiB },
   { tag: "repo-api:local", maxBytes: 165 * MiB },
   { tag: "repo-worker:local", maxBytes: 190 * MiB },
   { tag: "repo-docs:local", maxBytes: 260 * MiB },
