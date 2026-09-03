@@ -180,7 +180,7 @@ current when the decisions were made.
 | Cache            | Redis (via ioredis)        | 5.11.1                        |
 | Queues           | BullMQ                     | 5.81.2                        |
 | Object storage   | S3 API (R2 / MinIO)        | —                             |
-| Images           | Sharp                      | 0.35.3                        |
+| Images           | Sharp                      | 0.35.4                        |
 | Email delivery   | Resend                     | 6.18.1                        |
 | Email templates  | React Email                | 1.0.12                        |
 | Payments         | Stripe                     | 22.3.2                        |

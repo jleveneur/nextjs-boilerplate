@@ -40,7 +40,7 @@ RUN pnpm --filter @repo/web build
 FROM ${NODE_IMAGE} AS sharp
 WORKDIR /sharp
 # Complete Alpine sharp binary; also used to patch traced libvips paths below.
-RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.3 \
+RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.4 \
   && rm -rf package.json package-lock.json /root/.npm /tmp/*
 
 FROM ${ALPINE_IMAGE} AS runner
@@ -60,8 +60,10 @@ COPY --from=builder --chown=app:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=app:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=sharp --chown=app:nodejs /sharp/node_modules/sharp ./node_modules/sharp
 COPY --from=sharp --chown=app:nodejs /sharp/node_modules/@img ./node_modules/@img
+COPY --from=sharp --chown=app:nodejs /sharp/node_modules/detect-libc ./node_modules/detect-libc
+COPY --from=sharp --chown=app:nodejs /sharp/node_modules/semver ./node_modules/semver
 # File tracing often drops sharp's Alpine libvips `.so` from the pnpm store layout.
-# Workspace `overrides.sharp` pins 0.35.3 so traced package.json matches the
+# Workspace pins sharp@0.35.4 in the catalog so traced package.json matches the
 # patched binaries (and Trivy does not see Next's older sharp line).
 RUN LIBVIPS_SO="$(find /app/node_modules/@img -name 'libvips-cpp.so*' | head -1)" \
   && test -n "$LIBVIPS_SO" \

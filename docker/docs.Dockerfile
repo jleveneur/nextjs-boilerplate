@@ -45,7 +45,7 @@ RUN pnpm --filter @repo/docs build
 
 FROM ${NODE_IMAGE} AS sharp
 WORKDIR /sharp
-RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.3 \
+RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.4 \
   && rm -rf package.json package-lock.json /root/.npm /tmp/*
 
 FROM ${ALPINE_IMAGE} AS runner
@@ -65,6 +65,8 @@ COPY --from=builder --chown=app:nodejs /app/apps/docs/.next/static ./apps/docs/.
 COPY --from=builder --chown=app:nodejs /app/apps/docs/public ./apps/docs/public
 COPY --from=sharp --chown=app:nodejs /sharp/node_modules/sharp ./node_modules/sharp
 COPY --from=sharp --chown=app:nodejs /sharp/node_modules/@img ./node_modules/@img
+COPY --from=sharp --chown=app:nodejs /sharp/node_modules/detect-libc ./node_modules/detect-libc
+COPY --from=sharp --chown=app:nodejs /sharp/node_modules/semver ./node_modules/semver
 RUN LIBVIPS_SO="$(find /app/node_modules/@img -name 'libvips-cpp.so*' | head -1)" \
   && test -n "$LIBVIPS_SO" \
   && LIBVIPS_DIR="$(dirname "$LIBVIPS_SO")" \
