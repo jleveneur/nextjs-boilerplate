@@ -2,31 +2,31 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useTRPC } from "../../trpc/react.ts";
+import { orpc } from "../../orpc/query.ts";
 
 export function useCreateInvoice() {
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   return useMutation(
-    trpc.billing.create.mutationOptions({
+    orpc.billing.create.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.billing.list.pathFilter());
+        await queryClient.invalidateQueries({ queryKey: orpc.billing.list.key() });
       },
     }),
   );
 }
 
 export function useVoidInvoice() {
-  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   return useMutation(
-    trpc.billing.void.mutationOptions({
+    orpc.billing.void.mutationOptions({
       onSuccess: async (invoice) => {
         await Promise.all([
-          queryClient.invalidateQueries(trpc.billing.list.pathFilter()),
-          queryClient.invalidateQueries(trpc.billing.get.queryFilter({ invoiceId: invoice.id })),
+          queryClient.invalidateQueries({ queryKey: orpc.billing.list.key() }),
+          queryClient.invalidateQueries({
+            queryKey: orpc.billing.get.key({ input: { invoiceId: invoice.id } }),
+          }),
         ]);
       },
     }),

@@ -41,7 +41,7 @@ export abstract class AppError extends Error {
   /** Stable public code. The client contract; never rename. */
   readonly code: ErrorCode;
 
-  /** HTTP status the REST transport should use. tRPC maps via its own table. */
+  /** HTTP status the REST transport should use. oRPC maps via its own table. */
   readonly httpStatus: number;
 
   /** Whether this is expected domain traffic or a bug. Drives Sentry. */

@@ -187,7 +187,7 @@ progressive-enhancement forms; insufficient for complex client-side validation U
 a static type, an OpenAPI schema, and a form resolver. Version 4 is substantially faster with a
 smaller footprint than v3.
 **Instead of** _Valibot_ — smaller bundles via modularity and a real contender; Zod wins on ecosystem
-integration (tRPC, drizzle-zod, `@hono/zod-openapi`, RHF all target it first), which for us outweighs
+integration (oRPC, drizzle-zod, `@hono/zod-openapi`, RHF all target it first), which for us outweighs
 kilobytes. _ArkType_ — impressive performance, younger. _Yup_ — weaker inference. _TypeBox_ —
 JSON-Schema-first, less ergonomic. _io-ts_ — functional style we do not want repo-wide.
 **Health** The standard for TypeScript validation.
@@ -304,18 +304,25 @@ requirement.
 
 ## 4. Backend
 
-### tRPC 11.18
+### oRPC 1.15
 
 **Why** Compile-time end-to-end types between our own client and server with no codegen and no
 schema-drift window. Middleware composition gives us the layered `public`/`protected`/`org`
-procedures that make authorization structural.
-**Instead of** _REST for internal calls too_ — loses type safety or requires codegen. _GraphQL_ — a
-schema, resolvers, N+1 concerns, and a client cache for a problem we do not have (we control the only
-consumer). _ORPC / TS-Rest_ — similar ideas, smaller ecosystems. _Server Actions only_ — insufficient
-for queries, caching, and non-form interactions.
-**Health** Mature v11, large adoption, excellent TanStack Query integration.
+procedures that make authorization structural. First-party TanStack Query helpers, a built-in
+serializer (no SuperJSON), and a CSRF custom-header plugin that matches the threat model in
+[07](./07-auth.md). See [ADR-0011](../adr/0011-orpc-private-api.md).
+**Instead of** _tRPC 11_ — the previous private transport; same job, larger client, SuperJSON, and
+a React provider we no longer want. Exit cost is low _now_ (thin core wrappers) and would only
+rise. _REST for internal calls too_ — loses type safety or requires codegen. _GraphQL_ — a schema,
+resolvers, N+1 concerns, and a client cache for a problem we do not have. _oRPC 2 beta_ — newest
+APIs, but this repo pins stable `latest`; 2.x is its own ADR when it leaves beta. _Unifying public
+REST onto oRPC OpenAPI_ — would collapse the two-audience split ADR-0003 exists to protect.
+_Server Actions only_ — insufficient for queries, caching, and non-form interactions. _TS-Rest_ —
+similar idea, smaller RPC/client story.
+**Health** Active 1.x line; v1 is what `latest` currently points at. Smaller ecosystem than tRPC.
 **Exit** Medium — resolvers are thin over `@repo/core`, so replacing the transport is a
-transport-layer job. This is precisely what the one-core-two-transports design protects.
+transport-layer job. This is precisely what the one-core-two-transports design protects. The
+planned 1 → 2 upgrade is a catalog bump plus an ADR, not a rewrite.
 
 ### tsdown 0.22
 
@@ -728,7 +735,8 @@ Things a repo like this often includes, and why this one does not.
 | **`@t3-oss/env-nextjs`**                       | ~80 lines of Zod, and we need per-app schema composition and custom cross-field rules anyway.                                                                                                                                                                                     |
 | **clsx + tailwind-merge as separate concerns** | Both are needed, but exposed only through a single `cn()` in `@repo/ui`, so call sites depend on our helper, not the libraries.                                                                                                                                                   |
 | **A DI container (tsyringe, TypeDI)**          | Plain function composition gives the same testability without decorators, `reflect-metadata`, or startup-order magic.                                                                                                                                                             |
-| **GraphQL (Apollo, Pothos, urql)**             | We control the only internal consumer (tRPC is better there) and third parties want REST. GraphQL adds a schema, resolvers, N+1 concerns, and a client cache for no gain here.                                                                                                    |
+| **tRPC**                                       | Replaced by oRPC 1.15 for the private API ([ADR-0011](../adr/0011-orpc-private-api.md)). Same compile-time types; we no longer want SuperJSON or a React provider.                                                                                                                |
+| **GraphQL (Apollo, Pothos, urql)**             | We control the only internal consumer (oRPC is better there) and third parties want REST. GraphQL adds a schema, resolvers, N+1 concerns, and a client cache for no gain here.                                                                                                    |
 | **Prisma**                                     | Considered seriously; rejected for the Rust engine binary, a separate schema language, and generated-client friction in a monorepo.                                                                                                                                               |
 | **Redux Toolkit**                              | Our client state is small; Zustand covers it without the ceremony.                                                                                                                                                                                                                |
 | **Storybook**                                  | Genuinely useful, and genuinely heavy: a second build system, a second dependency graph, and constant maintenance. Component tests plus a route in `apps/web` that renders the design system cover our needs at a fraction of the cost. Revisit if a dedicated design team joins. |
@@ -767,6 +775,7 @@ is not".
 | R11 | **Vendor concentration**: Cloudflare provides DNS, CDN, WAF, and object storage.                                                                                   | Medium     | Each is individually replaceable (S3 API for storage, any DNS provider, any CDN), and none is imported in application code. Documented as a known concentration rather than pretended away.                                                                                                                               |
 | R12 | **Sharp is a native module.**                                                                                                                                      | Low        | Worker base image and architecture are pinned; multi-arch images are built and tested.                                                                                                                                                                                                                                    |
 | R13 | **Supply-chain compromise of any dependency.**                                                                                                                     | High       | Renovate enforces a 3-day minimum release age for non-security updates, lockfiles are committed and frozen in CI, `pnpm audit` and CodeQL run in CI, Trivy scans images, action SHAs are pinned, and provenance attestations are generated.                                                                               |
+| R14 | **oRPC 2 is still on the beta channel** while we pin 1.15.                                                                                                         | Low        | 1.x covers the private-API requirements. Trigger: `latest` on npm points at 2.x — then a dedicated ADR and catalog bump, not a rewrite. Do not generate public OpenAPI from oRPC.                                                                                                                                         |
 
 ### Review cadence
 

@@ -52,7 +52,7 @@ presentation, and nothing else.
 
 ```
 apps/
-├── web/          Next.js 16 — the product. RSC UI, tRPC handler, auth handler, Server Actions.
+├── web/          Next.js 16 — the product. RSC UI, oRPC handler, auth handler, Server Actions.
 ├── api/          Hono — public REST /v1, OpenAPI document, Scalar reference, inbound webhooks.
 ├── worker/       Node service — BullMQ consumers, repeatable schedules.
 └── docs/         Fumadocs — public documentation site, embeds the API reference.
@@ -70,7 +70,7 @@ apps/web/
 │   │   │   └── (app)/              # Authenticated product
 │   │   │       └── [orgSlug]/      # Tenant-scoped surface
 │   │   ├── api/
-│   │   │   ├── trpc/[trpc]/        # tRPC fetch adapter
+│   │   │   ├── rpc/[[...rest]]/    # oRPC fetch adapter
 │   │   │   └── auth/[...all]/      # Better Auth handler
 │   │   ├── layout.tsx
 │   │   └── global-error.tsx
@@ -79,7 +79,7 @@ apps/web/
 │   ├── server/
 │   │   ├── context.ts              # Builds the request Ctx (actor, adapters, logger)
 │   │   ├── container.ts            # Composition root: wires ports to adapters
-│   │   └── router.ts               # Root tRPC router: merges feature routers
+│   │   └── router.ts               # Root oRPC router composition
 │   ├── messages/                   # next-intl catalogs (`en.json`, `fr.json`)
 │   ├── styles/
 │   └── proxy.ts                    # Next 16 proxy (formerly middleware.ts)
@@ -165,7 +165,7 @@ Grouped by layer (see [03](./03-package-graph-and-boundaries.md) for the rules).
 | `@repo/utils`     | Small pure helpers: `invariant`, `assertNever`, id generation, slugify, cursor encoding.                           | Perform I/O or import env                            |
 | `@repo/env`       | Zod-validated environment schemas, split `server` / `client` / `shared`.                                           | Be imported by `@repo/utils`                         |
 | `@repo/errors`    | `AppError` base, error codes registry, severity, HTTP/problem-details mapping.                                     | Import a logger or transport                         |
-| `@repo/contracts` | Zod schemas + inferred DTOs for everything crossing a wire. The shared vocabulary of client, tRPC, REST, and jobs. | Import `@repo/db` or any adapter                     |
+| `@repo/contracts` | Zod schemas + inferred DTOs for everything crossing a wire. The shared vocabulary of client, oRPC, REST, and jobs. | Import `@repo/db` or any adapter                     |
 | `@repo/i18n`      | Locale list, routing config, formatting helpers shared by web and email.                                           | Contain message catalogs (those live with their app) |
 
 `@repo/contracts` is the keystone of the "one core, two transports" design: it is the only
@@ -201,9 +201,9 @@ and impossible to accidentally couple to a transport.
 
 ### Layer 3 — transport
 
-| Package      | Responsibility                                                                                       |
-| ------------ | ---------------------------------------------------------------------------------------------------- |
-| `@repo/trpc` | tRPC init, context type, base/protected/org procedures, error formatter, feature router composition. |
+| Package      | Responsibility                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------- |
+| `@repo/orpc` | oRPC init, context type, public/protected/org procedures, AppError mapping, feature router composition. |
 
 Kept out of `apps/web` so the router type can be imported by other clients (e.g. a future
 mobile app or CLI) without importing a Next.js app.
@@ -287,7 +287,7 @@ drawn wrong.
 ```
 apps/web/src/features/billing/
 ├── components/          # Feature-specific React components
-├── hooks/               # use-*.ts — TanStack Query wrappers over tRPC
+├── hooks/               # use-*.ts — TanStack Query wrappers over oRPC
 ├── stores/              # Zustand store, only for genuine client state
 ├── schemas/             # Form schemas (extend @repo/contracts, add UI-only fields)
 └── index.ts

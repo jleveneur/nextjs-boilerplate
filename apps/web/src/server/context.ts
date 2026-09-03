@@ -9,7 +9,7 @@ import {
 } from "@repo/auth";
 import { organizationIdSchema, userIdSchema } from "@repo/contracts";
 import type { Actor } from "@repo/types";
-import type { TrpcContext } from "@repo/trpc";
+import type { OrpcContext } from "@repo/orpc";
 
 import { getContainer } from "./container.ts";
 
@@ -50,11 +50,11 @@ async function resolveOrganizationActor(
   };
 }
 
-/** Build per-request tRPC context (session verified here, not in proxy). */
-export async function createTrpcContext(
+/** Build per-request oRPC context (session verified here, not in proxy). */
+export async function createOrpcContext(
   headers: Headers,
   options?: { organizationSlug: string },
-): Promise<TrpcContext> {
+): Promise<OrpcContext> {
   const { auth, db, logger, ports } = getContainer();
   const actor =
     (options === undefined

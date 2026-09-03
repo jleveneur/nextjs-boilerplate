@@ -42,7 +42,7 @@ The load-bearing ideas:
   physically unresolvable, and `make layers` rejects a declared dependency that
   breaks the layering. An architecture rule that only exists in a document is a
   rule that erodes.
-- **One domain core, two transports.** Business logic lives in one place; tRPC
+- **One domain core, two transports.** Business logic lives in one place; oRPC
   serves the app and REST/OpenAPI serves third parties. Neither transport owns a
   rule the other would have to duplicate.
 - **Multi-tenant from the first migration.** Tenancy is not something a schema

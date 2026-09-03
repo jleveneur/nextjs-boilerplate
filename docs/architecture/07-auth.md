@@ -229,7 +229,7 @@ The concrete failure modes this design is built against:
 | Broken object-level authorization (the most common API vulnerability) | Policies take the _loaded_ resource, not an id, so the tenant check happens against real data                           |
 | Credential stuffing                                                   | Rate limiting per IP and per identifier, breach-list check, passkey/2FA available                                       |
 | User enumeration                                                      | Constant-time, identical responses on login/reset/signup                                                                |
-| CSRF                                                                  | `SameSite` cookies + Better Auth CSRF protection on form posts; tRPC requires a custom header                           |
+| CSRF                                                                  | `SameSite` cookies + Better Auth CSRF protection on form posts; oRPC requires a custom `x-csrf-token` header            |
 | Leaked API key                                                        | Prefixed keys are detected by Gitleaks and provider leak scanners; revocation is instant; scopes bound the blast radius |
 | Insider access                                                        | Destructive actions are blocked while impersonating; reason capture, support UI, and audit wiring remain required       |
 | Webhook forgery                                                       | HMAC signature + timestamp window + event-id replay check                                                               |

@@ -103,7 +103,7 @@ These are not preferences; treat them as compile errors.
 
 | #   | Constraint                                                                                                                                                                                   | Enforced by                                                     |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| C1  | No business logic in a React component, route handler, tRPC resolver, or Server Action. They orchestrate only.                                                                               | Review + layering; resolvers are expected to be under ~15 lines |
+| C1  | No business logic in a React component, route handler, oRPC procedure, or Server Action. They orchestrate only.                                                                              | Review + layering; resolvers are expected to be under ~15 lines |
 | C2  | No database access outside `packages/db` and `packages/core`.                                                                                                                                | pnpm cannot resolve `@repo/db` where it is not declared         |
 | C3  | Runtime config is selected in app env modules and passed to `createEnv`; libraries never read `process.env` ad hoc. Process-edge metadata and test/tooling controls are boundary exceptions. | Review + env schema boundaries                                  |
 | C4  | No secret may reach the client bundle. Client env vars must be `NEXT_PUBLIC_`-prefixed and declared in the client schema.                                                                    | Split env schemas + CI check                                    |
@@ -131,7 +131,7 @@ flowchart LR
         B1["React components<br/>Zustand, TanStack Query<br/>@repo/ui, @repo/contracts"]
     end
     subgraph node["Node.js 24 (server)"]
-        N1["RSC / Server Actions<br/>tRPC handlers<br/>Hono routes<br/>Workers<br/>@repo/core and all adapters"]
+        N1["RSC / Server Actions<br/>oRPC handlers<br/>Hono routes<br/>Workers<br/>@repo/core and all adapters"]
     end
     subgraph edge["Edge (deliberately near-empty)"]
         E1["Cloudflare rules<br/>static asset caching"]
@@ -161,7 +161,7 @@ and what we get for it.
 | ------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | A monorepo with ~20 packages    | Enforced boundaries, independent testability, one core behind two transports | The alternative (one `src/lib`) has no enforceable boundaries at all                     |
 | Ports/adapters for side effects | Core is testable without network, vendors are swappable                      | Only applied where vendors actually change: email, storage, payments, jobs, flags, clock |
-| Two API surfaces (tRPC + REST)  | Best-in-class internal DX _and_ a stable public contract                     | Cost is near zero because both are thin transports over the same services                |
+| Two API surfaces (oRPC + REST)  | Best-in-class internal DX _and_ a stable public contract                     | Cost is near zero because both are thin transports over the same services                |
 | Two job systems                 | Right tool per workload class                                                | Contracts are shared; either can be removed without touching core                        |
 | Generated OpenAPI from Zod      | Docs and spec cannot drift from the code                                     | Hand-written specs are always wrong within a month                                       |
 | Multi-tenancy from day one      | No brutal retrofit later                                                     | Q3 in the [index](./README.md#7-open-questions-requiring-your-decision)                  |
@@ -177,7 +177,7 @@ DI container framework (plain function composition instead), no custom Babel/SWC
 A foundation is good if these operations are cheap. Each is used later as an acceptance check on
 the implementation.
 
-1. **Add a feature.** Create one folder in `packages/core`, one tRPC router file, optionally one
+1. **Add a feature.** Create one folder in `packages/core`, one oRPC router file, optionally one
    REST route, one migration, one test file. No changes to shared plumbing.
 2. **Delete a feature.** Delete the folder plus its two registration lines.
 3. **Swap a vendor.** Replace Resend with SES by writing one adapter; no core file changes.

@@ -17,9 +17,9 @@ What we drop: an interface for every dependency, entity/DTO duplication at every
 
 ```mermaid
 flowchart TB
-    subgraph transport["Transport — apps/*, @repo/trpc"]
+    subgraph transport["Transport — apps/*, @repo/orpc"]
         direction LR
-        T1["tRPC resolvers"]
+        T1["oRPC procedures"]
         T2["REST routes"]
         T3["Server Actions"]
         T4["Job consumers"]
@@ -58,7 +58,7 @@ the web UI, the public API, a background job, and a Stripe webhook all reach it.
 | Layer                 | May                                                                                            | May not                                                     |
 | --------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Transport             | Parse input, resolve actor, call one service, map result/errors to the wire, set cache headers | Contain a business rule, query the DB, decide authorization |
-| Application (service) | Authorize, orchestrate, transact, emit events, call ports                                      | Know about HTTP, React, tRPC, or queue mechanics            |
+| Application (service) | Authorize, orchestrate, transact, emit events, call ports                                      | Know about HTTP, React, oRPC, or queue mechanics            |
 | Domain                | Enforce invariants, compute, decide                                                            | Perform any I/O                                             |
 | Infrastructure        | Talk to the outside world                                                                      | Contain a business rule                                     |
 
@@ -90,8 +90,8 @@ the mistake this design avoids.
 |                  | Private API                                      | Public API                              |
 | ---------------- | ------------------------------------------------ | --------------------------------------- |
 | Consumer         | Our own web app (and future first-party clients) | Third parties, customer integrations    |
-| Technology       | tRPC 11                                          | Hono + `@hono/zod-openapi`              |
-| Transport        | HTTP POST batch, JSON + SuperJSON                | REST/JSON                               |
+| Technology       | oRPC 1.15                                        | Hono + `@hono/zod-openapi`              |
+| Transport        | HTTP POST batch, JSON (oRPC serializer)          | REST/JSON                               |
 | Auth             | Session cookie                                   | API key / bearer token, scoped          |
 | Versioning       | None — deployed together with the client         | `/v1`, with a deprecation policy        |
 | Contract         | TypeScript types, compile-time                   | OpenAPI 3.1 document, runtime-validated |
@@ -104,13 +104,13 @@ authorization policies. They differ only in framing.
 
 ```mermaid
 flowchart LR
-    BROWSER["Browser<br/>TanStack Query"] -->|"POST /api/trpc"| TRPC["tRPC router<br/>@repo/trpc"]
+    BROWSER["Browser<br/>TanStack Query"] -->|"POST /api/rpc"| ORPC["oRPC router<br/>@repo/orpc"]
     THIRD["Third-party client"] -->|"GET /v1/…"| REST["Hono routes<br/>apps/api"]
     STRIPE["Stripe"] -->|webhook| WH["apps/api/webhooks"]
     QUEUE["BullMQ"] --> CONS["apps/worker consumers"]
     FORM["HTML form"] -->|Server Action| SA["apps/web actions"]
 
-    TRPC --> CORE["@repo/core services"]
+    ORPC --> CORE["@repo/core services"]
     REST --> CORE
     WH --> CORE
     CONS --> CORE
@@ -118,35 +118,44 @@ flowchart LR
     CORE --> DB[("PostgreSQL")]
 ```
 
-### 2.1 Private API — tRPC
+### 2.1 Private API — oRPC
 
-**Why tRPC:** the client and server ship together, so a compile-time contract is strictly better
+**Why oRPC:** the client and server ship together, so a compile-time contract is strictly better
 than a runtime one. No codegen step, no schema drift window, and refactors propagate as type
-errors. TanStack Query integration gives caching, invalidation, and optimistic updates for free.
+errors. TanStack Query helpers give caching, invalidation, and optimistic updates without a
+React provider. See [ADR-0011](../adr/0011-orpc-private-api.md).
 
 Structure:
 
-- `@repo/trpc` owns `initTRPC`, the `Context` type, and the procedure builders.
+- `@repo/orpc` owns the context type, layered procedure builders, and feature routers.
 - Procedures are layered, so authorization is structural rather than remembered:
   - `publicProcedure` — no actor.
   - `protectedProcedure` — requires an authenticated actor.
-  - `orgProcedure` — requires an active organization membership; puts a tenant-scoped `ctx` in
-    place so queries cannot forget the tenant filter.
-- One router file per feature, merged in `apps/web/src/server/router.ts`.
+  - `orgProcedure` — requires an active organization membership; puts a tenant-scoped
+    `serviceCtx` in place so queries cannot forget the tenant filter.
+- One router file per feature, merged as `appRouter` in `@repo/orpc` and mounted from
+  `apps/web/src/server/router.ts`.
 - Input **and** output schemas are declared from `@repo/contracts`. Output schemas are not
   optional: they are what stops an internal field from silently entering a response.
-- The error formatter converts `AppError` → `TRPCError` with the stable code preserved in `data`,
-  so the client can map codes to localized messages.
-- SuperJSON as the transformer, for `Date`, `Map`, `Set`, and `undefined` fidelity.
+- Middleware converts `AppError` → `ORPCError` with the stable code on `data.appCode`, so the
+  client can map codes to localized messages.
+- oRPC's built-in serializer covers `Date`, `Map`, and `Set`. SuperJSON is not used.
+- Session cookies plus `SimpleCsrfProtection*` plugins (custom `x-csrf-token` header). Batch
+  requests stay enabled.
 
 Resolvers stay under ~15 lines. A resolver that grows is a service that was not written.
 
+oRPC can generate OpenAPI from the same procedures. **We do not.** The public API is a
+deliberately different contract (see 2.2).
+
 ### 2.2 Public API — REST + OpenAPI
 
-**Why REST rather than exposing tRPC:** tRPC's wire format is an implementation detail (batching,
-SuperJSON, POST-for-reads) and coupling third parties to it makes internal refactors breaking
+**Why REST rather than exposing oRPC:** oRPC's wire format is an implementation detail (batching,
+RPC paths, POST-for-reads) and coupling third parties to it makes internal refactors breaking
 changes for customers. Public consumers need caching semantics, ordinary HTTP verbs, generated
-SDKs, and a spec their tooling understands.
+SDKs, and a spec their tooling understands. Generating OpenAPI from the private router would
+collapse the two-audience split [ADR-0003](../adr/0003-one-domain-core-two-transports.md) exists
+to protect.
 
 **Why Hono:** small, fast, Web-standard `Request`/`Response`, and `@hono/zod-openapi` derives the
 OpenAPI 3.1 document _from the same Zod schemas used for validation_. The spec cannot drift from
@@ -183,7 +192,7 @@ result`.
 - Every action re-validates input server-side with the same schema the form used. Client
   validation is UX, never a security control.
 - Actions return a typed result rather than throwing, so forms can render field errors.
-- Never used as a general-purpose RPC. If it is not a form, it is a tRPC mutation.
+- Never used as a general-purpose RPC. If it is not a form, it is an oRPC mutation.
 
 ### 2.4 Webhook ingestion
 
@@ -202,14 +211,14 @@ The full path for an authenticated mutation, which is the path most bugs live on
 sequenceDiagram
     participant B as Browser
     participant P as proxy.ts (Node)
-    participant R as tRPC handler
+    participant R as oRPC handler
     participant C as Context builder
     participant S as core service
     participant Z as authz policy
     participant D as PostgreSQL
     participant Q as BullMQ
 
-    B->>P: POST /api/trpc/invoice.void (cookie)
+    B->>P: POST /api/rpc/billing.void (cookie)
     P->>P: Locale + cookie presence only. No authorization.
     P->>R: forward
     R->>C: build Ctx
@@ -292,7 +301,7 @@ The one place we _do_ return values instead of throwing: Server Actions, which r
 
 | Boundary      | Mapping                                                                                             |
 | ------------- | --------------------------------------------------------------------------------------------------- |
-| tRPC          | `errorFormatter` → `TRPCError` with `code` and safe message in `data`                               |
+| oRPC          | Middleware → `ORPCError` with HTTP-mapped `code` and stable `data.appCode`                          |
 | REST          | `onError` → RFC 9457 problem+json with `code`, `request_id`                                         |
 | Server Action | `{ ok: false, code, fieldErrors }`                                                                  |
 | Job consumer  | Retryable vs terminal classification: terminal errors go straight to DLQ instead of burning retries |

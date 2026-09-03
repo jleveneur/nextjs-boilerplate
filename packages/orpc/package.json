@@ -1,8 +1,8 @@
 {
-  "name": "@repo/trpc",
+  "name": "@repo/orpc",
   "version": "0.1.2",
   "private": true,
-  "description": "tRPC init, layered procedures, and feature routers.",
+  "description": "oRPC init, layered procedures, and feature routers.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -14,6 +14,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@orpc/server": "catalog:",
     "@repo/auth": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/core": "workspace:*",
@@ -21,9 +22,7 @@
     "@repo/errors": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/types": "workspace:*",
-    "@trpc/server": "catalog:",
     "server-only": "catalog:",
-    "superjson": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

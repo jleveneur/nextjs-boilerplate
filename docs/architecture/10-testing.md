@@ -54,7 +54,7 @@ Uncovered branches are reviewed for _why_, never chased for the number.
 ```mermaid
 flowchart TB
     E2E["E2E — Playwright<br/>~20 specs, minutes<br/>critical journeys only"]
-    CONTRACT["Contract — OpenAPI diff + tRPC type tests<br/>~10, seconds"]
+    CONTRACT["Contract — OpenAPI diff + oRPC type tests<br/>~10, seconds"]
     INT["Integration — Vitest + real Postgres/Redis<br/>~150, ~60s<br/>repositories, services, error mapping"]
     COMP["Component — Vitest + Testing Library + axe<br/>~100, ~20s"]
     UNIT["Unit — Vitest, no I/O<br/>~600, <10s<br/>domain, policies, utils, mappers"]
@@ -144,7 +144,7 @@ against the previous release tag and fails on a breaking change unless the PR ca
 against the spec's schemas, which catches implementations that quietly diverge from what they
 document.
 
-**Internal tRPC.** Type-level tests using `expectTypeOf` assert that router input/output types match
+**Internal oRPC.** Type-level tests using `expectTypeOf` assert that router input/output types match
 the shared contracts. Because client and server share types at compile time, a genuine breaking
 change is already a type error — these tests exist to make the failure explicit and readable.
 

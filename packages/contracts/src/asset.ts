@@ -1,5 +1,5 @@
 /**
- * Asset upload wire contracts (tRPC / jobs). CamelCase in TypeScript.
+ * Asset upload wire contracts (oRPC / jobs). CamelCase in TypeScript.
  */
 
 import { z } from "zod";

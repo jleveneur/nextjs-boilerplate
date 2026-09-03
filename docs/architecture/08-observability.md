@@ -297,7 +297,7 @@ gets fixed rather than worked around.
 
 | #   | Question                                 | Where to look locally                                                                                                          |
 | --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`55443`), Sentry issue, `ctx.actor` in tRPC context                                           |
+| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`55443`), Sentry issue, `ctx.actor` in oRPC context                                           |
 | 2   | p95 latency doubled after deploy         | Grafana RED dashboard (`55448`), compare `service.version` / Sentry `release` tags                                             |
 | 3   | Job retrying for an hour                 | Worker logs (`jobId`, `attempt`), Grafana Queue dashboard (`bullmq_queue_waiting`), Jaeger job span via envelope `traceparent` |
 | 4   | Emails not arriving                      | Domain event → outbox table → `email.send` job → Resend span in trace                                                          |

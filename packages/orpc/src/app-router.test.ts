@@ -2,6 +2,7 @@ import { Writable } from "node:stream";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ORPCError } from "@orpc/server";
 import { permissionsForOrganizationRole } from "@repo/auth";
 import type { Asset, Invoice, RequestUploadOutput } from "@repo/contracts";
 import * as core from "@repo/core";
@@ -9,11 +10,9 @@ import { createTestPorts } from "@repo/core/testing";
 import { ForbiddenError, NotFoundError } from "@repo/errors";
 import { createLogger } from "@repo/logger";
 import type { Actor, AssetId, InvoiceId, OrganizationId, UserId } from "@repo/types";
-import type { TRPCError } from "@trpc/server";
 
-import type { TrpcContext } from "./context.ts";
-import { appRouter } from "./root.ts";
-import { createCallerFactory } from "./trpc.ts";
+import type { OrpcContext } from "./context.ts";
+import { appRouter, createCallerFactory } from "./root.ts";
 
 vi.mock("@repo/core", async (importOriginal) => {
   const actual = await importOriginal<typeof core>();
@@ -63,13 +62,13 @@ function makeActor(role: "owner" | "member"): Actor {
   };
 }
 
-function makeCtx(actor: Actor | null): TrpcContext {
+function makeCtx(actor: Actor | null): OrpcContext {
   return {
     actor,
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- services mocked
-    db: {} as TrpcContext["db"],
+    db: {} as OrpcContext["db"],
     logger: createLogger({
-      service: "trpc-test",
+      service: "orpc-test",
       env: "local",
       level: "error",
       destination: new Writable({
@@ -114,7 +113,7 @@ describe("billing router via createCaller", () => {
     const caller = createCaller(makeCtx(null));
     await expect(caller.billing.get({ invoiceId })).rejects.toMatchObject({
       code: "UNAUTHORIZED",
-    } satisfies Partial<TRPCError>);
+    } satisfies Partial<ORPCError<string, unknown>>);
   });
 
   it("creates an invoice on the happy path", async () => {

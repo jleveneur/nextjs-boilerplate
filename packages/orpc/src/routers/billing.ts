@@ -23,7 +23,7 @@ import {
 } from "@repo/core";
 import { z } from "zod";
 
-import { createTRPCRouter, orgProcedure } from "../trpc.ts";
+import { orgProcedure } from "../procedures.ts";
 
 const checkoutInputSchema = z.object({
   priceId: z.string().min(1),
@@ -35,38 +35,40 @@ const portalInputSchema = z.object({
   returnUrl: z.url(),
 });
 
-export const billingRouter = createTRPCRouter({
+export const billingRouter = {
   create: orgProcedure
     .input(createInvoiceInputSchema)
     .output(invoiceSchema)
-    .mutation(({ ctx, input }) => createInvoice(ctx.serviceCtx, input)),
+    .handler(({ context, input }) => createInvoice(context.serviceCtx, input)),
 
   get: orgProcedure
     .input(getInvoiceInputSchema)
     .output(invoiceSchema)
-    .query(({ ctx, input }) => getInvoice(ctx.serviceCtx, input)),
+    .handler(({ context, input }) => getInvoice(context.serviceCtx, input)),
 
   list: orgProcedure
     .input(listInvoicesInputSchema)
     .output(listInvoicesOutputSchema)
-    .query(({ ctx, input }) => listInvoicesForOrg(ctx.serviceCtx, input)),
+    .handler(({ context, input }) => listInvoicesForOrg(context.serviceCtx, input)),
 
   void: orgProcedure
     .input(voidInvoiceInputSchema)
     .output(invoiceSchema)
-    .mutation(({ ctx, input }) => voidInvoice(ctx.serviceCtx, input)),
+    .handler(({ context, input }) => voidInvoice(context.serviceCtx, input)),
 
-  catalog: orgProcedure.query(({ ctx }) => listBillingCatalog(ctx.serviceCtx)),
+  catalog: orgProcedure.handler(({ context }) => listBillingCatalog(context.serviceCtx)),
 
-  syncCatalog: orgProcedure.mutation(({ ctx }) => syncBillingCatalog(ctx.serviceCtx)),
+  syncCatalog: orgProcedure.handler(({ context }) => syncBillingCatalog(context.serviceCtx)),
 
-  subscription: orgProcedure.query(({ ctx }) => getOrganizationSubscription(ctx.serviceCtx)),
+  subscription: orgProcedure.handler(({ context }) =>
+    getOrganizationSubscription(context.serviceCtx),
+  ),
 
   checkout: orgProcedure
     .input(checkoutInputSchema)
-    .mutation(({ ctx, input }) => startCheckout(ctx.serviceCtx, input)),
+    .handler(({ context, input }) => startCheckout(context.serviceCtx, input)),
 
   portal: orgProcedure
     .input(portalInputSchema)
-    .mutation(({ ctx, input }) => openBillingPortal(ctx.serviceCtx, input)),
-});
+    .handler(({ context, input }) => openBillingPortal(context.serviceCtx, input)),
+};

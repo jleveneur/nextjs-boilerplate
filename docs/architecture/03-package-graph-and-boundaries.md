@@ -16,7 +16,7 @@ lower layers, with one exception below.** No upward dependencies, ever.
 | 0     | Foundation        | Browser + Node | `types`, `utils`, `env`, `errors`, `contracts`, `i18n`                                                                  |
 | 1     | Platform adapters | Node only      | `logger`, `observability`, `db`, `cache`, `storage`, `email`, `payments`, `jobs`, `auth`, `authz`, `analytics`, `flags` |
 | 2     | Domain            | Node only      | `core`                                                                                                                  |
-| 3     | Transport         | Node only      | `trpc`                                                                                                                  |
+| 3     | Transport         | Node only      | `orpc`                                                                                                                  |
 | 4     | Applications      | —              | `apps/web`, `apps/api`, `apps/worker`, `apps/docs`                                                                      |
 | U     | UI                | Browser        | `ui` (may depend on layer 0 only)                                                                                       |
 | T     | Tooling/testing   | Build-time     | `tooling/*`, `testing`                                                                                                  |
@@ -66,7 +66,7 @@ flowchart BT
     end
 
     subgraph L3["Layer 3 — transport"]
-        trpc["@repo/trpc"]
+        orpc["@repo/orpc"]
     end
 
     subgraph L4["Layer 4 — apps"]
@@ -83,11 +83,11 @@ flowchart BT
     L1 --> L0
     core --> L1
     core --> L0
-    trpc --> core
-    trpc --> L1
-    trpc --> L0
+    orpc --> core
+    orpc --> L1
+    orpc --> L0
     ui --> L0
-    web --> trpc
+    web --> orpc
     web --> ui
     web --> core
     api --> core
@@ -107,10 +107,10 @@ flowchart BT
 | `@repo/authz`     | `types`, `errors`                                                                                                                           |
 | `@repo/auth`      | `types` — db schema + email/Redis callbacks are injected (same-layer ban)                                                                   |
 | `@repo/core`      | layer 0 + `db`, `authz`, `logger`, `jobs` (side-effect ports for mail/files/flags/analytics; adapters injected)                             |
-| `@repo/trpc`      | `core`, `auth`, `errors`, `contracts`, `logger`, `db`, `types`                                                                              |
+| `@repo/orpc`      | `core`, `auth`, `errors`, `contracts`, `logger`, `db`, `types`                                                                              |
 | `@repo/ui`        | _(nothing internal yet)_ — may use layer 0 only (`types`, `utils`, `i18n`); theme CSS from `@repo/tailwind-config` (dev/build)              |
-| `apps/web`        | `ui`, `trpc`, `core`, `auth`, `auth/client`, `db`, `email`, `env`, `i18n`, `jobs`, `logger`, `contracts`, `types`, `utils`                  |
-| `apps/api`        | `core`, `auth`, `trpc` (parity tests), `contracts`, `errors`, `env`, `logger`, `cache`, `db`, `email`, `jobs`, `payments`, `types`, `utils` |
+| `apps/web`        | `ui`, `orpc`, `core`, `auth`, `auth/client`, `db`, `email`, `env`, `i18n`, `jobs`, `logger`, `contracts`, `types`, `utils`                  |
+| `apps/api`        | `core`, `auth`, `orpc` (parity tests), `contracts`, `errors`, `env`, `logger`, `cache`, `db`, `email`, `jobs`, `payments`, `types`, `utils` |
 
 > **Note on `db` → `logger`:** both are layer 1, so `@repo/db` may not import `@repo/logger`.
 > This is not pedantry — it is what keeps `@repo/db` usable in migration scripts and tests

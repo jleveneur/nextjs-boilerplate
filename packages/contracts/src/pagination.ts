@@ -2,7 +2,7 @@
  * Cursor pagination.
  *
  * Offset pagination repeats and skips rows under concurrent writes, so it is not
- * offered. A page is `{ data, nextCursor }` (tRPC / TypeScript) or
+ * offered. A page is `{ data, nextCursor }` (oRPC / TypeScript) or
  * `{ data, next_cursor }` on the public REST surface — same shape, one casing
  * transform in the REST serializer.
  *
@@ -25,7 +25,7 @@ export const MAX_PAGE_LIMIT = 100;
  * Query parameters for a cursor page.
  *
  * `limit` is coerced from a string because query params arrive as strings on
- * REST. tRPC callers pass a number and coercion is a no-op.
+ * REST. oRPC callers pass a number and coercion is a no-op.
  */
 export const paginationQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(MAX_PAGE_LIMIT).default(DEFAULT_PAGE_LIMIT),
