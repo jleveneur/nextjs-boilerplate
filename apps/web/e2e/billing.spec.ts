@@ -31,7 +31,7 @@ test.describe("billing invoices", () => {
     await page.getByRole("button", { name: /^create invoice$|^créer une facture$/i }).click();
 
     await expect(page).toHaveURL(/\/invoices\/[^/]+$/);
-    await expect(page.getByText(number)).toBeVisible();
+    await expect(page.getByRole("heading", { name: number })).toBeVisible();
     await expectNoAxeViolations(page);
 
     const voidButton = page.getByRole("button", { name: /void|annuler/i });
@@ -44,6 +44,6 @@ test.describe("billing invoices", () => {
       .getByRole("link", { name: /invoices|factures/i })
       .first()
       .click();
-    await expect(page.getByText(number)).toBeVisible();
+    await expect(page.getByRole("link", { name: number })).toBeVisible();
   });
 });
