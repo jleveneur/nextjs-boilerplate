@@ -238,7 +238,8 @@ Rules:
    control stays in the application.
 5. **EXIF is stripped** from user images — it commonly carries GPS coordinates.
 6. **Sharp runs in the worker, never in the request path.** Image processing is CPU-bound and
-   will starve the event loop.
+   will starve the event loop. Import `@repo/storage/image` and `@repo/core/assets/derive` only
+   from `apps/worker`.
 7. **Every asset has a database row** with status (`pending`/`ready`/`failed`), owner, and tenant.
    The database is the source of truth; the bucket is storage. Orphan reconciliation runs
    nightly, since presigned uploads that are never confirmed are inevitable.

@@ -21,12 +21,11 @@ import {
   type TenantCtx,
 } from "@repo/db";
 import { NotFoundError, ValidationError } from "@repo/errors";
-import { buildObjectKey, derivativeObjectKey, deriveImageVariants } from "@repo/storage";
+import { buildObjectKey } from "@repo/storage";
 import type { AssetId, OrganizationId } from "@repo/types";
 
 import type { Ctx } from "../ctx.ts";
 import { writeOutboxEvent } from "../outbox/write-outbox-event.ts";
-import { AssetDerivationInputMissingError } from "./asset.errors.ts";
 import { assetConfirmedEvent, ASSET_CONFIRMED } from "./asset.events.ts";
 import { toAssetDto } from "./asset.mapper.ts";
 
@@ -40,7 +39,7 @@ function brandAssetId(id: string): AssetId {
   return id as AssetId;
 }
 
-function tenantCtx(ctx: Ctx): TenantCtx {
+export function tenantCtx(ctx: Ctx): TenantCtx {
   return {
     organizationId: ctx.actor.organizationId,
     db: ctx.tx ?? ctx.db,
@@ -154,46 +153,6 @@ export async function confirmUpload(
 
     return toAssetDto(existing);
   });
-}
-
-export async function deriveAssetVariants(ctx: Ctx, input: { assetId: AssetId }): Promise<void> {
-  authorize(ctx.actor, PERMISSIONS["asset:create"], {
-    organizationId: ctx.actor.organizationId,
-  });
-
-  const existing = await findAssetById(tenantCtx(ctx), input.assetId);
-  if (existing === null) {
-    throw new AssetDerivationInputMissingError(input.assetId, "asset");
-  }
-
-  if (existing.status === "ready") {
-    return;
-  }
-
-  try {
-    const original = await ctx.ports.files.getObject(existing.storageKey);
-    if (original === undefined) {
-      throw new AssetDerivationInputMissingError(input.assetId, "source_object");
-    }
-
-    const variants = await deriveImageVariants(original);
-    await ctx.ports.files.putObject({
-      key: derivativeObjectKey(existing.storageKey, "webp"),
-      body: variants.webp.body,
-      contentType: variants.webp.contentType,
-    });
-    await ctx.ports.files.putObject({
-      key: derivativeObjectKey(existing.storageKey, "avif"),
-      body: variants.avif.body,
-      contentType: variants.avif.contentType,
-    });
-
-    await markAssetReady(ctx, input.assetId);
-    ctx.logger.info({ assetId: input.assetId }, "asset variants derived");
-  } catch (error) {
-    await markAssetFailed(ctx, input.assetId).catch(() => undefined);
-    throw error;
-  }
 }
 
 export async function markAssetReady(ctx: Ctx, assetId: AssetId): Promise<ConfirmUploadOutput> {

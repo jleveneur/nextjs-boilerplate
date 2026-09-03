@@ -7,7 +7,6 @@ export {
   AssetDerivationInputMissingError,
   assetConfirmedEvent,
   confirmUpload,
-  deriveAssetVariants,
   markAssetFailed,
   markAssetReady,
   reconcileOrphanAssets,

@@ -7,7 +7,6 @@ export {
 } from "./asset.events.ts";
 export {
   confirmUpload,
-  deriveAssetVariants,
   markAssetFailed,
   markAssetReady,
   reconcileOrphanAssets,

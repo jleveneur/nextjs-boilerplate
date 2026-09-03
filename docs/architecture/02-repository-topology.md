@@ -174,20 +174,20 @@ response shapes are defined once.
 
 ### Layer 1 — platform adapters (server-only)
 
-| Package               | Responsibility                                                                                                                         |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `@repo/logger`        | Pino instance factory, redaction, request-scoped child loggers via `AsyncLocalStorage`, trace-id correlation.                          |
-| `@repo/observability` | OTel SDK setup, Sentry init, span helpers, trace/log/error correlation.                                                                |
-| `@repo/db`            | Drizzle schema (one file per module), client factory, pool config, migrations, seeds, transaction helper, tenant-scoped query helpers. |
-| `@repo/cache`         | Redis client, namespaced keys, TTL policy, stampede protection, tag invalidation.                                                      |
-| `@repo/storage`       | S3 API client, presigned upload/download, key conventions, Sharp derivative pipeline.                                                  |
-| `@repo/email`         | Resend adapter + React Email templates + a preview dev server; a `NoopMailer` for tests.                                               |
-| `@repo/payments`      | Stripe adapter: catalog sync, checkout/portal sessions, webhook handlers, entitlement mapping.                                         |
-| `@repo/jobs`          | Job **contracts** (name registry + Zod payload per job) and the `enqueue` facade. Owns no execution semantics.                         |
-| `@repo/auth`          | Better Auth server config (Drizzle adapter, plugins), server-side session helpers, typed client.                                       |
-| `@repo/authz`         | Permission registry, roles, `can()` / `authorize()`, policy primitives. Pure and dependency-free by design.                            |
-| `@repo/analytics`     | Typed product-event registry and server/client capture adapters (PostHog).                                                             |
-| `@repo/flags`         | Feature-flag interface, typed flag registry, env + PostHog providers.                                                                  |
+| Package               | Responsibility                                                                                                                                        |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/logger`        | Pino instance factory, redaction, request-scoped child loggers via `AsyncLocalStorage`, trace-id correlation.                                         |
+| `@repo/observability` | OTel SDK setup, Sentry init, span helpers, trace/log/error correlation.                                                                               |
+| `@repo/db`            | Drizzle schema (one file per module), client factory, pool config, migrations, seeds, transaction helper, tenant-scoped query helpers.                |
+| `@repo/cache`         | Redis client, namespaced keys, TTL policy, stampede protection, tag invalidation.                                                                     |
+| `@repo/storage`       | S3 API client, presigned upload/download, key conventions. Sharp derivatives live on `@repo/storage/image` so Next.js and the API never load libvips. |
+| `@repo/email`         | Resend adapter + React Email templates + a preview dev server; a `NoopMailer` for tests.                                                              |
+| `@repo/payments`      | Stripe adapter: catalog sync, checkout/portal sessions, webhook handlers, entitlement mapping.                                                        |
+| `@repo/jobs`          | Job **contracts** (name registry + Zod payload per job) and the `enqueue` facade. Owns no execution semantics.                                        |
+| `@repo/auth`          | Better Auth server config (Drizzle adapter, plugins), server-side session helpers, typed client.                                                      |
+| `@repo/authz`         | Permission registry, roles, `can()` / `authorize()`, policy primitives. Pure and dependency-free by design.                                           |
+| `@repo/analytics`     | Typed product-event registry and server/client capture adapters (PostHog).                                                                            |
+| `@repo/flags`         | Feature-flag interface, typed flag registry, env + PostHog providers.                                                                                 |
 
 `@repo/authz` is deliberately pure (no DB, no session): it takes an actor and a resource and
 returns a decision, which makes the entire authorization model unit-testable in milliseconds

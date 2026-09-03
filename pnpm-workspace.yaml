@@ -25,7 +25,8 @@ allowBuilds:
   # we do not need the compile step in this repo.
   msgpackr-extract: false
   # Sharp needs its install script to fetch platform-specific libvips binaries.
-  # Required by `@repo/storage` image derivation in the worker.
+  # Required by `@repo/storage/image` in the worker. Next lists sharp as an
+  # optional dependency too; the same grant covers that copy.
   sharp: true
   # protobufjs ships prebuilt code; its postinstall is optional. OTLP HTTP
   # exporters work without the install script regenerating stubs.

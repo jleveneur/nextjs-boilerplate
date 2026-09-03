@@ -2,10 +2,11 @@
   "name": "@repo/storage",
   "version": "0.0.1",
   "private": true,
-  "description": "S3-compatible object storage with presigned URLs, byte I/O, and Sharp derivatives.",
+  "description": "S3-compatible object storage with presigned URLs, byte I/O, and a Sharp image subpath.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./image": "./src/derive-image.ts",
     "./testing": "./src/testing/index.ts"
   },
   "scripts": {

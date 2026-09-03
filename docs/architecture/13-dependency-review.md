@@ -450,8 +450,9 @@ AVIF/WebP output and EXIF stripping.
 **Instead of** _jimp_ — pure JS, dramatically slower. _ImageMagick via CLI_ — process spawning and
 a broader attack surface. _Cloudflare Images / imgix_ — hosted, and we already need worker CPU.
 **Health** The standard; Next.js itself depends on it.
-**Exit** Low — used in one worker consumer. Note it is a native module, which is why worker images
-pin a base image and architecture explicitly.
+**Exit** Low — used in one worker consumer via `@repo/storage/image`. Note it is a native
+module, which is why the worker image installs it separately. Next.js lists the same package as
+an optional dependency for `next/image`; that copy is not declared in app manifests.
 
 ### Resend 6.18 + React Email 1.0
 

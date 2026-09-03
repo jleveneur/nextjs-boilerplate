@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./assets/derive": "./src/assets/derive-asset-variants.ts",
     "./testing": "./src/testing/index.ts"
   },
   "scripts": {
