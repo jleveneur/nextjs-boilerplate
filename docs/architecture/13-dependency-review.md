@@ -590,6 +590,19 @@ not enforced in CI, so it does not hold.
 **Health** Mature, stable.
 **Exit** Very low.
 
+### React Doctor 0.9
+
+**Why** Catches React-specific security, accessibility, and performance issues that Oxlint does not
+cover (reduced-motion, client-side redirects, eager heavy imports). The CLI is pinned and run through
+`make react-doctor`, same as Knip — not `npx @latest` and not the unpinned GitHub Action.
+**Instead of** _eslint-plugin-react-hooks / jsx-a11y on ESLint_ — blocked by TypeScript 7 (see
+Oxlint). _Manual review_ — does not happen on every PR. _The vendor GitHub Action_ — a mutable
+tag with write permissions; this repo pins SHAs and composes `make` targets.
+**Health** Pre-1.0 (0.9.13), Million Software. Nested `oxlint@1.79` is isolated from the repo's
+1.76 toolchain. `playwright-core` is overridden to 1.62.0 in `pnpm-workspace.yaml` so it cannot
+split from `@playwright/test`.
+**Exit** Very low — a scanner, not a runtime dependency.
+
 ### Lefthook 2.1
 
 **Why** Single Go binary, no Node spawn per hook, parallel execution, declarative YAML, and native

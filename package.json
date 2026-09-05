@@ -17,11 +17,12 @@
     "format:check": "oxfmt --check",
     "spell": "cspell lint --no-progress --gitignore --dot .",
     "knip": "knip",
+    "react-doctor": "react-doctor --no-telemetry --no-supply-chain --yes",
     "check:layers": "node scripts/check-layers.ts",
     "check:flags": "node scripts/check-flag-expiry.ts",
     "check:env": "node scripts/check-env-catalog.ts",
     "test:scripts": "node --test \"scripts/**/*.test.ts\"",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:layers && pnpm check:flags && pnpm check:env && pnpm spell && pnpm knip && pnpm test:scripts && pnpm test",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:layers && pnpm check:flags && pnpm check:env && pnpm spell && pnpm knip && pnpm react-doctor && pnpm test:scripts && pnpm test",
     "changeset": "changeset",
     "changeset:status": "changeset status --since=origin/main",
     "prepare": "node scripts/install-hooks.ts"
@@ -39,6 +40,7 @@
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
     "portless": "catalog:",
+    "react-doctor": "0.9.13",
     "turbo": "2.10.11",
     "typescript": "catalog:"
   },

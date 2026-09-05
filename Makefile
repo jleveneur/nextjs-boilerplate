@@ -14,7 +14,7 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck typecheck-affected spell knip layers env-catalog bundle-budget openapi-check \
+        typecheck typecheck-affected spell knip react-doctor layers env-catalog bundle-budget openapi-check \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
@@ -112,6 +112,9 @@ spell: ## Spell-check code, comments, and docs
 
 knip: ## Find unused files, exports, and dependencies
 	pnpm knip
+
+react-doctor: ## Scan React apps for security, a11y, and performance issues
+	pnpm react-doctor $(REACT_DOCTOR_FLAGS)
 
 layers: ## Assert package layer boundaries (ADR-0002)
 	pnpm check:layers

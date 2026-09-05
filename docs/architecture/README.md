@@ -202,6 +202,7 @@ current when the decisions were made.
 | Type-aware lint  | `oxlint-tsgolint`                 | 7.0.2001     |
 | Format           | Oxfmt                             | 0.61.0       |
 | Unused code/deps | Knip                              | 6.29.0       |
+| React lint       | React Doctor                      | 0.9.13       |
 | Spelling         | CSpell                            | 10.0.1       |
 | Git hooks        | Lefthook                          | 2.1.10       |
 | Commit lint      | commitlint                        | 21.2.1       |

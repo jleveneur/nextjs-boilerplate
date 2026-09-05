@@ -42,4 +42,6 @@ export default async function ProjectPage({ params }: Props) {
 
 Interactive elements are real elements: `button`, `a`, `label`-bound inputs. A
 `div` with `onClick` is not keyboard reachable and fails the axe checks in CI.
-Every image needs `alt`; decorative images take `alt=""`.
+Every image needs `alt`; decorative images take `alt=""`. After changing React
+or UI code, run `make react-doctor` (also part of `make check`) and fix findings
+instead of disabling rules.

@@ -90,8 +90,8 @@ secret is compromised the instant it is pushed, so catching it in CI is already 
 ## 3. Continuous integration
 
 `make check` is the fast local pre-push gate: formatting, type-aware lint, full
-typechecking, layer, flag-expiry, and env-catalog checks, spelling, dead-code detection, script and unit tests,
-and the web bundle budget. It is not a complete local reproduction of CI.
+typechecking, layer, flag-expiry, and env-catalog checks, spelling, dead-code detection, React Doctor,
+script and unit tests, and the web bundle budget. It is not a complete local reproduction of CI.
 
 CI runs an overlapping set in parallel (with affected typechecks and unit tests on PRs), then adds
 history- and environment-dependent gates: secret and commit scanning, changeset policy, OpenAPI
@@ -108,6 +108,7 @@ flowchart TB
     SETUP --> C["typecheck --affected"]
     SETUP --> D["test:unit --affected"]
     SETUP --> E["spell + knip"]
+    SETUP --> RD["react-doctor"]
     SETUP --> F["gitleaks"]
     SETUP --> CQ["CodeQL (separate workflow)"]
     SETUP --> G["changeset status"]
@@ -119,6 +120,7 @@ flowchart TB
     C --> DONE
     D --> DONE
     E --> DONE
+    RD --> DONE
     F --> DONE
     G --> DONE
     H --> DONE
@@ -133,6 +135,9 @@ Practices that keep it honest:
   stale run.
 - **`--affected`** limits typecheck and unit tests to packages the diff touches on PRs and
   merge-group runs; **`main` always runs the full set**.
+- **React Doctor** scans `apps/web`, `apps/docs`, and `packages/ui`. Pull requests report only
+  newly introduced findings (`--scope changed`); **`main` runs a full scan**. Errors fail the
+  job; existing warnings do not.
 - **Path filters** skip image, E2E, Lighthouse, and integration jobs when the diff cannot affect
   apps, packages, Dockerfiles, or the lockfile (again: full set on `main`).
 - **Turborepo remote cache** via Vercel OIDC (`vercel/setup-turborepo-remote-cache-action`) when the

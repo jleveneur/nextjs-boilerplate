@@ -19,7 +19,7 @@ make check
 ```
 
 It runs formatting, type-aware lint, typechecking, layer, flag-expiry, and env-catalog checks,
-spelling, dead-code detection, script tests, unit tests, and the web bundle
+spelling, dead-code detection, React Doctor, script tests, unit tests, and the web bundle
 budget. A green result is necessary, but does not predict that full CI will pass.
 CI runs overlapping checks in parallel (using affected typechecks and unit tests
 on PRs) and adds history- and service-dependent gates: secret and commit scans,
@@ -36,7 +36,8 @@ If a failure looks pre-existing, confirm that on a clean tree instead of
 assuming.
 
 Individual gates, for a faster loop: `make format`, `make lint`, `make typecheck`,
-`make test`, `make layers`, `make env-catalog`, `make spell`, `make knip`.
+`make test`, `make layers`, `make env-catalog`, `make spell`, `make knip`,
+`make react-doctor`.
 
 ---
 

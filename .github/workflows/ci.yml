@@ -135,6 +135,25 @@ jobs:
       - run: make spell
       - run: make knip
 
+  react-doctor:
+    name: React Doctor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # `--scope changed` on PRs needs the merge base.
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          turbo_team: ${{ vars.TURBO_TEAM }}
+      - name: Scan React apps
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            make react-doctor
+          else
+            make react-doctor REACT_DOCTOR_FLAGS="--scope changed --base ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
+          fi
+
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest
@@ -361,6 +380,7 @@ jobs:
       - test
       - boundaries
       - hygiene
+      - react-doctor
       - secrets
       - commits
       - changeset

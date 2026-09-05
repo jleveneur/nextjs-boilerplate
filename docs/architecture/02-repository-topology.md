@@ -16,6 +16,7 @@
 ├── .github/                 # Workflows, templates, CODEOWNERS.
 
 ├── .cursor/rules/           # Machine-readable architecture rules for AI agents.
+├── .agents/skills/          # Project skills for coding agents (React Doctor, …).
 ├── .vscode/                 # Recommended settings + extensions.
 ├── Makefile                 # The single human entry point.
 ├── turbo.json               # Task graph.
@@ -26,6 +27,7 @@
 ├── .oxfmtrc.json            # Format config.
 ├── cspell.config.yaml       # Spell checker.
 ├── knip.json                # Unused code/dependency detection.
+├── doctor.config.json       # React Doctor scan config.
 ├── renovate.json            # Dependency updates.
 ├── .editorconfig
 ├── .gitattributes

@@ -188,3 +188,10 @@ catalog:
 # soon as it ages past the window — this list is a waiver, not a setting.
 minimumReleaseAgeExclude:
   - bullmq@6.2.2
+
+# react-doctor depends on playwright-core ^1.62.1. With resolution-mode=highest
+# that pulls 1.62.1 for @axe-core/playwright as well, while @playwright/test
+# stays on 1.62.0 — and the two Page types fail typecheck. Pin to the catalog
+# Playwright version until we bump @playwright/test.
+overrides:
+  playwright-core: 1.62.0

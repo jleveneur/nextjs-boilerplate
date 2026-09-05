@@ -5,10 +5,12 @@
 changesets
 corepack
 lefthook
+magicast
 oxc
 oxfmt
 oxlint
 portless
+react-doctor
 tsbuildinfo
 tsconfig
 tsgolint

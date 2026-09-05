@@ -10,6 +10,7 @@
       "Bash(make layers:*)",
       "Bash(make spell:*)",
       "Bash(make knip:*)",
+      "Bash(make react-doctor:*)",
       "Bash(pnpm changeset:*)",
       "Bash(pnpm install:*)",
       "Bash(git status:*)",

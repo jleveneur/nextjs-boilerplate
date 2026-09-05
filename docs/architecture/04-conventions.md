@@ -265,6 +265,7 @@ changed.
 | Oxfmt         | `.oxfmtrc.json`                             | `printWidth: 100` (Oxfmt's default), double quotes, semicolons, trailing commas, import sorting + Tailwind class sorting built in |
 | CSpell        | `cspell.config.yaml`                        | Project dictionary committed so new jargon is a reviewed diff                                                                     |
 | Knip          | `knip.json`                                 | Fails CI on unused files, exports, and dependencies                                                                               |
+| React Doctor  | `doctor.config.json`                        | Fails CI on React security, a11y, and performance errors; PRs report only newly introduced findings                               |
 | Lefthook      | `lefthook.yml`                              | pre-commit: format + lint staged, gitleaks. pre-push: typecheck + affected unit tests                                             |
 | EditorConfig  | `.editorconfig`                             | LF, UTF-8, 2 spaces, final newline, trim trailing whitespace                                                                      |
 | gitattributes | `.gitattributes`                            | `* text=auto eol=lf`, lockfile marked binary-ish for diffs, `linguist-generated` on generated files                               |
