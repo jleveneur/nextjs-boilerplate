@@ -1,5 +1,12 @@
 # @repo/orpc
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [28841e8]
+  - @repo/core@1.0.0
+
 ## 0.2.0
 
 ### Minor Changes

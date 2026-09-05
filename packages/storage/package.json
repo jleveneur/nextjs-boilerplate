@@ -1,6 +1,6 @@
 {
   "name": "@repo/storage",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "description": "S3-compatible object storage with presigned URLs, byte I/O, and a Sharp image subpath.",
   "type": "module",
