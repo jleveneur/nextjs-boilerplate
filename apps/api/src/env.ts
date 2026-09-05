@@ -22,6 +22,8 @@ const api = z.object({
  * Server env for `apps/api`.
  *
  * Validated once at import. This is a Node composition root — no client presets.
+ * Portless assigns an ephemeral `PORT` for `make dev`; compose/images set
+ * `API_PORT`. Prefer the process `PORT` when present so the proxy can reach us.
  */
 export const env = createEnv({
   server: [base, db, redis, auth, resend, smtp, otel, sentry, posthog, featureFlags, stripe, api],
@@ -53,7 +55,7 @@ export const env = createEnv({
     POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
     POSTHOG_HOST: process.env["POSTHOG_HOST"],
     FLAGS_JSON: process.env["FLAGS_JSON"],
-    API_PORT: process.env["API_PORT"],
+    API_PORT: process.env["PORT"] ?? process.env["API_PORT"],
     STRIPE_SECRET_KEY: process.env["STRIPE_SECRET_KEY"],
     STRIPE_WEBHOOK_SECRET: process.env["STRIPE_WEBHOOK_SECRET"],
   },

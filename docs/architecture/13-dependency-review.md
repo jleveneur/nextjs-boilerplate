@@ -599,6 +599,16 @@ _simple-git-hooks_ — minimal, no parallelism or staged-file handling.
 **Health** Stable, widely used, language-agnostic.
 **Exit** Very low.
 
+### Portless 0.15
+
+**Why** Named `*.localhost` URLs for every local app so Better Auth, `NEXT_PUBLIC_APP_URL`, and
+humans stop chasing ephemeral ports. Injects `PORT` / `HOST` / `PORTLESS_URL`; HTTPS is optional.
+**Instead of** _Hardcoded `localhost:3000`_ — collides the moment two apps or two worktrees run.
+_Caddy/Traefik on the laptop_ — another compose file for a problem Portless solves in the `dev`
+script. _`mkcert` + `/etc/hosts` by hand_ — the same job, more ceremony.
+**Health** Vercel Labs, Apache-2.0, active 2026. Dev-only; not in images.
+**Exit** Very low — `PORTLESS=0` restores port-based `dev` scripts.
+
 ### commitlint 21
 
 **Why** Enforces Conventional Commits, which is what makes the squashed history readable and

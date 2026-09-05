@@ -23,6 +23,8 @@ import { webClientPresets, webClientRuntimeEnv } from "./browser.ts";
  * Server edge env for `apps/web`.
  *
  * Validated once at import. Client code must import `./client.ts` — never this file.
+ * `PORTLESS_URL` is the public origin when `make dev` wraps the process; `.env`
+ * remains the fallback for `PORTLESS=0` and for non-dev entrypoints.
  */
 export const env = createEnv({
   server: [base, db, redis, auth, resend, smtp, s3, otel, sentry, posthog, featureFlags, stripe],
@@ -30,13 +32,13 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     APP_ENV: process.env["APP_ENV"],
-    APP_URL: process.env["APP_URL"],
+    APP_URL: process.env["PORTLESS_URL"] ?? process.env["APP_URL"],
     LOG_LEVEL: process.env["LOG_LEVEL"],
     DATABASE_URL: process.env["DATABASE_URL"],
     DATABASE_POOL_SIZE: process.env["DATABASE_POOL_SIZE"],
     REDIS_URL: process.env["REDIS_URL"],
     BETTER_AUTH_SECRET: process.env["BETTER_AUTH_SECRET"],
-    BETTER_AUTH_URL: process.env["BETTER_AUTH_URL"],
+    BETTER_AUTH_URL: process.env["PORTLESS_URL"] ?? process.env["BETTER_AUTH_URL"],
     GITHUB_CLIENT_ID: process.env["GITHUB_CLIENT_ID"],
     GITHUB_CLIENT_SECRET: process.env["GITHUB_CLIENT_SECRET"],
     GOOGLE_CLIENT_ID: process.env["GOOGLE_CLIENT_ID"],

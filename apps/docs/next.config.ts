@@ -6,6 +6,7 @@ const withMDX = createMDX();
 const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ["@repo/env", "fumadocs-mdx", "fumadocs-ui", "fumadocs-core"],
+  allowedDevOrigins: ["*.localhost"],
   experimental: {
     useTypeScriptCli: true,
   },

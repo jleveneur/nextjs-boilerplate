@@ -5,7 +5,7 @@
   "description": "BullMQ workers — email, image derivatives, outbox relay, and schedules.",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file=../../.env src/index.ts",
+    "dev": "portless worker -- tsx watch --env-file=../../.env src/index.ts",
     "build": "tsdown",
     "start": "node --env-file=../../.env dist/index.mjs",
     "typecheck": "tsc --noEmit",
@@ -41,6 +41,7 @@
     "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "portless": "catalog:",
     "tsdown": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",

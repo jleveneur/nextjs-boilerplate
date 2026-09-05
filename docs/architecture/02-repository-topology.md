@@ -145,7 +145,8 @@ plus alert is mandatory for every queue.
 
 ### `apps/docs`
 
-Fumadocs site on port **3003**. `scripts/prepare-content.ts` syncs
+Fumadocs site at **https://docs.localhost** via Portless (`PORTLESS=0` → port 3003).
+`scripts/prepare-content.ts` syncs
 `docs/{architecture,adr,runbooks}` into gitignored MDX at build/dev time; hand-written guides
 (`getting-started`, `contributing`) live under `content/docs/`. Embeds the Scalar API reference
 from the committed `apps/api/openapi.json`. Documentation the team already writes becomes the
@@ -376,7 +377,7 @@ pnpm _and_ Docker.
 
 ```
 make setup            # Install toolchain, deps, .env, start services, migrate, seed
-make dev              # Services + all apps in watch mode
+make dev              # Services + all apps (Portless: https://web.localhost)
 make check            # Everything CI runs, locally, in the same order
 make images           # Build web/api/worker/docs images and assert size budgets
 make e2e              # Playwright against the built web image

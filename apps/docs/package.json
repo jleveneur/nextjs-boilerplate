@@ -10,7 +10,7 @@
     "predev": "pnpm prepare-source",
     "prebuild": "pnpm prepare-source",
     "pretypecheck": "pnpm prepare-source",
-    "dev": "next dev --port 3003",
+    "dev": "portless docs -- node --experimental-strip-types ../../scripts/with-portless-origin.ts --default-port 3003 -- next dev",
     "build": "next build",
     "start": "next start --port 3003",
     "typecheck": "tsc --noEmit"
@@ -36,6 +36,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "portless": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },

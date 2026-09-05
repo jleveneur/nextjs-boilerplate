@@ -8,11 +8,14 @@ lefthook
 oxc
 oxfmt
 oxlint
+portless
 tsbuildinfo
 tsconfig
 tsgolint
 tsdown
 turborepo
+worktree
+worktrees
 knip
 cspell
 gitleaks

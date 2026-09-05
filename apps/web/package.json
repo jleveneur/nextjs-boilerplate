@@ -5,7 +5,7 @@
   "description": "Next.js web application — locale routing, auth, and the billing slice UI.",
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "portless web -- node --experimental-strip-types ../../scripts/with-portless-origin.ts next dev",
     "build": "next build",
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit",
@@ -60,6 +60,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "portless": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },

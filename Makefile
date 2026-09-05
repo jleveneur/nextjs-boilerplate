@@ -22,7 +22,7 @@ SHELL := bash
         deps-up deps-up-test deps-up-test-worker deps-down \
         prod-up prod-down \
         db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push \
-        email dev
+        email dev proxy
 
 
 # Do not `include .env` here: Make treats `//` as a comment, which truncates
@@ -69,9 +69,12 @@ setup: ## Idempotent clean-machine bootstrap (tools, deps, .env, services, migra
 	$(MAKE) db-seed
 	@printf '\nSetup complete. Next: make dev\n\n'
 
-dev: ## Start dependency containers and all apps in watch mode
+dev: ## Start dependency containers and all apps (Portless: https://web.localhost)
 	$(MAKE) deps-up
 	pnpm dev
+
+proxy: ## Start the Portless reverse proxy (HTTPS :443; auto-starts on make dev)
+	pnpm proxy
 
 ## ----------------------------------------------------------------------------
 ## Quality gates

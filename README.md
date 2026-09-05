@@ -19,10 +19,11 @@ Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
 ```bash
 make setup            # install, root `.env`, `apps/docs/.env`, deps, migrate, seed
 make check            # every quality gate — the same set CI runs
-pnpm --filter @repo/docs dev   # docs site → http://localhost:3003/docs
+make dev              # deps + apps → https://web.localhost
+pnpm --filter @repo/docs dev   # docs → https://docs.localhost
 ```
 
-Apps: `pnpm --filter @repo/web dev` (3000), `@repo/api` (3001), `@repo/worker` (3002).
+Apps through Portless: web, api, worker, docs. `PORTLESS=0` uses localhost:3000–3003.
 With `make prod-up`, Traefik on `:8080` serves docs at
 [http://docs.localhost:8080](http://docs.localhost:8080).
 

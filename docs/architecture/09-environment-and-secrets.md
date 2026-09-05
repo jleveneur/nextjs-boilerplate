@@ -120,6 +120,23 @@ branched from staging's schema, so migrations are exercised on realistic data be
 `.env.example` → `.env`, start Docker services, wait for health, migrate, seed, print next
 steps.
 
+`make dev` runs apps through [Portless](https://github.com/vercel-labs/portless): stable
+HTTPS `*.localhost` URLs (proxy on 443, so no port in the URL) and ephemeral listen ports
+behind it.
+
+| App    | URL                      |
+| ------ | ------------------------ |
+| web    | https://web.localhost    |
+| api    | https://api.localhost    |
+| worker | https://worker.localhost |
+| docs   | https://docs.localhost   |
+
+Portless injects `PORTLESS_URL`, `PORT`, and `HOST` into each child. That is process-edge
+metadata (like `NEXT_RUNTIME`): composition-root env modules may read `PORTLESS_URL` to set
+the public origin; it is not a catalog key. First HTTPS start may prompt to trust the local
+CA (`portless trust`). `PORTLESS=0` skips the proxy (web `localhost:3000`, docs `3003`,
+api `3001`, worker `3002`).
+
 Local services in `docker/compose.yaml`: PostgreSQL 18, Redis, MinIO (with the bucket
 pre-created), Mailpit (SMTP catcher with a web UI so email is inspectable without sending),
 OTel collector (OTLP → Jaeger traces + Prometheus metrics), Jaeger UI, Prometheus, and Grafana.

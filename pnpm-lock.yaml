@@ -317,6 +317,9 @@ catalogs:
     pino:
       specifier: 10.3.1
       version: 10.3.1
+    portless:
+      specifier: 0.15.6
+      version: 0.15.6
     postgres:
       specifier: 3.4.9
       version: 3.4.9
@@ -418,6 +421,9 @@ importers:
       oxlint-tsgolint:
         specifier: 7.0.2001
         version: 7.0.2001
+      portless:
+        specifier: 'catalog:'
+        version: 0.15.6
       turbo:
         specifier: 2.10.11
         version: 2.10.11
@@ -509,6 +515,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.11(vitest@4.1.11)
+      portless:
+        specifier: 'catalog:'
+        version: 0.15.6
       tsdown:
         specifier: 'catalog:'
         version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.1)(typescript@7.0.2)
@@ -579,6 +588,9 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.2.5(@types/react@19.2.18)
+      portless:
+        specifier: 'catalog:'
+        version: 0.15.6
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3
@@ -718,6 +730,9 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.2.5(@types/react@19.2.18)
+      portless:
+        specifier: 'catalog:'
+        version: 0.15.6
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3
@@ -803,6 +818,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.11(vitest@4.1.11)
+      portless:
+        specifier: 'catalog:'
+        version: 0.15.6
       tsdown:
         specifier: 'catalog:'
         version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.1)(typescript@7.0.2)
@@ -9046,6 +9064,12 @@ packages:
   points-on-path@0.2.1:
     resolution: {integrity: sha512-25ClnWWuw7JbWZcgqY/gJ4FQWadKxGWk+3kR/7kD0tCaDtPPMj7oHu2ToLaVhfpnHrZzYby2w6tUA0eOIuUg8g==}
 
+  portless@0.15.6:
+    resolution: {integrity: sha512-uOAwWLF32rmyEGFASzSO0VOaqb/AQxFCCzyZbPGd82UNNOfIEvc09zy92nroNibE5HNfzV4oVB0ObKbPXgkM9A==}
+    engines: {node: '>=24'}
+    os: [darwin, linux, win32]
+    hasBin: true
+
   postal-mime@2.7.5:
     resolution: {integrity: sha512-GNEXKvWFQnbgO5NlrGzVa0FmWzBZ24PersAWErttSg1Hjpf0ATxTwS5DOMGaOpTG6bUh5cTr7xi0jAD942wCJA==}
 
@@ -14265,7 +14289,7 @@ snapshots:
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)
+      vite: 8.2.2(@types/node@24.13.3)
     optional: true
 
   '@vitest/pretty-format@4.1.11':
@@ -17616,6 +17640,8 @@ snapshots:
       path-data-parser: 0.1.0
       points-on-curve: 0.2.0
 
+  portless@0.15.6: {}
+
   postal-mime@2.7.5: {}
 
   postcss@8.5.23:
@@ -18838,6 +18864,18 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
+  vite@8.2.2(@types/node@24.13.3):
+    dependencies:
+      lightningcss: 1.33.0
+      picomatch: 4.0.7
+      postcss: 8.5.26
+      rolldown: 1.2.5
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 24.13.3
+      fsevents: 2.3.3
+    optional: true
+
   vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.33.0
@@ -18948,7 +18986,7 @@ snapshots:
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.1
-      vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)
+      vite: 8.2.2(@types/node@24.13.3)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1

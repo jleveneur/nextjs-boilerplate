@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
   cacheComponents: true,
   transpilePackages: ["@repo/ui", "@repo/i18n", "@repo/env", "@repo/analytics", "@repo/flags"],
+  // Portless (and other reverse proxies) serve Next from a *.localhost Host
+  // while the process binds 127.0.0.1. Allow those origins for `/_next/*`.
+  allowedDevOrigins: ["*.localhost"],
   experimental: {
     useTypeScriptCli: true,
   },

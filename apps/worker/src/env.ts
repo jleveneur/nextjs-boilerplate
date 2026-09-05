@@ -24,7 +24,8 @@ const worker = z.object({
  * Server env for `apps/worker`.
  *
  * Composed from `@repo/env/presets` (no `server-only`) so the Node worker
- * process is not tied to the Next.js client firewall.
+ * process is not tied to the Next.js client firewall. Portless assigns `PORT`
+ * for `make dev`; compose/images set `WORKER_PORT`.
  */
 export const env = createEnv({
   server: [base, db, redis, s3, resend, smtp, otel, sentry, posthog, featureFlags, stripe, worker],
@@ -57,7 +58,7 @@ export const env = createEnv({
     FLAGS_JSON: process.env["FLAGS_JSON"],
     STRIPE_SECRET_KEY: process.env["STRIPE_SECRET_KEY"],
     STRIPE_WEBHOOK_SECRET: process.env["STRIPE_WEBHOOK_SECRET"],
-    WORKER_PORT: process.env["WORKER_PORT"],
+    WORKER_PORT: process.env["PORT"] ?? process.env["WORKER_PORT"],
     OUTBOX_POLL_MS: process.env["OUTBOX_POLL_MS"],
   },
 });
