@@ -18,7 +18,7 @@ Run the fast local gate before reporting work complete:
 make check
 ```
 
-It runs formatting, type-aware lint, typechecking, layer and flag-expiry checks,
+It runs formatting, type-aware lint, typechecking, layer, flag-expiry, and env-catalog checks,
 spelling, dead-code detection, script tests, unit tests, and the web bundle
 budget. A green result is necessary, but does not predict that full CI will pass.
 CI runs overlapping checks in parallel (using affected typechecks and unit tests
@@ -36,7 +36,7 @@ If a failure looks pre-existing, confirm that on a clean tree instead of
 assuming.
 
 Individual gates, for a faster loop: `make format`, `make lint`, `make typecheck`,
-`make test`, `make layers`, `make spell`, `make knip`.
+`make test`, `make layers`, `make env-catalog`, `make spell`, `make knip`.
 
 ---
 

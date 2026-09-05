@@ -51,10 +51,13 @@ export type AppContainer = {
 };
 
 function createEmailMailer(): EmailMailer {
-  if (env.SMTP_URL !== undefined && env.SMTP_URL !== "") {
+  if (env.SMTP_URL !== undefined) {
     return createSmtpMailer({ smtpUrl: env.SMTP_URL, from: env.EMAIL_FROM });
   }
-  return createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM });
+  if (env.RESEND_API_KEY !== undefined) {
+    return createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM });
+  }
+  throw new Error("SMTP_URL or RESEND_API_KEY is required");
 }
 
 export function buildContainer(): AppContainer {
@@ -97,7 +100,7 @@ export function buildContainer(): AppContainer {
   const envFlags =
     env.FLAGS_JSON === undefined
       ? createEnvFlagProvider()
-      : createEnvFlagProvider({ flagsJson: env.FLAGS_JSON });
+      : createEnvFlagProvider({ values: env.FLAGS_JSON });
   const posthogFlags =
     env.POSTHOG_API_KEY !== undefined && env.POSTHOG_HOST !== undefined
       ? createPostHogFlagProvider({

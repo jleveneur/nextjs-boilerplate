@@ -11,13 +11,14 @@
 import "server-only";
 
 export {
-  combine,
   createEnv,
   type CreateEnvOptions,
   type EnvOf,
   type InferPresets,
   type RuntimeEnv,
+  type RuntimeEnvFor,
 } from "./create-env.ts";
+export { definePreset } from "./merge-presets.ts";
 export {
   auth,
   base,

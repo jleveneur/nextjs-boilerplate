@@ -14,7 +14,7 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck typecheck-affected spell knip layers bundle-budget openapi-check \
+        typecheck typecheck-affected spell knip layers env-catalog bundle-budget openapi-check \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
@@ -111,6 +111,9 @@ knip: ## Find unused files, exports, and dependencies
 
 layers: ## Assert package layer boundaries (ADR-0002)
 	pnpm check:layers
+
+env-catalog: ## Assert .env*.example files share one key catalog
+	pnpm check:env
 
 bundle-budget: ## Build apps/web and assert First Load JS budgets
 	pnpm --filter @repo/web build

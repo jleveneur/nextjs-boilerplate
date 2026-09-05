@@ -1,8 +1,8 @@
 /**
  * Env-backed flag provider.
  *
- * The composition root passes the `FLAGS_JSON` blob (validated by `@repo/env`) —
- * this module never reads `process.env` itself.
+ * The composition root passes already-parsed flag overrides (from `FLAGS_JSON`,
+ * validated by `@repo/env`) — this module never reads `process.env` itself.
  */
 
 import { z } from "zod";

@@ -1,11 +1,12 @@
 /**
- * Production-only strictness checks.
+ * Staging/production strictness checks.
  *
  * These catch the most embarrassing class of deploy mistake: a staging URL, a
- * `dev-` prefixed secret, or a Stripe test key reaching production. They run
- * after the schema parse succeeds, keyed on `APP_ENV === "production"` — not
- * `NODE_ENV`, which frameworks overload and which is often `production` in
- * staging builds.
+ * `dev-` prefixed secret, or a Stripe test key reaching a live environment. They
+ * run after the schema parse succeeds, keyed on `APP_ENV` of `staging` or
+ * `production` — not `NODE_ENV`, which frameworks overload and which is often
+ * `production` in staging builds. Preview stays loose so PR apps can use test
+ * keys and tunnel URLs.
  */
 
 const LOCALHOST = /^(https?|postgres(ql)?|redis):\/\/(localhost|127\.0\.0\.1|\[::1\])\b/i;
@@ -13,11 +14,19 @@ const LOCALHOST = /^(https?|postgres(ql)?|redis):\/\/(localhost|127\.0\.0\.1|\[:
 /** Keys whose values are URLs that must not point at a loopback host in production. */
 const URL_SUFFIXES = ["_URL", "_URI", "_ENDPOINT", "_HOST"] as const;
 
+const LIVE_APP_ENVS = new Set(["staging", "production"]);
+
 /**
  * Returns human-readable problems for values that are fine in development and
- * fatal in production. Empty array means the env is production-safe.
+ * fatal in staging/production. Empty array means the env is live-safe, or that
+ * this is not a live `APP_ENV`.
  */
 export function productionProblems(env: Readonly<Record<string, unknown>>): string[] {
+  const appEnv = env["APP_ENV"];
+  if (typeof appEnv !== "string" || !LIVE_APP_ENVS.has(appEnv)) {
+    return [];
+  }
+
   const problems: string[] = [];
 
   for (const [key, value] of Object.entries(env)) {

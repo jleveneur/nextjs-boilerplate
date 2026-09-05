@@ -25,7 +25,7 @@ export function createAppPorts(options: {
   emailMailer: EmailMailer;
   posthogApiKey?: string;
   posthogHost?: string;
-  flagsJson?: string;
+  flagValues?: Readonly<Record<string, boolean>>;
   stripeSecretKey?: string;
   s3: {
     endpoint: string;

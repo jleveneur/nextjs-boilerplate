@@ -11,8 +11,9 @@ import { z } from "zod";
 /**
  * `"true"` / `"false"` → boolean.
  *
- * Rejects anything else — including `"1"`, `"yes"`, and `""` — so a typo is a
- * boot failure rather than a surprising default.
+ * Rejects anything else — including `"1"` and `"yes"` — so a typo is a boot
+ * failure rather than a surprising default. Empty strings are stripped before
+ * this runs, so a defaulted flag treats `""` as unset.
  */
 export const booleanString = z.enum(["true", "false"]).transform((value) => value === "true");
 
@@ -27,15 +28,21 @@ export const portNumber = z.coerce.number().int().positive().max(65_535);
 export const positiveInt = z.coerce.number().int().positive();
 
 /**
- * Treats `""` as absent.
+ * Converts `""` to `undefined` across a picked `runtimeEnv` map.
  *
  * Shells and `.env` loaders often set a variable to the empty string rather than
- * leaving it unset; without this, `z.url().optional()` rejects `""` as an
- * invalid URL instead of accepting "not provided".
+ * leaving it unset. `createEnv` runs this before parse so presets do not each
+ * reimplement the same preprocess.
  */
-export function emptyToUndefined(value: unknown): unknown {
-  return value === "" ? undefined : value;
+export function emptyStringsToUndefined(
+  source: Readonly<Record<string, string | undefined>>,
+): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {};
+  for (const [key, value] of Object.entries(source)) {
+    out[key] = value === "" ? undefined : value;
+  }
+  return out;
 }
 
-/** Optional URL that tolerates an empty string from the environment. */
-export const optionalUrl = z.preprocess(emptyToUndefined, z.url().optional());
+/** Optional URL. Empty strings are stripped by {@link emptyStringsToUndefined}. */
+export const optionalUrl = z.url().optional();

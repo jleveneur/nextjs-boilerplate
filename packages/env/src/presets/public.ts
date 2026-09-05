@@ -18,12 +18,9 @@ export const publicApp = z.object({
 
 /** Optional Stripe publishable key for client Checkout / Elements (Phase 17). */
 export const stripeClient = z.object({
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.preprocess(
-    (value) => (value === "" || value === undefined ? undefined : value),
-    z
-      .string()
-      .min(1)
-      .refine((value) => value.startsWith("pk_"), { message: "must start with pk_" })
-      .optional(),
-  ),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z
+    .string()
+    .min(1)
+    .refine((value) => value.startsWith("pk_"), { message: "must start with pk_" })
+    .optional(),
 });

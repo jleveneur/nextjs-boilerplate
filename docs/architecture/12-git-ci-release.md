@@ -90,7 +90,7 @@ secret is compromised the instant it is pushed, so catching it in CI is already 
 ## 3. Continuous integration
 
 `make check` is the fast local pre-push gate: formatting, type-aware lint, full
-typechecking, layer and flag-expiry checks, spelling, dead-code detection, script and unit tests,
+typechecking, layer, flag-expiry, and env-catalog checks, spelling, dead-code detection, script and unit tests,
 and the web bundle budget. It is not a complete local reproduction of CI.
 
 CI runs an overlapping set in parallel (with affected typechecks and unit tests on PRs), then adds

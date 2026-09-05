@@ -6,7 +6,7 @@ alwaysApply: true
 # Verification
 
 `make check` is the fast local gate. It runs format checking, type-aware lint,
-typechecking, layer and flag-expiry checks, spelling, dead-code detection, script
+typechecking, layer, flag-expiry, and env-catalog checks, spelling, dead-code detection, script
 tests, unit tests, and the web bundle budget.
 
 It is not the full CI gate. CI runs overlapping checks in parallel and adds
@@ -16,7 +16,7 @@ Playwright, Lighthouse, and CodeQL. Reproduce relevant paths with
 `make openapi-check`, `make images`, `make test-integration`, `make e2e`, or
 `make lighthouse`; some require Docker and `make deps-up-test`.
 
-Faster individual loops: `make lint`, `make typecheck`, `make test`, `make layers`.
+Faster individual loops: `make lint`, `make typecheck`, `make test`, `make layers`, `make env-catalog`.
 
 Do not report work complete without running it. If a failure looks pre-existing,
 confirm that on a clean tree instead of assuming.

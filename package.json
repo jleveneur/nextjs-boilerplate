@@ -18,8 +18,9 @@
     "knip": "knip",
     "check:layers": "node scripts/check-layers.ts",
     "check:flags": "node scripts/check-flag-expiry.ts",
+    "check:env": "node scripts/check-env-catalog.ts",
     "test:scripts": "node --test \"scripts/**/*.test.ts\"",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:layers && pnpm check:flags && pnpm spell && pnpm knip && pnpm test:scripts && pnpm test",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:layers && pnpm check:flags && pnpm check:env && pnpm spell && pnpm knip && pnpm test:scripts && pnpm test",
     "changeset": "changeset",
     "changeset:status": "changeset status --since=origin/main",
     "prepare": "node scripts/install-hooks.ts"
