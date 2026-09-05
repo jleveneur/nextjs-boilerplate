@@ -39,7 +39,7 @@ export function getPostAuthHref(next: string | null | undefined, locale: string)
 
 /**
  * Absolute-on-origin path including locale — for Better Auth callbackURL / window redirects.
- * Default post-auth landing is `/continue`, which resolves the first org client-side.
+ * Default post-auth landing is `/continue`, which resolves the first org server-side.
  */
 export function getPostAuthCallbackURL(next: string | null | undefined, locale: string): string {
   const href = getPostAuthHref(next, locale);

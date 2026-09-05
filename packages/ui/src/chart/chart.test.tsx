@@ -1,3 +1,4 @@
+import { waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { expectAccessible, renderUi } from "../test/render.tsx";
@@ -11,12 +12,16 @@ const SAMPLE = [
 describe("chart", () => {
   it("renders area chart and passes axe", async () => {
     const { container } = renderUi(<SimpleAreaChart data={SAMPLE} />);
-    expect(container.querySelector("[data-slot='chart']")).not.toBeNull();
+    await waitFor(() => {
+      expect(container.querySelector("[data-slot='chart']")).not.toBeNull();
+    });
     await expectAccessible(container);
   });
 
-  it("renders bar chart", () => {
+  it("renders bar chart", async () => {
     const { container } = renderUi(<SimpleBarChart data={SAMPLE} />);
-    expect(container.querySelector("[data-slot='chart']")).not.toBeNull();
+    await waitFor(() => {
+      expect(container.querySelector("[data-slot='chart']")).not.toBeNull();
+    });
   });
 });

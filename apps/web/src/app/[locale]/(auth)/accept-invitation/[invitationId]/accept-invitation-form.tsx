@@ -21,18 +21,21 @@ export function AcceptInvitationForm({ invitationId }: Props) {
   async function accept() {
     setError(null);
     setPending(true);
-    const { error: resultError } = await authClient.organization.acceptInvitation({
-      invitationId,
-    });
-    setPending(false);
+    try {
+      const { error: resultError } = await authClient.organization.acceptInvitation({
+        invitationId,
+      });
 
-    if (resultError) {
-      setError(authErrorMessage(resultError, t("errorGeneric")));
-      return;
+      if (resultError) {
+        setError(authErrorMessage(resultError, t("errorGeneric")));
+        return;
+      }
+
+      router.push("/");
+      router.refresh();
+    } finally {
+      setPending(false);
     }
-
-    router.push("/");
-    router.refresh();
   }
 
   return (

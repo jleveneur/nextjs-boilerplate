@@ -1,17 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { lazy, Suspense, type CSSProperties, type ReactNode } from "react";
 
 import { cn } from "../lib/utils.ts";
 
@@ -23,6 +12,11 @@ export type ChartPoint = {
 type ChartShellProps = {
   className?: string;
   children: ReactNode;
+};
+
+type LoadedChartProps = {
+  variant: "area" | "bar";
+  data: readonly ChartPoint[];
 };
 
 /** Recharts defaults to a light tooltip box; bind it to theme tokens. */
@@ -46,57 +40,91 @@ const chartTooltipItemStyle = {
 
 const chartAxisTick = { fill: "var(--muted-foreground)", fontSize: 12 } satisfies CSSProperties;
 
-function ChartTooltip() {
-  return (
-    <Tooltip
-      cursor={{ stroke: "var(--border)", strokeDasharray: "3 3" }}
-      contentStyle={chartTooltipContentStyle}
-      labelStyle={chartTooltipLabelStyle}
-      itemStyle={chartTooltipItemStyle}
-    />
-  );
-}
+const chartTooltipProps = {
+  cursor: { stroke: "var(--border)", strokeDasharray: "3 3" },
+  contentStyle: chartTooltipContentStyle,
+  labelStyle: chartTooltipLabelStyle,
+  itemStyle: chartTooltipItemStyle,
+} as const;
+
+const chartFallback = <div className="h-64 w-full min-w-0" aria-busy="true" />;
 
 export function ChartContainer({ className, children }: ChartShellProps) {
   return (
     <div className={cn("h-64 w-full min-w-0", className)} data-slot="chart">
-      <ResponsiveContainer width="100%" height="100%">
-        {children}
-      </ResponsiveContainer>
+      {children}
     </div>
   );
 }
 
+const LoadedChart = lazy(async () => {
+  const {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+  } = await import("recharts");
+
+  return {
+    default({ variant, data }: LoadedChartProps) {
+      const series = [...data];
+      const plot =
+        variant === "area" ? (
+          <AreaChart data={series}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={chartAxisTick} />
+            <YAxis tickLine={false} axisLine={false} width={40} tick={chartAxisTick} />
+            <Tooltip {...chartTooltipProps} />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="var(--color-primary, var(--primary))"
+              fill="var(--color-primary, var(--primary))"
+              fillOpacity={0.15}
+            />
+          </AreaChart>
+        ) : (
+          <BarChart data={series}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={chartAxisTick} />
+            <YAxis tickLine={false} axisLine={false} width={40} tick={chartAxisTick} />
+            <Tooltip {...chartTooltipProps} />
+            <Bar
+              dataKey="value"
+              fill="var(--color-primary, var(--primary))"
+              radius={[4, 4, 0, 0]}
+            />
+          </BarChart>
+        );
+
+      return (
+        <ChartContainer>
+          <ResponsiveContainer width="100%" height="100%">
+            {plot}
+          </ResponsiveContainer>
+        </ChartContainer>
+      );
+    },
+  };
+});
+
 export function SimpleAreaChart({ data }: { data: readonly ChartPoint[] }) {
   return (
-    <ChartContainer>
-      <AreaChart data={[...data]}>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={chartAxisTick} />
-        <YAxis tickLine={false} axisLine={false} width={40} tick={chartAxisTick} />
-        <ChartTooltip />
-        <Area
-          type="monotone"
-          dataKey="value"
-          stroke="var(--color-primary, var(--primary))"
-          fill="var(--color-primary, var(--primary))"
-          fillOpacity={0.15}
-        />
-      </AreaChart>
-    </ChartContainer>
+    <Suspense fallback={chartFallback}>
+      <LoadedChart variant="area" data={data} />
+    </Suspense>
   );
 }
 
 export function SimpleBarChart({ data }: { data: readonly ChartPoint[] }) {
   return (
-    <ChartContainer>
-      <BarChart data={[...data]}>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={chartAxisTick} />
-        <YAxis tickLine={false} axisLine={false} width={40} tick={chartAxisTick} />
-        <ChartTooltip />
-        <Bar dataKey="value" fill="var(--color-primary, var(--primary))" radius={[4, 4, 0, 0]} />
-      </BarChart>
-    </ChartContainer>
+    <Suspense fallback={chartFallback}>
+      <LoadedChart variant="bar" data={data} />
+    </Suspense>
   );
 }

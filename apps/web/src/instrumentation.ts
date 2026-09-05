@@ -7,8 +7,10 @@ export async function register(): Promise<void> {
     return;
   }
 
-  const { initObservability } = await import("@repo/observability");
-  const { env } = await import("./env/server.ts");
+  const [{ initObservability }, { env }] = await Promise.all([
+    import("@repo/observability"),
+    import("./env/server.ts"),
+  ]);
 
   const release = env.SENTRY_RELEASE ?? process.env["GITHUB_SHA"];
   initObservability({

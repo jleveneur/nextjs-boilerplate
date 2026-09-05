@@ -19,7 +19,7 @@ export default async function ContinuePage({ params }: Props) {
         <CardDescription>{t("continuing")}</CardDescription>
       </CardHeader>
       <div className="px-6 pb-6">
-        <ContinueToApp />
+        <ContinueToApp locale={locale} />
       </div>
     </>
   );

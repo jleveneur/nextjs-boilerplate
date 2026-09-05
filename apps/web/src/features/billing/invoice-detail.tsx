@@ -3,7 +3,11 @@ import { Badge } from "@repo/ui";
 import { getTranslations } from "next-intl/server";
 
 import { Link } from "../../i18n/navigation.ts";
-import { formatAmountMinor, invoiceStatusBadgeVariant } from "./format-money.ts";
+import {
+  formatAmountMinor,
+  formatInvoiceDateTime,
+  invoiceStatusBadgeVariant,
+} from "./format-money.ts";
 import { VoidInvoiceButton } from "./void-invoice-button.tsx";
 
 type Props = {
@@ -39,12 +43,7 @@ export async function InvoiceDetail({ orgSlug, locale, invoice, canVoid }: Props
         <dt className="text-muted-foreground">{t("currency")}</dt>
         <dd>{invoice.currency}</dd>
         <dt className="text-muted-foreground">{t("createdAt")}</dt>
-        <dd className="tabular-nums">
-          {new Intl.DateTimeFormat(locale, {
-            dateStyle: "medium",
-            timeStyle: "short",
-          }).format(new Date(invoice.createdAt))}
-        </dd>
+        <dd className="tabular-nums">{formatInvoiceDateTime(invoice.createdAt, locale)}</dd>
       </dl>
 
       <VoidInvoiceButton invoiceId={invoice.id} canVoid={canVoid} />

@@ -5,7 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "../../i18n/navigation.ts";
 import { getBootstrappedFlags } from "../../server/flag-bootstrap.ts";
 import { createServerCaller } from "../../server/router.ts";
-import { formatAmountMinor, invoiceStatusBadgeVariant } from "./format-money.ts";
+import { formatAmountMinor, formatInvoiceDate, invoiceStatusBadgeVariant } from "./format-money.ts";
 import {
   InvoiceStatusFilter,
   type InvoiceStatusFilter as InvoiceStatusFilterValue,
@@ -83,9 +83,7 @@ export async function InvoiceList({ orgSlug, status }: Props) {
                     {formatAmountMinor(invoice.amountMinor, invoice.currency, locale)}
                   </td>
                   <td className="text-muted-foreground px-2 py-3 tabular-nums">
-                    {new Intl.DateTimeFormat(locale, {
-                      dateStyle: "medium",
-                    }).format(new Date(invoice.createdAt))}
+                    {formatInvoiceDate(invoice.createdAt, locale)}
                   </td>
                 </tr>
               ))}
