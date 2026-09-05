@@ -1,5 +1,13 @@
 # @repo/orpc
 
+## 0.2.2
+
+### Patch Changes
+
+- @repo/db@0.2.1
+  - @repo/auth@0.1.2
+  - @repo/core@1.0.1
+
 ## 0.2.1
 
 ### Patch Changes

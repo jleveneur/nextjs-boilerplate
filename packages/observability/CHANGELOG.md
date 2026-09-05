@@ -1,5 +1,11 @@
 # @repo/observability
 
+## 0.2.0
+
+### Minor Changes
+
+- d03d93a: Tag Sentry events with the service name (`api`, `worker`, `web`) at initialisation so errors across apps can report to a single unified Sentry project.
+
 ## 0.1.1
 
 ### Patch Changes
