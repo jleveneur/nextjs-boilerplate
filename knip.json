@@ -37,6 +37,10 @@
     "packages/orpc": {
       "entry": ["vitest.server-only-stub.ts"]
     },
+    "packages/storage": {
+      // Referenced only via Vitest `resolve.alias` for `server-only`.
+      "entry": ["vitest.server-only-stub.ts"]
+    },
     "apps/web": {
       // LHCI config is passed as a CLI flag (`--config=lighthouserc.cjs`), which
       // Knip does not treat as a script reference.
@@ -49,7 +53,6 @@
         "vitest.server-only-stub.ts",
         // Referenced only via tsdown `alias` for Docker bundles.
         "server-only-stub.ts",
-        "sharp-stub.ts",
         "src/**/*.integration.test.ts"
       ]
     },

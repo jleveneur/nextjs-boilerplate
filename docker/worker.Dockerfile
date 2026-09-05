@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1.26@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
-# Production image for @repo/worker — turbo prune + tsdown bundle + sharp.
+# Production image for @repo/worker — turbo prune + tsdown bundle.
+# Sharp is installed in a dedicated stage: tsdown leaves the native module
+# external so Alpine can ship the musl libvips binary (`@repo/storage/image`).
 # Shape: docs/architecture/11-infrastructure-and-deployment.md
 
 ARG NODE_IMAGE=node:24.19.0-alpine@sha256:d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43
@@ -33,6 +35,7 @@ RUN pnpm --filter @repo/worker build \
 
 FROM ${NODE_IMAGE} AS sharp
 WORKDIR /sharp
+# Keep in lockstep with catalog.sharp in pnpm-workspace.yaml.
 RUN npm install --omit=dev --no-audit --no-fund sharp@0.35.4 \
   && rm -rf package.json package-lock.json /root/.npm /tmp/*
 

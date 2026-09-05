@@ -2,7 +2,6 @@
 import "server-only";
 
 export { derivativeObjectKey, type ImageDerivativeFormat } from "./derivative-key.ts";
-export { deriveImageVariants, type ImageDerivatives } from "./derive-image.ts";
 export { buildObjectKey } from "./key.ts";
 export { createFileStore } from "./s3-file-store.ts";
 export type {

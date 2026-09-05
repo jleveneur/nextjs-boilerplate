@@ -2,15 +2,16 @@ import { permissionsForRole } from "@repo/authz";
 import { findAssetById, updateAssetStatus, type AssetRow } from "@repo/db";
 import type * as DbModule from "@repo/db";
 import { ForbiddenError } from "@repo/errors";
-import { derivativeObjectKey, deriveImageVariants } from "@repo/storage";
-import type * as StorageModule from "@repo/storage";
+import { derivativeObjectKey } from "@repo/storage";
+import { deriveImageVariants } from "@repo/storage/image";
+import type * as StorageImageModule from "@repo/storage/image";
 import type { Actor, AssetId, OrganizationId, UserId } from "@repo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Ctx } from "../ctx.ts";
 import { createTestPorts } from "../testing/create-test-ports.ts";
 import { AssetDerivationInputMissingError } from "./asset.errors.ts";
-import { deriveAssetVariants } from "./asset.service.ts";
+import { deriveAssetVariants } from "./derive-asset-variants.ts";
 
 vi.mock("@repo/db", async (importOriginal) => {
   const actual = await importOriginal<typeof DbModule>();
@@ -21,8 +22,8 @@ vi.mock("@repo/db", async (importOriginal) => {
   };
 });
 
-vi.mock("@repo/storage", async (importOriginal) => {
-  const actual = await importOriginal<typeof StorageModule>();
+vi.mock("@repo/storage/image", async (importOriginal) => {
+  const actual = await importOriginal<typeof StorageImageModule>();
   return {
     ...actual,
     deriveImageVariants: vi.fn(),

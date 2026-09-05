@@ -15,7 +15,7 @@
 6. **Small**: budgets are **linux/amd64** uncompressed `docker image inspect` sizes
    (CI gate): web &lt; 275 MB, api &lt; 165 MB, worker &lt; 190 MB. Arm64 locals run smaller;
    do not calibrate against them. Runners start from Alpine and copy only the `node`
-   binary (plus Sharp where needed), so yarn/npm from the Node image never ship.
+   binary (plus Sharp on the worker), so yarn/npm from the Node image never ship.
    Hidden sourcemaps are built for Sentry upload but stripped before the runtime `COPY`.
 7. **Observable**: `HEALTHCHECK`, graceful `SIGTERM` handling, build metadata as labels.
 
@@ -65,10 +65,11 @@ builds go from seconds to minutes.
 `node_modules`. This is what makes source-only internal packages
 ([03](./03-package-graph-and-boundaries.md)) work in production: bundling resolves the workspace
 graph at build time, so the runtime image contains the ESM graph and no workspace symlinks. It also
-cuts image size dramatically and removes install-time surprises. `sharp` stays external on the
-worker image so Alpine can install the musl native binary; the web runner reinstalls `sharp` and
-patches traced libvips paths because Next standalone file-tracing often drops the `.so` on musl.
-`apps/web` uses Next's `output: "standalone"`, which does the equivalent for the app graph.
+cuts image size dramatically and removes install-time surprises. Next 16 includes `sharp` as an
+optional dependency and traces it into standalone output, so the web and docs runners do not
+reinstall a second copy. The worker still leaves `sharp` external: tsdown cannot bundle the native
+module, and Alpine must ship the musl libvips binary for `@repo/storage/image`. `apps/web` uses
+Next's `output: "standalone"`, which does the equivalent for the app graph.
 
 **Local prod-like stack** (`docker/compose.prod.yaml`) runs Traefik on HTTP with Docker labels
 routing to the built `web` / `api` images; the worker stays internal; a one-shot `migrate`

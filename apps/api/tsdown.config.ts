@@ -7,7 +7,6 @@ import { defineConfig } from "tsdown";
  * `server-only` is stubbed (Node process, not an RSC boundary).
  * Treeshake is off: bundling better-auth's organization plugin with treeshake
  * produced `Export 'getOrgAdapter' is not defined in module` at runtime.
- * `sharp` is stubbed — the API graph can pull it transitively but never calls it.
  *
  * Alias targets must be absolute: relative paths are resolved from the importer
  * (workspace packages), which fails inside the Docker prune build.
@@ -25,7 +24,6 @@ export default defineConfig({
   treeshake: false,
   alias: {
     "server-only": `${import.meta.dirname}/server-only-stub.ts`,
-    sharp: `${import.meta.dirname}/sharp-stub.ts`,
   },
   deps: {
     alwaysBundle: [/.*/],

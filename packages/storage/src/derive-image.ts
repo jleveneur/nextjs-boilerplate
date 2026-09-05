@@ -1,8 +1,13 @@
 /**
  * Sharp-based image derivatives: WebP + AVIF with EXIF stripped.
  *
- * Runs in the worker process only — never on the request path.
+ * Import `@repo/storage/image` from the worker only — never from a request
+ * path or a Next.js server graph. The package root stays Sharp-free so
+ * `createFileStore` cannot pull libvips into web/API bundles.
  */
+
+// oxlint-disable-next-line import/no-unassigned-import
+import "server-only";
 
 import sharp from "sharp";
 
