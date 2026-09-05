@@ -14,6 +14,8 @@ import { resolve } from "node:path";
 
 import {
   assignmentKeys,
+  catalogBodyStructure,
+  catalogFormatProblems,
   checkEnvCatalog,
   checkEnvCatalogFromRoot,
   parseAssignments,
@@ -60,6 +62,28 @@ describe("parseAssignments", () => {
   });
 });
 
+describe("catalogFormatProblems", () => {
+  it("accepts KEY=value and # KEY=value with a trailing newline", () => {
+    assert.deepEqual(catalogFormatProblems("APP_ENV=local\n# SMTP_URL=\n", ".env.example"), []);
+  });
+
+  it("rejects spaces around = and a missing space after #", () => {
+    const problems = catalogFormatProblems("APP_ENV = local\n#SMTP_URL=\n", ".env.example");
+    assert.equal(problems.length, 2);
+    assert.match(problems[0] ?? "", /assignment must be KEY=value/);
+    assert.match(problems[1] ?? "", /assignment must be KEY=value/);
+  });
+});
+
+describe("catalogBodyStructure", () => {
+  it("treats commented and set lines as the same key slot", () => {
+    assert.deepEqual(
+      catalogBodyStructure("NODE_ENV=development\n# SMTP_URL=\n"),
+      catalogBodyStructure("NODE_ENV=production\nSMTP_URL=smtp://127.0.0.1:55438\n"),
+    );
+  });
+});
+
 describe("checkEnvCatalog", () => {
   it("accepts matching catalogs that cover the preset keys", () => {
     const keys = ["NODE_ENV", "APP_ENV", "APP_URL", "DATABASE_URL", "SMTP_URL"];
@@ -85,8 +109,31 @@ APP_URL=https://staging.example.com
       "DATABASE_URL",
       "SMTP_URL",
     ]);
+    assert.ok(report.problems.some((problem) => /staging\.example keys differ/.test(problem)));
+  });
+
+  it("rejects a section-comment drift in staging", () => {
+    const example = `NODE_ENV=development
+APP_ENV=local
+# Database
+DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55432/app
+`;
+    const staging = `NODE_ENV=production
+APP_ENV=staging
+DATABASE_URL=postgres://USER:PASSWORD@db.example.com:5432/app_staging
+`;
+    const production = `NODE_ENV=production
+APP_ENV=production
+# Database
+DATABASE_URL=postgres://USER:PASSWORD@db.example.com:5432/app
+`;
+    const report = checkEnvCatalog({ example, staging, production }, [
+      "NODE_ENV",
+      "APP_ENV",
+      "DATABASE_URL",
+    ]);
     assert.equal(report.problems.length, 1);
-    assert.match(report.problems[0] ?? "", /staging\.example keys differ/);
+    assert.match(report.problems[0] ?? "", /staging\.example body differs/);
   });
 
   it("rejects a preset key missing from the catalog", () => {
