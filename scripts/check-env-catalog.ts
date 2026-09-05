@@ -1,10 +1,11 @@
 /**
- * Asserts the three committed env catalogs list the same keys, in the same
- * order, and that every `@repo/env` preset key appears in that catalog.
+ * Asserts the three committed env catalogs share one body (same keys, same
+ * order, same section comments) and that every `@repo/env` preset key appears.
  *
  * `.env.example` is the reference for what exists (docs/architecture/09 §5).
  * Staging and production placeholders must not silently drop a variable, and a
- * preset added without a documented entry is incomplete work.
+ * preset added without a documented entry is incomplete work. Only values and
+ * which assignment lines are uncommented may differ.
  *
  * Run: node scripts/check-env-catalog.ts
  * Test: node --test scripts/check-env-catalog.test.ts
@@ -36,6 +37,12 @@ import { productionProblems } from "../packages/env/src/production.ts";
 
 /** `KEY=value` or `# KEY=value`. Captures whether the line is commented. */
 const ASSIGNMENT = /^(?<comment>#\s*)?(?<key>[A-Z][A-Z0-9_]*)=(?<value>.*)$/u;
+
+/** Canonical assignment line: no spaces around `=`, exactly one space after `#`. */
+const FORMATTED_ASSIGNMENT = /^(?:# )?[A-Z][A-Z0-9_]*=.*$/u;
+
+/** Line that is meant to be an assignment but may be mistyped. */
+const ASSIGNMENT_LIKE = /^#?\s*[A-Z][A-Z0-9_]*\s*=/u;
 
 export type EnvAssignment = {
   key: string;
@@ -101,6 +108,59 @@ export function parseAssignments(source: string): EnvAssignment[] {
   return assignments;
 }
 
+/**
+ * Body skeleton from the first assignment onward: blanks, prose comments, and
+ * key slots. Commented vs set is ignored so the three files can differ only in
+ * values and which lines are uncommented.
+ */
+export function catalogBodyStructure(source: string): string[] {
+  const lines = source.replaceAll("\r\n", "\n").replaceAll("\r", "\n").split("\n");
+  if (lines.at(-1) === "") {
+    lines.pop();
+  }
+  const start = lines.findIndex((line) => ASSIGNMENT.exec(line.trim()) !== null);
+  const body = start === -1 ? lines : lines.slice(start);
+  return body.map((line) => {
+    const match = ASSIGNMENT.exec(line.trim());
+    const key = match?.groups?.["key"];
+    if (key !== undefined) {
+      return `key:${key}`;
+    }
+    if (line.trim() === "") {
+      return "blank";
+    }
+    return `prose:${line}`;
+  });
+}
+
+/** Mechanical dotenv shape: LF, trailing newline, `KEY=value` or `# KEY=value`. */
+export function catalogFormatProblems(source: string, file: string): string[] {
+  const problems: string[] = [];
+  if (source.includes("\r")) {
+    problems.push(`${file}: CRLF line endings`);
+  }
+  if (!source.endsWith("\n")) {
+    problems.push(`${file}: missing trailing newline`);
+  }
+
+  const lines = source.split("\n");
+  const contentLines = source.endsWith("\n") ? lines.slice(0, -1) : lines;
+  for (const [index, line] of contentLines.entries()) {
+    const at = `${file}:${String(index + 1)}`;
+    if (line !== line.trimEnd()) {
+      problems.push(`${at}: trailing whitespace`);
+    }
+    if (line.startsWith(" ") || line.startsWith("\t")) {
+      problems.push(`${at}: leading whitespace`);
+    }
+    if (ASSIGNMENT_LIKE.test(line) && !FORMATTED_ASSIGNMENT.test(line)) {
+      problems.push(`${at}: assignment must be KEY=value or # KEY=value`);
+    }
+  }
+
+  return problems;
+}
+
 /** First-seen assignment keys, in file order. */
 export function assignmentKeys(assignments: readonly EnvAssignment[]): string[] {
   const keys: string[] = [];
@@ -157,6 +217,24 @@ export function checkEnvCatalog(
   presetKeys: readonly string[] = presetCatalogKeys(),
 ): EnvCatalogReport {
   const problems: string[] = [];
+
+  problems.push(
+    ...catalogFormatProblems(files.example, ".env.example"),
+    ...catalogFormatProblems(files.staging, ".env.staging.example"),
+    ...catalogFormatProblems(files.production, ".env.production.example"),
+  );
+
+  const exampleBody = catalogBodyStructure(files.example);
+  const stagingBodyMismatch = firstMismatch(exampleBody, catalogBodyStructure(files.staging));
+  if (stagingBodyMismatch !== undefined) {
+    problems.push(`.env.staging.example body differs from .env.example (${stagingBodyMismatch})`);
+  }
+  const productionBodyMismatch = firstMismatch(exampleBody, catalogBodyStructure(files.production));
+  if (productionBodyMismatch !== undefined) {
+    problems.push(
+      `.env.production.example body differs from .env.example (${productionBodyMismatch})`,
+    );
+  }
 
   const parsed = {
     ".env.example": parseAssignments(files.example),

@@ -61,6 +61,7 @@ setup: ## Idempotent clean-machine bootstrap (tools, deps, .env, services, migra
 	@docker info >/dev/null 2>&1 || (echo "Docker daemon is not running" && exit 1)
 	pnpm install
 	@if [ ! -f .env ]; then cp .env.example .env; echo "Created .env from .env.example"; fi
+	@if [ ! -f apps/web/.env ]; then cp .env apps/web/.env; echo "Created apps/web/.env from .env"; fi
 	@if [ ! -f apps/docs/.env ]; then cp apps/docs/.env.example apps/docs/.env; echo "Created apps/docs/.env from apps/docs/.env.example"; fi
 	$(MAKE) deps-up
 

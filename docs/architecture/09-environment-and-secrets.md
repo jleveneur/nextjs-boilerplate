@@ -128,9 +128,9 @@ Jaeger `55443`, OTLP `55444`/`55445`, Prometheus `55447`, Grafana `55448`.
 
 `.env.example` is committed, exhaustively commented, and contains working defaults for every local
 service. It is the reference for what exists; a variable added without a documented entry there is
-treated as incomplete work. `.env.staging.example` and `.env.production.example` list the **same
-keys in the same order** (values and which lines are uncommented differ). Enforced by
-`scripts/check-env-catalog.ts`.
+treated as incomplete work. `.env.staging.example` and `.env.production.example` share the **same
+body**: same keys, same order, same section comments (values and which assignment lines are
+uncommented differ). Enforced by `scripts/check-env-catalog.ts`.
 
 ---
 
@@ -186,8 +186,9 @@ the presets it imports. Placeholder files:
 | [`.env.staging.example`](../../.env.staging.example)       | Staging-shaped deploy       |
 | [`.env.production.example`](../../.env.production.example) | Production-shaped deploy    |
 
-These three files are one catalog: same keys, same order. `make env-catalog` (also part of
-`make check`) fails if they drift or if an `@repo/env` preset key is missing.
+These three files are one catalog: same keys, same order, same section comments.
+`make env-catalog` (also part of `make check`) fails if they drift or if an `@repo/env` preset
+key is missing.
 
 ### Shared / base (every process)
 
