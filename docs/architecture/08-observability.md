@@ -150,6 +150,13 @@ Sentry receives **unexpected** errors only. Expected domain errors (`ValidationE
 `NotFoundError`, `ForbiddenError`) are logged and never reported, because an alert channel with
 false positives is an alert channel nobody reads.
 
+**Single project across all apps:** To eliminate setup friction, all services (`web`, `api`,
+`worker`, and the browser client) report to a single Sentry project by default, differentiated
+by the `service` tag (`service: "web" | "api" | "worker"`). A single DSN (`SENTRY_DSN` for server,
+`NEXT_PUBLIC_SENTRY_DSN` for browser) and single CI variable (`SENTRY_PROJECT`) are all that is
+needed to configure error tracking across the entire monorepo. (Per-service overrides like
+`SENTRY_DSN_API` or `SENTRY_PROJECT_API` remain supported if separation is ever required).
+
 Configuration: source maps uploaded from [`publish.yml`](../../.github/workflows/publish.yml)
 on pushes to `main` (same SHA as GHCR tags; not on PRs) and **not** publicly served; release
 tagged with the git SHA so regressions are attributable to a deploy; `tracesSampleRate` aligned

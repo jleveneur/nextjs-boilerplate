@@ -28,6 +28,7 @@ export function SentryProvider({ children }: { children: ReactNode }): ReactNode
           return event;
         },
       });
+      Sentry.setTag("service", "web");
     })();
   }, []);
 

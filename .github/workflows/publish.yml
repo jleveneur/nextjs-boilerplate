@@ -56,6 +56,7 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
           SENTRY_PROJECT_API: ${{ vars.SENTRY_PROJECT_API }}
           SENTRY_PROJECT_WORKER: ${{ vars.SENTRY_PROJECT_WORKER }}
           SENTRY_PROJECT_WEB: ${{ vars.SENTRY_PROJECT_WEB }}
@@ -85,9 +86,9 @@ jobs:
               --release "$release" \
               "$dist_dir"
           }
-          upload "$SENTRY_PROJECT_API" apps/api/dist
-          upload "$SENTRY_PROJECT_WORKER" apps/worker/dist
-          upload "$SENTRY_PROJECT_WEB" apps/web/.next/static
+          upload "${SENTRY_PROJECT_API:-$SENTRY_PROJECT}" apps/api/dist
+          upload "${SENTRY_PROJECT_WORKER:-$SENTRY_PROJECT}" apps/worker/dist
+          upload "${SENTRY_PROJECT_WEB:-$SENTRY_PROJECT}" apps/web/.next/static
 
   build:
     name: Build ${{ matrix.app.name }} (${{ matrix.platform.name }})

@@ -41,4 +41,14 @@ describe("initObservability", () => {
       }),
     ).toThrow(/SENTRY_DSN/);
   });
+
+  it("initializes sentry with service tag and shuts down cleanly", async () => {
+    const handle = initObservability({
+      serviceName: "api",
+      otel: { enabled: false },
+      sentry: { enabled: true, dsn: "https://public@sentry.example.com/1" },
+    });
+    handles.push(handle);
+    await expect(handle.shutdown()).resolves.toBeUndefined();
+  });
 });

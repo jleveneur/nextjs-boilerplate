@@ -60,8 +60,11 @@ export const env = createEnv({
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
     OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
     SENTRY_ENABLED: process.env["SENTRY_ENABLED"],
-    // Prefer per-service DSN when the monorepo shares one `.env`.
-    SENTRY_DSN: process.env["SENTRY_DSN_WEB"] ?? process.env["SENTRY_DSN"],
+    // Prefer per-service DSN when set; falls back to SENTRY_DSN or NEXT_PUBLIC_SENTRY_DSN.
+    SENTRY_DSN:
+      process.env["SENTRY_DSN_WEB"] ??
+      process.env["SENTRY_DSN"] ??
+      process.env["NEXT_PUBLIC_SENTRY_DSN"],
     SENTRY_ENVIRONMENT: process.env["SENTRY_ENVIRONMENT"],
     SENTRY_RELEASE: process.env["SENTRY_RELEASE"],
     POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],

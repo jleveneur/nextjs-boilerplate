@@ -19,6 +19,8 @@ export type SentryInitOptions = {
   release?: string;
   /** Align with OTel sampling; default 0 (errors only via captureException). */
   tracesSampleRate?: number;
+  /** Service name tag (e.g. `api`, `worker`, `web`) for filtering in a unified Sentry project. */
+  serviceName?: string;
 };
 
 export type InitObservabilityOptions = {

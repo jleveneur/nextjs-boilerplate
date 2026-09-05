@@ -11,7 +11,10 @@ import type { InitObservabilityOptions, ObservabilityHandle } from "./types.ts";
 
 export function initObservability(options: InitObservabilityOptions): ObservabilityHandle {
   const otel = initOtel(options.serviceName, options.otel);
-  const sentry = initSentry(options.sentry);
+  const sentry = initSentry({
+    ...options.sentry,
+    serviceName: options.sentry.serviceName ?? options.serviceName,
+  });
 
   return {
     async shutdown() {

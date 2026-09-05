@@ -73,6 +73,10 @@ export function initSentry(options: SentryInitOptions): SentryHandle {
     },
   });
 
+  if (options.serviceName !== undefined && options.serviceName !== "") {
+    Sentry.setTag("service", options.serviceName);
+  }
+
   return {
     async shutdown() {
       await Sentry.close(2000);
