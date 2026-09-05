@@ -1,5 +1,12 @@
 # @repo/db
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [7afd252]
+  - @repo/env@0.1.0
+
 ## 0.2.0
 
 ### Minor Changes
