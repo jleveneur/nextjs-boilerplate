@@ -42,14 +42,14 @@ export function createNoopFileStore(): FileStore {
 }
 
 function createFlagPort(options: {
-  flagsJson?: string;
+  flagValues?: Readonly<Record<string, boolean>>;
   posthogApiKey?: string;
   posthogHost?: string;
 }): FlagProvider {
   const envProvider =
-    options.flagsJson === undefined
+    options.flagValues === undefined
       ? createEnvFlagProvider()
-      : createEnvFlagProvider({ flagsJson: options.flagsJson });
+      : createEnvFlagProvider({ values: options.flagValues });
   const posthogProvider =
     options.posthogApiKey !== undefined &&
     options.posthogApiKey !== "" &&
@@ -83,7 +83,7 @@ export function createAppPorts(options: {
   emailMailer: EmailMailer;
   posthogApiKey?: string;
   posthogHost?: string;
-  flagsJson?: string;
+  flagValues?: Readonly<Record<string, boolean>>;
   stripeSecretKey?: string;
 }): AppPortsHandle {
   const events = createInProcessEventBus();

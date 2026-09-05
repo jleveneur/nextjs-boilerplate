@@ -25,9 +25,6 @@ const api = z.object({
  */
 export const env = createEnv({
   server: [base, db, redis, auth, resend, smtp, otel, sentry, posthog, featureFlags, stripe, api],
-
-  skipValidation:
-    process.env["SKIP_ENV_VALIDATION"] === "1" || process.env["SKIP_ENV_VALIDATION"] === "true",
   runtimeEnv: {
     NODE_ENV: process.env["NODE_ENV"],
     APP_ENV: process.env["APP_ENV"],
@@ -43,7 +40,6 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: process.env["GOOGLE_CLIENT_ID"],
     GOOGLE_CLIENT_SECRET: process.env["GOOGLE_CLIENT_SECRET"],
     RESEND_API_KEY: process.env["RESEND_API_KEY"],
-
     EMAIL_FROM: process.env["EMAIL_FROM"],
     SMTP_URL: process.env["SMTP_URL"],
     MAILPIT_API_URL: process.env["MAILPIT_API_URL"],
@@ -51,8 +47,7 @@ export const env = createEnv({
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
     OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
     SENTRY_ENABLED: process.env["SENTRY_ENABLED"],
-    // Prefer per-service DSN when the monorepo shares one `.env`.
-    SENTRY_DSN: process.env["SENTRY_DSN_API"] ?? process.env["SENTRY_DSN"],
+    SENTRY_DSN: process.env["SENTRY_DSN"],
     SENTRY_ENVIRONMENT: process.env["SENTRY_ENVIRONMENT"],
     SENTRY_RELEASE: process.env["SENTRY_RELEASE"],
     POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
@@ -61,6 +56,5 @@ export const env = createEnv({
     API_PORT: process.env["API_PORT"],
     STRIPE_SECRET_KEY: process.env["STRIPE_SECRET_KEY"],
     STRIPE_WEBHOOK_SECRET: process.env["STRIPE_WEBHOOK_SECRET"],
-    SKIP_ENV_VALIDATION: process.env["SKIP_ENV_VALIDATION"],
   },
 });

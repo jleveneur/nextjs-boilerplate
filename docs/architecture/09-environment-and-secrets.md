@@ -51,40 +51,45 @@ export const env = createEnv({
   server: [base, db, redis, s3, resend, otel],
   runtimeEnv: {
     DATABASE_URL: process.env["DATABASE_URL"],
-    // ...the other keys this process accepts
+    // every key the composed schemas read — TypeScript errors if one is missing
   },
 })
 ```
 
 This is the payoff of composition over one monolithic schema: an app fails fast on _its_ missing
 variables, and nothing is required to hold credentials it never uses. Explicit `runtimeEnv`
-objects also make the accepted boundary visible at the app entry point. `createEnv` can default
-to `process.env` for server-side callers, but applications use explicit objects so configuration
-does not become an ad hoc ambient dependency.
+objects also make the accepted boundary visible at the app entry point. The map is exhaustive:
+adding a field to a preset is a type error at every composition root until that key is listed.
+`createEnv` can default to `process.env` for server-side callers, but applications use explicit
+objects so configuration does not become an ad hoc ambient dependency.
 
 ### Validation rules
 
 - **Typed coercion, not strings.** Ports and pool sizes are `z.coerce.number().int().positive()`;
   booleans are `z.enum(["true","false"]).transform(...)`, because `Boolean("false")` is `true` and
-  that bug ships silently.
+  that bug ships silently. Empty strings are treated as unset before parse, so `PORT=` applies a
+  default instead of failing as an invalid number.
 - **Semantic validation, not just presence.** `DATABASE_URL` must parse as a `postgres://` URL,
-  `APP_URL` must be a valid absolute URL, secrets have minimum lengths.
-- **Cross-field refinements.** Example: if `OTEL_ENABLED=true`, then `OTEL_EXPORTER_OTLP_ENDPOINT`
-  is required. This is where a hand-rolled module earns its place.
-- **Production-only strictness.** `refine`s that reject development defaults when `APP_ENV` is
-  `production`: no `localhost` URLs, no `dev-` prefixed secrets, no `test` Stripe keys. This
-  single check catches the most embarrassing class of deploy mistake.
+  `APP_URL` must be a valid absolute URL, secrets have minimum lengths. `FLAGS_JSON` is parsed as
+  a JSON object of booleans at boot.
+- **Cross-field refinements live on the preset.** Example: if `OTEL_ENABLED=true`, then
+  `OTEL_EXPORTER_OTLP_ENDPOINT` is required. Shape-merge drops Zod `.refine()`, so pairing rules
+  attach via `definePreset` and run only when that preset was composed.
+- **Staging and production strictness.** Checks that reject development defaults when `APP_ENV` is
+  `staging` or `production`: no `localhost` URLs, no `dev-` prefixed secrets, no `test` Stripe
+  keys. Preview stays loose. This single check catches the most embarrassing class of deploy
+  mistake.
 - **Fail loudly.** Errors print every invalid variable at once with its reason — never one at a
   time, which turns a first deploy into a guessing game.
 - **`SKIP_ENV_VALIDATION=1`** for Docker builds where runtime secrets are legitimately absent.
-  Validation then happens at container start instead.
+  Validation then happens at container start instead. The skip path still returns only schema keys.
 
 ### Client safety
 
-`client.ts` accepts only `NEXT_PUBLIC_`-prefixed keys, enforced by the schema itself. `server.ts`
-imports `server-only`, so any client component reaching it fails the build with a clear error. A
-CI check additionally greps the client bundle for known secret patterns — belt and braces, because
-this failure mode is unrecoverable once published.
+`client.ts` accepts only `NEXT_PUBLIC_`-prefixed keys, enforced at the type level and again at
+runtime. `server.ts` imports `server-only`, so any client component reaching it fails the build
+with a clear error. A CI check additionally greps the client bundle for known secret patterns —
+belt and braces, because this failure mode is unrecoverable once published.
 
 ---
 
@@ -112,18 +117,20 @@ branched from staging's schema, so migrations are exercised on realistic data be
 ### Local development
 
 `make setup` is idempotent and does everything: check tool versions, `pnpm install`, copy
-`.env.example` → `.env.local`, start Docker services, wait for health, migrate, seed, print next
+`.env.example` → `.env`, start Docker services, wait for health, migrate, seed, print next
 steps.
 
 Local services in `docker/compose.yaml`: PostgreSQL 18, Redis, MinIO (with the bucket
 pre-created), Mailpit (SMTP catcher with a web UI so email is inspectable without sending),
 OTel collector (OTLP → Jaeger traces + Prometheus metrics), Jaeger UI, Prometheus, and Grafana.
-Host ports: Postgres `55432`, Redis `55434`, Jaeger `55443`, OTLP `55444`/`55445`, Prometheus
-`55447`, Grafana `55448`.
+Host ports: Postgres `55432`, Redis `55434`, MinIO `55436`/`55437`, Mailpit `55438`/`55439`,
+Jaeger `55443`, OTLP `55444`/`55445`, Prometheus `55447`, Grafana `55448`.
 
 `.env.example` is committed, exhaustively commented, and contains working defaults for every local
 service. It is the reference for what exists; a variable added without a documented entry there is
-treated as incomplete work.
+treated as incomplete work. `.env.staging.example` and `.env.production.example` list the **same
+keys in the same order** (values and which lines are uncommented differ). Enforced by
+`scripts/check-env-catalog.ts`.
 
 ---
 
@@ -179,6 +186,9 @@ the presets it imports. Placeholder files:
 | [`.env.staging.example`](../../.env.staging.example)       | Staging-shaped deploy       |
 | [`.env.production.example`](../../.env.production.example) | Production-shaped deploy    |
 
+These three files are one catalog: same keys, same order. `make env-catalog` (also part of
+`make check`) fails if they drift or if an `@repo/env` preset key is missing.
+
 ### Shared / base (every process)
 
 | Variable    | Kind    | Notes                                                       |
@@ -211,12 +221,12 @@ the presets it imports. Placeholder files:
 
 ### Email (`resend` + optional `smtp`) — web, api, worker
 
-| Variable          | Kind           | Notes                                          |
-| ----------------- | -------------- | ---------------------------------------------- |
-| `RESEND_API_KEY`  | runtime secret | Must start with `re_`                          |
-| `EMAIL_FROM`      | runtime        | Valid email                                    |
-| `SMTP_URL`        | runtime        | Optional; preferred when set (Mailpit locally) |
-| `MAILPIT_API_URL` | runtime        | Optional local inspection                      |
+| Variable          | Kind           | Notes                                                                 |
+| ----------------- | -------------- | --------------------------------------------------------------------- |
+| `RESEND_API_KEY`  | runtime secret | Must start with `re_`. Required unless `SMTP_URL` is set.             |
+| `EMAIL_FROM`      | runtime        | Valid email; always required when a mail preset is composed           |
+| `SMTP_URL`        | runtime        | Optional; preferred when set (Mailpit locally). At least one channel. |
+| `MAILPIT_API_URL` | runtime        | Optional local inspection                                             |
 
 ### Object storage (`s3`) — web, worker
 
@@ -234,16 +244,27 @@ the presets it imports. Placeholder files:
 | `NEXT_PUBLIC_APP_URL`                              | **build-time** | Baked into the web / docs images            |
 | `NEXT_PUBLIC_APP_ENV`                              | **build-time** | Baked into the web / docs images            |
 | `NEXT_PUBLIC_POSTHOG_*` / `NEXT_PUBLIC_SENTRY_DSN` | **build-time** | Only when those client presets are composed |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`               | **build-time** | Optional; must start with `pk_`             |
 
 ### Observability / payments presets (composed when wired — Phase 14/17)
 
-| Variable                                                             | Kind           | Notes                                        |
-| -------------------------------------------------------------------- | -------------- | -------------------------------------------- |
-| `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_SERVICE_NAME` | runtime        | Off by default                               |
-| `SENTRY_ENABLED` / `SENTRY_DSN` / `SENTRY_RELEASE`                   | runtime        | Off by default                               |
-| `POSTHOG_API_KEY` / `POSTHOG_HOST`                                   | runtime        | Server capture                               |
-| `FLAGS_JSON`                                                         | runtime        | Env flag overrides (`@repo/flags`)           |
-| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`                        | runtime secret | Rejected test keys when `APP_ENV=production` |
+| Variable                                                                  | Kind           | Notes                                                            |
+| ------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------- |
+| `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_SERVICE_NAME`      | runtime        | Off by default                                                   |
+| `SENTRY_ENABLED` / `SENTRY_DSN` / `SENTRY_ENVIRONMENT` / `SENTRY_RELEASE` | runtime        | Off by default; DSN required when enabled                        |
+| `POSTHOG_API_KEY` / `POSTHOG_HOST`                                        | runtime        | Server capture; host required when the key is set                |
+| `FLAGS_JSON`                                                              | runtime        | JSON object of boolean flag overrides                            |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`                             | runtime secret | Pair required together; test keys rejected in staging/production |
+
+### CI source maps (not runtime)
+
+Set on the publish workflow, not in the running container. One project for all apps.
+
+| Variable            | Kind        | Notes                       |
+| ------------------- | ----------- | --------------------------- |
+| `SENTRY_ORG`        | CI variable | Sentry org slug             |
+| `SENTRY_PROJECT`    | CI variable | Single project for all apps |
+| `SENTRY_AUTH_TOKEN` | CI secret   | Source-map upload           |
 
 ### Process ports (app-local)
 
@@ -259,7 +280,8 @@ the presets it imports. Placeholder files:
 | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `SKIP_ENV_VALIDATION=1` | **Image build only** — secrets are legitimately absent. Validation is mandatory at container/process start. |
 
-Production strictness (`APP_ENV=production`): no localhost URLs, no `dev-` secret prefixes, no Stripe test keys — see `packages/env/src/production.ts`.
+Production strictness (`APP_ENV` is `staging` or `production`): no localhost URLs, no `dev-`
+secret prefixes, no Stripe test keys — see `packages/env/src/production.ts`. Preview stays loose.
 
 ---
 

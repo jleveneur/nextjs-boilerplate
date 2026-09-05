@@ -7,5 +7,5 @@
     // by omitting the type.
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "vitest.config.ts"]
 }

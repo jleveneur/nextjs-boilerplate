@@ -28,8 +28,6 @@ const worker = z.object({
  */
 export const env = createEnv({
   server: [base, db, redis, s3, resend, smtp, otel, sentry, posthog, featureFlags, stripe, worker],
-  skipValidation:
-    process.env["SKIP_ENV_VALIDATION"] === "1" || process.env["SKIP_ENV_VALIDATION"] === "true",
   runtimeEnv: {
     NODE_ENV: process.env["NODE_ENV"],
     APP_ENV: process.env["APP_ENV"],
@@ -51,8 +49,7 @@ export const env = createEnv({
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
     OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
     SENTRY_ENABLED: process.env["SENTRY_ENABLED"],
-    // Prefer per-service DSN when the monorepo shares one `.env`.
-    SENTRY_DSN: process.env["SENTRY_DSN_WORKER"] ?? process.env["SENTRY_DSN"],
+    SENTRY_DSN: process.env["SENTRY_DSN"],
     SENTRY_ENVIRONMENT: process.env["SENTRY_ENVIRONMENT"],
     SENTRY_RELEASE: process.env["SENTRY_RELEASE"],
     POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
@@ -62,6 +59,5 @@ export const env = createEnv({
     STRIPE_WEBHOOK_SECRET: process.env["STRIPE_WEBHOOK_SECRET"],
     WORKER_PORT: process.env["WORKER_PORT"],
     OUTBOX_POLL_MS: process.env["OUTBOX_POLL_MS"],
-    SKIP_ENV_VALIDATION: process.env["SKIP_ENV_VALIDATION"],
   },
 });

@@ -35,10 +35,13 @@ export type AppContainer = {
 };
 
 function createEmailMailer(): EmailMailer {
-  if (env.SMTP_URL !== undefined && env.SMTP_URL !== "") {
+  if (env.SMTP_URL !== undefined) {
     return createSmtpMailer({ smtpUrl: env.SMTP_URL, from: env.EMAIL_FROM });
   }
-  return createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM });
+  if (env.RESEND_API_KEY !== undefined) {
+    return createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM });
+  }
+  throw new Error("SMTP_URL or RESEND_API_KEY is required");
 }
 
 function buildContainer(): AppContainer {
@@ -103,7 +106,7 @@ function buildContainer(): AppContainer {
     emailMailer,
     ...(env.POSTHOG_API_KEY !== undefined ? { posthogApiKey: env.POSTHOG_API_KEY } : {}),
     ...(env.POSTHOG_HOST !== undefined ? { posthogHost: env.POSTHOG_HOST } : {}),
-    ...(env.FLAGS_JSON !== undefined ? { flagsJson: env.FLAGS_JSON } : {}),
+    ...(env.FLAGS_JSON !== undefined ? { flagValues: env.FLAGS_JSON } : {}),
     ...(env.STRIPE_SECRET_KEY !== undefined ? { stripeSecretKey: env.STRIPE_SECRET_KEY } : {}),
   });
 

@@ -13,32 +13,75 @@
 
 import { z, type output } from "zod";
 
-import { crossFieldProblems } from "./cross-field.ts";
+import { emptyStringsToUndefined } from "./coerce.ts";
 import { formatEnvErrors } from "./format-errors.ts";
-import { mergePresets, type Preset } from "./merge-presets.ts";
+import { collectPresetProblems, mergePresets, type Preset } from "./merge-presets.ts";
 import { productionProblems } from "./production.ts";
 
 const CLIENT_PREFIX = "NEXT_PUBLIC_";
 
 export type RuntimeEnv = Readonly<Record<string, string | undefined>>;
 
+type EmptyEnv = Record<never, never>;
+
 /**
  * Infers the merged output type of one preset, a tuple of presets, or nothing.
  *
  * Tuple form is what apps write (`server: [base, db, redis]`): each element's
  * fields become required properties on the result. A bare `Preset[]` (non-tuple)
- * cannot be inferred field-by-field and collapses to a wide record — pass a
- * tuple, or wrap with {@link combine}, when you want precise keys.
+ * cannot be inferred field-by-field and collapses to {@link EmptyEnv} — pass a
+ * tuple when you want precise keys.
+ *
+ * Empty-tuple / missing presets must not be `Record<string, never>`: that
+ * widens `keyof` to `string` and breaks both exhaustive `runtimeEnv` and the
+ * `NEXT_PUBLIC_` client-key check.
  */
-export type InferPresets<T> = T extends undefined
-  ? Record<string, never>
-  : T extends Preset
-    ? output<T>
+export type InferPresets<T> = [T] extends [undefined]
+  ? EmptyEnv
+  : T extends readonly []
+    ? EmptyEnv
     : T extends readonly [infer Head, ...infer Tail]
       ? Head extends Preset
         ? output<Head> & InferPresets<Tail>
-        : Record<string, never>
-      : Record<string, never>;
+        : EmptyEnv
+      : T extends Preset
+        ? output<T>
+        : EmptyEnv;
+
+type EnvKeys<TServer, TClient> = Extract<
+  keyof InferPresets<TServer> | keyof InferPresets<TClient>,
+  string
+>;
+
+/**
+ * Raw string map for every key the composed schemas will read.
+ *
+ * Defaults and optionals still belong here: omitting a key is how a new preset
+ * field silently takes its default. `SKIP_ENV_VALIDATION` is extra so Docker
+ * image builds can opt out without putting that flag on a schema.
+ */
+export type RuntimeEnvFor<TServer, TClient> = {
+  [K in EnvKeys<TServer, TClient>]: string | undefined;
+} & {
+  SKIP_ENV_VALIDATION?: string | undefined;
+};
+
+type OffendingClientKeys<T> = Exclude<
+  Extract<keyof InferPresets<T>, string>,
+  `NEXT_PUBLIC_${string}`
+>;
+
+type PublicClient<T> = [T] extends [undefined]
+  ? T
+  : [OffendingClientKeys<T>] extends [never]
+    ? T
+    : T & {
+        readonly __clientPrefix: `Client environment keys must start with "${typeof CLIENT_PREFIX}". Offending: ${OffendingClientKeys<T>}`;
+      };
+
+type RuntimeEnvOption<TServer, TClient> = [TClient] extends [undefined]
+  ? { runtimeEnv?: RuntimeEnvFor<TServer, TClient> }
+  : { runtimeEnv: RuntimeEnvFor<TServer, TClient> };
 
 export type CreateEnvOptions<
   TServer extends Preset | readonly Preset[] | undefined = undefined,
@@ -47,18 +90,10 @@ export type CreateEnvOptions<
   /** Server-only presets. Merged in order; later entries win on key collisions. */
   server?: TServer;
   /**
-   * Client presets. Every key must be `NEXT_PUBLIC_`-prefixed — enforced here,
-   * not by convention.
+   * Client presets. Every key must be `NEXT_PUBLIC_`-prefixed — enforced at the
+   * type level and again at runtime.
    */
-  client?: TClient;
-  /**
-   * Values to validate.
-   *
-   * Defaults to `process.env` on the server. **Required on the client**: Next.js
-   * inlines only static `process.env.NEXT_PUBLIC_*` accesses, so a dynamic lookup
-   * by key would see `undefined` for every public variable after the build.
-   */
-  runtimeEnv?: RuntimeEnv;
+  client?: PublicClient<TClient>;
   /**
    * Skip validation. Also honoured when `SKIP_ENV_VALIDATION=1`, which Docker
    * image builds set because runtime secrets are legitimately absent then.
@@ -71,7 +106,7 @@ export type CreateEnvOptions<
    * lists every invalid variable. Tests use this to assert without try/catch.
    */
   onValidationError?: (message: string) => never;
-};
+} & RuntimeEnvOption<TServer, TClient>;
 
 export type EnvOf<T extends CreateEnvOptions> = InferPresets<T["server"]> &
   InferPresets<T["client"]>;
@@ -102,20 +137,18 @@ export function createEnv<
   });
 
   const runtimeEnv = options.runtimeEnv ?? readProcessEnv();
-  const skip =
-    options.skipValidation === true ||
-    runtimeEnv["SKIP_ENV_VALIDATION"] === "1" ||
-    runtimeEnv["SKIP_ENV_VALIDATION"] === "true";
+  const skip = shouldSkipValidation(options.skipValidation, runtimeEnv);
+  const values = emptyStringsToUndefined(pick(runtimeEnv, Object.keys(schema.shape)));
 
   if (skip) {
     // Docker builds reach here with secrets absent. The cast is the cost of the
     // skip: callers that set SKIP_ENV_VALIDATION take responsibility for not
     // reading env until a later process start validates for real.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    return runtimeEnv as InferPresets<TServer> & InferPresets<TClient>;
+    return values as InferPresets<TServer> & InferPresets<TClient>;
   }
 
-  const parsed = schema.safeParse(pick(runtimeEnv, Object.keys(schema.shape)));
+  const parsed = schema.safeParse(values);
 
   if (!parsed.success) {
     fail(formatEnvErrors(parsed.error), options.onValidationError);
@@ -123,7 +156,11 @@ export function createEnv<
 
   const data = parsed.data;
 
-  const dependencyProblems = crossFieldProblems(data);
+  const dependencyProblems = uniqueSorted(
+    [...collectPresetProblems(options.server), ...collectPresetProblems(options.client)].flatMap(
+      (problems) => problems(data),
+    ),
+  );
   if (dependencyProblems.length > 0) {
     fail(
       ["Invalid environment variables:", ...dependencyProblems.map((line) => `  ${line}`)].join(
@@ -133,34 +170,22 @@ export function createEnv<
     );
   }
 
-  if (data["APP_ENV"] === "production") {
-    const problems = productionProblems(data);
-    if (problems.length > 0) {
-      fail(
-        [
-          "Invalid environment variables for production:",
-          ...problems.map((line) => `  ${line}`),
-        ].join("\n"),
-        options.onValidationError,
-      );
-    }
+  const liveProblems = productionProblems(data);
+  if (liveProblems.length > 0) {
+    const appEnv = data["APP_ENV"] === "staging" ? "staging" : "production";
+    fail(
+      [
+        `Invalid environment variables for ${appEnv}:`,
+        ...liveProblems.map((line) => `  ${line}`),
+      ].join("\n"),
+      options.onValidationError,
+    );
   }
 
   // Parsed output is validated against the merged schema; the cast reconnects it
   // to the tuple-inferred return type TypeScript cannot compute through z.object.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return data as InferPresets<TServer> & InferPresets<TClient>;
-}
-
-/**
- * Merges presets into one object schema.
- *
- * Prefer a tuple at the `createEnv` call site for precise key inference:
- * `createEnv({ server: [base, db, redis] })`. Use `combine` when you need a
- * named schema to pass around before calling `createEnv`.
- */
-export function combine(...presets: Preset[]): Preset {
-  return mergePresets(presets);
 }
 
 /**
@@ -186,6 +211,19 @@ function pick(source: RuntimeEnv, keys: readonly string[]): Record<string, strin
     out[key] = source[key];
   }
   return out;
+}
+
+function shouldSkipValidation(
+  skipValidation: boolean | undefined,
+  runtimeEnv: RuntimeEnv,
+): boolean {
+  if (skipValidation === true) return true;
+  const flag = runtimeEnv["SKIP_ENV_VALIDATION"] ?? process.env["SKIP_ENV_VALIDATION"];
+  return flag === "1" || flag === "true";
+}
+
+function uniqueSorted(lines: readonly string[]): string[] {
+  return [...new Set(lines)].toSorted();
 }
 
 /**

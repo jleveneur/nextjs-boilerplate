@@ -14,14 +14,14 @@ import {
 import { env } from "../env/server.ts";
 
 export function createFlagPort(options: {
-  flagsJson?: string;
+  flagValues?: Readonly<Record<string, boolean>>;
   posthogApiKey?: string;
   posthogHost?: string;
 }): FlagProvider {
   const envProvider =
-    options.flagsJson === undefined
+    options.flagValues === undefined
       ? createEnvFlagProvider()
-      : createEnvFlagProvider({ flagsJson: options.flagsJson });
+      : createEnvFlagProvider({ values: options.flagValues });
   const posthogProvider =
     options.posthogApiKey !== undefined &&
     options.posthogApiKey !== "" &&
@@ -52,7 +52,7 @@ export function createFlagPort(options: {
 export function getBootstrappedFlags(): Promise<FlagBootstrap> {
   return bootstrapFlags(
     createFlagPort({
-      ...(env.FLAGS_JSON === undefined ? {} : { flagsJson: env.FLAGS_JSON }),
+      ...(env.FLAGS_JSON === undefined ? {} : { flagValues: env.FLAGS_JSON }),
       ...(env.POSTHOG_API_KEY === undefined ? {} : { posthogApiKey: env.POSTHOG_API_KEY }),
       ...(env.POSTHOG_HOST === undefined ? {} : { posthogHost: env.POSTHOG_HOST }),
     }),

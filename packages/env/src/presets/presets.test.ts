@@ -15,7 +15,6 @@ import { stripe } from "./stripe.ts";
 
 describe("presets", () => {
   it("compose a full worker-shaped server env", () => {
-    // Tuple form keeps field types; `combine(...)` would widen to Preset.
     const env = createEnv({
       server: [base, db, redis, s3, resend, otel, posthog, sentry, auth, stripe],
       runtimeEnv: {
@@ -34,13 +33,21 @@ describe("presets", () => {
         RESEND_API_KEY: "re_abc",
         EMAIL_FROM: "noreply@example.com",
         OTEL_ENABLED: "false",
+        OTEL_EXPORTER_OTLP_ENDPOINT: undefined,
+        OTEL_SERVICE_NAME: undefined,
         POSTHOG_API_KEY: "phc_abc",
         POSTHOG_HOST: "https://eu.posthog.com",
         SENTRY_ENABLED: "false",
+        SENTRY_DSN: undefined,
+        SENTRY_ENVIRONMENT: undefined,
+        SENTRY_RELEASE: undefined,
         BETTER_AUTH_SECRET: "s".repeat(32),
         BETTER_AUTH_URL: "https://staging.example.com",
+        GITHUB_CLIENT_ID: undefined,
+        GITHUB_CLIENT_SECRET: undefined,
+        GOOGLE_CLIENT_ID: undefined,
+        GOOGLE_CLIENT_SECRET: undefined,
         STRIPE_SECRET_KEY: "sk_live_abc",
-
         STRIPE_WEBHOOK_SECRET: "whsec_abc",
       },
     });
@@ -70,7 +77,12 @@ describe("presets", () => {
     expect(() =>
       createEnv({
         server: [sentry],
-        runtimeEnv: { SENTRY_ENABLED: "true" },
+        runtimeEnv: {
+          SENTRY_ENABLED: "true",
+          SENTRY_DSN: undefined,
+          SENTRY_ENVIRONMENT: undefined,
+          SENTRY_RELEASE: undefined,
+        },
       }),
     ).toThrow(/SENTRY_DSN/);
   });
@@ -107,6 +119,8 @@ describe("presets", () => {
       runtimeEnv: {
         SENTRY_ENABLED: "false",
         SENTRY_DSN: "",
+        SENTRY_ENVIRONMENT: undefined,
+        SENTRY_RELEASE: undefined,
       },
     });
 

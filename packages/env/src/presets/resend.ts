@@ -1,7 +1,13 @@
 import { z } from "zod";
 
-/** Resend email delivery. */
-export const resend = z.object({
-  RESEND_API_KEY: z.string().min(1).startsWith("re_"),
-  EMAIL_FROM: z.email(),
-});
+import { definePreset } from "../merge-presets.ts";
+import { mailProblems } from "./mail-problems.ts";
+
+/** Resend email delivery. Optional when composed next to `smtp`. */
+export const resend = definePreset(
+  z.object({
+    RESEND_API_KEY: z.string().min(1).startsWith("re_").optional(),
+    EMAIL_FROM: z.email(),
+  }),
+  mailProblems,
+);
