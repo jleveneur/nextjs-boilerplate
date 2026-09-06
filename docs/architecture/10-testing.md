@@ -49,6 +49,12 @@ rather than a repo-wide number, which averages away exactly the information you 
 
 Uncovered branches are reviewed for _why_, never chased for the number.
 
+**Repositories and mappers are excluded from unit coverage** in `@repo/core`, by pattern
+rather than by name. A repository is queries with no policy — its behaviour only exists
+against real Postgres, so it is covered by `*.integration.test.ts`; a mapper is row-to-DTO
+translation. Enumerating them one line per slice meant every new slice silently dropped the
+package below its floor until someone remembered to edit `vitest.config.ts`.
+
 **What an app's threshold measures.** `apps/api` and `apps/worker` scope coverage to the code
 that decides something on the request or job path. Composition roots, env modules, process
 entry points, and route registration are excluded in their `vitest.config.ts`: they are

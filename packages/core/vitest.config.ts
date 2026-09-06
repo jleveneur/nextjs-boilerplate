@@ -32,9 +32,13 @@ export default mergeConfig(
           "src/outbox/**",
           "src/assets/**",
           "src/system-actor.ts",
-          "src/billing/billing.repository.ts",
-          "src/billing/billing.mapper.ts",
-          "src/subscription/subscription.repository.ts",
+          // Stated as the rule rather than one line per slice. A repository is
+          // queries with no policy, exercised by `*.integration.test.ts` against
+          // real Postgres; a mapper is row-to-DTO translation. Enumerating them
+          // meant every new slice silently dropped the package below its floor
+          // until someone remembered to edit this file.
+          "src/**/*.repository.ts",
+          "src/**/*.mapper.ts",
           "src/**/*.test.ts",
           "src/**/*.integration.test.ts",
           "src/**/*.d.ts",

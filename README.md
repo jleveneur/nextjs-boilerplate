@@ -98,6 +98,7 @@ scripts/     Repository automation, with its own tests
 ## Working here
 
 ```bash
+make new-slice NAME=widget   # scaffold a domain slice across every layer
 make check       # everything below, in one command
 make lint        # oxlint, including type-aware rules
 make typecheck   # tsc --noEmit across the workspace
