@@ -1,5 +1,20 @@
 # @repo/orpc
 
+## 0.3.0
+
+### Minor Changes
+
+- d4bbdd3: Upgrade the private API transport from oRPC 1.15 to 2.0.0-beta.33 (ADR-0012).
+
+### Patch Changes
+
+- e120a37: Extract `describeRpcFailure` so the web RPC route can log expected vs unexpected errors without inlining the classification.
+- Updated dependencies [b526fa4]
+- Updated dependencies [6aae087]
+  - @repo/db@0.2.2
+  - @repo/auth@0.2.0
+  - @repo/core@1.1.0
+
 ## 0.2.2
 
 ### Patch Changes

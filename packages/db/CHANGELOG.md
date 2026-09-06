@@ -1,5 +1,13 @@
 # @repo/db
 
+## 0.2.2
+
+### Patch Changes
+
+- b526fa4: Stop re-exporting the Drizzle schema from the `@repo/db` root barrel. Import tables from `@repo/db/schema`.
+- Updated dependencies [e120a37]
+  - @repo/env@0.2.0
+
 ## 0.2.1
 
 ### Patch Changes
