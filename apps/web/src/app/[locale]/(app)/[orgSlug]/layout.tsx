@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 
 import { Skeleton } from "@repo/ui";
+import { Toaster } from "@repo/ui/toast";
 
 import { EnsureActiveOrg } from "@/components/ensure-active-org.tsx";
 import { OrgSwitcher } from "@/components/org-switcher.tsx";
@@ -22,17 +23,19 @@ type Props = {
  */
 export default function AppShellLayout({ children, params }: Props) {
   return (
-    <div className="bg-background flex min-h-dvh flex-col">
-      <Suspense fallback={<HeaderFallback />}>
-        <AppHeader params={params} />
-      </Suspense>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <Suspense fallback={null}>
-          <ActivateOrg params={params} />
+    <Toaster>
+      <div className="bg-background flex min-h-dvh flex-col">
+        <Suspense fallback={<HeaderFallback />}>
+          <AppHeader params={params} />
         </Suspense>
-        {children}
-      </main>
-    </div>
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+          <Suspense fallback={null}>
+            <ActivateOrg params={params} />
+          </Suspense>
+          {children}
+        </main>
+      </div>
+    </Toaster>
   );
 }
 

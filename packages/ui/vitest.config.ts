@@ -18,7 +18,6 @@ export default mergeConfig(
         exclude: [
           "src/index.ts",
           "src/icons/index.ts",
-          "src/sonner/index.ts",
           "src/test/**",
           "src/**/*.test.ts",
           "src/**/*.test.tsx",

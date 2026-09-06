@@ -226,13 +226,15 @@ formatting are deceptively hard.
 **Health** Actively maintained in step with Next.js releases.
 **Exit** Medium — message keys are spread through components, but the catalog format is portable.
 
-### Sonner 2.0
+### shadcn/ui Toast (Base UI)
 
-**Why** Toast notifications with correct stacking, swipe dismissal, promise states, and accessibility.
-Small and finished.
-**Instead of** _react-hot-toast_ — comparable. _Radix/Base UI Toast primitive_ — more assembly for the
-same result. _Hand-rolled_ — animation and a11y details make this bigger than it looks.
-**Health** Small, stable, widely adopted (and the shadcn/ui default).
+**Why** Toast notifications with stacking, swipe dismissal, promise states, status types, and
+accessibility, assembled on `@base-ui/react/toast` — the primitive layer this design system already
+uses. shadcn/ui retired the Sonner recipe on the Base UI track and ships this component instead.
+**Instead of** _Sonner_ — still the Radix-track shadcn default, but a second client stack here once
+Base UI already provides the primitive. _react-hot-toast_ — comparable, extra dependency.
+_Hand-rolled_ — animation and a11y details make this bigger than it looks.
+**Health** Lives in `@base-ui/react`, which we already take as the primitive layer.
 **Exit** Low — one wrapper in `@repo/ui`.
 
 ### Date arithmetic

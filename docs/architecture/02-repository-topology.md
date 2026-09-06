@@ -216,9 +216,9 @@ mobile app or CLI) without importing a Next.js app.
 
 ### UI track (browser, parallel to layers 1–3)
 
-| Package    | Responsibility                                                                                                                    |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `@repo/ui` | The design system: shadcn/ui on Base UI, icon wrapper, Sonner. Theme tokens live in `tooling/tailwind` (`@repo/tailwind-config`). |
+| Package    | Responsibility                                                                                                                   |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/ui` | The design system: shadcn/ui on Base UI, icon wrapper, toast. Theme tokens live in `tooling/tailwind` (`@repo/tailwind-config`). |
 
 `@repo/ui` may import only Layer 0. It never learns that a database exists.
 
@@ -227,7 +227,7 @@ Subpath exports keep icons and the toast host off the default barrel when a call
 ```
 @repo/ui          → primitives (button, input, dialog, …)
 @repo/ui/icons    → HugeIcons wrapper
-@repo/ui/sonner   → Toaster
+@repo/ui/toast    → Toaster
 ```
 
 ### Testing (not a runtime package)

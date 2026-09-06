@@ -146,7 +146,7 @@ so a future reader can tell what was current when the architecture was last revi
 | Server state      | TanStack Query                | 5.102.0 |
 | Theming           | next-themes                   | 0.4.6   |
 | i18n              | next-intl                     | 4.13.7  |
-| Toasts            | Sonner                        | 2.0.8   |
+| Toasts            | shadcn/ui Toast (Base UI)     | —       |
 | URL state         | nuqs                          | 2.9.3   |
 
 Zustand is **allowed** for ephemeral UI state that is neither server state nor URL state
