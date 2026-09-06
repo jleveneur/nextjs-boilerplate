@@ -268,32 +268,33 @@ The repo has **two** kinds of feature module, and keeping them distinct is impor
 
 ```
 packages/core/src/billing/
-├── billing.service.ts       # Use cases. The only public entry point.
+├── billing.service.ts       # Use cases. Re-exported from the package root.
 ├── billing.policy.ts        # Authorization rules for this feature
 ├── billing.repository.ts    # Drizzle queries. The only file that touches @repo/db.
 ├── billing.errors.ts        # Feature-specific AppError subclasses
 ├── billing.events.ts        # Domain events emitted (→ jobs, analytics)
 ├── billing.mapper.ts        # Row → DTO (@repo/contracts) conversion
 ├── billing.service.test.ts  # Unit tests with in-memory ports
-├── billing.repository.test.ts # Integration tests against real Postgres
-└── index.ts                 # Public surface. Everything else is private.
+└── billing.repository.integration.test.ts
 ```
 
-Rules: services never import another feature's repository — cross-feature access goes through
-the other feature's `index.ts`, or through a domain event when the coupling should be
-asynchronous. A feature that needs three other features' internals is a sign the boundaries are
-drawn wrong.
+The only barrel in `@repo/core` is `src/index.ts` ([04](./04-conventions.md)). Feature folders
+have no `index.ts`. Services never import another feature's repository — cross-feature access
+imports the other feature's **service file** by name, or goes through a domain event when the
+coupling should be asynchronous. A feature that needs three other features' internals is a sign
+the boundaries are drawn wrong.
 
 ### Client feature module — `apps/web/src/features/<feature>/`
 
 ```
 apps/web/src/features/billing/
-├── components/          # Feature-specific React components
-├── hooks/               # use-*.ts — TanStack Query wrappers over oRPC
-├── stores/              # Optional Zustand store — only for genuine client state
+├── *.tsx                # Feature-specific React components (pages import these files)
+├── hooks.ts             # TanStack Query wrappers over oRPC
 ├── schemas/             # Form schemas (extend @repo/contracts, add UI-only fields)
-└── index.ts
+└── stores/              # Optional Zustand store — only for genuine client state
 ```
+
+No feature-level `index.ts`. Same barrel rule as packages: import the file, not a folder.
 
 Rules: server state belongs to TanStack Query, URL state to nuqs, form state to React Hook
 Form, and only what is left — ephemeral UI state shared across a subtree — may go into Zustand

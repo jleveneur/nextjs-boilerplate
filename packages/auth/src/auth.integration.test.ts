@@ -8,7 +8,7 @@ import { isUuidV7 } from "@repo/utils";
 
 import { createAuth, type Auth } from "./create-auth.ts";
 import { resolveActor, resolveActorFromApiKey } from "./resolve-actor.ts";
-import { createRecordingMailers } from "./testing/index.ts";
+import { createRecordingMailers } from "./testing/recording-mailers.ts";
 
 const authSchema = {
   user: dbSchema.user,

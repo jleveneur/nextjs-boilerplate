@@ -6,7 +6,7 @@ import { createMemoryCache } from "@repo/cache/testing";
 import { ConflictError, ValidationError } from "@repo/errors";
 import type { Actor, OrganizationId } from "@repo/types";
 
-import type { ApiEnv } from "../app.ts";
+import type { ApiEnv } from "../api-env.ts";
 import type { AppContainer } from "../server/container.ts";
 import { idempotencyMiddleware } from "./idempotency.ts";
 

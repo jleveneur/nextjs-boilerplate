@@ -3,7 +3,7 @@ import type { MiddlewareHandler } from "hono";
 import { runWithLogger } from "@repo/logger";
 import { generateUuidV7 } from "@repo/utils";
 
-import type { ApiEnv } from "../app.ts";
+import type { ApiEnv } from "../api-env.ts";
 
 const HEADER = "x-request-id";
 

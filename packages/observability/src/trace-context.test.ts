@@ -1,7 +1,7 @@
 import { TraceFlags, trace } from "@opentelemetry/api";
 import { describe, expect, it, vi } from "vitest";
 
-import { createFixedTraceContext, noopGetTraceContext } from "./testing/index.ts";
+import { createFixedTraceContext, noopGetTraceContext } from "./testing/fixed-trace-context.ts";
 import { getTraceContext, spanContextToTraceContext } from "./trace-context.ts";
 
 describe("getTraceContext", () => {

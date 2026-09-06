@@ -2,30 +2,18 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
 
-import type { Ctx } from "@repo/core";
-import type { Actor } from "@repo/types";
-
-import {
-  apiKeyAuthMiddleware,
-  errorHandler,
-  idempotencyMiddleware,
-  rateLimitMiddleware,
-  requestIdMiddleware,
-  securityHeadersMiddleware,
-} from "./middleware/index.ts";
+import type { ApiEnv } from "./api-env.ts";
+import { apiKeyAuthMiddleware } from "./middleware/api-key-auth.ts";
+import { errorHandler } from "./middleware/error-handler.ts";
+import { idempotencyMiddleware } from "./middleware/idempotency.ts";
+import { rateLimitMiddleware } from "./middleware/rate-limit.ts";
+import { requestIdMiddleware } from "./middleware/request-id.ts";
+import { securityHeadersMiddleware } from "./middleware/security-headers.ts";
 import { registerInvoiceRoutes } from "./routes/v1/invoices.ts";
 import type { AppContainer } from "./server/container.ts";
 import { registerStripeWebhook } from "./webhooks/stripe.ts";
 
-export type ApiEnv = {
-  Variables: {
-    container: AppContainer;
-    requestId: string;
-    actor: Actor;
-    apiKey: string;
-    ctx: Ctx;
-  };
-};
+export type { ApiEnv } from "./api-env.ts";
 
 /**
  * Build the Hono app with the public middleware stack, `/v1` billing routes,

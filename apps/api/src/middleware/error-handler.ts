@@ -8,7 +8,7 @@ import {
   type AppError,
 } from "@repo/errors";
 
-import type { ApiEnv } from "../app.ts";
+import type { ApiEnv } from "../api-env.ts";
 
 function isAppErrorShape(value: unknown): value is AppError {
   if (isAppError(value)) {

@@ -1,8 +1,9 @@
+import { Search01Icon } from "@hugeicons/core-free-icons";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { expectAccessible, renderUi } from "../test/render.tsx";
-import { Icon, Search01Icon } from "./index.ts";
+import { Icon } from "./icon.tsx";
 
 describe("Icon", () => {
   it("renders an accessible decorative icon", async () => {

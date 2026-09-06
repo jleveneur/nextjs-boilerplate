@@ -17,8 +17,9 @@ import { ForbiddenError } from "@repo/errors";
 import { createLogger, type Logger } from "@repo/logger";
 import type { Actor, InvoiceId, OrganizationId } from "@repo/types";
 
-import type { ApiEnv } from "../app.ts";
-import { errorHandler, requestIdMiddleware } from "../middleware/index.ts";
+import type { ApiEnv } from "../api-env.ts";
+import { errorHandler } from "../middleware/error-handler.ts";
+import { requestIdMiddleware } from "../middleware/request-id.ts";
 import type { AppContainer } from "../server/container.ts";
 
 /** Root pool or an open test transaction — both work as the service `db`. */

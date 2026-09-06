@@ -4,7 +4,7 @@ import { enqueueStripeWebhookEvent, systemActorForOrganization } from "@repo/cor
 import { UnauthorizedError, ValidationError } from "@repo/errors";
 import type { OrganizationId } from "@repo/types";
 
-import type { ApiEnv } from "../app.ts";
+import type { ApiEnv } from "../api-env.ts";
 import { env } from "../env.ts";
 
 const REPLAY_TTL_SECONDS = 60 * 60 * 24 * 7;

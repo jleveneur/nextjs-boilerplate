@@ -130,9 +130,10 @@ is not a type error on its own).
 
 ### Every core feature exposes only services
 
-`index.ts` re-exports the service functions, the feature's public contracts, and its error
-classes. Repositories, policies, and mappers are private. If another feature needs a query, it
-gets a service function — not the query.
+The package root `src/index.ts` re-exports the service functions, the feature's public
+contracts, and its error classes. Feature folders have no `index.ts` — internal files import
+siblings by filename. Repositories and mappers stay unexported. If another feature needs a
+query, it gets a service function — not the query.
 
 ### Function signature convention
 

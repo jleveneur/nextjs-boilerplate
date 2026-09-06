@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  adaptEmailMailer,
-  createInProcessEventBus,
-  createSystemClock,
-  createUuidIdGenerator,
-} from "../ports/index.ts";
+import { createSystemClock } from "../ports/clock.ts";
+import { createInProcessEventBus } from "../ports/event-bus.ts";
+import { createUuidIdGenerator } from "../ports/id-generator.ts";
+import { adaptEmailMailer } from "../ports/mailer.ts";
 import { createTestPorts } from "./create-test-ports.ts";
 import { createFakeClock } from "./fake-clock.ts";
 import { createInMemoryEventBus } from "./in-memory-event-bus.ts";

@@ -4,7 +4,7 @@ import type { MiddlewareHandler } from "hono";
 
 import { ConflictError, ValidationError } from "@repo/errors";
 
-import type { ApiEnv } from "../app.ts";
+import type { ApiEnv } from "../api-env.ts";
 
 const IDEMPOTENCY_TTL_SECONDS = 60 * 60 * 24;
 const IDEMPOTENCY_PENDING_TTL_SECONDS = 60 * 5;

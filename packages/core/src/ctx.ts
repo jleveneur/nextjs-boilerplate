@@ -9,17 +9,15 @@ import type { Database, DbTransaction } from "@repo/db";
 import type { Logger } from "@repo/logger";
 import type { Actor } from "@repo/types";
 
-import type {
-  AnalyticsSink,
-  Clock,
-  EventBus,
-  FileStore,
-  FlagProvider,
-  IdGenerator,
-  JobQueue,
-  Mailer,
-  PaymentGateway,
-} from "./ports/index.ts";
+import type { AnalyticsSink } from "./ports/analytics.ts";
+import type { Clock } from "./ports/clock.ts";
+import type { EventBus } from "./ports/event-bus.ts";
+import type { FileStore } from "./ports/file-store.ts";
+import type { FlagProvider } from "./ports/flags.ts";
+import type { IdGenerator } from "./ports/id-generator.ts";
+import type { JobQueue } from "./ports/job-queue.ts";
+import type { Mailer } from "./ports/mailer.ts";
+import type { PaymentGateway } from "./ports/payment-gateway.ts";
 
 export type CtxPorts = {
   /** `APP_ENV` — first segment of storage object keys. */

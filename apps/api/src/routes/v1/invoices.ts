@@ -5,7 +5,7 @@ import { createInvoice, getInvoice, listInvoicesForOrg, voidInvoice } from "@rep
 import { ForbiddenError } from "@repo/errors";
 import type { InvoiceId, OrganizationId } from "@repo/types";
 
-import type { ApiEnv } from "../../app.ts";
+import type { ApiEnv } from "../../api-env.ts";
 import {
   createInvoiceRoute,
   getInvoiceRoute,

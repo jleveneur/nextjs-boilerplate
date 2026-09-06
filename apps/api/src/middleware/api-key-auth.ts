@@ -4,7 +4,7 @@ import { resolveActorFromApiKey } from "@repo/auth";
 import type { Ctx } from "@repo/core";
 import { UnauthorizedError } from "@repo/errors";
 
-import type { ApiEnv } from "../app.ts";
+import type { ApiEnv } from "../api-env.ts";
 
 function bearerToken(authorization: string | undefined): string | undefined {
   if (authorization === undefined) {

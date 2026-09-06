@@ -4,7 +4,7 @@ import type { MiddlewareHandler } from "hono";
 
 import { RateLimitError } from "@repo/errors";
 
-import type { ApiEnv } from "../app.ts";
+import type { ApiEnv } from "../api-env.ts";
 
 const WINDOW_SECONDS = 60;
 const MAX_REQUESTS = 60;
