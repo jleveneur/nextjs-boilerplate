@@ -1,15 +1,17 @@
 /**
  * Static role → permission grants.
  *
- * Composed to mirror Better Auth org `adminAc`/`memberAc` plus our product
- * statements. `dynamicAccessControl` stays off (ADR-0005).
+ * Roles are code-defined; `dynamicAccessControl` stays off (ADR-0005). Grants
+ * are additive by seniority, so a change to `member` is inherited rather than
+ * copied — the previous split across three files is what let `asset` reach
+ * `@repo/authz` without ever reaching Better Auth.
  */
 
-import type { OrganizationRole, Permission } from "@repo/types";
+import type { OrganizationRole } from "@repo/types";
 
-import { ALL_ACTIONS, PERMISSIONS, type Action } from "./permissions.ts";
+import { ALL_ACTIONS, PERMISSIONS, type Action } from "./registry.ts";
 
-const memberPermissions: readonly Action[] = [
+const MEMBER: readonly Action[] = [
   PERMISSIONS["invoice:create"],
   PERMISSIONS["invoice:read"],
   PERMISSIONS["invoice:update"],
@@ -20,8 +22,8 @@ const memberPermissions: readonly Action[] = [
   PERMISSIONS["asset:read"],
 ];
 
-const adminPermissions: readonly Action[] = [
-  ...memberPermissions,
+const ADMIN: readonly Action[] = [
+  ...MEMBER,
   PERMISSIONS["organization:update"],
   PERMISSIONS["member:create"],
   PERMISSIONS["member:update"],
@@ -34,24 +36,24 @@ const adminPermissions: readonly Action[] = [
   PERMISSIONS["apiKey:revoke"],
 ];
 
-const ownerPermissions: readonly Action[] = [
-  ...adminPermissions,
-  PERMISSIONS["organization:delete"],
-];
+const OWNER: readonly Action[] = [...ADMIN, PERMISSIONS["organization:delete"]];
 
 export const ROLE_PERMISSIONS: Record<OrganizationRole, readonly Action[]> = {
-  member: memberPermissions,
-  admin: adminPermissions,
-  owner: ownerPermissions,
+  member: MEMBER,
+  admin: ADMIN,
+  owner: OWNER,
 };
 
-/** Every action an owner can perform — used to assert registry completeness. */
-export function permissionsForRole(role: OrganizationRole): readonly Permission[] {
+export function permissionsForRole(role: OrganizationRole): readonly Action[] {
   return ROLE_PERMISSIONS[role];
 }
 
 export function roleHasPermission(role: OrganizationRole, action: Action): boolean {
   return ROLE_PERMISSIONS[role].includes(action);
+}
+
+export function isOrganizationRole(value: string): value is OrganizationRole {
+  return value === "owner" || value === "admin" || value === "member";
 }
 
 /** Actions registered but missing from a grant set — used by the matrix guard. */
@@ -61,8 +63,10 @@ export function actionsMissingFrom(grants: readonly Action[]): Action[] {
 }
 
 /**
- * Fail the build/test suite if a registered action is missing from owner grants
- * (owners must be able to do everything in the product registry).
+ * Fail the suite if a registered action is missing from owner grants.
+ *
+ * A permission nobody can hold is dead code that reads like a feature, and the
+ * failure mode is silent: the route exists, the check runs, everyone is denied.
  */
 export function assertOwnerCoversAllActions(
   grants: readonly Action[] = ROLE_PERMISSIONS.owner,

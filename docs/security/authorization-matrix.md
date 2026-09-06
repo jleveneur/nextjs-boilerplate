@@ -1,12 +1,16 @@
 # Authorization matrix
 
 Role grants for the closed permission registry. **Source of truth:**
-[`packages/authz/src/roles.ts`](../../packages/authz/src/roles.ts) and
-[`packages/authz/src/can.test.ts`](../../packages/authz/src/can.test.ts)
+[`packages/permissions/src/roles.ts`](../../packages/permissions/src/roles.ts)
 (owners must cover every registered action; unknown actions deny by default).
+
+The table below is **generated** — `make authz-matrix` rewrites it and `make check`
+fails if it drifts. Edit the registry, not this file.
 
 Cross-tenant resources are denied for non-system actors. Destructive actions are barred while
 impersonating ([07 — auth](../architecture/07-auth.md)).
+
+<!-- begin:authz-matrix -->
 
 | Action                | member | admin | owner |
 | --------------------- | ------ | ----- | ----- |
@@ -25,11 +29,12 @@ impersonating ([07 — auth](../architecture/07-auth.md)).
 | `billing:read`        | yes    | yes   | yes   |
 | `billing:manage`      |        | yes   | yes   |
 | `apiKey:create`       |        | yes   | yes   |
+| `apiKey:revoke`       |        | yes   | yes   |
+| `apiKey:list`         | yes    | yes   | yes   |
+| `asset:create`        | yes    | yes   | yes   |
+| `asset:read`          | yes    | yes   | yes   |
 
-| `apiKey:revoke` | | yes | yes |
-| `apiKey:list` | yes | yes | yes |
-| `asset:create` | yes | yes | yes |
-| `asset:read` | yes | yes | yes |
+<!-- end:authz-matrix -->
 
 REST/oRPC must produce the same outcomes for the same `Actor` —
 [`apps/api/src/authz-parity.integration.test.ts`](../../apps/api/src/authz-parity.integration.test.ts).

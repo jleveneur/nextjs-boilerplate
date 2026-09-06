@@ -1,18 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { ForbiddenError } from "@repo/errors";
+import {
+  ALL_ACTIONS,
+  PERMISSIONS,
+  permissionsForRole,
+  roleHasPermission,
+  type Action,
+} from "@repo/permissions";
 import type { Actor, OrganizationId, OrganizationRole, UserId } from "@repo/types";
 
 import { authorize } from "./authorize.ts";
 import { can } from "./can.ts";
-import { ALL_ACTIONS, PERMISSIONS, type Action } from "./permissions.ts";
-import {
-  actionsMissingFrom,
-  assertOwnerCoversAllActions,
-  permissionsForRole,
-  ROLE_PERMISSIONS,
-  roleHasPermission,
-} from "./roles.ts";
 
 function brandUserId(id: string): UserId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- test brand constructor
@@ -44,17 +43,6 @@ function makeActor(
       : { isImpersonating: overrides.isImpersonating }),
   };
 }
-
-describe("assertOwnerCoversAllActions", () => {
-  it("passes for the shipped role map", () => {
-    expect(() => assertOwnerCoversAllActions()).not.toThrow();
-  });
-
-  it("reports actions missing from a grant set", () => {
-    expect(actionsMissingFrom([])).toEqual([...ALL_ACTIONS]);
-    expect(actionsMissingFrom([...ALL_ACTIONS])).toEqual([]);
-  });
-});
 
 describe("can / authorize", () => {
   it("denies unknown actions", () => {
@@ -115,10 +103,6 @@ describe("can / authorize", () => {
     const actor = makeActor({ role: "owner" });
     expect(() => authorize(actor, PERMISSIONS["invoice:read"])).not.toThrow();
   });
-
-  it("assertOwnerCoversAllActions throws when owner grants are incomplete", () => {
-    expect(() => assertOwnerCoversAllActions([])).toThrow(/Owner role is missing/);
-  });
 });
 
 describe("role × action matrix", () => {
@@ -131,16 +115,6 @@ describe("role × action matrix", () => {
         const expected = roleHasPermission(role, action);
         expect(can(actor, action).allowed, `${role} ${action}`).toBe(expected);
       }
-    }
-  });
-
-  it("owner is a superset of admin, admin of member", () => {
-    for (const action of ROLE_PERMISSIONS.member) {
-      expect(ROLE_PERMISSIONS.admin.includes(action)).toBe(true);
-      expect(ROLE_PERMISSIONS.owner.includes(action)).toBe(true);
-    }
-    for (const action of ROLE_PERMISSIONS.admin) {
-      expect(ROLE_PERMISSIONS.owner.includes(action)).toBe(true);
     }
   });
 

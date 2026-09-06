@@ -14,7 +14,7 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck typecheck-affected spell knip react-doctor layers env-catalog bundle-budget openapi-check \
+        typecheck typecheck-affected spell knip react-doctor layers env-catalog authz-matrix bundle-budget openapi-check \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
@@ -118,6 +118,9 @@ react-doctor: ## Scan React apps for security, a11y, and performance issues
 
 layers: ## Assert package layer boundaries (ADR-0002)
 	pnpm check:layers
+
+authz-matrix: ## Regenerate the documented authorization matrix from the registry
+	node scripts/check-authz-matrix.ts --write
 
 env-catalog: ## Assert .env*.example files share one key catalog
 	pnpm check:env

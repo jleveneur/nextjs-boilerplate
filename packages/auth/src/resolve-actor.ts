@@ -5,10 +5,10 @@
  * tell them apart (docs/architecture/07-auth.md §3).
  */
 
+import { isOrganizationRole, permissionsForRole } from "@repo/permissions";
 import type { Actor, OrganizationId, Permission, UserId } from "@repo/types";
 
 import type { Auth } from "./create-auth.ts";
-import { isOrganizationRole, permissionsForOrganizationRole } from "./role-permissions.ts";
 
 function brandUserId(id: string): UserId {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- boundary brand from Better Auth
@@ -84,7 +84,7 @@ export async function resolveActor(
     userId: brandUserId(session.user.id),
     organizationId: brandOrganizationId(organizationId),
     role,
-    permissions: permissionsForOrganizationRole(role),
+    permissions: permissionsForRole(role),
     isSystem: false,
     ...(impersonatedBy === null || impersonatedBy === undefined || impersonatedBy === ""
       ? {}
@@ -115,7 +115,7 @@ export async function resolveActorFromApiKey(
 
   const organizationId = result.key.referenceId;
   const role = input.fallbackRole ?? "member";
-  const rolePermissions = permissionsForOrganizationRole(role);
+  const rolePermissions = permissionsForRole(role);
   const fromKey = permissionsFromApiKeyRecord(result.key.permissions);
   const requestedPermissions = fromKey === undefined ? undefined : new Set(fromKey);
   const permissions =

@@ -3,7 +3,7 @@ import { Writable } from "node:stream";
 import type { ORPCError } from "@orpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { permissionsForOrganizationRole } from "@repo/auth";
+import { permissionsForRole } from "@repo/auth";
 import type { Asset, Invoice, RequestUploadOutput } from "@repo/contracts";
 import * as core from "@repo/core";
 import { createTestPorts } from "@repo/core/testing";
@@ -57,7 +57,7 @@ function makeActor(role: "owner" | "member"): Actor {
     userId: brandUserId("01900000-0000-7000-8000-0000000000aa"),
     organizationId: brandOrganizationId("01900000-0000-7000-8000-000000000001"),
     role,
-    permissions: permissionsForOrganizationRole(role),
+    permissions: permissionsForRole(role),
     isSystem: false,
   };
 }

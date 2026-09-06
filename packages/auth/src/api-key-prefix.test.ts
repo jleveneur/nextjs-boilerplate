@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { isOrganizationRole, permissionsForRole } from "@repo/permissions";
+
 import { apiKeyPrefixForEnv } from "./api-key-prefix.ts";
-import { isOrganizationRole, permissionsForOrganizationRole } from "./role-permissions.ts";
 
 describe("apiKeyPrefixForEnv", () => {
   it("uses live prefix in production and test elsewhere", () => {
@@ -18,8 +19,8 @@ describe("role permissions", () => {
   });
 
   it("gives owners a superset of member permissions", () => {
-    const member = permissionsForOrganizationRole("member");
-    const owner = permissionsForOrganizationRole("owner");
+    const member = permissionsForRole("member");
+    const owner = permissionsForRole("owner");
     for (const permission of member) {
       expect(owner).toContain(permission);
     }

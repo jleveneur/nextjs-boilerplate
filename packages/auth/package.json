@@ -18,6 +18,7 @@
   "dependencies": {
     "@better-auth/api-key": "catalog:",
     "@better-auth/passkey": "catalog:",
+    "@repo/permissions": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",
     "better-auth": "catalog:",
