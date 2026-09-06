@@ -13,10 +13,11 @@ import { headers } from "next/headers";
 import { appRouter, createCallerFactory } from "@repo/orpc";
 
 import { createOrpcContext } from "./context.ts";
+import { reportCallerFailure } from "./report-caller-failure.ts";
 
 export { appRouter };
 
-const createCaller = createCallerFactory(appRouter);
+const createCaller = createCallerFactory(appRouter, reportCallerFailure);
 
 /** Create an in-process caller scoped to the organization addressed by the URL. */
 export async function createServerCaller(organizationSlug: string) {

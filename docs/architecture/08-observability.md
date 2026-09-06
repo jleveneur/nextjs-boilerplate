@@ -154,13 +154,19 @@ The split is the point: logs answer _what happened in this request_, a tracker a
 broken this week_ — the same exception grouped across requests, releases and hosts, which no log
 query does well.
 
-Three boundaries report, and they are the three that already logged:
+Four boundaries report, and each was already logging:
 
 | Boundary                                   | Reports                                            |
 | ------------------------------------------ | -------------------------------------------------- |
 | `apps/api/src/middleware/error-handler.ts` | any `AppError` that is not `expected`              |
 | `apps/web` RPC route                       | any failure `describeRpcFailure` calls an incident |
+| `apps/web` in-process caller               | the same policy, for Server Components             |
 | `apps/worker` container                    | dead-lettered jobs, and DLQ failures               |
+
+The in-process caller needs its own hook because a Server Component calls services
+directly: no HTTP layer observes it, so without `reportCallerFailure` its errors would
+surface as a rendered `error.tsx` and nothing else. Both web entry points run the same
+`describeRpcFailure` policy, so they cannot disagree about what counts as an incident.
 
 `SENTRY_DSN` is the whole switch. Unset selects `createNoopErrorTracker()`, which is the
 supported state for local runs, CI, and self-hosted deployments without a tracker. A self-hosted
@@ -175,10 +181,11 @@ earlier attempt at this went in circles. So `skipOpenTelemetrySetup: true` and
 `sentry-tracker.test.ts` pins that the global provider is untouched. Tracing stays with OTel and
 Jaeger.
 
-Consequences worth knowing: no browser errors, no session replay, and no source maps — server
-stack traces are readable because the deployed code is the built code, but a client-side
-exception never reaches the tracker. Adding that means `@sentry/nextjs` and its build plugin,
-which is the part that was painful before.
+Consequences worth knowing: **no browser errors**, no session replay, and no source maps. A
+component that throws in the user's browser — a bad `onClick`, a render crash inside a
+`"use client"` tree — never reaches the tracker; it renders `error.tsx` and disappears.
+Server stack traces are readable because the deployed code is the built code. Covering the
+browser means `@sentry/nextjs` and its build plugin, which is the part that was painful.
 
 `capture()` never throws and shutdown flushes with a bounded timeout: a tracker outage must not
 become an outage.

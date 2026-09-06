@@ -9,13 +9,14 @@ import { createCallerFactory } from "@repo/orpc";
 
 import { InvoiceDetail } from "@/features/billing/invoice-detail.tsx";
 import { createOrpcContext } from "@/server/context.ts";
+import { reportCallerFailure } from "@/server/report-caller-failure.ts";
 import { appRouter } from "@/server/router.ts";
 
 type Props = {
   params: Promise<{ locale: string; orgSlug: string; invoiceId: string }>;
 };
 
-const createCaller = createCallerFactory(appRouter);
+const createCaller = createCallerFactory(appRouter, reportCallerFailure);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   "use cache";
