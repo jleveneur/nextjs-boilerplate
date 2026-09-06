@@ -86,6 +86,27 @@ export function createMemoryCache(appEnv: string): Cache {
       });
       return Promise.resolve(true);
     },
+    incr(input: CacheSetOptions): Promise<number> {
+      const key = buildCacheKey(appEnv, input);
+      const existing = store.get(key);
+
+      // Matches Redis `INCR`: a missing or expired counter restarts at 1, and
+      // that first write is the only one that arms the TTL.
+      if (existing === undefined || existing.expiresAt <= Date.now()) {
+        store.set(key, { value: "1", expiresAt: Date.now() + input.ttlSeconds * 1000 });
+        return Promise.resolve(1);
+      }
+
+      const previous = Number.parseInt(existing.value, 10);
+      if (!Number.isInteger(previous)) {
+        // Redis fails the same way. Staying loud surfaces a namespace collision
+        // instead of silently disabling whatever the counter guards.
+        throw new Error(`cache incr on a non-integer value at ${key}`);
+      }
+
+      store.set(key, { value: String(previous + 1), expiresAt: existing.expiresAt });
+      return Promise.resolve(previous + 1);
+    },
     del(input: CacheKeyInput): Promise<void> {
       store.delete(buildCacheKey(appEnv, input));
       return Promise.resolve();

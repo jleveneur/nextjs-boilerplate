@@ -38,9 +38,13 @@ limiter at 60 req/min).
 | Upload stand-in (authed list)         | Concurrent reads under 3 VUs; p95 ≈ 31 ms; 429 counted as expected                       | Same API rate limit                       |
 
 **Primary limiter for the public API today:** per-key fixed-window rate limit
-(60 req/min in `apps/api/src/middleware/rate-limit.ts`). Raising that without
-raising `DATABASE_POOL_SIZE` × replicas will shift saturation to the **database
-pool**. Queue depth becomes the limiter for async work (email/image) under
+(60 req/min in `apps/api/src/middleware/rate-limit.ts`). A coarser per-IP window
+(300 req/min) runs ahead of API-key auth so unauthenticated traffic cannot drive
+key lookups without a ceiling; it is an abuse bound, not a quota, and a
+legitimate tenant should never reach it. Both count through an atomic Redis
+counter, so the ceilings hold across replicas rather than per process. Raising
+the per-key limit without raising `DATABASE_POOL_SIZE` × replicas will shift
+saturation to the **database pool**. Queue depth becomes the limiter for async work (email/image) under
 upload/notify storms — see [queue-backlog.md](./queue-backlog.md).
 
 Re-run and update this table after material changes to pools, rate limits, or

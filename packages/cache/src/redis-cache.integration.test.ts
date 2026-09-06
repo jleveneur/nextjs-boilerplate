@@ -55,4 +55,25 @@ describe("createCache (redis)", () => {
     await expect(cache.get<string>(key)).resolves.toBe(claims[0] ? "first" : "second");
     await cache.del(key);
   });
+
+  it("increments atomically and expires the counter", async () => {
+    const key = {
+      namespace: "integration-counter",
+      version: 1,
+      key: `counter-${Date.now()}`,
+      ttlSeconds: 30,
+    };
+
+    const counts = await Promise.all(Array.from({ length: 25 }, () => cache.incr(key)));
+
+    // Every caller must observe a distinct value: the Lua `INCR` is what makes
+    // a fixed-window limiter hold across concurrent requests and replicas.
+    expect(counts.toSorted((a, b) => a - b)).toEqual(Array.from({ length: 25 }, (_, i) => i + 1));
+
+    // Counters are integers, not envelopes, so `get` cannot read them.
+    await expect(cache.get(key)).resolves.toBeUndefined();
+    await cache.del(key);
+    await expect(cache.incr(key)).resolves.toBe(1);
+    await cache.del(key);
+  });
 });

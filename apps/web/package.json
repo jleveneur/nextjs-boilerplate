@@ -12,6 +12,8 @@
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit",
     "bundle-budget": "node --experimental-strip-types ../../scripts/check-bundle-budget.ts",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",
     "lighthouse": "lhci autorun --config=lighthouserc.cjs --collect.chromePath=${CHROME_PATH}"
@@ -57,13 +59,16 @@
     "@playwright/test": "catalog:",
     "@repo/tailwind-config": "workspace:*",
     "@repo/tsconfig": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "portless": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "repo": {
     "layer": 4,

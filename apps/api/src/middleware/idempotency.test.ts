@@ -133,4 +133,62 @@ describe("idempotencyMiddleware", () => {
     expect(handler).not.toHaveBeenCalled();
     await cache.close();
   });
+
+  /**
+   * The claim is what makes a concurrent duplicate 409. Keeping it after the
+   * handler failed would 409 the client's own retry for the whole pending TTL,
+   * so an unfinished request has to release it — errors reach `app.onError`
+   * without unwinding through the middleware's happy path.
+   */
+  it("releases the key when the handler throws", async () => {
+    const cache = createMemoryCache("test");
+    const handler = vi
+      .fn<MutationHandler>()
+      .mockRejectedValueOnce(new Error("downstream exploded"))
+      .mockImplementation((c) => Promise.resolve(c.json({ created: true }, 201)));
+    const app = createTestApp(cache, handler);
+
+    const failed = await app.request("/mutation", REQUEST_INIT);
+    expect(failed.status).toBe(500);
+
+    const retried = await app.request("/mutation", REQUEST_INIT);
+    expect(retried.status).toBe(201);
+    await expect(retried.json()).resolves.toEqual({ created: true });
+    expect(handler).toHaveBeenCalledTimes(2);
+    await cache.close();
+  });
+
+  it("releases the key when the handler answers 5xx", async () => {
+    const cache = createMemoryCache("test");
+    const handler = vi
+      .fn<MutationHandler>()
+      .mockImplementationOnce((c) => Promise.resolve(c.json({ error: "upstream" }, 502)))
+      .mockImplementation((c) => Promise.resolve(c.json({ created: true }, 201)));
+    const app = createTestApp(cache, handler);
+
+    const failed = await app.request("/mutation", REQUEST_INIT);
+    expect(failed.status).toBe(502);
+
+    // A 5xx is not a settled outcome, so it must not be replayed as one.
+    const retried = await app.request("/mutation", REQUEST_INIT);
+    expect(retried.status).toBe(201);
+    expect(retried.headers.get("x-idempotent-replay")).toBeNull();
+    await cache.close();
+  });
+
+  it("still replays a settled 4xx", async () => {
+    const cache = createMemoryCache("test");
+    const handler = vi.fn<MutationHandler>((c) =>
+      Promise.resolve(c.json({ error: "invalid" }, 422)),
+    );
+    const app = createTestApp(cache, handler);
+
+    expect((await app.request("/mutation", REQUEST_INIT)).status).toBe(422);
+
+    const replay = await app.request("/mutation", REQUEST_INIT);
+    expect(replay.status).toBe(422);
+    expect(replay.headers.get("x-idempotent-replay")).toBe("true");
+    expect(handler).toHaveBeenCalledOnce();
+    await cache.close();
+  });
 });
