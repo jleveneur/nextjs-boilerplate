@@ -47,7 +47,7 @@ export type RequestUploadInput = z.infer<typeof requestUploadInputSchema>;
 export const requestUploadOutputSchema = z.object({
   asset: assetSchema,
   upload: z.object({
-    url: z.string().url(),
+    url: z.url(),
     key: z.string().min(1),
     expiresInSeconds: z.number().int().positive(),
   }),

@@ -8,6 +8,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
+    "src/**/*.d.ts",
     "next.config.ts",
     "next-env.d.ts",
     "playwright.config.ts",

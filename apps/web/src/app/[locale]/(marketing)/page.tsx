@@ -1,14 +1,8 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/navigation.ts";
 
-type Props = {
-  params: Promise<{ locale: string }>;
-};
-
-export default async function MarketingHomePage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+export default async function MarketingHomePage() {
   const t = await getTranslations("Marketing");
 
   return (

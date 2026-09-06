@@ -19,7 +19,16 @@ export function SentryProvider({ children }: { children: ReactNode }): ReactNode
       Sentry.init({
         dsn,
         environment: env.NEXT_PUBLIC_APP_ENV,
-        sendDefaultPii: false,
+        dataCollection: {
+          userInfo: false,
+          cookies: false,
+          httpHeaders: { request: false, response: false },
+          urlQueryParams: false,
+          httpBodies: [],
+          databaseQueryData: false,
+          stackFrameVariables: false,
+          genAI: { inputs: false, outputs: false },
+        },
         beforeSend(event) {
           if (event.request?.headers !== undefined) {
             delete event.request.headers["authorization"];

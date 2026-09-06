@@ -1,4 +1,4 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 
@@ -28,8 +28,7 @@ export default function AppShellLayout({ children, params }: Props) {
 }
 
 async function AppShell({ children, params }: Props) {
-  const { locale, orgSlug } = await params;
-  setRequestLocale(locale);
+  const { orgSlug } = await params;
   const t = await getTranslations("Shell");
 
   return (

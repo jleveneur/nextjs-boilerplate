@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -35,7 +35,6 @@ export default function InvoiceDetailPage({ params }: Props) {
 
 async function InvoiceDetailContent({ params }: Props) {
   const { locale, orgSlug, invoiceId } = await params;
-  setRequestLocale(locale);
 
   const parsed = invoiceIdSchema.safeParse(invoiceId);
   if (!parsed.success) {

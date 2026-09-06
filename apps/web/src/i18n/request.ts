@@ -1,5 +1,7 @@
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { locale as localeRootParam } from "next/root-params";
 
 import { routing } from "./routing.ts";
 
@@ -13,12 +15,14 @@ async function loadMessages(locale: string): Promise<Record<string, unknown>> {
   }
 }
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
+export default getRequestConfig(async ({ locale: localeOverride }) => {
+  const resolved = localeOverride ?? (await localeRootParam());
+  if (!hasLocale(routing.locales, resolved)) {
+    notFound();
+  }
 
   return {
-    locale,
-    messages: await loadMessages(locale),
+    locale: resolved,
+    messages: await loadMessages(resolved),
   };
 });

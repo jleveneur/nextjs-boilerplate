@@ -1,4 +1,4 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { CardDescription, CardHeader, CardTitle } from "@repo/ui";
 
@@ -10,7 +10,6 @@ type Props = {
 
 export default async function ContinuePage({ params }: Props) {
   const { locale } = await params;
-  setRequestLocale(locale);
   const t = await getTranslations("Auth");
 
   return (

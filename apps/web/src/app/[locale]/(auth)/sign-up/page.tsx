@@ -1,16 +1,10 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { CardHeader, CardTitle } from "@repo/ui";
 
 import { SignUpForm } from "./sign-up-form.tsx";
 
-type Props = {
-  params: Promise<{ locale: string }>;
-};
-
-export default async function SignUpPage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+export default async function SignUpPage() {
   const t = await getTranslations("Auth");
 
   return (

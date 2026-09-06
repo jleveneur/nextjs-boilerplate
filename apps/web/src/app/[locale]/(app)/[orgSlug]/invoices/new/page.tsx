@@ -1,4 +1,4 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { Skeleton } from "@repo/ui";
@@ -19,8 +19,7 @@ export default function NewInvoicePage({ params }: Props) {
 }
 
 async function NewInvoiceContent({ params }: Props) {
-  const { locale, orgSlug } = await params;
-  setRequestLocale(locale);
+  const { orgSlug } = await params;
   const t = await getTranslations("Billing");
 
   return (

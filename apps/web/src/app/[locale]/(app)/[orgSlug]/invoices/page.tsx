@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { Skeleton } from "@repo/ui";
@@ -26,9 +26,8 @@ export default function InvoicesPage({ params, searchParams }: Props) {
 }
 
 async function InvoicesContent({ params, searchParams }: Props) {
-  const { locale, orgSlug } = await params;
+  const { orgSlug } = await params;
   const { status: rawStatus } = await searchParams;
-  setRequestLocale(locale);
 
   const status =
     typeof rawStatus === "string" &&

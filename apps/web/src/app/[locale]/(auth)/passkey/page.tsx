@@ -1,18 +1,15 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { CardHeader, CardTitle } from "@repo/ui";
 
 import { PasskeyActions } from "./passkey-actions.tsx";
 
 type Props = {
-  params: Promise<{ locale: string }>;
   searchParams: Promise<{ next?: string }>;
 };
 
-export default async function PasskeyPage({ params, searchParams }: Props) {
-  const { locale } = await params;
+export default async function PasskeyPage({ searchParams }: Props) {
   const { next } = await searchParams;
-  setRequestLocale(locale);
   const t = await getTranslations("Auth");
 
   return (

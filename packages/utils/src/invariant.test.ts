@@ -24,7 +24,7 @@ describe("invariant", () => {
     // unknown 500.
     expect(() => {
       invariant(false, "boom");
-    }).toThrowError(expect.objectContaining({ name: INVARIANT_VIOLATION_NAME }));
+    }).toThrow(expect.objectContaining({ name: INVARIANT_VIOLATION_NAME }));
   });
 
   it("treats falsy-but-valid values as failures", () => {

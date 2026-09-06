@@ -1,5 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { apiReference } from "@scalar/hono-api-reference";
+import { Scalar } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
 
 import type { Ctx } from "@repo/core";
@@ -73,7 +73,7 @@ export function createApp(container: AppContainer): OpenAPIHono<ApiEnv> {
 
   app.get(
     "/reference",
-    apiReference({
+    Scalar({
       url: "/openapi.json",
       pageTitle: "Repo Public API",
     }),

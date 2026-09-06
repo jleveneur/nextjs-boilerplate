@@ -117,7 +117,8 @@ across Next, Vitest, and Node.
 
 `no-floating-promises` and `no-misused-promises` are the two rules that justify the whole
 type-aware setup: an unawaited promise in a request handler is a silent data-loss bug, and no
-syntax-only linter can see it.
+syntax-only linter can see it. `no-deprecated` fails CI on `@deprecated` APIs (editor strikethrough
+is not a type error on its own).
 
 ---
 
@@ -263,16 +264,16 @@ changed.
 
 ## 8. Tooling configuration summary
 
-| Tool          | Config                                      | Notes                                                                                                                                         |
-| ------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Oxlint        | `.oxlintrc.json` extending `tooling/oxlint` | `typeAware: true` at root; correctness rules are errors; per-layer overrides (e.g. `no-console` off in `apps/worker` bootstrap)               |
-| Oxfmt         | `.oxfmtrc.json`                             | `printWidth: 100` (Oxfmt's default), double quotes, semicolons, trailing commas, `sortImports` on. Tailwind class sorting is built in but off |
-| CSpell        | `cspell.config.yaml`                        | Project dictionary committed so new jargon is a reviewed diff                                                                                 |
-| Knip          | `knip.json`                                 | Fails CI on unused files, exports, and dependencies                                                                                           |
-| React Doctor  | `doctor.config.json`                        | Fails CI on React security, a11y, and performance errors; PRs report only newly introduced findings                                           |
-| Lefthook      | `lefthook.yml`                              | pre-commit: format + lint staged, gitleaks. pre-push: typecheck + affected unit tests                                                         |
-| EditorConfig  | `.editorconfig`                             | LF, UTF-8, 2 spaces, final newline, trim trailing whitespace                                                                                  |
-| gitattributes | `.gitattributes`                            | `* text=auto eol=lf`, lockfile marked binary-ish for diffs, `linguist-generated` on generated files                                           |
+| Tool          | Config                                      | Notes                                                                                                                                                  |
+| ------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Oxlint        | `.oxlintrc.json` extending `tooling/oxlint` | `typeAware: true` at root; correctness rules are errors; `no-deprecated` is on; per-layer overrides (e.g. `no-console` off in `apps/worker` bootstrap) |
+| Oxfmt         | `.oxfmtrc.json`                             | `printWidth: 100` (Oxfmt's default), double quotes, semicolons, trailing commas, `sortImports` on. Tailwind class sorting is built in but off          |
+| CSpell        | `cspell.config.yaml`                        | Project dictionary committed so new jargon is a reviewed diff                                                                                          |
+| Knip          | `knip.json`                                 | Fails CI on unused files, exports, and dependencies                                                                                                    |
+| React Doctor  | `doctor.config.json`                        | Fails CI on React security, a11y, and performance errors; PRs report only newly introduced findings                                                    |
+| Lefthook      | `lefthook.yml`                              | pre-commit: format + lint staged, gitleaks. pre-push: typecheck + affected unit tests                                                                  |
+| EditorConfig  | `.editorconfig`                             | LF, UTF-8, 2 spaces, final newline, trim trailing whitespace                                                                                           |
+| gitattributes | `.gitattributes`                            | `* text=auto eol=lf`, lockfile marked binary-ish for diffs, `linguist-generated` on generated files                                                    |
 
 ### Git hooks: deliberately fast
 

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
 
 import { Skeleton } from "@repo/ui";
@@ -23,8 +22,7 @@ export default function BillingPage({ params }: Props) {
 }
 
 async function BillingContent({ params }: Props) {
-  const { locale, orgSlug } = await params;
-  setRequestLocale(locale);
+  const { orgSlug } = await params;
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-6">

@@ -28,7 +28,7 @@ describe("assertNever", () => {
   });
 
   it("throws an error the mapper can recognise by name", () => {
-    expect(() => assertNever(unexpected("x"))).toThrowError(
+    expect(() => assertNever(unexpected("x"))).toThrow(
       expect.objectContaining({ name: INVARIANT_VIOLATION_NAME }),
     );
   });

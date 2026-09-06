@@ -1,18 +1,15 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { CardHeader, CardTitle } from "@repo/ui";
 
 import { TwoFactorForm } from "./two-factor-form.tsx";
 
 type Props = {
-  params: Promise<{ locale: string }>;
   searchParams: Promise<{ next?: string }>;
 };
 
-export default async function TwoFactorPage({ params, searchParams }: Props) {
-  const { locale } = await params;
+export default async function TwoFactorPage({ searchParams }: Props) {
   const { next } = await searchParams;
-  setRequestLocale(locale);
   const t = await getTranslations("Auth");
 
   return (

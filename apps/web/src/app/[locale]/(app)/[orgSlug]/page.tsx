@@ -1,4 +1,3 @@
-import { setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
 
 import { redirect } from "@/i18n/navigation.ts";
@@ -17,6 +16,5 @@ export default function OrgHomePage({ params }: Props) {
 
 async function OrgHomeRedirect({ params }: Props): Promise<never> {
   const { locale, orgSlug } = await params;
-  setRequestLocale(locale);
   return redirect({ href: `/${orgSlug}/invoices`, locale });
 }

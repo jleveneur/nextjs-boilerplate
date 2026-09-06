@@ -42,12 +42,14 @@ export function initOtel(serviceName: string, options: OtelInitOptions): OtelHan
     traceExporter: new OTLPTraceExporter({
       url: `${endpoint}/v1/traces`,
     }),
-    metricReader: new PeriodicExportingMetricReader({
-      exporter: new OTLPMetricExporter({
-        url: `${endpoint}/v1/metrics`,
+    metricReaders: [
+      new PeriodicExportingMetricReader({
+        exporter: new OTLPMetricExporter({
+          url: `${endpoint}/v1/metrics`,
+        }),
+        exportIntervalMillis: 15_000,
       }),
-      exportIntervalMillis: 15_000,
-    }),
+    ],
     instrumentations: [
       // Inbound HTTP (api) and Node's http/https clients.
       new HttpInstrumentation(),

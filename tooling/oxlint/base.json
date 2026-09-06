@@ -26,6 +26,8 @@
     // syntax-only linter can see it.
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
+    // `@deprecated` is only a strikethrough in the editor unless we fail CI on it.
+    "typescript/no-deprecated": "error",
     "typescript/await-thenable": "error",
     "typescript/require-await": "error",
     "typescript/no-unnecessary-type-assertion": "error",

@@ -43,7 +43,7 @@ export const jobPayloadSchemas = {
      * Wall-clock cutoff; pending assets older than this are failed.
      * When omitted, the handler defaults to now minus 24 hours.
      */
-    olderThanIso: z.string().datetime().optional(),
+    olderThanIso: z.iso.datetime().optional(),
   }),
   "stripe.event.process": z.object({
     eventId: z.string().min(1),
