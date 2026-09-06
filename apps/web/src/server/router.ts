@@ -19,9 +19,16 @@ export { appRouter };
 
 const createCaller = createCallerFactory(appRouter, reportCallerFailure);
 
-/** Create an in-process caller scoped to the organization addressed by the URL. */
+/**
+ * In-process caller scoped to the organization addressed by the URL.
+ *
+ * Returns the actor alongside it because a page usually needs both: the data,
+ * and whether this actor may act on it (`canVoidInvoice` and friends). Without
+ * the actor, callers had to rebuild the whole context by hand just to read it,
+ * which is how one page ended up re-implementing this function inline.
+ */
 export async function createServerCaller(organizationSlug: string) {
   const requestHeaders = await headers();
   const context = await createOrpcContext(requestHeaders, { organizationSlug });
-  return createCaller(context);
+  return { api: createCaller(context), actor: context.actor };
 }
