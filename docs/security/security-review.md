@@ -13,19 +13,21 @@ Related: [authorization matrix](./authorization-matrix.md), [accessibility audit
 
 ## Checklist
 
-| Area                                 | Status             | Evidence                                                                                                                       |
-| ------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| Authorization matrix (role × action) | Automated          | [authorization-matrix.md](./authorization-matrix.md), [`packages/authz/src/can.test.ts`](../../packages/authz/src/can.test.ts) |
-| Transport parity (oRPC = REST authz) | Automated          | [`apps/api/src/authz-parity.integration.test.ts`](../../apps/api/src/authz-parity.integration.test.ts)                         |
-| Tenant isolation in repositories     | Automated          | Core/db integration tests (billing, assets)                                                                                    |
-| Secrets only via `@repo/env`         | Automated + policy | [09](../architecture/09-environment-and-secrets.md), Gitleaks in CI/hooks                                                      |
-| No secrets in client bundles         | Policy             | `server-only` on server env; knip/layer `runtime: browser` ban                                                                 |
-| Security headers (web)               | Implemented        | `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`                                           |
-| Security headers (api)               | Implemented        | Same set; unit test in `security-headers.test.ts`                                                                              |
-| CSP / HSTS                           | Adopter edge       | Not shipped as an app CSP; set at the TLS reverse proxy when an adopter is ready                                               |
-| Dependency / SAST / images           | CI                 | `pnpm audit`+Renovate, CodeQL, Trivy on images                                                                                 |
-| OWASP ZAP baseline                   | Nightly            | `make zap`, `.github/workflows/nightly-hardening.yml`                                                                          |
-| Load / saturation                    | Nightly + runbook  | `make load`, [scaling.md](../runbooks/scaling.md)                                                                              |
+| Area                                 | Status             | Evidence                                                                                                                        |
+| ------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Authorization matrix (role × action) | Automated          | [authorization-matrix.md](./authorization-matrix.md), [`packages/authz/src/can.test.ts`](../../packages/authz/src/can.test.ts)  |
+| Transport parity (oRPC = REST authz) | Automated          | [`apps/api/src/authz-parity.integration.test.ts`](../../apps/api/src/authz-parity.integration.test.ts)                          |
+| Tenant isolation in repositories     | Automated          | Core/db integration tests (billing, assets)                                                                                     |
+| Secrets only via `@repo/env`         | Automated + policy | [09](../architecture/09-environment-and-secrets.md), Gitleaks in CI/hooks                                                       |
+| No secrets in client bundles         | Policy             | `server-only` on server env; knip/layer `runtime: browser` ban                                                                  |
+| Security headers (web)               | Implemented        | `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`                                            |
+| Security headers (api)               | Implemented        | Same set; unit test in `security-headers.test.ts`                                                                               |
+| CSP / HSTS                           | Adopter edge       | Not shipped as an app CSP; set at the TLS reverse proxy when an adopter is ready                                                |
+| Dependency / SAST / images           | CI                 | `pnpm audit`+Renovate, CodeQL, Trivy on images                                                                                  |
+| OWASP ZAP baseline                   | Nightly            | `make zap`, `.github/workflows/nightly-hardening.yml`                                                                           |
+| Load / saturation                    | Nightly + runbook  | `make load`, [scaling.md](../runbooks/scaling.md)                                                                               |
+| Rate limiting (public API)           | Automated          | Per-IP before auth + per-key after; [`apps/api/src/middleware/rate-limit.test.ts`](../../apps/api/src/middleware/rate-limit.ts) |
+| Post-auth redirect targets           | Automated          | [`apps/web/src/features/auth/auth-utils.ts`](../../apps/web/src/features/auth/auth-utils.ts) — off-origin `next` rejected       |
 
 ---
 
@@ -39,7 +41,10 @@ Related: [authorization matrix](./authorization-matrix.md), [accessibility audit
 
 ## Findings / accepted risks
 
-| ID    | Severity | Finding                                                                                       | Disposition                                                                                     |
-| ----- | -------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| P16-1 | Medium   | Better Auth API-key plugin defaulted to **10 req/day** and surfaced as HTTP 401 when exceeded | Fixed: `rateLimit.enabled: false` in `@repo/auth`; app limiter remains 60 req/min in `apps/api` |
-| P16-2 | Low      | Org API keys without `metadata.userId` resolve as invalid (`resolveActorFromApiKey`)          | Documented in `perf/k6/README.md`; creators must set `metadata.userId`                          |
+| ID    | Severity | Finding                                                                                                                                                                             | Disposition                                                                                                                                                                    |
+| ----- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| P16-1 | Medium   | Better Auth API-key plugin defaulted to **10 req/day** and surfaced as HTTP 401 when exceeded                                                                                       | Fixed: `rateLimit.enabled: false` in `@repo/auth`; app limiter remains 60 req/min in `apps/api`                                                                                |
+| P16-2 | Low      | Org API keys without `metadata.userId` resolve as invalid (`resolveActorFromApiKey`)                                                                                                | Documented in `perf/k6/README.md`; creators must set `metadata.userId`                                                                                                         |
+| P17-1 | High     | Per-key limiter read-modify-wrote its counter, so overlapping requests all observed the same count and the 60 req/min ceiling was not enforced under concurrency or across replicas | Fixed: counts through an atomic `Cache.incr` (Redis `INCR` + first-write `EXPIRE`, one Lua call). Regression test asserts exactly 60 of 80 overlapping requests pass           |
+| P17-2 | Medium   | The only limiter ran **after** API-key auth, leaving requests with an invalid key unmetered — an unauthenticated caller could drive an unbounded number of key lookups              | Fixed: a per-IP limiter (300 req/min) mounted ahead of `apiKeyAuthMiddleware`. Buckets on the last `X-Forwarded-For` entry, which a client cannot forge past one trusted proxy |
+| P17-3 | Medium   | Stripe webhook held its replay claim through a failed enqueue, so a retry inside the 5-minute pending TTL was answered `replay: true` and the event was dropped                     | Fixed: the claim is released on failure so the 500 lets Stripe retry. Same fix applied to the `Idempotency-Key` claim on a thrown handler or 5xx                               |
