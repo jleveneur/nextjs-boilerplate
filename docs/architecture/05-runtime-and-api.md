@@ -173,7 +173,7 @@ Conventions:
 | Errors            | RFC 9457 `application/problem+json`: `{ type, title, status, detail, code, errors?, request_id }`. `code` is the stable contract; `detail` is human text and may change. |
 | Pagination        | Cursor-only: `?limit=&cursor=` → `{ data, next_cursor }`. Opaque, signed cursors.                                                                                        |
 | Idempotency       | `Idempotency-Key` on all mutations; key + request hash + response stored in Redis (24 h) and replayed on retry. Non-negotiable for a payments-adjacent API.              |
-| Rate limiting     | Per API key, sliding window in Redis, `RateLimit-*` headers, `429` + `Retry-After`.                                                                                      |
+| Rate limiting     | Fixed window in Redis via an atomic counter: per IP before auth, per API key after. `RateLimit-*` headers, `429` + `Retry-After`.                                        |
 | Filtering/sorting | Explicit allowlist per resource. No arbitrary query DSL — it becomes a permanent contract and a query-planner hazard.                                                    |
 | Field selection   | `?fields=` allowlist where payloads are large.                                                                                                                           |
 | Partial updates   | `PATCH` with merge semantics; `exactOptionalPropertyTypes` makes "absent vs null" tractable in types.                                                                    |

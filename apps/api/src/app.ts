@@ -6,7 +6,7 @@ import type { ApiEnv } from "./api-env.ts";
 import { apiKeyAuthMiddleware } from "./middleware/api-key-auth.ts";
 import { errorHandler } from "./middleware/error-handler.ts";
 import { idempotencyMiddleware } from "./middleware/idempotency.ts";
-import { rateLimitMiddleware } from "./middleware/rate-limit.ts";
+import { clientRateLimitMiddleware, rateLimitMiddleware } from "./middleware/rate-limit.ts";
 import { requestIdMiddleware } from "./middleware/request-id.ts";
 import { securityHeadersMiddleware } from "./middleware/security-headers.ts";
 import { registerInvoiceRoutes } from "./routes/v1/invoices.ts";
@@ -42,6 +42,9 @@ export function createApp(container: AppContainer): OpenAPIHono<ApiEnv> {
   });
 
   const v1 = new OpenAPIHono<ApiEnv>();
+  // Per-IP first: key resolution is a database round trip, so it must sit
+  // behind a limiter that does not need the key to already be valid.
+  v1.use("*", clientRateLimitMiddleware);
   v1.use("*", apiKeyAuthMiddleware);
   v1.use("*", rateLimitMiddleware);
   v1.use("*", idempotencyMiddleware);
