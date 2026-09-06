@@ -15,8 +15,9 @@
 ├── scripts/                 # Repo automation (layers, restore-drill, budgets, …).
 ├── .github/                 # Workflows, templates, CODEOWNERS.
 
-├── .cursor/rules/           # Machine-readable architecture rules for AI agents.
-├── .agents/skills/          # Project skills for coding agents (React Doctor, …).
+├── .cursor/rules/           # Glob-scoped rules — the per-file context AGENTS.md cannot give.
+├── .agents/skills/          # Project skills. `.claude/skills` and `.cursor/skills`
+│                            # symlink here; the content was triplicated byte-for-byte.
 ├── .vscode/                 # Recommended settings + extensions.
 ├── Makefile                 # The single human entry point.
 ├── turbo.json               # Task graph.
