@@ -1,13 +1,15 @@
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 
+import type { Locale } from "@repo/i18n";
+
 import { redirect } from "@/i18n/navigation.ts";
 import { getContainer } from "@/server/container.ts";
 
 import { firstOrgInvoicesHref } from "./auth-utils.ts";
 
 type Props = {
-  locale: string;
+  locale: Locale;
 };
 
 /**

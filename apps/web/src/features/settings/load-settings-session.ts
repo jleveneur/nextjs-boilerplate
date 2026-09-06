@@ -4,6 +4,7 @@ import "server-only";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
+import type { Locale } from "@repo/i18n";
 import { isOrganizationRole } from "@repo/permissions";
 
 import { redirect } from "@/i18n/navigation.ts";
@@ -23,7 +24,7 @@ function twoFactorEnabled(user: object): boolean {
 }
 
 export async function loadSettingsSession(
-  locale: string,
+  locale: Locale,
   orgSlug: string,
 ): Promise<SettingsSession> {
   const requestHeaders = await headers();

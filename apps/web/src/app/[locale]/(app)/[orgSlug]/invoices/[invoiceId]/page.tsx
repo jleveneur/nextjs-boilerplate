@@ -6,6 +6,7 @@ import { invoiceIdSchema } from "@repo/contracts";
 import { canVoidInvoice } from "@repo/core";
 
 import { InvoiceDetail } from "@/features/billing/invoice-detail.tsx";
+import { requireLocale } from "@/i18n/params.ts";
 import { createServerCaller } from "@/server/router.ts";
 
 type Props = {
@@ -15,7 +16,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   "use cache";
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Billing" });
+  const t = await getTranslations({ locale: requireLocale(locale), namespace: "Billing" });
   return { title: t("title") };
 }
 

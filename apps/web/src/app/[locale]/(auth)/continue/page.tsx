@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { CardDescription, CardHeader, CardTitle } from "@repo/ui";
 
 import { ContinueToApp } from "@/features/auth/continue-to-app.tsx";
+import { requireLocale } from "@/i18n/params.ts";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -19,7 +20,7 @@ export default async function ContinuePage({ params }: Props) {
         <CardDescription>{t("continuing")}</CardDescription>
       </CardHeader>
       <div className="px-6 pb-6">
-        <ContinueToApp locale={locale} />
+        <ContinueToApp locale={requireLocale(locale)} />
       </div>
     </>
   );

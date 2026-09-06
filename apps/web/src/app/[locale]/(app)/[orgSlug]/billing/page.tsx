@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { SubscriptionPanel } from "@/features/billing/subscription-panel.tsx";
+import { requireLocale } from "@/i18n/params.ts";
 
 type Props = {
   params: Promise<{ locale: string; orgSlug: string }>;
@@ -10,7 +11,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   "use cache";
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Billing" });
+  const t = await getTranslations({ locale: requireLocale(locale), namespace: "Billing" });
   return { title: t("portalTitle") };
 }
 

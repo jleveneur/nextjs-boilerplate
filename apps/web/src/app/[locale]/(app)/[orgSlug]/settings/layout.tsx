@@ -5,6 +5,7 @@ import { Skeleton } from "@repo/ui";
 
 import { loadSettingsSession } from "@/features/settings/load-settings-session.ts";
 import { SettingsNav } from "@/features/settings/settings-nav.tsx";
+import { requireLocale } from "@/i18n/params.ts";
 
 type Props = {
   children: ReactNode;
@@ -28,6 +29,6 @@ async function SettingsNavSlot({
   params: Promise<{ locale: string; orgSlug: string }>;
 }) {
   const { locale, orgSlug } = await params;
-  const session = await loadSettingsSession(locale, orgSlug);
+  const session = await loadSettingsSession(requireLocale(locale), orgSlug);
   return <SettingsNav orgSlug={orgSlug} role={session.role} />;
 }
