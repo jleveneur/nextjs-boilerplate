@@ -90,6 +90,8 @@
     "loadError": "Impossible de charger les factures.",
     "saveError": "Impossible d'enregistrer la facture.",
     "voidError": "Impossible d'annuler la facture.",
+    "voidErrorAlreadyPaid": "Cette facture est déjà payée et ne peut pas être annulée.",
+    "voidErrorAlreadyVoid": "Cette facture est déjà annulée.",
     "retry": "Réessayer"
   },
   "Settings": {

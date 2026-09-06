@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Asset, Invoice, RequestUploadOutput } from "@repo/contracts";
 import * as core from "@repo/core";
+import { InvoiceAlreadyPaidError, InvoiceAlreadyVoidError } from "@repo/core";
 import { createTestPorts } from "@repo/core/testing";
 import { ForbiddenError, NotFoundError } from "@repo/errors";
 import { createLogger } from "@repo/logger";
@@ -286,5 +287,29 @@ describe("createCallerFactory failure reporting", () => {
     const caller = createCallerFactory(appRouter)(makeCtx(null));
 
     await expect(caller.billing.list({ limit: 20 })).rejects.toThrow();
+  });
+});
+
+/**
+ * The typed error contract on `billing.void`.
+ *
+ * Declaring it is only worth anything if a refusal raised deep in the domain
+ * still arrives in that shape: the service throws `InvoiceAlreadyPaidError`, and
+ * the caller must receive a CONFLICT carrying the domain code it can branch on.
+ */
+describe("billing.void typed errors", () => {
+  it.each([
+    ["INVOICE_ALREADY_PAID", new InvoiceAlreadyPaidError("inv_1")],
+    ["INVOICE_ALREADY_VOID", new InvoiceAlreadyVoidError("inv_1")],
+  ] as const)("surfaces %s as CONFLICT with the declared appCode", async (appCode, thrown) => {
+    vi.mocked(core.voidInvoice).mockRejectedValue(thrown);
+    const caller = createCaller(makeCtx(makeActor("owner")));
+
+    await expect(caller.billing.void({ invoiceId })).rejects.toMatchObject({
+      // CONFLICT, not a custom code: a custom one is absent from
+      // COMMON_ERROR_STATUS_MAP and the response would arrive as a 500.
+      code: "CONFLICT",
+      data: { appCode },
+    });
   });
 });

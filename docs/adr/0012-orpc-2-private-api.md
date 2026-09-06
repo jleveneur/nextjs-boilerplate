@@ -17,7 +17,10 @@ same coordinated deploy, and v2 ships deprecated aliases for most renames.
 The load-bearing breaks for this repo are CSRF, GET, and the RPC Link URL shape. v2 removed
 `SimpleCsrfProtection*` (the custom `x-csrf-token` pair ADR-0011 relied on). GET is rejected by
 default; CSRF for cookie-authenticated GET is a dedicated plugin we do not need if we never
-allow GET. `RPCLink` splits the former absolute `url` into `origin` plus a path-only `url`.
+allow GET. `RPCLink` splits the former absolute `url` into `origin` plus a path-only `url`. `origin` is
+resolved per request from `window.location`, not from `NEXT_PUBLIC_APP_URL`: a build-time
+origin is wrong on any other host, and the failure is quiet — the call goes cross-origin,
+`SameSite=Lax` withholds the session cookie, and everything returns 401.
 
 `npm view @orpc/server dist-tags` still has `latest` at 1.15.0 and `beta` at 2.0.0-beta.33.
 
@@ -56,6 +59,65 @@ exact; server and browser client upgrade in the same change.
 
 When `latest` points at 2.x, drop the beta pin — that is a catalog bump, not a new transport
 decision.
+
+## Deviations from the documented Next.js patterns
+
+Two, both deliberate. Recorded here because the next reader will otherwise
+"correct" them.
+
+**No unified server/browser client.** oRPC's
+[SSR guide](https://orpc.dev/docs/best-practices/optimize-ssr) recommends one
+`client` shared by both runtimes — a `globalThis.$client` built with
+`createRouterClient` on the server, an `RPCLink` in the browser. We keep two:
+`createServerCaller(orgSlug)` for Server Components and `orpcClient` for the
+browser.
+
+This is a preference, not a constraint. `createRouterClient` takes
+[client context](https://orpc.dev/docs/client/server-side) resolved per call, and
+the documentation names this exact use — "switch between contexts, such as
+different users or tenants, without creating multiple client instances". A
+unified client would work:
+
+```ts
+const api = createRouterClient(appRouter, {
+  context: async ({ organizationSlug }: { organizationSlug?: string }) => …,
+})
+
+await api.billing.get({ invoiceId }, { context: { organizationSlug } })
+```
+
+We keep the factory because a page usually makes several calls and needs the
+actor as well: `createServerCaller(orgSlug)` resolves the tenant once and returns
+`{ api, actor }`, where the unified client would repeat
+`{ context: { organizationSlug } }` at every call site and still leave the actor
+to be fetched separately.
+
+**What is a real constraint** is deriving the tenant from the session rather than
+passing it. `EnsureActiveOrg` aligns Better Auth's active organization in a
+client effect, so it has not run when the server renders. A server caller reading
+`session.activeOrganizationId` would serve the previous organization's data on
+the first render after a switch. That is why `/api/rpc` calls
+`createOrpcContext(headers)` with no slug — in the browser the session has caught
+up — while Server Components pass one explicitly. Whichever client shape is used,
+the slug has to be an argument, never an ambient lookup.
+
+**Typed errors only where a caller can act on them.** oRPC recommends `.errors()`
+for application-specific failures and plain `ORPCError` for common ones
+([error handling](https://orpc.dev/docs/error-handling)). `AppError` →
+`ORPCError` covers the common half. On top of that, `billing.void` declares
+`CONFLICT` with a typed `data.appCode`, so the browser can tell "already paid"
+from "already void" from a 500 without matching on message text.
+
+The code stays `CONFLICT` rather than becoming `INVOICE_ALREADY_PAID`: a custom
+code is legal but absent from `COMMON_ERROR_STATUS_MAP`, so the response would
+lose its 409. The distinguishing detail belongs in `data`.
+
+That map is written inline with plain string literals. Passing it through a
+variable, or building the enum from `BILLING_ERROR_CODES`, widens the schema and
+`data.appCode` infers as `unknown` — a contract that compiles and buys nothing.
+`routers/billing.test.ts` asserts the literals still match the domain codes.
+
+---
 
 ## Consequences
 
