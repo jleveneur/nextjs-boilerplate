@@ -1,5 +1,11 @@
 # @repo/core
 
+## 1.1.2
+
+### Patch Changes
+
+- @repo/db@0.2.3
+
 ## 1.1.1
 
 ### Patch Changes
