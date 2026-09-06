@@ -1,5 +1,7 @@
 import type { drizzleAdapter } from "better-auth/adapters/drizzle";
 
+import type { Locale } from "@repo/i18n";
+
 import type { OnAuditEvent } from "./audit-event.ts";
 
 /**
@@ -19,19 +21,36 @@ export type OAuthProviderConfig = {
   clientSecret: string;
 };
 
-export type SendVerificationEmailInput = {
+/**
+ * Language to write the email in, negotiated from the request that triggered it.
+ *
+ * Resolved here rather than in the composition root because only this package
+ * sees Better Auth's `request` argument. Always a supported locale — negotiation
+ * falls back rather than failing — so a callback never handles a missing value.
+ *
+ * It is the *request's* language, not a stored user preference: this codebase has
+ * no locale column on `user`. That is right for a sign-up or an invitation, where
+ * the request is the recipient's own browser. It is a guess for a send triggered
+ * by someone else, and it degrades to the default locale when Better Auth invokes
+ * a callback with no request at all.
+ */
+type LocalizedEmail = {
+  locale: Locale;
+};
+
+export type SendVerificationEmailInput = LocalizedEmail & {
   user: { id: string; email: string; name: string };
   url: string;
   token: string;
 };
 
-export type SendMagicLinkInput = {
+export type SendMagicLinkInput = LocalizedEmail & {
   email: string;
   url: string;
   token: string;
 };
 
-export type SendInvitationEmailInput = {
+export type SendInvitationEmailInput = LocalizedEmail & {
   email: string;
   invitationId: string;
   inviterName: string;

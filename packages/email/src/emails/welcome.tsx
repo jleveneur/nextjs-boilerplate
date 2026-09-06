@@ -1,46 +1,29 @@
-import { Body, Container, Head, Heading, Html, Preview, Text } from "react-email";
+import { Text } from "react-email";
+
+import { defaultLocale, type Locale } from "@repo/i18n";
+
+import { EmailLayout, text } from "./layout.tsx";
+import { emailMessages } from "./messages.ts";
 
 export type WelcomeEmailProps = {
-  name: string;
-  appName?: string;
+  readonly name: string;
+  readonly appName?: string;
+  readonly locale?: Locale;
 };
 
-export function WelcomeEmail({ name, appName = "App" }: WelcomeEmailProps) {
+export function WelcomeEmail({ name, appName = "App", locale = defaultLocale }: WelcomeEmailProps) {
+  const messages = emailMessages(locale);
+
   return (
-    <Html>
-      <Head />
-      <Preview>Welcome to {appName}</Preview>
-      <Body style={body}>
-        <Container style={container}>
-          <Heading style={heading}>Welcome, {name}</Heading>
-          <Text style={text}>Your account is ready. Sign in to get started.</Text>
-        </Container>
-      </Body>
-    </Html>
+    <EmailLayout
+      locale={locale}
+      preview={messages.welcome.preview({ appName })}
+      heading={messages.welcome.heading({ name })}
+      messages={messages}
+    >
+      <Text style={text}>{messages.welcome.body}</Text>
+    </EmailLayout>
   );
 }
 
 export default WelcomeEmail;
-
-const body = {
-  backgroundColor: "#f6f6f6",
-  fontFamily: "Helvetica, Arial, sans-serif",
-};
-
-const container = {
-  backgroundColor: "#ffffff",
-  margin: "40px auto",
-  padding: "24px",
-  maxWidth: "480px",
-};
-
-const heading = {
-  fontSize: "22px",
-  margin: "0 0 16px",
-};
-
-const text = {
-  fontSize: "16px",
-  lineHeight: "24px",
-  margin: "0",
-};

@@ -12,6 +12,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, magicLink, organization, twoFactor } from "better-auth/plugins";
 
+import { negotiateLocaleFromRequest } from "@repo/i18n";
 import { generateUuidV7 } from "@repo/utils";
 
 import { ac, organizationRoles } from "./access-control.ts";
@@ -67,22 +68,24 @@ export function createAuth(options: CreateAuthOptions) {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
-      sendResetPassword: async ({ user, url, token }) => {
+      sendResetPassword: async ({ user, url, token }, request) => {
         await options.sendVerificationEmail({
           user: { id: user.id, email: user.email, name: user.name },
           url,
           token,
+          locale: negotiateLocaleFromRequest(request),
         });
       },
     },
     emailVerification: {
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
-      sendVerificationEmail: async ({ user, url, token }) => {
+      sendVerificationEmail: async ({ user, url, token }, request) => {
         await options.sendVerificationEmail({
           user: { id: user.id, email: user.email, name: user.name },
           url,
           token,
+          locale: negotiateLocaleFromRequest(request),
         });
       },
     },
@@ -121,7 +124,7 @@ export function createAuth(options: CreateAuthOptions) {
         roles: organizationRoles,
         allowUserToCreateOrganization: true,
         creatorRole: "owner",
-        async sendInvitationEmail(data) {
+        async sendInvitationEmail(data, request) {
           if (options.sendInvitationEmail === undefined) {
             return;
           }
@@ -132,6 +135,9 @@ export function createAuth(options: CreateAuthOptions) {
             inviterName: data.inviter.user.name,
             organizationName: data.organization.name,
             url: `${options.baseURL}/accept-invitation/${data.id}`,
+            // The inviter's request, not the recipient's — the recipient has not
+            // arrived yet. Their own locale wins from the accept page onwards.
+            locale: negotiateLocaleFromRequest(request),
           });
         },
         organizationHooks: {
@@ -267,8 +273,16 @@ export function createAuth(options: CreateAuthOptions) {
         origin: options.baseURL,
       }),
       magicLink({
-        sendMagicLink: async ({ email, url, token }) => {
-          await options.sendMagicLink({ email, url, token });
+        sendMagicLink: async ({ email, url, token }, context) => {
+          await options.sendMagicLink({
+            email,
+            url,
+            token,
+            // The magic-link plugin hands over an endpoint context rather than the
+            // bare `Request` the core callbacks receive, so the request is one
+            // level in. Not every context carries one.
+            locale: negotiateLocaleFromRequest(context?.request),
+          });
         },
       }),
       admin({

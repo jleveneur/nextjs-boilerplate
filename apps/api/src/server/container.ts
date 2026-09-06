@@ -3,7 +3,14 @@ import { createCache, type Cache } from "@repo/cache";
 import { recordAuditLog, type CtxPorts } from "@repo/core";
 import { createDb, type Database, type SqlClient } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
-import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
+import {
+  buildInvitationEmail,
+  buildMagicLinkEmail,
+  buildVerifyEmail,
+  createResendMailer,
+  createSmtpMailer,
+  type Mailer as EmailMailer,
+} from "@repo/email";
 import { createLogger, type Logger } from "@repo/logger";
 import { createSentryErrorTracker, getTraceContext, type ErrorTracker } from "@repo/observability";
 
@@ -68,14 +75,6 @@ function buildContainer(): AppContainer {
 
   const emailMailer = createEmailMailer();
 
-  const sendHtml = async (input: { to: string; subject: string; html: string }): Promise<void> => {
-    await emailMailer.send({
-      to: input.to,
-      subject: input.subject,
-      html: input.html,
-    });
-  };
-
   const { auth } = createAuth({
     db,
     schema: authSchema,
@@ -84,25 +83,16 @@ function buildContainer(): AppContainer {
     appEnv: env.APP_ENV,
     appName: "Repo",
     redisUrl: env.REDIS_URL,
-    sendVerificationEmail: async ({ user, url }) => {
-      await sendHtml({
-        to: user.email,
-        subject: "Verify your email",
-        html: `<p>Verify your email: <a href="${url}">${url}</a></p>`,
-      });
+    sendVerificationEmail: async ({ user, url, locale }) => {
+      await emailMailer.send({ to: user.email, ...buildVerifyEmail({ url, locale }) });
     },
-    sendMagicLink: async ({ email, url }) => {
-      await sendHtml({
-        to: email,
-        subject: "Your magic link",
-        html: `<p>Sign in: <a href="${url}">${url}</a></p>`,
-      });
+    sendMagicLink: async ({ email, url, locale }) => {
+      await emailMailer.send({ to: email, ...buildMagicLinkEmail({ url, locale }) });
     },
-    sendInvitationEmail: async ({ email, url, organizationName, inviterName }) => {
-      await sendHtml({
+    sendInvitationEmail: async ({ email, url, organizationName, inviterName, locale }) => {
+      await emailMailer.send({
         to: email,
-        subject: `Join ${organizationName}`,
-        html: `<p>${inviterName} invited you to ${organizationName}. Accept: <a href="${url}">${url}</a></p>`,
+        ...buildInvitationEmail({ url, inviterName, organizationName, locale }),
       });
     },
     onAuditEvent: async (event) => {

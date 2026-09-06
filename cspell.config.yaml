@@ -14,6 +14,12 @@ dictionaryDefinitions:
     path: ./tooling/cspell/project.txt
     addWords: true
 
+import:
+  # French copy now ships in source (the transactional email catalog), so it is
+  # spell-checked rather than exempted. Scoped by the `overrides` block below:
+  # everywhere else, a French word in an English string is still an error.
+  - "@cspell/dict-fr-fr/cspell-ext.json"
+
 dictionaries:
   - project
   - typescript
@@ -39,6 +45,15 @@ ignorePaths:
   - .git/**
   # Locale catalogs are translated prose, not English spelling targets.
   - apps/*/src/messages/**
+
+# The transactional email catalog holds every locale's copy in one file, so it is
+# checked against both dictionaries at once. Unlike `apps/*/src/messages/**`,
+# which is exempted outright, this keeps the English half of the file honest.
+overrides:
+  - filename:
+      - packages/email/src/emails/messages.ts
+      - packages/email/src/emails/*.test.tsx
+    language: en,en-GB,fr-FR
 
 # Hex colours, base64-ish blobs, and URLs are not words.
 ignoreRegExpList:
