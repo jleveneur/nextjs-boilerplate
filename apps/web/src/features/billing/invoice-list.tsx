@@ -18,12 +18,12 @@ type Props = {
 };
 
 export async function InvoiceList({ orgSlug, status }: Props) {
-  const [t, locale, caller] = await Promise.all([
+  const [t, locale, { api }] = await Promise.all([
     getTranslations("Billing"),
     getLocale(),
     createServerCaller(orgSlug),
   ]);
-  const page = await caller.billing.list({ limit: 50 });
+  const page = await api.billing.list({ limit: 50 });
   const invoices = (() => {
     if (status === "all") return page.data;
     const statusFilter: InvoiceStatus = status;

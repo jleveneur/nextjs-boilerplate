@@ -47,6 +47,9 @@ async function shutdown(signal: string): Promise<void> {
   await container.idempotencyRedis.quit();
   await container.sql.end({ timeout: 5 });
   await container.closeAnalytics();
+  // Drain queued events before the process goes: the crash that caused the
+  // restart is exactly the one you want to have arrived.
+  await container.errorTracker.flush();
   await observability.shutdown();
   process.exit(0);
 }

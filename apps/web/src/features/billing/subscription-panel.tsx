@@ -12,10 +12,10 @@ type Props = {
 
 export async function SubscriptionPanel({ orgSlug }: Props) {
   const t = await getTranslations("Billing");
-  const caller = await createServerCaller(orgSlug);
+  const { api } = await createServerCaller(orgSlug);
   const [catalog, subscription] = await Promise.all([
-    caller.billing.catalog(),
-    caller.billing.subscription(),
+    api.billing.catalog(),
+    api.billing.subscription(),
   ]);
 
   return (

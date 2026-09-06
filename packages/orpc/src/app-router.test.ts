@@ -252,3 +252,39 @@ describe("assets router via createCaller", () => {
     expect(result.status).toBe("pending");
   });
 });
+
+/**
+ * A Server Component calling a service in-process never touches the `/api/rpc`
+ * route, so without this hook its failures reach Next's `error.tsx` and nothing
+ * else — the one class of production error with no log line and no tracker event.
+ */
+describe("createCallerFactory failure reporting", () => {
+  it("reports a failure and still rethrows it", async () => {
+    const reported: Array<{ error: unknown; path: ReadonlyArray<string | number> }> = [];
+    const caller = createCallerFactory(appRouter, (error, path) => {
+      reported.push({ error, path });
+    })(makeCtx(null));
+
+    // No actor: `orgProcedure` rejects before reaching any service.
+    await expect(caller.billing.list({ limit: 20 })).rejects.toThrow();
+
+    expect(reported).toHaveLength(1);
+    expect(reported[0]?.path).toEqual(["billing", "list"]);
+  });
+
+  it("stays silent on success", async () => {
+    const reported: unknown[] = [];
+    const caller = createCallerFactory(appRouter, (error) => {
+      reported.push(error);
+    })(makeCtx(null));
+
+    await expect(caller.billing.list({ limit: 20 })).rejects.toThrow();
+    expect(reported).toHaveLength(1);
+  });
+
+  it("works without a reporter, as tests and other callers use it", async () => {
+    const caller = createCallerFactory(appRouter)(makeCtx(null));
+
+    await expect(caller.billing.list({ limit: 20 })).rejects.toThrow();
+  });
+});

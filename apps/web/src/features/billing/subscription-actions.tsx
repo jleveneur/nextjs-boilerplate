@@ -1,12 +1,13 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
 import { Button } from "@repo/ui";
 
 import { useRouter } from "@/i18n/navigation.ts";
 import { orpc } from "@/orpc/query.ts";
+import { useInvalidate } from "@/orpc/use-invalidate.ts";
 
 type SubscriptionActionsProps = {
   orgSlug: string;
@@ -16,7 +17,7 @@ type SubscriptionActionsProps = {
 export function SubscriptionActions({ orgSlug, hasSubscription }: SubscriptionActionsProps) {
   const locale = useLocale();
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const invalidate = useInvalidate();
 
   const portal = useMutation(
     orpc.billing.portal.mutationOptions({
@@ -29,7 +30,7 @@ export function SubscriptionActions({ orgSlug, hasSubscription }: SubscriptionAc
   const sync = useMutation(
     orpc.billing.syncCatalog.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: orpc.billing.catalog.key() });
+        await invalidate(orpc.billing.catalog.key());
         router.refresh();
       },
     }),

@@ -29,6 +29,7 @@ export { publicApp, stripeClient } from "./presets/public.ts";
 export { redis } from "./presets/redis.ts";
 export { resend } from "./presets/resend.ts";
 export { s3 } from "./presets/s3.ts";
+export { sentry } from "./presets/sentry.ts";
 export { smtp } from "./presets/smtp.ts";
 export { appEnvs, nodeEnvs, shared, type AppEnv, type NodeEnv } from "./presets/shared.ts";
 export { stripe } from "./presets/stripe.ts";

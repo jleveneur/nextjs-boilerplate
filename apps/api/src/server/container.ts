@@ -5,7 +5,7 @@ import { createDb, type Database, type SqlClient } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
 import { createLogger, type Logger } from "@repo/logger";
-import { getTraceContext } from "@repo/observability";
+import { createSentryErrorTracker, getTraceContext, type ErrorTracker } from "@repo/observability";
 
 import { env } from "../env.ts";
 import { createAppPorts } from "./ports.ts";
@@ -27,6 +27,7 @@ export type AppContainer = {
   db: Database;
   sql: SqlClient;
   logger: Logger;
+  errorTracker: ErrorTracker;
   auth: Auth;
   ports: CtxPorts;
   cache: Cache;
@@ -46,6 +47,12 @@ function createEmailMailer(): EmailMailer {
 
 function buildContainer(): AppContainer {
   const release = process.env["GITHUB_SHA"];
+  // No DSN is the default: this returns the no-op tracker and nothing else changes.
+  const errorTracker = createSentryErrorTracker({
+    ...(env.SENTRY_DSN === undefined ? {} : { dsn: env.SENTRY_DSN }),
+    environment: env.APP_ENV,
+    ...(release === undefined ? {} : { release }),
+  });
   const logger = createLogger({
     service: "api",
     env: env.APP_ENV,
@@ -122,7 +129,7 @@ function buildContainer(): AppContainer {
     appEnv: env.APP_ENV,
   });
 
-  return { db, sql, logger, auth, ports, cache, emailMailer, closeAnalytics };
+  return { db, sql, logger, errorTracker, auth, ports, cache, emailMailer, closeAnalytics };
 }
 
 const globalForContainer = globalThis as typeof globalThis & {

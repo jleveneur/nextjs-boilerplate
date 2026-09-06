@@ -15,7 +15,8 @@ const handler = new RPCHandler(appRouter, {
       try {
         return await options.next();
       } catch (error) {
-        const logger = options.context.logger ?? getContainer().logger;
+        const container = getContainer();
+        const logger = options.context.logger ?? container.logger;
         const failure = describeRpcFailure(error, options.path);
         const details = {
           code: failure.code,
@@ -27,6 +28,10 @@ const handler = new RPCHandler(appRouter, {
           logger.warn(details, failure.message);
         } else {
           logger.error({ err: failure.err, ...details }, failure.message);
+          container.errorTracker.capture(failure.err, {
+            code: failure.code,
+            operation: `rpc ${failure.path}`,
+          });
         }
 
         throw error;

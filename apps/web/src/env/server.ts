@@ -8,6 +8,7 @@ import {
   db,
   featureFlags,
   otel,
+  sentry,
   posthog,
   redis,
   resend,
@@ -26,7 +27,7 @@ import { webClientPresets, webClientRuntimeEnv } from "./browser.ts";
  * remains the fallback for `PORTLESS=0` and for non-dev entrypoints.
  */
 export const env = createEnv({
-  server: [base, db, redis, auth, resend, smtp, s3, otel, posthog, featureFlags, stripe],
+  server: [base, db, redis, auth, resend, smtp, s3, otel, sentry, posthog, featureFlags, stripe],
   client: webClientPresets,
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
@@ -54,6 +55,7 @@ export const env = createEnv({
     OTEL_ENABLED: process.env["OTEL_ENABLED"],
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
     OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
+    SENTRY_DSN: process.env["SENTRY_DSN"],
     POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
     POSTHOG_HOST: process.env["POSTHOG_HOST"],
     FLAGS_JSON: process.env["FLAGS_JSON"],

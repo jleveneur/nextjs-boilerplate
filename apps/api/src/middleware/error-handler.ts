@@ -47,10 +47,14 @@ export const errorHandler: ErrorHandler<ApiEnv> = (error, c) => {
   const appError: AppError = coerceAppError(error);
 
   if (!appError.expose || appError.severity !== "expected") {
-    c.get("container").logger.error(
-      { err: appError, requestId, code: appError.code },
-      appError.message,
-    );
+    const container = c.get("container");
+    container.logger.error({ err: appError, requestId, code: appError.code }, appError.message);
+    // Same condition as the log line: an incident, not an expected outcome.
+    container.errorTracker.capture(appError, {
+      requestId,
+      code: appError.code,
+      operation: `${c.req.method} ${c.req.path}`,
+    });
   } else {
     c.get("container").logger.warn(
       { requestId, code: appError.code, context: appError.context },

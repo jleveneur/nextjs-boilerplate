@@ -1,21 +1,16 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { invoiceIdSchema } from "@repo/contracts";
 import { canVoidInvoice } from "@repo/core";
-import { createCallerFactory } from "@repo/orpc";
 
 import { InvoiceDetail } from "@/features/billing/invoice-detail.tsx";
-import { createOrpcContext } from "@/server/context.ts";
-import { appRouter } from "@/server/router.ts";
+import { createServerCaller } from "@/server/router.ts";
 
 type Props = {
   params: Promise<{ locale: string; orgSlug: string; invoiceId: string }>;
 };
-
-const createCaller = createCallerFactory(appRouter);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   "use cache";
@@ -32,9 +27,9 @@ export default async function InvoiceDetailPage({ params }: Props) {
     notFound();
   }
 
-  const context = await createOrpcContext(await headers(), { organizationSlug: orgSlug });
-  const invoice = await createCaller(context).billing.get({ invoiceId: parsed.data });
-  const canVoid = context.actor !== null && canVoidInvoice(context.actor, invoice).allowed;
+  const { api, actor } = await createServerCaller(orgSlug);
+  const invoice = await api.billing.get({ invoiceId: parsed.data });
+  const canVoid = actor !== null && canVoidInvoice(actor, invoice).allowed;
 
   return <InvoiceDetail orgSlug={orgSlug} locale={locale} invoice={invoice} canVoid={canVoid} />;
 }
