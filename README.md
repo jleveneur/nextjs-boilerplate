@@ -18,7 +18,7 @@ Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
 [Docker](https://docs.docker.com/get-docker/). `make help` lists everything.
 
 ```bash
-make setup            # install, root `.env`, `apps/docs/.env`, deps, migrate, seed
+make setup            # install, `.env` for root/web/docs, deps, migrate, seed
 make check            # the fast local quality gate (not full CI)
 make dev              # deps + apps → https://web.localhost
 pnpm --filter @repo/docs dev   # docs → https://docs.localhost

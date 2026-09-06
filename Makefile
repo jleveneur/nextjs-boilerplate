@@ -14,14 +14,14 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck typecheck-affected spell knip react-doctor layers env-catalog authz-matrix bundle-budget openapi-check \
+        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix bundle-budget openapi-check \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
         changeset clean clean-all \
         deps-up deps-up-observability deps-up-test deps-up-test-worker deps-down \
         prod-up prod-down \
-        db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push \
+        db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push db-studio \
         email dev proxy
 
 
@@ -112,6 +112,13 @@ spell: ## Spell-check code, comments, and docs
 
 knip: ## Find unused files, exports, and dependencies
 	pnpm knip
+
+audit: ## Fail on high-severity advisories in shipped dependencies
+	# --prod scopes this to what reaches an image. Dev-tool advisories (lhci,
+	# drizzle-kit) matter, but they are Renovate's job, not a merge blocker.
+	pnpm audit --prod --audit-level=high
+	@printf '\nFull tree (advisory, not a gate):\n'
+	-@pnpm audit --audit-level=moderate 2>&1 | tail -3
 
 react-doctor: ## Scan React apps for security, a11y, and performance issues
 	pnpm react-doctor $(REACT_DOCTOR_FLAGS)
@@ -378,6 +385,9 @@ db-reset: ## Drop the app database, migrate, and seed
 
 db-push: ## Push schema without a migration (local iteration only)
 	pnpm --filter @repo/db exec drizzle-kit push
+
+db-studio: ## Browse the local database (Drizzle Studio)
+	pnpm --filter @repo/db exec drizzle-kit studio
 
 ## ----------------------------------------------------------------------------
 ## Email
