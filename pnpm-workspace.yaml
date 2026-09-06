@@ -199,4 +199,4 @@ minimumReleaseAgeExclude:
 # stays on 1.62.0 — and the two Page types fail typecheck. Pin to the catalog
 # Playwright version until we bump @playwright/test.
 overrides:
-  playwright-core: 1.62.0
+  playwright-core: 1.62.1
