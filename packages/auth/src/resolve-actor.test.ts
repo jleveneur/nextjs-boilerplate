@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { Auth } from "./create-auth.ts";
-import { permissionsForOrganizationRole } from "./role-permissions.ts";
 import { resolveActorFromApiKey } from "./resolve-actor.ts";
+import { permissionsForOrganizationRole } from "./role-permissions.ts";
 
 type VerifyApiKeyResult = Awaited<ReturnType<Auth["api"]["verifyApiKey"]>>;
 type VerifiedApiKey = NonNullable<Extract<VerifyApiKeyResult, { error: null }>["key"]>;

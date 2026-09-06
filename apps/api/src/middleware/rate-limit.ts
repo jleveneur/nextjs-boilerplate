@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 
-import { RateLimitError } from "@repo/errors";
 import type { MiddlewareHandler } from "hono";
+
+import { RateLimitError } from "@repo/errors";
 
 import type { ApiEnv } from "../app.ts";
 

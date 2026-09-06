@@ -1,6 +1,6 @@
 import { toNextJsHandler } from "better-auth/next-js";
 
-import { getContainer } from "../../../../server/container.ts";
+import { getContainer } from "@/server/container.ts";
 
 function handlers() {
   return toNextJsHandler(getContainer().auth);

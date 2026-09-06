@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveFlag } from "./evaluate.ts";
 import { createEnvFlagProvider } from "./env-provider.ts";
+import { resolveFlag } from "./evaluate.ts";
 import { listExpiredFlags } from "./expiry.ts";
 import { createStaticFlagProvider } from "./static-provider.ts";
 import type { FlagProvider } from "./types.ts";

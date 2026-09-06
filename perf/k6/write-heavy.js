@@ -1,9 +1,9 @@
+import { check, sleep } from "k6";
 /**
  * Write-heavy mutations against the public API when API_KEY + ORGANIZATION_ID
  * are set. Without credentials the scenario exits cleanly (no false failures).
  */
 import http from "k6/http";
-import { check, sleep } from "k6";
 
 import { authHeaders, baseUrl, expectApiStatuses, missingAuth, organizationId } from "./lib/env.js";
 

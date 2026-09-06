@@ -1,9 +1,9 @@
+import { check, sleep } from "k6";
 /**
  * Public API burst against `/v1` — unauthenticated requests must stay non-5xx
  * (401/403). With API_KEY set, also assert rate-limit headers / eventual 429.
  */
 import http from "k6/http";
-import { check, sleep } from "k6";
 import { Rate } from "k6/metrics";
 
 import { apiKey, authHeaders, baseUrl, expectApiStatuses, organizationId } from "./lib/env.js";

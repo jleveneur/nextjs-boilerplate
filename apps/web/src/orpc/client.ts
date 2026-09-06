@@ -1,12 +1,13 @@
 "use client";
 
-import type { RouterClient } from "@orpc/server";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { BatchLinkPlugin } from "@orpc/client/plugins";
+import type { RouterClient } from "@orpc/server";
+
 import type { AppRouter } from "@repo/orpc/router";
 
-import { env } from "../env/client.ts";
+import { env } from "@/env/client.ts";
 
 /**
  * Browser oRPC client — credentials included for Better Auth session cookies.

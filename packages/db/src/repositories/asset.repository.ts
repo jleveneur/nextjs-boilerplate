@@ -3,11 +3,12 @@
  */
 
 import { and, eq, lt, sql } from "drizzle-orm";
+
 import type { AssetId, OrganizationId, UserId } from "@repo/types";
 
-import type { DbExecutor } from "../with-transaction.ts";
 import { asset, type AssetStatus } from "../schema/asset.sql.ts";
 import { scopedWhere, type TenantCtx } from "../tenant.ts";
+import type { DbExecutor } from "../with-transaction.ts";
 
 export type AssetRow = typeof asset.$inferSelect;
 

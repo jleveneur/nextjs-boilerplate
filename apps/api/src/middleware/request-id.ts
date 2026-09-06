@@ -1,6 +1,7 @@
+import type { MiddlewareHandler } from "hono";
+
 import { runWithLogger } from "@repo/logger";
 import { generateUuidV7 } from "@repo/utils";
-import type { MiddlewareHandler } from "hono";
 
 import type { ApiEnv } from "../app.ts";
 

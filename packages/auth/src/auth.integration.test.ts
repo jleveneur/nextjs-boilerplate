@@ -1,9 +1,10 @@
+import { eq } from "drizzle-orm";
+import { afterAll, describe, expect, it } from "vitest";
+
 import { can, PERMISSIONS } from "@repo/authz";
 import * as dbSchema from "@repo/db/schema";
 import { setupDbIntegrationTests } from "@repo/db/testing";
 import { isUuidV7 } from "@repo/utils";
-import { eq } from "drizzle-orm";
-import { afterAll, describe, expect, it } from "vitest";
 
 import { createAuth, type Auth } from "./create-auth.ts";
 import { resolveActor, resolveActorFromApiKey } from "./resolve-actor.ts";

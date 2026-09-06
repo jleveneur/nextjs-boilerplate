@@ -1,11 +1,13 @@
 "use client";
 
-import type { InvoiceId } from "@repo/types";
-import { Button } from "@repo/ui";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { useRouter } from "../../i18n/navigation.ts";
+import type { InvoiceId } from "@repo/types";
+import { Button } from "@repo/ui";
+
+import { useRouter } from "@/i18n/navigation.ts";
+
 import { useVoidInvoice } from "./hooks.ts";
 
 type Props = {

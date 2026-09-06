@@ -1,12 +1,13 @@
 "use client";
 
-import { Button, CardContent } from "@repo/ui";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { authErrorMessage } from "../../../../../features/auth/auth-utils.ts";
-import { Link, useRouter } from "../../../../../i18n/navigation.ts";
-import { authClient } from "../../../../../lib/auth-client.ts";
+import { Button, CardContent } from "@repo/ui";
+
+import { authErrorMessage } from "@/features/auth/auth-utils.ts";
+import { Link, useRouter } from "@/i18n/navigation.ts";
+import { authClient } from "@/lib/auth-client.ts";
 
 type Props = {
   invitationId: string;

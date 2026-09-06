@@ -64,6 +64,9 @@ symmetric. The important part is consistency; this is the coin-flip we have flip
 support `baseUrl` in `tsconfig.json`. `paths` without `baseUrl` resolves relative to the config
 file and is fully supported, so this costs nothing.
 
+Oxfmt `sortImports` (`.oxfmtrc.json`) groups: side-effect (`server-only`), Node builtins, npm
+packages, `@repo/*`, `@/` internals, relative `./`, then CSS. Same-group imports are alphabetical.
+
 ---
 
 ## 2. TypeScript
@@ -260,16 +263,16 @@ changed.
 
 ## 8. Tooling configuration summary
 
-| Tool          | Config                                      | Notes                                                                                                                             |
-| ------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Oxlint        | `.oxlintrc.json` extending `tooling/oxlint` | `typeAware: true` at root; correctness rules are errors; per-layer overrides (e.g. `no-console` off in `apps/worker` bootstrap)   |
-| Oxfmt         | `.oxfmtrc.json`                             | `printWidth: 100` (Oxfmt's default), double quotes, semicolons, trailing commas, import sorting + Tailwind class sorting built in |
-| CSpell        | `cspell.config.yaml`                        | Project dictionary committed so new jargon is a reviewed diff                                                                     |
-| Knip          | `knip.json`                                 | Fails CI on unused files, exports, and dependencies                                                                               |
-| React Doctor  | `doctor.config.json`                        | Fails CI on React security, a11y, and performance errors; PRs report only newly introduced findings                               |
-| Lefthook      | `lefthook.yml`                              | pre-commit: format + lint staged, gitleaks. pre-push: typecheck + affected unit tests                                             |
-| EditorConfig  | `.editorconfig`                             | LF, UTF-8, 2 spaces, final newline, trim trailing whitespace                                                                      |
-| gitattributes | `.gitattributes`                            | `* text=auto eol=lf`, lockfile marked binary-ish for diffs, `linguist-generated` on generated files                               |
+| Tool          | Config                                      | Notes                                                                                                                                         |
+| ------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Oxlint        | `.oxlintrc.json` extending `tooling/oxlint` | `typeAware: true` at root; correctness rules are errors; per-layer overrides (e.g. `no-console` off in `apps/worker` bootstrap)               |
+| Oxfmt         | `.oxfmtrc.json`                             | `printWidth: 100` (Oxfmt's default), double quotes, semicolons, trailing commas, `sortImports` on. Tailwind class sorting is built in but off |
+| CSpell        | `cspell.config.yaml`                        | Project dictionary committed so new jargon is a reviewed diff                                                                                 |
+| Knip          | `knip.json`                                 | Fails CI on unused files, exports, and dependencies                                                                                           |
+| React Doctor  | `doctor.config.json`                        | Fails CI on React security, a11y, and performance errors; PRs report only newly introduced findings                                           |
+| Lefthook      | `lefthook.yml`                              | pre-commit: format + lint staged, gitleaks. pre-push: typecheck + affected unit tests                                                         |
+| EditorConfig  | `.editorconfig`                             | LF, UTF-8, 2 spaces, final newline, trim trailing whitespace                                                                                  |
+| gitattributes | `.gitattributes`                            | `* text=auto eol=lf`, lockfile marked binary-ish for diffs, `linguist-generated` on generated files                                           |
 
 ### Git hooks: deliberately fast
 

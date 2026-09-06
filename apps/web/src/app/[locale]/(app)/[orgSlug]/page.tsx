@@ -1,8 +1,7 @@
+import { setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
 
-import { setRequestLocale } from "next-intl/server";
-
-import { redirect } from "../../../../i18n/navigation.ts";
+import { redirect } from "@/i18n/navigation.ts";
 
 type Props = {
   params: Promise<{ locale: string; orgSlug: string }>;

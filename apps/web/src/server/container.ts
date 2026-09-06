@@ -10,7 +10,8 @@ import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from
 import { createLogger, type Logger } from "@repo/logger";
 import { getTraceContext } from "@repo/observability";
 
-import { env } from "../env/server.ts";
+import { env } from "@/env/server.ts";
+
 import { createAppPorts } from "./ports.ts";
 
 const authSchema = {

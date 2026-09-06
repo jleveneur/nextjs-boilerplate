@@ -1,7 +1,8 @@
 "use client";
 
-import { Button } from "@repo/ui";
 import { useTranslations } from "next-intl";
+
+import { Button } from "@repo/ui";
 
 type Props = {
   error: Error & { digest?: string };

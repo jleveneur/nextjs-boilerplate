@@ -2,7 +2,7 @@ import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { env } from "../env.ts";
+import { env } from "@/env.ts";
 
 // oxlint-disable-next-line import/no-unassigned-import -- Next.css entry
 import "./global.css";

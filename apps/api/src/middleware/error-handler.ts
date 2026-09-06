@@ -1,3 +1,5 @@
+import type { ErrorHandler } from "hono";
+
 import {
   isAppError,
   normalizeError,
@@ -6,7 +8,6 @@ import {
   type AppError,
 } from "@repo/errors";
 import { captureUnexpectedException } from "@repo/observability";
-import type { ErrorHandler } from "hono";
 
 import type { ApiEnv } from "../app.ts";
 

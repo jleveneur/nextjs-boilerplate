@@ -1,14 +1,14 @@
+import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { AppProviders } from "../../components/providers.tsx";
-import { routing } from "../../i18n/routing.ts";
+import { AppProviders } from "@/components/providers.tsx";
+import { routing } from "@/i18n/routing.ts";
 
 // oxlint-disable-next-line import/no-unassigned-import -- Next.css entry
-import "../../styles/globals.css";
+import "@/styles/globals.css";
 
 type Props = {
   children: ReactNode;

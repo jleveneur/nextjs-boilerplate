@@ -1,8 +1,9 @@
 "use client";
 
-import { Icon, Moon02Icon, Sun03Icon } from "@repo/ui/icons";
-import { Button } from "@repo/ui";
 import { useTheme } from "next-themes";
+
+import { Button } from "@repo/ui";
+import { Icon, Moon02Icon, Sun03Icon } from "@repo/ui/icons";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();

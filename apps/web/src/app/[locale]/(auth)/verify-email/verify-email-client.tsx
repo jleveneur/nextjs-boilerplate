@@ -1,12 +1,13 @@
 "use client";
 
-import { CardContent } from "@repo/ui";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
-import { authErrorMessage } from "../../../../features/auth/auth-utils.ts";
-import { Link } from "../../../../i18n/navigation.ts";
-import { authClient } from "../../../../lib/auth-client.ts";
+import { CardContent } from "@repo/ui";
+
+import { authErrorMessage } from "@/features/auth/auth-utils.ts";
+import { Link } from "@/i18n/navigation.ts";
+import { authClient } from "@/lib/auth-client.ts";
 
 type Props = {
   token?: string | undefined;

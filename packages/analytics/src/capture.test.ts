@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { capture } from "./capture.ts";
+import { subscribeToAnalytics, type AnalyticsEventBus } from "./domain-subscriber.ts";
 import { createMemoryAnalyticsSink } from "./memory-sink.ts";
 import { createNoopAnalyticsSink } from "./noop-sink.ts";
 import { createAnalyticsSink } from "./posthog-sink.ts";
-import { subscribeToAnalytics, type AnalyticsEventBus } from "./domain-subscriber.ts";
 
 function createTestBus(): AnalyticsEventBus & {
   emit: (event: { type: string; payload: unknown; occurredAt: Date }) => Promise<void>;

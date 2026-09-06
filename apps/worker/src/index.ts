@@ -1,3 +1,8 @@
+import { serve } from "@hono/node-server";
+
+import { createApp } from "./app.ts";
+import { buildContainer } from "./container.ts";
+import { env } from "./env.ts";
 /**
  * Worker process entry.
  *
@@ -5,12 +10,6 @@
  * HTTP / pg / ioredis / BullMQ before those modules load.
  */
 import { observability } from "./observability.ts";
-
-import { serve } from "@hono/node-server";
-
-import { createApp } from "./app.ts";
-import { buildContainer } from "./container.ts";
-import { env } from "./env.ts";
 import { startOutboxRelay } from "./outbox-relay.ts";
 import { assertRedisNoEviction } from "./redis-policy.ts";
 import { startSchedules } from "./schedules.ts";

@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui";
 import { useTranslations } from "next-intl";
+
+import { Button, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui";
 
 type Props = {
   error: Error & { digest?: string };

@@ -1,9 +1,10 @@
+import type { Redis } from "ioredis";
+
 import { asOrganizationId, asUserId } from "@repo/contracts";
 import type { Ctx } from "@repo/core";
-import type { JobHandler } from "@repo/jobs";
 import type { Mailer as EmailMailer } from "@repo/email";
+import type { JobHandler } from "@repo/jobs";
 import type { Actor, OrganizationId } from "@repo/types";
-import type { Redis } from "ioredis";
 
 import {
   beginJobIdempotency,

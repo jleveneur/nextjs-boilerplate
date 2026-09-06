@@ -2,8 +2,8 @@
  * Evaluate every registered flag once for RSC → client bootstrap.
  */
 
-import { flags, hasFlagName, type FlagBootstrap, type FlagName } from "./registry.ts";
 import { resolveFlag } from "./evaluate.ts";
+import { flags, hasFlagName, type FlagBootstrap, type FlagName } from "./registry.ts";
 import type { FlagContext, FlagProvider } from "./types.ts";
 
 export type { FlagBootstrap };

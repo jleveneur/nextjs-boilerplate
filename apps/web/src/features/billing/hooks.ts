@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { orpc } from "../../orpc/query.ts";
+import { orpc } from "@/orpc/query.ts";
 
 export function useCreateInvoice() {
   const queryClient = useQueryClient();

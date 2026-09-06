@@ -8,8 +8,9 @@
 // oxlint-disable-next-line import/no-unassigned-import -- credential firewall
 import "server-only";
 
-import { appRouter, createCallerFactory } from "@repo/orpc";
 import { headers } from "next/headers";
+
+import { appRouter, createCallerFactory } from "@repo/orpc";
 
 import { createOrpcContext } from "./context.ts";
 

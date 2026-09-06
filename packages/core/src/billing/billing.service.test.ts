@@ -2,8 +2,8 @@ import { Writable } from "node:stream";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type * as DbModule from "@repo/db";
 import { permissionsForRole } from "@repo/authz";
+import type * as DbModule from "@repo/db";
 import { findOrganizationOwnerEmail } from "@repo/db";
 import { ForbiddenError, NotFoundError } from "@repo/errors";
 import { createLogger } from "@repo/logger";

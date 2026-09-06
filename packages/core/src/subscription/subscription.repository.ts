@@ -1,4 +1,6 @@
 import { and, eq } from "drizzle-orm";
+
+import type { TenantCtx } from "@repo/db";
 import {
   entitlement,
   stripeCustomer,
@@ -7,7 +9,6 @@ import {
   subscription,
   type SubscriptionStatus,
 } from "@repo/db/schema";
-import type { TenantCtx } from "@repo/db";
 
 export async function findStripeCustomerId(tenant: TenantCtx): Promise<string | undefined> {
   const rows = await tenant.db

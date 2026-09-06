@@ -1,10 +1,10 @@
-import { Suspense } from "react";
-
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
+
 import { Skeleton } from "@repo/ui";
 
-import { SubscriptionPanel } from "../../../../../features/billing/subscription-panel.tsx";
+import { SubscriptionPanel } from "@/features/billing/subscription-panel.tsx";
 
 type Props = {
   params: Promise<{ locale: string; orgSlug: string }>;

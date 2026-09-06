@@ -1,10 +1,12 @@
 "use client";
 
-import { Button, Separator } from "@repo/ui";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { authClient } from "../../lib/auth-client.ts";
+import { Button, Separator } from "@repo/ui";
+
+import { authClient } from "@/lib/auth-client.ts";
+
 import { authErrorMessage, getPostAuthCallbackURL } from "./auth-utils.ts";
 
 type Props = {

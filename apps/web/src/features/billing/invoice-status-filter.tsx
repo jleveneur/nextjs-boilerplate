@@ -1,8 +1,9 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui";
 import { useTranslations } from "next-intl";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui";
 
 export const INVOICE_STATUS_FILTERS = ["all", "draft", "open", "paid", "void"] as const;
 export type InvoiceStatusFilter = (typeof INVOICE_STATUS_FILTERS)[number];

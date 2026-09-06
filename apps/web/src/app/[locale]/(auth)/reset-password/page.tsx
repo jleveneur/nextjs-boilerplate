@@ -1,5 +1,6 @@
-import { CardHeader, CardTitle } from "@repo/ui";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+
+import { CardHeader, CardTitle } from "@repo/ui";
 
 import { ResetPasswordForm } from "./reset-password-form.tsx";
 

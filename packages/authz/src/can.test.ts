@@ -1,6 +1,7 @@
+import { describe, expect, it } from "vitest";
+
 import { ForbiddenError } from "@repo/errors";
 import type { Actor, OrganizationId, OrganizationRole, UserId } from "@repo/types";
-import { describe, expect, it } from "vitest";
 
 import { authorize } from "./authorize.ts";
 import { can } from "./can.ts";

@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import {
   auth,
   base,
@@ -12,7 +14,6 @@ import {
   smtp,
   stripe,
 } from "@repo/env/server";
-import { z } from "zod";
 
 const api = z.object({
   API_PORT: z.coerce.number().int().positive().default(3001),

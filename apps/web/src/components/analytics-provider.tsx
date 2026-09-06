@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { env } from "../env/client.ts";
+import { env } from "@/env/client.ts";
 
 /**
  * Boots PostHog in the browser when a public key is configured.

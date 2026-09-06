@@ -1,9 +1,10 @@
+import type { Redis } from "ioredis";
+
 import { asAssetId, asOrganizationId } from "@repo/contracts";
 import { AssetDerivationInputMissingError, systemActorForOrganization, type Ctx } from "@repo/core";
 import { deriveAssetVariants } from "@repo/core/assets/derive";
 import { TerminalJobError, type JobHandler } from "@repo/jobs";
 import type { Actor } from "@repo/types";
-import type { Redis } from "ioredis";
 
 import {
   beginJobIdempotency,

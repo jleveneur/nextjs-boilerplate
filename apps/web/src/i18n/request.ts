@@ -6,10 +6,10 @@ import { routing } from "./routing.ts";
 async function loadMessages(locale: string): Promise<Record<string, unknown>> {
   switch (locale) {
     case "fr":
-      return (await import("../messages/fr.json")).default;
+      return (await import("@/messages/fr.json")).default;
     case "en":
     default:
-      return (await import("../messages/en.json")).default;
+      return (await import("@/messages/en.json")).default;
   }
 }
 

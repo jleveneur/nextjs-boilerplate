@@ -8,8 +8,8 @@ import {
   type Auth,
 } from "@repo/auth";
 import { organizationIdSchema, userIdSchema } from "@repo/contracts";
-import type { Actor } from "@repo/types";
 import type { OrpcContext } from "@repo/orpc";
+import type { Actor } from "@repo/types";
 
 import { getContainer } from "./container.ts";
 

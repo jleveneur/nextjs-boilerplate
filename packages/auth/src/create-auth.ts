@@ -8,10 +8,11 @@
 
 import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
-import { generateUuidV7 } from "@repo/utils";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, magicLink, organization, twoFactor } from "better-auth/plugins";
+
+import { generateUuidV7 } from "@repo/utils";
 
 import { ac, organizationRoles } from "./access-control.ts";
 import { apiKeyPrefixForEnv } from "./api-key-prefix.ts";

@@ -4,6 +4,7 @@
 
 import { Queue } from "bullmq";
 import { Redis } from "ioredis";
+
 import { JOB_NAMES } from "@repo/jobs";
 import type { Logger } from "@repo/logger";
 

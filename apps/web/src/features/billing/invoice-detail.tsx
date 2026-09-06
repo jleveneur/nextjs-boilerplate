@@ -1,8 +1,10 @@
-import type { Invoice } from "@repo/contracts";
-import { Badge } from "@repo/ui";
 import { getTranslations } from "next-intl/server";
 
-import { Link } from "../../i18n/navigation.ts";
+import type { Invoice } from "@repo/contracts";
+import { Badge } from "@repo/ui";
+
+import { Link } from "@/i18n/navigation.ts";
+
 import {
   formatAmountMinor,
   formatInvoiceDateTime,

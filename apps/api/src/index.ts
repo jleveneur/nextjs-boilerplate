@@ -1,3 +1,7 @@
+import { serve } from "@hono/node-server";
+
+import { createApp } from "./app.ts";
+import { env } from "./env.ts";
 /**
  * API process entry.
  *
@@ -5,11 +9,6 @@
  * HTTP / pg / ioredis before those modules load.
  */
 import { observability } from "./observability.ts";
-
-import { serve } from "@hono/node-server";
-
-import { createApp } from "./app.ts";
-import { env } from "./env.ts";
 import { getContainer } from "./server/container.ts";
 
 const container = getContainer();

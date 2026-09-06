@@ -1,8 +1,8 @@
+import { check, sleep } from "k6";
 /**
  * Read-heavy browsing: web public pages + optional authenticated invoice list.
  */
 import http from "k6/http";
-import { check, sleep } from "k6";
 
 import { authHeaders, baseUrl, expectApiStatuses, missingAuth, organizationId } from "./lib/env.js";
 

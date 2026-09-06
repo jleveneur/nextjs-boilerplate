@@ -1,7 +1,8 @@
-import { CardDescription, CardHeader, CardTitle } from "@repo/ui";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { ContinueToApp } from "../../../../features/auth/continue-to-app.tsx";
+import { CardDescription, CardHeader, CardTitle } from "@repo/ui";
+
+import { ContinueToApp } from "@/features/auth/continue-to-app.tsx";
 
 type Props = {
   params: Promise<{ locale: string }>;

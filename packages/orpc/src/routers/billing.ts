@@ -2,6 +2,8 @@
  * Billing transport — thin wrappers over `@repo/core` services.
  */
 
+import { z } from "zod";
+
 import {
   createInvoiceInputSchema,
   getInvoiceInputSchema,
@@ -21,7 +23,6 @@ import {
   syncBillingCatalog,
   voidInvoice,
 } from "@repo/core";
-import { z } from "zod";
 
 import { orgProcedure } from "../procedures.ts";
 

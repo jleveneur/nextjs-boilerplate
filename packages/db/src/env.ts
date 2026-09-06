@@ -5,8 +5,8 @@
  * Node's default export condition (workers and CLIs are not Next RSC).
  */
 
-import { createEnv } from "@repo/env/shared";
 import { base, db } from "@repo/env/presets";
+import { createEnv } from "@repo/env/shared";
 
 export function loadDbEnv() {
   return createEnv({

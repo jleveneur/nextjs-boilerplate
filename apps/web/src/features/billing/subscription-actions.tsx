@@ -1,11 +1,12 @@
 "use client";
 
-import { Button } from "@repo/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
-import { useRouter } from "../../i18n/navigation.ts";
-import { orpc } from "../../orpc/query.ts";
+import { Button } from "@repo/ui";
+
+import { useRouter } from "@/i18n/navigation.ts";
+import { orpc } from "@/orpc/query.ts";
 
 type SubscriptionActionsProps = {
   orgSlug: string;

@@ -11,7 +11,7 @@ import {
   type FlagBootstrap,
 } from "@repo/flags";
 
-import { env } from "../env/server.ts";
+import { env } from "@/env/server.ts";
 
 export function createFlagPort(options: {
   flagValues?: Readonly<Record<string, boolean>>;

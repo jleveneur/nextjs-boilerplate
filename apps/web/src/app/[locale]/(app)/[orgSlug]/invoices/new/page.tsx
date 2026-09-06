@@ -1,10 +1,10 @@
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
 
-import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Skeleton } from "@repo/ui";
 
-import { CreateInvoiceForm } from "../../../../../../features/billing/create-invoice-form.tsx";
-import { Link } from "../../../../../../i18n/navigation.ts";
+import { CreateInvoiceForm } from "@/features/billing/create-invoice-form.tsx";
+import { Link } from "@/i18n/navigation.ts";
 
 type Props = {
   params: Promise<{ locale: string; orgSlug: string }>;

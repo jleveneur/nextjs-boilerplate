@@ -1,10 +1,12 @@
-import type { InvoiceStatus } from "@repo/contracts";
-import { Badge, Button } from "@repo/ui";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { Link } from "../../i18n/navigation.ts";
-import { getBootstrappedFlags } from "../../server/flag-bootstrap.ts";
-import { createServerCaller } from "../../server/router.ts";
+import type { InvoiceStatus } from "@repo/contracts";
+import { Badge, Button } from "@repo/ui";
+
+import { Link } from "@/i18n/navigation.ts";
+import { getBootstrappedFlags } from "@/server/flag-bootstrap.ts";
+import { createServerCaller } from "@/server/router.ts";
+
 import { formatAmountMinor, formatInvoiceDate, invoiceStatusBadgeVariant } from "./format-money.ts";
 import {
   InvoiceStatusFilter,

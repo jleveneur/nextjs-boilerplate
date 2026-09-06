@@ -1,14 +1,14 @@
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 
-import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Skeleton } from "@repo/ui";
 
-import { EnsureActiveOrg } from "../../../../components/ensure-active-org.tsx";
-import { OrgSwitcher } from "../../../../components/org-switcher.tsx";
-import { SignOutButton } from "../../../../components/sign-out-button.tsx";
-import { ThemeToggle } from "../../../../components/theme-toggle.tsx";
-import { Link } from "../../../../i18n/navigation.ts";
+import { EnsureActiveOrg } from "@/components/ensure-active-org.tsx";
+import { OrgSwitcher } from "@/components/org-switcher.tsx";
+import { SignOutButton } from "@/components/sign-out-button.tsx";
+import { ThemeToggle } from "@/components/theme-toggle.tsx";
+import { Link } from "@/i18n/navigation.ts";
 
 type Props = {
   children: ReactNode;

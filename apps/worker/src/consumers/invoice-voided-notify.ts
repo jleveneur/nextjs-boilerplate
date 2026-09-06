@@ -1,3 +1,5 @@
+import type { Redis } from "ioredis";
+
 import { asOrganizationId } from "@repo/contracts";
 import {
   resolveInvoiceVoidedRecipientEmail,
@@ -7,7 +9,6 @@ import {
 import type { Mailer as EmailMailer } from "@repo/email";
 import { TerminalJobError, type JobHandler } from "@repo/jobs";
 import type { Actor } from "@repo/types";
-import type { Redis } from "ioredis";
 
 import {
   beginJobIdempotency,

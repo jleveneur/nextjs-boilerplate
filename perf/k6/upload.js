@@ -1,10 +1,10 @@
+import { check, sleep } from "k6";
 /**
  * Upload path smoke. Product upload via public REST is limited; when credentials
  * are absent the scenario soft-skips. With auth it hits a cheap authenticated
  * read as a stand-in; product upload via public REST is limited.
  */
 import http from "k6/http";
-import { check, sleep } from "k6";
 
 import { authHeaders, baseUrl, expectApiStatuses, missingAuth, organizationId } from "./lib/env.js";
 

@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui";
 
-import { getBootstrappedFlags } from "../../server/flag-bootstrap.ts";
-import { createServerCaller } from "../../server/router.ts";
+import { getBootstrappedFlags } from "@/server/flag-bootstrap.ts";
+import { createServerCaller } from "@/server/router.ts";
+
 import { SubscribeButton, SubscriptionActions } from "./subscription-actions.tsx";
 
 type Props = {

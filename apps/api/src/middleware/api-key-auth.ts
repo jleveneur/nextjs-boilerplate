@@ -1,7 +1,8 @@
+import type { MiddlewareHandler } from "hono";
+
 import { resolveActorFromApiKey } from "@repo/auth";
 import type { Ctx } from "@repo/core";
 import { UnauthorizedError } from "@repo/errors";
-import type { MiddlewareHandler } from "hono";
 
 import type { ApiEnv } from "../app.ts";
 

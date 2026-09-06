@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 
-import { env } from "../env/client.ts";
+import { env } from "@/env/client.ts";
 
 /**
  * Boots browser Sentry when `NEXT_PUBLIC_SENTRY_DSN` is set.

@@ -1,8 +1,9 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { defineLibraryConfig } from "@repo/vitest-config";
 import { defineConfig, mergeConfig } from "vitest/config";
+
+import { defineLibraryConfig } from "@repo/vitest-config";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 

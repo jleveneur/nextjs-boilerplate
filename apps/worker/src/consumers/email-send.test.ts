@@ -1,8 +1,9 @@
+import type { Redis } from "ioredis";
+import { describe, expect, it, vi } from "vitest";
+
 import type { Ctx } from "@repo/core";
 import type { Mailer } from "@repo/email";
 import type { Actor } from "@repo/types";
-import type { Redis } from "ioredis";
-import { describe, expect, it, vi } from "vitest";
 
 import { createEmailSendHandler } from "./email-send.ts";
 

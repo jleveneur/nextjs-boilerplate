@@ -1,5 +1,6 @@
-import { CardDescription, CardHeader, CardTitle } from "@repo/ui";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+
+import { CardDescription, CardHeader, CardTitle } from "@repo/ui";
 
 import { VerifyEmailClient } from "./verify-email-client.tsx";
 

@@ -12,6 +12,24 @@
 
   "overrides": [
     {
+      // apps/web and apps/docs declare `@/*` → `./src/*` (no `baseUrl`).
+      // Parent-relative imports are the pattern the alias exists to replace.
+      "files": ["apps/web/src/**", "apps/docs/src/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["../*", "../**"],
+                "message": "Use the @/ path alias for imports across folders (docs/architecture/04-conventions.md)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // Composition roots and process bootstraps legitimately write to stdout
       // before a logger exists, and scripts are not shipped code.
       "files": [

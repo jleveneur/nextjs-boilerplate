@@ -9,6 +9,27 @@
   "endOfLine": "lf",
   "tabWidth": 2,
   "useTabs": false,
+  "sortImports": {
+    "internalPattern": ["@/"],
+    "newlinesBetween": true,
+    "customGroups": [
+      {
+        "groupName": "repo",
+        "elementNamePattern": ["@repo", "@repo/**"]
+      }
+    ],
+    "groups": [
+      "side_effect",
+      "builtin",
+      "external",
+      "repo",
+      "internal",
+      ["parent", "sibling", "index"],
+      "side_effect_style",
+      "style",
+      "unknown"
+    ]
+  },
   "ignorePatterns": [
     "**/dist/**",
     "**/.next/**",

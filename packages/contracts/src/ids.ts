@@ -6,6 +6,8 @@
  * string becomes an `OrganizationId` only after it proves it is a UUIDv7.
  */
 
+import { z } from "zod";
+
 import type {
   AssetId,
   InvitationId,
@@ -17,7 +19,6 @@ import type {
   UserId,
 } from "@repo/types";
 import { isUuidV7 } from "@repo/utils";
-import { z } from "zod";
 
 /**
  * A UUIDv7 string, branded as `T`.

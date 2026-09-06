@@ -1,6 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import type { z } from "zod";
+
 import { createInvoiceInputSchema, type CreateInvoiceInput } from "@repo/contracts";
 import {
   Button,
@@ -12,12 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/ui";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import type { z } from "zod";
 
-import { useRouter } from "../../i18n/navigation.ts";
+import { useRouter } from "@/i18n/navigation.ts";
+
 import { useCreateInvoice } from "./hooks.ts";
 
 type FormInput = z.input<typeof createInvoiceInputSchema>;

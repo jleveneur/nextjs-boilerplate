@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+
 import {
   Button,
   DropdownMenu,
@@ -11,11 +14,9 @@ import {
   DropdownMenuTrigger,
   Skeleton,
 } from "@repo/ui";
-import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 
-import { useRouter } from "../i18n/navigation.ts";
-import { authClient } from "../lib/auth-client.ts";
+import { useRouter } from "@/i18n/navigation.ts";
+import { authClient } from "@/lib/auth-client.ts";
 
 type Org = {
   id: string;

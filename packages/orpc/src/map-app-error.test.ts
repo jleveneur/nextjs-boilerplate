@@ -1,7 +1,7 @@
+import { ORPCError } from "@orpc/server";
 import { describe, expect, it } from "vitest";
 
 import { ForbiddenError, InternalError, NotFoundError, ValidationError } from "@repo/errors";
-import { ORPCError } from "@orpc/server";
 
 import { httpStatusToOrpcCode, rethrowAsOrpc, toOrpcError } from "./map-app-error.ts";
 

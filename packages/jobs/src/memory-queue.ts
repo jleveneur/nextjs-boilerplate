@@ -3,8 +3,8 @@
  */
 
 import { parseJobPayload } from "./registry.ts";
-import type { EnqueueOptions, EnqueueResult, JobQueue } from "./types.ts";
 import type { JobName, JobPayload } from "./registry.ts";
+import type { EnqueueOptions, EnqueueResult, JobQueue } from "./types.ts";
 
 export type RecordedJob = {
   id: string;

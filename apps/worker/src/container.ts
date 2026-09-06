@@ -1,3 +1,5 @@
+import { Redis } from "ioredis";
+
 import { createAnalyticsSink, subscribeToAnalytics } from "@repo/analytics";
 import {
   adaptEmailMailer,
@@ -27,7 +29,6 @@ import { captureUnexpectedException, getTraceContext } from "@repo/observability
 import { createPaymentGateway } from "@repo/payments";
 import { createFileStore } from "@repo/storage";
 import type { Actor } from "@repo/types";
-import { Redis } from "ioredis";
 
 import { createAssetReconcileHandler } from "./consumers/asset-reconcile.ts";
 import { createEmailSendHandler } from "./consumers/email-send.ts";

@@ -1,17 +1,17 @@
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { invoiceIdSchema } from "@repo/contracts";
 import { canVoidInvoice } from "@repo/core";
 import { createCallerFactory } from "@repo/orpc";
 import { Skeleton } from "@repo/ui";
-import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
 
-import { InvoiceDetail } from "../../../../../../features/billing/invoice-detail.tsx";
-import { createOrpcContext } from "../../../../../../server/context.ts";
-import { appRouter } from "../../../../../../server/router.ts";
+import { InvoiceDetail } from "@/features/billing/invoice-detail.tsx";
+import { createOrpcContext } from "@/server/context.ts";
+import { appRouter } from "@/server/router.ts";
 
 type Props = {
   params: Promise<{ locale: string; orgSlug: string; invoiceId: string }>;

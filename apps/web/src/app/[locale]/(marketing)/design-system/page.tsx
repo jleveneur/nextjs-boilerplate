@@ -2,8 +2,9 @@ import { setRequestLocale } from "next-intl/server";
 
 import { Button } from "@repo/ui";
 
-import { ThemeToggle } from "../../../../components/theme-toggle.tsx";
-import { Link } from "../../../../i18n/navigation.ts";
+import { ThemeToggle } from "@/components/theme-toggle.tsx";
+import { Link } from "@/i18n/navigation.ts";
+
 import { DesignSystemGallery } from "./gallery.tsx";
 import { WidgetsDemoLoader } from "./widgets-demo-loader.tsx";
 

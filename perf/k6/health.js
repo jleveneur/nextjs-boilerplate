@@ -1,8 +1,8 @@
+import { check, sleep } from "k6";
 /**
  * Baseline smoke: web and API health via Traefik (make prod-up).
  */
 import http from "k6/http";
-import { check, sleep } from "k6";
 
 import { baseUrl } from "./lib/env.js";
 

@@ -1,5 +1,6 @@
-import { defineLibraryConfig } from "@repo/vitest-config";
 import { defineConfig, mergeConfig } from "vitest/config";
+
+import { defineLibraryConfig } from "@repo/vitest-config";
 
 const base = defineLibraryConfig({
   name: "@repo/cache",

@@ -1,6 +1,7 @@
-import { isLocale } from "@repo/i18n";
 import createMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
+
+import { isLocale } from "@repo/i18n";
 
 import { routing } from "./i18n/routing.ts";
 import { SESSION_COOKIE_NAMES } from "./lib/session-cookie.ts";

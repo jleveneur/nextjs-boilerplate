@@ -1,19 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, CardContent, Input, Label } from "@repo/ui";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Button, CardContent, Input, Label } from "@repo/ui";
+
 import {
   authErrorMessage,
   firstOrgInvoicesHref,
   getPostAuthHref,
-} from "../../../../features/auth/auth-utils.ts";
-import { useRouter } from "../../../../i18n/navigation.ts";
-import { authClient } from "../../../../lib/auth-client.ts";
+} from "@/features/auth/auth-utils.ts";
+import { useRouter } from "@/i18n/navigation.ts";
+import { authClient } from "@/lib/auth-client.ts";
 
 const twoFactorSchema = z.object({
   code: z.string().min(6).max(32),

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { Invoice } from "./invoice.ts";
 import {
   createInvoiceRestInputSchema,
   fromCreateInvoiceRest,
   toInvoiceRest,
   toInvoiceRestPage,
 } from "./invoice-rest.ts";
+import type { Invoice } from "./invoice.ts";
 
 const sample: Invoice = {
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- fixture brand

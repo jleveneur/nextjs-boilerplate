@@ -1,21 +1,22 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, CardContent, Input, Label } from "@repo/ui";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { Button, CardContent, Input, Label } from "@repo/ui";
 
 import {
   authErrorMessage,
   continueHref,
   getPostAuthCallbackURL,
   getPostAuthHref,
-} from "../../../../features/auth/auth-utils.ts";
-import { OAuthButtons } from "../../../../features/auth/oauth-buttons.tsx";
-import { Link, useRouter } from "../../../../i18n/navigation.ts";
-import { authClient } from "../../../../lib/auth-client.ts";
+} from "@/features/auth/auth-utils.ts";
+import { OAuthButtons } from "@/features/auth/oauth-buttons.tsx";
+import { Link, useRouter } from "@/i18n/navigation.ts";
+import { authClient } from "@/lib/auth-client.ts";
 
 const signInSchema = z.object({
   email: z.email(),

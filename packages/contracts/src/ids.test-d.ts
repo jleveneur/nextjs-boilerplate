@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from "vitest";
+import type { z } from "zod";
 
 import type { OrganizationId, UserId } from "@repo/types";
-import type { z } from "zod";
 
 import type { asOrganizationId, asUserId, organizationIdSchema, userIdSchema } from "./ids.ts";
 

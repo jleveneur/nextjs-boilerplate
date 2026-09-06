@@ -1,12 +1,13 @@
-import { isAppError, normalizeError } from "@repo/errors";
-import { captureUnexpectedException } from "@repo/observability";
 import { ORPCError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { BatchHandlerPlugin } from "@orpc/server/plugins";
 
-import { getContainer } from "../../../../server/container.ts";
-import { createOrpcContext } from "../../../../server/context.ts";
-import { appRouter } from "../../../../server/router.ts";
+import { isAppError, normalizeError } from "@repo/errors";
+import { captureUnexpectedException } from "@repo/observability";
+
+import { getContainer } from "@/server/container.ts";
+import { createOrpcContext } from "@/server/context.ts";
+import { appRouter } from "@/server/router.ts";
 
 const EXPECTED_ORPC_CODES = new Set([
   "BAD_REQUEST",

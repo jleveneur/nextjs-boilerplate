@@ -1,8 +1,9 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import type { Ctx } from "@repo/core";
-import type { Actor } from "@repo/types";
 import { apiReference } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
+
+import type { Ctx } from "@repo/core";
+import type { Actor } from "@repo/types";
 
 import {
   apiKeyAuthMiddleware,
@@ -12,7 +13,6 @@ import {
   requestIdMiddleware,
   securityHeadersMiddleware,
 } from "./middleware/index.ts";
-
 import { registerInvoiceRoutes } from "./routes/v1/invoices.ts";
 import type { AppContainer } from "./server/container.ts";
 import { registerStripeWebhook } from "./webhooks/stripe.ts";

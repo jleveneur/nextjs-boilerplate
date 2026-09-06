@@ -1,10 +1,11 @@
 "use client";
 
-import { Skeleton } from "@repo/ui";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
-import { authClient } from "../lib/auth-client.ts";
+import { Skeleton } from "@repo/ui";
+
+import { authClient } from "@/lib/auth-client.ts";
 
 type Props = {
   orgSlug: string;
