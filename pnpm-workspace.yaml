@@ -184,6 +184,15 @@ catalog:
 
 # Entries still inside pnpm's default release-age cutoff. Delete each one as
 # soon as it ages past the window — this list is a waiver, not a setting.
+#
+# The `@orpc/*` entries are a different shape from the rest, and worth naming:
+# they waive the delay for a *prerelease* the private API transport depends on
+# (ADR-0012). A beta line does not age out of this list the way a stable release
+# does — each new beta is freshly published, so the waiver renews itself and the
+# supply-chain delay never applies to the one dependency most likely to move.
+# That is accepted, not overlooked. `make prerelease-pins` reports when a stable
+# release lands and the whole arrangement can be deleted; it runs nightly with
+# `--strict` so nobody has to remember to look.
 minimumReleaseAgeExclude:
   - bullmq@6.2.2
   - "@orpc/client@2.0.0-beta.33"

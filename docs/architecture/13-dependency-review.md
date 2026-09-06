@@ -280,7 +280,9 @@ collapse the two-audience split ADR-0003 exists to protect. _Server Actions only
 for queries, caching, and non-form interactions. _TS-Rest_ — similar idea, smaller RPC/client
 story.
 **Health** 2.x is on the `beta` dist-tag (`2.0.0-beta.33`); `latest` remains 1.15. Smaller
-ecosystem than tRPC. Pin exact, upgrade server and client together, do not automerge.
+ecosystem than tRPC. Pin exact, upgrade server and client together, do not automerge. These are
+the only prerelease pins in the catalog, and `make prerelease-pins` fails once a stable 2.x
+exists rather than leaving the exit condition to memory.
 **Exit** Medium — resolvers are thin over `@repo/core`, so replacing the transport is a
 transport-layer job. This is precisely what the one-core-two-transports design protects. Leaving
 beta for 2.0.0 `latest` is a catalog bump.

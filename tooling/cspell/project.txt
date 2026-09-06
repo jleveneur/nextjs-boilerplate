@@ -213,6 +213,7 @@ oxlintrc
 oxlintcache
 napi
 emnapi
+packument # npm's term for a package's full metadata document
 valkey
 negotiables
 
@@ -271,6 +272,7 @@ renderable
 replayable
 strippable
 unauditable
+unparseable
 unawaited
 unrepresentable
 relitigated

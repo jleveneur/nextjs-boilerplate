@@ -22,6 +22,7 @@
     "check:flags": "node scripts/check-flag-expiry.ts",
     "check:env": "node scripts/check-env-catalog.ts",
     "check:authz": "node scripts/check-authz-matrix.ts",
+    "check:prerelease-pins": "node scripts/check-prerelease-pins.ts",
     "test:scripts": "node --test \"scripts/**/*.test.ts\"",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm check:layers && pnpm check:flags && pnpm check:env && pnpm check:authz && pnpm spell && pnpm knip && pnpm react-doctor && pnpm test:scripts && pnpm test",
     "changeset": "changeset",

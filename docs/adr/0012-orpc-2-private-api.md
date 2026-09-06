@@ -60,6 +60,24 @@ exact; server and browser client upgrade in the same change.
 When `latest` points at 2.x, drop the beta pin — that is a catalog bump, not a new transport
 decision.
 
+### How that exit condition fires
+
+An accepted ADR is not re-read on a schedule, so a revisit trigger written only here is a
+trigger nobody pulls. `scripts/check-prerelease-pins.ts` reads the prerelease pins straight out
+of the catalog, compares each against the registry's `latest`, and fails once a stable release
+of the pinned major exists. It runs nightly with `--strict`, and on demand via
+`make prerelease-pins`.
+
+It is deliberately **not** part of `make check`: it needs the network, and a local gate that
+fails offline is one people learn to skip. `--strict` exists because the lenient default
+treats an unresolved lookup as "unknown" — which, in CI, is indistinguishable from a check that
+silently stopped working.
+
+The waiver in `minimumReleaseAgeExclude` is part of the same arrangement and is called out
+there. Because each beta is freshly published, that waiver renews itself rather than ageing
+out, so pnpm's supply-chain delay does not apply to these packages for as long as this decision
+stands.
+
 ## Deviations from the documented Next.js patterns
 
 Two, both deliberate. Recorded here because the next reader will otherwise
@@ -144,6 +162,7 @@ variable, or building the enum from `BILLING_ERROR_CODES`, widens the schema and
 
 ## Revisit if
 
-`latest` on `@orpc/server` points at 2.x (drop the beta pin), a beta breaks the wire or
-handler API in a way that is expensive to chase, or we need GET (HTTP caching) — which requires
-the GET CSRF plugin and must not be enabled casually.
+`latest` on `@orpc/server` points at 2.x (drop the beta pin) — **reported automatically** by
+`make prerelease-pins`, nightly. Or a beta breaks the wire or handler API in a way that is
+expensive to chase, or we need GET (HTTP caching), which requires the GET CSRF plugin and must
+not be enabled casually.

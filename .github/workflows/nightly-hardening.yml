@@ -36,6 +36,11 @@ jobs:
         with:
           turbo_team: ${{ vars.TURBO_TEAM }}
 
+      # Cheap and network-only, so it runs before the 90-minute stack work: a
+      # broken beta pin should be reported even if the load suite later fails.
+      - name: Prerelease pins have not been superseded
+        run: node scripts/check-prerelease-pins.ts --strict
+
       - name: Build app images
         run: make images
 

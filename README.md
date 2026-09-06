@@ -10,6 +10,16 @@ lives in [`docs/architecture/`](docs/architecture/README.md). How it was
 sequenced is archived in
 [build history](docs/architecture/14-build-history.md).
 
+> **One caveat before you adopt this.** The private API transport is pinned to
+> **`@orpc/server` 2.0.0-beta.33**. oRPC 2 has no stable release yet, so a
+> load-bearing piece of the stack sits on a prerelease whose wire format and
+> handler APIs can still move.
+> [ADR-0012](docs/adr/0012-orpc-2-private-api.md) sets out why taking the major
+> early is cheaper than waiting, and `make prerelease-pins` reports when the
+> stable release lands. Everything else in the catalog is pinned to a stable
+> version. If a beta on the internal RPC path is not a trade you want, ADR-0011
+> describes the 1.15 setup it replaced.
+
 ---
 
 ## Quick start
@@ -104,6 +114,7 @@ make lint        # oxlint, including type-aware rules
 make typecheck   # tsc --noEmit across the workspace
 make test        # unit tests
 make layers      # assert the layer boundaries hold
+make prerelease-pins  # report catalog pins waiting on a stable release
 make format      # apply Oxfmt
 make images      # build web/api/worker/docs images and assert size budgets
 make load        # k6 via Docker (make prod-up first; needs Docker)

@@ -140,6 +140,9 @@ new-slice: ## Scaffold a domain slice across every layer (NAME=widget [PLURAL=wi
 env-catalog: ## Assert .env*.example files share one key catalog
 	pnpm check:env
 
+prerelease-pins: ## Report catalog pins on a prerelease and whether a stable release has landed
+	node scripts/check-prerelease-pins.ts
+
 bundle-budget: ## Build apps/web and assert First Load JS budgets
 	pnpm --filter @repo/web build
 	pnpm --filter @repo/web bundle-budget
