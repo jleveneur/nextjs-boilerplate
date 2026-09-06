@@ -260,6 +260,7 @@ yugabyte
 # Kept rather than reworded: they are precise and standard in engineering prose.
 assertable
 bypassable
+crawlable
 diffable
 gateable
 greppable
