@@ -27,7 +27,6 @@ permissions:
 jobs:
   version:
     name: Version packages
-    if: ${{ vars.RELEASE_APP_ID != '' }}
     runs-on: ubuntu-latest
 
     permissions:
