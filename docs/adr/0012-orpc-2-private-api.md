@@ -68,24 +68,38 @@ Two, both deliberate. Recorded here because the next reader will otherwise
 **No unified server/browser client.** oRPC's
 [SSR guide](https://orpc.dev/docs/best-practices/optimize-ssr) recommends one
 `client` shared by both runtimes — a `globalThis.$client` built with
-`createRouterClient` and a lazy context on the server, an `RPCLink` in the
-browser. We keep two: `createServerCaller(orgSlug)` for Server Components and
-`orpcClient` for the browser.
+`createRouterClient` on the server, an `RPCLink` in the browser. We keep two:
+`createServerCaller(orgSlug)` for Server Components and `orpcClient` for the
+browser.
 
-The reason is multi-tenancy. That pattern derives its context from headers
-alone, which works when the tenant lives in the session. Here the organization
-comes from the URL, and `EnsureActiveOrg` only aligns the session in a client
-effect — _after_ the server has rendered. A server caller reading
+This is a preference, not a constraint. `createRouterClient` takes
+[client context](https://orpc.dev/docs/client/server-side) resolved per call, and
+the documentation names this exact use — "switch between contexts, such as
+different users or tenants, without creating multiple client instances". A
+unified client would work:
+
+```ts
+const api = createRouterClient(appRouter, {
+  context: async ({ organizationSlug }: { organizationSlug?: string }) => …,
+})
+
+await api.billing.get({ invoiceId }, { context: { organizationSlug } })
+```
+
+We keep the factory because a page usually makes several calls and needs the
+actor as well: `createServerCaller(orgSlug)` resolves the tenant once and returns
+`{ api, actor }`, where the unified client would repeat
+`{ context: { organizationSlug } }` at every call site and still leave the actor
+to be fetched separately.
+
+**What is a real constraint** is deriving the tenant from the session rather than
+passing it. `EnsureActiveOrg` aligns Better Auth's active organization in a
+client effect, so it has not run when the server renders. A server caller reading
 `session.activeOrganizationId` would serve the previous organization's data on
-the first render after a switch. The URL is authoritative server-side; the
-session is authoritative in the browser, where it has already caught up. That is
-why `/api/rpc` calls `createOrpcContext(headers)` with no slug and Server
-Components pass one.
-
-Adopting the unified client would require the middleware to inject the slug as a
-request header, trading an explicit tenant argument for an ambient one. In a
-codebase whose first rule is "scope every query by `organization_id`", the
-explicit argument is the point, not ceremony.
+the first render after a switch. That is why `/api/rpc` calls
+`createOrpcContext(headers)` with no slug — in the browser the session has caught
+up — while Server Components pass one explicitly. Whichever client shape is used,
+the slug has to be an argument, never an ambient lookup.
 
 **Typed errors only where a caller can act on them.** oRPC recommends `.errors()`
 for application-specific failures and plain `ORPCError` for common ones
