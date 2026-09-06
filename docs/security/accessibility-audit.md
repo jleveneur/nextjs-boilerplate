@@ -13,7 +13,7 @@ complete this checklist for each release that changes primary UI
 | ----------- | ------------------------------------------------------------- |
 | Date (UTC)  | 2026-08-03                                                    |
 | Auditor     | automated (Playwright keyboard-auth + axe); screen reader TBD |
-| Build / SHA | post-`f77c37a` Phase 16 follow-up (see git history)           |
+| Build / SHA | post-`f77c37a` hardening follow-up (see git history)          |
 | Environment | local (`apps/web` Playwright webServer / prod-like compose)   |
 | Overall     | **pass** for automated keyboard + axe; screen reader not run  |
 

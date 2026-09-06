@@ -108,7 +108,7 @@ flowchart LR
     THIRD["Third-party client"] -->|"GET /v1/…"| REST["Hono routes<br/>apps/api"]
     STRIPE["Stripe"] -->|webhook| WH["apps/api/webhooks"]
     QUEUE["BullMQ"] --> CONS["apps/worker consumers"]
-    FORM["HTML form"] -->|Server Action| SA["apps/web actions"]
+    FORM["HTML form"] -->|Better Auth client / oRPC| SA["apps/web"]
 
     ORPC --> CORE["@repo/core services"]
     REST --> CORE
@@ -175,7 +175,7 @@ Conventions:
 | Filtering/sorting | Explicit allowlist per resource. No arbitrary query DSL — it becomes a permanent contract and a query-planner hazard.                                                    |
 | Field selection   | `?fields=` allowlist where payloads are large.                                                                                                                           |
 | Partial updates   | `PATCH` with merge semantics; `exactOptionalPropertyTypes` makes "absent vs null" tractable in types.                                                                    |
-| Webhooks out      | Signed (HMAC-SHA256, timestamped), retried with exponential backoff via BullMQ, replayable from the dashboard.                                                           |
+| Webhooks out      | Specified pattern: signed (HMAC-SHA256, timestamped), retried with exponential backoff via BullMQ. **Not implemented.** Inbound Stripe webhooks are (see 2.4).           |
 
 **Spec as a tested artifact.** `openapi.json` is generated and **committed**. CI regenerates it
 and fails if the working copy differs, then diffs it against the previous release to detect
@@ -185,7 +185,9 @@ breaking changes. The spec is the contract, so it gets the same treatment as cod
 
 ### 2.3 Server Actions
 
-Used for form mutations where progressive enhancement matters (auth flows, settings). Rules:
+An allowed transport for form mutations where progressive enhancement matters. **None ship
+today.** Auth screens use the Better Auth client; product mutations (invoices, billing) go
+through oRPC. When a flow needs a Server Action, the rules are:
 
 - An action is a transport: `parse → resolve actor → call service → revalidate → return typed
 result`.
@@ -294,8 +296,9 @@ handled with a short lock plus stale-while-revalidate.
 benefit — exhaustive error handling — is only realised if every layer participates. Rejecting it
 is a deliberate trade of theoretical exhaustiveness for readable orchestration code.
 
-The one place we _do_ return values instead of throwing: Server Actions, which return
-`{ ok: false, errors }` because forms need field-level errors as data, not exceptions.
+The one place we _do_ return values instead of throwing: Server Actions, _when they exist_, which
+return `{ ok: false, errors }` because forms need field-level errors as data, not exceptions.
+Current forms use the Better Auth client or oRPC mutations.
 
 ### Mapping at each boundary
 
@@ -324,12 +327,12 @@ The one place we _do_ return values instead of throwing: Server Actions, which r
 
 ## 6. Runtime shape of each app
 
-| App      | Process model                                           | Health                                                     | Shutdown                                                             |
-| -------- | ------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------- |
-| `web`    | Next standalone server, Node 24                         | `/api/health` (liveness), `/api/health/ready` (DB + Redis) | SIGTERM → stop accepting, drain, exit                                |
-| `api`    | Hono on `@hono/node-server`                             | `/health`, `/health/ready`                                 | Same                                                                 |
-| `worker` | Long-running Node process, no HTTP except a health port | `/health` on an internal port                              | SIGTERM → stop pulling jobs, finish in-flight (bounded), close Redis |
-| `docs`   | Static export or Next server                            | `/health`                                                  | —                                                                    |
+| App      | Process model                                           | Health                                         | Shutdown                                                             |
+| -------- | ------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------- |
+| `web`    | Next standalone server, Node 24                         | `/api/health` (liveness)                       | SIGTERM → stop accepting, drain, exit                                |
+| `api`    | Hono on `@hono/node-server`                             | `/health`, `/health/ready`                     | Same                                                                 |
+| `worker` | Long-running Node process, no HTTP except a health port | `/health`, `/health/ready` on an internal port | SIGTERM → stop pulling jobs, finish in-flight (bounded), close Redis |
+| `docs`   | Next server (Fumadocs)                                  | `/api/health`                                  | —                                                                    |
 
 Graceful shutdown is implemented on day one, not retrofitted: without it, every deploy drops
 in-flight requests and re-runs partially completed jobs, and the resulting bugs are attributed

@@ -74,7 +74,8 @@ that is slow, flaky, and gives poor failure localisation.
 
 - Core services are tested by building a `Ctx` from in-memory fakes: `InMemoryMailer`,
   `InMemoryFileStore`, `FakeClock`, `FixedIdGenerator`, `RecordingEventBus`. Fakes live in
-  `@repo/testing` and are **real implementations of the ports**, not mocks — so tests assert on
+  `@repo/core/testing` (and sibling `./testing` subpaths on adapters) and are **real
+  implementations of the ports**, not mocks — so tests assert on
   outcomes (`mailer.sent`) rather than on call counts. This is precisely what the narrow use of
   ports ([03](./03-package-graph-and-boundaries.md#4-ports-and-adapters--applied-narrowly)) buys.
 - Policies are tested as matrices over roles × resource states, with a table-driven test per
@@ -193,7 +194,7 @@ error rate. The saturation point is recorded in [scaling.md](../runbooks/scaling
 
 **Security.** Automated in PR CI: Gitleaks, Renovate/`pnpm audit`, CodeQL, Trivy. OWASP ZAP
 baseline nightly (`make zap`, `perf/zap/rules.tsv`). Authorization remains the security test that
-matters most — see [docs/security/](../security/phase-16-review.md).
+matters most — see [docs/security/](../security/security-review.md).
 
 ---
 

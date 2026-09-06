@@ -1,4 +1,4 @@
-# Phase 16 — Security review
+# Security review
 
 Checklist for authorization, tenant isolation, secrets, headers, and automated scanning.
 Executable tests remain the source of truth; this document links evidence.
@@ -6,6 +6,8 @@ Executable tests remain the source of truth; this document links evidence.
 CSP and HSTS are **adopter / reverse-proxy** concerns at the TLS edge. This boilerplate sets
 baseline headers on web HTML ([`apps/web/src/proxy.ts`](../../apps/web/src/proxy.ts)) and on every
 API response ([`apps/api/src/middleware/security-headers.ts`](../../apps/api/src/middleware/security-headers.ts)).
+
+Related: [authorization matrix](./authorization-matrix.md), [accessibility audit](./accessibility-audit.md).
 
 ---
 
@@ -20,7 +22,7 @@ API response ([`apps/api/src/middleware/security-headers.ts`](../../apps/api/src
 | No secrets in client bundles         | Policy             | `server-only` on server env; knip/layer `runtime: browser` ban                                                                 |
 | Security headers (web)               | Implemented        | `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`                                           |
 | Security headers (api)               | Implemented        | Same set; unit test in `security-headers.test.ts`                                                                              |
-| CSP / HSTS                           | Adopter edge       | Documented here — not shipped as app CSP in Phase 16                                                                           |
+| CSP / HSTS                           | Adopter edge       | Not shipped as an app CSP; set at the TLS reverse proxy when an adopter is ready                                               |
 | Dependency / SAST / images           | CI                 | `pnpm audit`+Renovate, CodeQL, Trivy on images                                                                                 |
 | OWASP ZAP baseline                   | Nightly            | `make zap`, `.github/workflows/nightly-hardening.yml`                                                                          |
 | Load / saturation                    | Nightly + runbook  | `make load`, [scaling.md](../runbooks/scaling.md)                                                                              |

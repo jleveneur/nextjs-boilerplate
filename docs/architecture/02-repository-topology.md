@@ -10,7 +10,7 @@
 ├── packages/                # Everything reusable. Where the code actually lives.
 ├── tooling/                 # Shared build/lint/test configuration, published to nobody.
 ├── docker/                  # Dockerfiles + compose stacks (deps, prod-like, test, e2e).
-├── docs/                    # Architecture, ADRs, runbooks, security review (this folder).
+├── docs/                    # Architecture, ADRs, runbooks, security (this folder).
 ├── perf/                    # k6 load scenarios + ZAP baseline config (not PR CI).
 ├── scripts/                 # Repo automation (layers, restore-drill, budgets, …).
 ├── .github/                 # Workflows, templates, CODEOWNERS.
@@ -68,12 +68,13 @@ apps/web/
 │   ├── app/                        # ROUTING ONLY. No logic beyond composition.
 │   │   ├── [locale]/
 │   │   │   ├── (marketing)/        # Public, statically cached
-│   │   │   ├── (auth)/             # sign-in, sign-up, reset, verify
+│   │   │   ├── (auth)/             # sign-in, sign-up, reset, verify, passkey, 2FA
 │   │   │   └── (app)/              # Authenticated product
-│   │   │       └── [orgSlug]/      # Tenant-scoped surface
+│   │   │       └── [orgSlug]/      # Tenant-scoped surface (invoices, billing)
 │   │   ├── api/
 │   │   │   ├── rpc/[[...rest]]/    # oRPC fetch adapter
-│   │   │   └── auth/[...all]/      # Better Auth handler
+│   │   │   ├── auth/[...all]/      # Better Auth handler
+│   │   │   └── health/             # Liveness (`/api/health`)
 │   │   ├── layout.tsx
 │   │   └── global-error.tsx
 │   ├── features/                   # Client-side feature modules (see §5)
@@ -82,8 +83,11 @@ apps/web/
 │   │   ├── context.ts              # Builds the request Ctx (actor, adapters, logger)
 │   │   ├── container.ts            # Composition root: wires ports to adapters
 │   │   └── router.ts               # Root oRPC router composition
-│   ├── messages/                   # next-intl catalogs (`en.json`, `fr.json`)
-│   ├── styles/
+│   ├── env/                        # Composition-root env modules (server / client / browser)
+│   ├── i18n/                       # next-intl routing, request, navigation
+│   ├── messages/                   # next-intl catalogs (`en.json`)
+│   ├── orpc/                       # Browser client + TanStack Query helpers
+│   ├── instrumentation.ts          # OTel + Sentry process instrumentation
 │   └── proxy.ts                    # Next 16 proxy (formerly middleware.ts)
 ├── e2e/                            # Playwright + axe specs (`make e2e`)
 ├── lighthouserc.cjs                # LHCI budgets (`make lighthouse`)
@@ -91,8 +95,6 @@ apps/web/
 ├── next.config.ts
 └── package.json
 ```
-
-OTel/Sentry `instrumentation*.ts` land in Phase 14; Phase 8 boots without them.
 
 `app/` mirrors URLs and nothing else. The moment a route file exceeds composition — fetch data,
 render, handle a form submission by delegating — the logic belongs in `features/` (client) or
@@ -117,9 +119,9 @@ apps/api/
 │   ├── server/
 │   │   ├── container.ts          # Composition root (db, auth, cache, ports)
 │   │   └── ports.ts
-│   ├── middleware/               # request-id, API-key auth, rate limit, idempotency, errors
+│   ├── middleware/               # request-id, API-key auth, rate limit, idempotency, security headers, errors
 │   ├── routes/v1/                # @hono/zod-openapi invoice routes
-│   └── webhooks/                 # stripe.ts — signature verify + replay stub
+│   └── webhooks/                 # stripe.ts — signature verify + enqueue `stripe.event.process`
 ├── openapi.json                  # Committed snapshot; `make openapi-check` / CI
 └── package.json
 ```
@@ -136,7 +138,7 @@ apps/worker/
 │   ├── index.ts             # Bootstrap: workers, schedulers, graceful shutdown, health port
 │   ├── container.ts
 │   ├── outbox-relay.ts      # Poll pending outbox → enqueue → mark published
-│   ├── consumers/           # One file per job; each maps payload → core service call
+│   ├── consumers/           # email.send, image.derive, invoice.voided.notify, stripe.event.process, asset.reconcile-orphans
 │   └── schedules.ts         # Repeatable jobs (cron) with stable scheduler ids
 └── package.json
 ```
@@ -149,10 +151,11 @@ plus alert is mandatory for every queue.
 
 Fumadocs site at **https://docs.localhost** via Portless (`PORTLESS=0` → port 3003).
 `scripts/prepare-content.ts` syncs
-`docs/{architecture,adr,runbooks}` into gitignored MDX at build/dev time; hand-written guides
-(`getting-started`, `contributing`) live under `content/docs/`. Embeds the Scalar API reference
-from the committed `apps/api/openapi.json`. Documentation the team already writes becomes the
-published site, so there is only one copy. Image: `docker/docs.Dockerfile` → `repo-docs`.
+`docs/{architecture,adr,runbooks,security}` into gitignored MDX at build/dev time; hand-written
+guides (`getting-started`, `contributing`) live under `content/docs/`. Embeds the Scalar API
+reference from the committed `apps/api/openapi.json`. Documentation the team already writes
+becomes the published site, so there is only one copy. Image: `docker/docs.Dockerfile` →
+`repo-docs`.
 
 ---
 
@@ -198,9 +201,9 @@ and impossible to accidentally couple to a transport.
 
 ### Layer 2 — domain
 
-| Package      | Responsibility                                                                                                         |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `@repo/core` | **All business logic**, organised by feature. Ports for side effects, services, policies, repositories, domain events. |
+| Package      | Responsibility                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/core` | **All business logic**, organised by feature (`billing`, `subscription`, `assets`, plus shared ports, outbox, and audit). |
 
 ### Layer 3 — transport
 
@@ -233,11 +236,13 @@ gallery; the Next bundle-budget gate on `apps/web` keeps them off `/`:
 @repo/ui/table    → TanStack Table
 ```
 
-### Cross-cutting
+### Testing (not a runtime package)
 
-| Package         | Responsibility                                                                                                           |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `@repo/testing` | Vitest setup files, DB test harness (transaction-per-test), data factories, MSW handlers, Playwright fixtures. Dev-only. |
+There is no `@repo/testing` package. Shared Vitest config lives in `tooling/vitest`
+(`@repo/vitest-config`). Fakes, factories, and harnesses are **subpath exports** of the package
+they belong to (`@repo/core/testing`, `@repo/db/testing`, `@repo/cache/testing`, …) so a layer-0
+or layer-1 test helper cannot drag the whole domain graph into a unit test. Playwright fixtures
+live next to `apps/web/e2e/`.
 
 ---
 
@@ -291,15 +296,16 @@ drawn wrong.
 apps/web/src/features/billing/
 ├── components/          # Feature-specific React components
 ├── hooks/               # use-*.ts — TanStack Query wrappers over oRPC
-├── stores/              # Zustand store, only for genuine client state
+├── stores/              # Optional Zustand store — only for genuine client state
 ├── schemas/             # Form schemas (extend @repo/contracts, add UI-only fields)
 └── index.ts
 ```
 
 Rules: server state belongs to TanStack Query, URL state to nuqs, form state to React Hook
-Form, and only what is left — ephemeral UI state shared across a subtree — goes into Zustand.
-The most common state-management mistake is putting server data in a client store; the layering
-here is designed to make that feel wrong.
+Form, and only what is left — ephemeral UI state shared across a subtree — may go into Zustand
+(add the catalog pin when a feature needs it; none do today). The most common state-management
+mistake is putting server data in a client store; the layering here is designed to make that
+feel wrong.
 
 ---
 

@@ -201,7 +201,7 @@ they remain requirements before impersonation is exposed as a supported operator
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | Credential    | API key: displayed once, stored as a SHA-256 hash with a short lookup prefix                                                      |
 | Format        | `sk_live_<random>` / `sk_test_<random>` — prefixes make keys greppable in leak scanning and obvious in support tickets            |
-| Scoping       | Intended invariant: per organization, with effective permissions equal to the key scope ∩ creator role                            |
+| Scoping       | Per organization; effective permissions = key scope ∩ creator role                                                                |
 | Expiry        | Optional, encouraged; the dashboard warns about non-expiring keys                                                                 |
 | Rotation      | Overlapping keys supported so rotation needs no downtime                                                                          |
 | Revocation    | Immediate; keys are cached in Redis with a short TTL and evicted on revoke                                                        |
@@ -211,9 +211,9 @@ Keys resolve to the same `Actor` shape as a session, which means **`@repo/core` 
 whether it is serving the web app or a third party**, and therefore cannot apply weaker rules to
 one of them. That is the entire benefit of a shared actor abstraction.
 
-The main-branch resolver does not yet enforce the intended intersection: it uses a key's explicit
-scope directly (or falls back to role permissions). Treat the intersection as the required design,
-not as a currently enforced guarantee, until the authorization fix and its parity tests land.
+Effective permissions are the **intersection** of the key's explicit scope and the creating
+member's role permissions (`resolveActorFromApiKey`). A key without a scope inherits the role
+permissions. Keys without `metadata.userId` do not resolve — creators must set it.
 
 ---
 

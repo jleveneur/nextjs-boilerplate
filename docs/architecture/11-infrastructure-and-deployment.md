@@ -22,7 +22,7 @@
 ### Build shape
 
 ```dockerfile
-# docker/api.Dockerfile — shape, not final code
+# docker/api.Dockerfile — shape
 FROM node:24-alpine AS base
 # corepack, pnpm pinned
 
@@ -73,8 +73,8 @@ Next's `output: "standalone"`, which does the equivalent for the app graph.
 
 **Local prod-like stack** (`docker/compose.prod.yaml`) runs Traefik on HTTP with Docker labels
 routing to the built `web` / `api` images; the worker stays internal; a one-shot `migrate`
-service runs the **api** image with `node dist/migrate.mjs` before apps start. GHCR publish is
-Phase 12; the portable deploy sequence is Phase 13 ([docs/runbooks/deploy.md](../runbooks/deploy.md)).
+service runs the **api** image with `node dist/migrate.mjs` before apps start. GHCR publish and
+the portable deploy sequence are in place ([docs/runbooks/deploy.md](../runbooks/deploy.md)).
 Host ACME/TLS is an adopter concern, not shipped here.
 
 ### The build/run split for Next.js
@@ -264,11 +264,19 @@ _your_ deployment in your runbook; the formula lives in [docs/runbooks/deploy.md
 Operational documentation lives in `docs/runbooks/` and is treated as deliverable work, because the
 value of a runbook is realised at 3 a.m. by someone who did not write it:
 
-`deploy.md` (portable sequence + connection budget), plus:
-`high-error-rate.md`, `queue-backlog.md`, stubs for `db-connections-exhausted.md` and
-`disk-full.md`; later: `restore-database.md`, `rotate-secrets.md`, `scale-up.md`,
-`incident-response.md`, `on-call.md`.
+| Runbook                                                                | For                                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------- |
+| [deploy.md](../runbooks/deploy.md)                                     | Portable migrate-then-roll sequence + connection budget |
+| [high-error-rate.md](../runbooks/high-error-rate.md)                   | Error-rate spike                                        |
+| [queue-backlog.md](../runbooks/queue-backlog.md)                       | BullMQ depth / DLQ                                      |
+| [db-connections-exhausted.md](../runbooks/db-connections-exhausted.md) | Postgres pool saturation                                |
+| [disk-full.md](../runbooks/disk-full.md)                               | Host disk                                               |
+| [backup.md](../runbooks/backup.md)                                     | Backup expectations                                     |
+| [restore.md](../runbooks/restore.md)                                   | Restore + `make restore-drill`                          |
+| [scaling.md](../runbooks/scaling.md)                                   | Saturation baseline                                     |
 
-Each states: symptoms, how to confirm, immediate mitigation, root-cause investigation, and
-prevention follow-up. Every alert links to its runbook; an alert without one is either given a
-runbook or deleted.
+Not shipped (adopter-owned): rotate-secrets, incident-response, on-call.
+
+Each shipped runbook states: symptoms, how to confirm, immediate mitigation, root-cause
+investigation, and prevention follow-up. Every alert should link to its runbook; an alert without
+one is either given a runbook or deleted.

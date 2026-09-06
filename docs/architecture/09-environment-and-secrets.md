@@ -264,7 +264,7 @@ key is missing.
 | `NEXT_PUBLIC_POSTHOG_*` / `NEXT_PUBLIC_SENTRY_DSN` | **build-time** | Only when those client presets are composed |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`               | **build-time** | Optional; must start with `pk_`             |
 
-### Observability / payments presets (composed when wired — Phase 14/17)
+### Observability / payments presets (composed by web, api, worker as needed)
 
 | Variable                                                                  | Kind           | Notes                                                            |
 | ------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------- |

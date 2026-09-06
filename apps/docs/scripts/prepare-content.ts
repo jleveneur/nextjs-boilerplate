@@ -1,8 +1,8 @@
 /**
- * Sync `docs/{architecture,adr,runbooks}` into Fumadocs content (single source).
+ * Sync `docs/{architecture,adr,runbooks,security}` into Fumadocs content (single source).
  *
- * Writes gitignored MDX under `content/docs/{architecture,adr,runbooks}/` with
- * frontmatter derived from the first H1, plus section `meta.json` page lists.
+ * Writes gitignored MDX under `content/docs/{architecture,adr,runbooks,security}/`
+ * with frontmatter derived from the first H1, plus section `meta.json` page lists.
  * Also copies the committed OpenAPI snapshot for the Scalar page.
  *
  * Hand-written guides (`index`, `getting-started`, `contributing`) live in git
@@ -18,7 +18,7 @@ const appRoot = resolve(here, "..");
 const repoRoot = resolve(appRoot, "../..");
 const contentRoot = join(appRoot, "content/docs");
 
-type SectionId = "architecture" | "adr" | "runbooks";
+type SectionId = "architecture" | "adr" | "runbooks" | "security";
 
 type Section = {
   id: SectionId;
@@ -49,6 +49,13 @@ const sections: Section[] = [
     outDir: join(contentRoot, "runbooks"),
     title: "Runbooks",
     description: "Operational procedures for deploy, queues, and incidents.",
+  },
+  {
+    id: "security",
+    sourceDir: join(repoRoot, "docs/security"),
+    outDir: join(contentRoot, "security"),
+    title: "Security",
+    description: "Authorization matrix, review checklist, and accessibility audit.",
   },
 ];
 
@@ -83,6 +90,7 @@ function rewriteRepoLinks(markdown: string, sectionId: SectionId): string {
   );
   out = out.replaceAll(/\]\(\.\.\/adr\/([^)]+?)\.md(#[^)]*)?\)/g, "](/docs/adr/$1$2)");
   out = out.replaceAll(/\]\(\.\.\/runbooks\/([^)]+?)\.md(#[^)]*)?\)/g, "](/docs/runbooks/$1$2)");
+  out = out.replaceAll(/\]\(\.\.\/security\/([^)]+?)\.md(#[^)]*)?\)/g, "](/docs/security/$1$2)");
   // Same-folder relative links.
   out = out.replaceAll(/\]\(\.\/([^)]+?)\.md(#[^)]*)?\)/g, `](/docs/${sectionId}/$1$2)`);
   return out;
@@ -148,6 +156,8 @@ function writeRootMeta(): void {
           "...adr",
           "---Operations---",
           "...runbooks",
+          "---Security---",
+          "...security",
         ],
       },
       null,

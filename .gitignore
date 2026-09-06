@@ -7,11 +7,12 @@ dist/
 build/
 out/
 .next/
-# Fumadocs generated collections + synced architecture/ADR/runbook MDX
+# Fumadocs generated collections + synced architecture/ADR/runbook/security MDX
 apps/docs/.source/
 apps/docs/content/docs/architecture/
 apps/docs/content/docs/adr/
 apps/docs/content/docs/runbooks/
+apps/docs/content/docs/security/
 apps/docs/content/docs/meta.json
 apps/docs/public/openapi.json
 playwright-report/

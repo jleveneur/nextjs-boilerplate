@@ -1,10 +1,12 @@
 # Architecture
 
-This is the architecture document for the boilerplate. It is written to be read **before**
-any code exists, and to remain the reference document for years after.
+This is the architecture document for the boilerplate. It describes the **system as it is**: a
+working monorepo, not a design to be built. When a decision changes, write an ADR and update the
+affected document in the same change — these pages are present tense; the [ADR log](../adr/README.md)
+is the history.
 
-Status: **accepted — validated 2026-07-30**
-Date: 2026-07-30
+Status: **accepted and implemented**
+Last reviewed: 2026-09-06
 Authors: platform engineering
 
 ---
@@ -20,6 +22,9 @@ It is not a demo. Every file in it is meant to be copied into real products and 
 years. The design bias is therefore always: **maintainability > scalability > developer
 experience > time-to-first-commit.**
 
+The foundation ships auth, organizations, settings, a billing invoice vertical slice, and Stripe
+SaaS billing as **reference implementations** — patterns to copy, not a product roadmap.
+
 ### Non-goals
 
 Being explicit about non-goals is what keeps a boilerplate from rotting into a framework.
@@ -29,9 +34,9 @@ Being explicit about non-goals is what keeps a boilerplate from rotting into a f
 | Supporting multiple databases                  | One well-understood database (PostgreSQL) beats an abstraction over three. Portability comes from SQL and Drizzle, not from a dialect layer. |
 | Supporting multiple deployment targets equally | Two are supported and tested: self-hosted Docker and Vercel. Others are possible but unblessed.                                              |
 | A generic plugin system                        | Products fork this repo; they do not extend it via plugins. Convention replaces configuration.                                               |
-| Runtime-agnostic code (Deno/Bun/Workers)       | Node.js LTS only. Edge-compatible code is an explicit, narrow subset (see §Runtime boundaries).                                              |
+| Runtime-agnostic code (Deno/Bun/Workers)       | Node.js LTS only. Edge-compatible code is an explicit, narrow subset (see [01](./01-principles-and-constraints.md#3-runtime-boundaries)).    |
 | 100 % test coverage                            | Coverage is a diagnostic, not a target. See [Testing](./10-testing.md).                                                                      |
-| A generic admin UI or CMS                      | Those are product decisions. The foundation includes worked auth, invoice, and Stripe billing surfaces only as reference implementations.    |
+| A generic admin UI or CMS                      | Those are product decisions.                                                                                                                 |
 
 ---
 
@@ -52,8 +57,10 @@ Being explicit about non-goals is what keeps a boilerplate from rotting into a f
 | 11  | [Docker, infrastructure & deployment](./11-infrastructure-and-deployment.md) | Images, local Traefik, BYO infra, migrate-then-roll                    |
 | 12  | [Git, CI/CD & release](./12-git-ci-release.md)                               | Branching, hooks, pipelines, Changesets, versioning                    |
 | 13  | [Dependency review](./13-dependency-review.md)                               | Every dependency justified, every alternative rejected, risks tracked  |
-| 14  | [Implementation plan](./14-implementation-plan.md)                           | The phased, reviewable build order                                     |
+| 14  | [Build history](./14-build-history.md)                                       | How the foundation was sequenced — complete, not a backlog             |
 | —   | [ADRs](../adr/README.md)                                                     | The decision log                                                       |
+| —   | [Security](../security/security-review.md)                                   | Authorization matrix, review checklist, accessibility audit            |
+| —   | [Runbooks](../runbooks/deploy.md)                                            | Deploy, incidents, backup, restore                                     |
 
 ---
 
@@ -64,20 +71,22 @@ Everything else is detail. These five are the load-bearing walls.
 ### 3.1 One core, two transports
 
 Business logic lives in **`packages/core`**, organised by feature, and knows nothing about
-HTTP, oRPC, React, or Next.js. `apps/web` (oRPC + Server Actions) and `apps/api` (public
-REST/OpenAPI) are _transports_ that validate input, resolve an actor, call a core service, and
-map errors to their wire format.
+HTTP, oRPC, React, or Next.js. `apps/web` (oRPC) and `apps/api` (public REST/OpenAPI) are
+_transports_ that validate input, resolve an actor, call a core service, and map errors to their
+wire format. Job consumers in `apps/worker` are a third transport over the same services.
 
 This is the single most valuable property of the repo. It is what makes "private API with oRPC"
 and "public API with REST + OpenAPI" a non-duplicated requirement instead of two codebases
-that drift. See [05](./05-runtime-and-api.md).
+that drift. See [05](./05-runtime-and-api.md) and
+[ADR-0003](../adr/0003-one-domain-core-two-transports.md).
 
 ### 3.2 Layered packages, enforced by the package manager
 
 Packages are assigned to numbered layers and may only depend downward. This is not enforced by
 a linter plugin that people disable — it is enforced by `package.json` declarations plus pnpm's
 isolated `node_modules`, which makes an undeclared import **physically unresolvable**. See
-[03](./03-package-graph-and-boundaries.md).
+[03](./03-package-graph-and-boundaries.md) and
+[ADR-0002](../adr/0002-layered-monorepo-with-pnpm-enforcement.md).
 
 ### 3.3 Deny-by-default authorization inside the domain, never at the edge
 
@@ -85,7 +94,7 @@ isolated `node_modules`, which makes an undeclared import **physically unresolva
 only. Real authorization happens in core services, which take an explicit `actor` and consult a
 policy. RBAC covers coarse capabilities; policy functions cover record-level rules such as
 ownership. Nothing is authorized by virtue of which route it was reached from. See
-[07](./07-auth.md).
+[07](./07-auth.md) and [ADR-0005](../adr/0005-better-auth-with-rbac-and-policies.md).
 
 ### 3.4 The same artifact runs everywhere
 
@@ -99,91 +108,81 @@ path and Vercel is a supported convenience, not a dependency. See
 ### 3.5 Toolchain on the native (Rust/Go) tier
 
 TypeScript 7, Oxlint (with type-aware linting via tsgolint), and Oxfmt replace tsc-on-Node,
-ESLint, and Prettier. This is not novelty-chasing; as of July 2026 it is the _only_ coherent
-choice, and the reasoning is important enough to state here rather than bury in the dependency
-review:
-
-- TypeScript 7.0 went GA on 2026-07-08 as a native Go port, ~10× faster, with type-checking
-  semantics ported rather than rewritten.
-- TypeScript 7.0 ships **without a stable programmatic compiler API** (expected in 7.1, ~Q4
-  2026). Consequently **typescript-eslint closed its TS 7 support request as "not planned"**,
-  and ESLint core is blocked behind it.
-- Oxlint does not embed the TypeScript compiler for syntax rules, and its type-aware backend
-  (`oxlint-tsgolint`) is built directly on `typescript-go`. Type-aware linting went **stable on
-  2026-07-22** with 59 of typescript-eslint's 61 type-aware rules.
-
-So the ESLint path means either staying on TypeScript 6 or losing type-aware lint rules. The
-Oxc path gets both. `@typescript/typescript6` (which installs a `tsc6` binary) is kept available
-as an escape hatch for any tool that still needs the old API. See
-[13](./13-dependency-review.md) for the risk register on this.
+ESLint, and Prettier. This is not novelty-chasing; it is the coherent choice given TypeScript 7's
+missing programmatic compiler API (expected in 7.1) and typescript-eslint's closed TS 7 support
+request. Oxlint's type-aware backend (`oxlint-tsgolint`) is built directly on `typescript-go`.
+See [ADR-0004](../adr/0004-native-typescript-toolchain.md) and the risk register in
+[13](./13-dependency-review.md).
 
 ---
 
 ## 4. Stack matrix
 
-Versions verified against the npm registry on **2026-07-30**. These are the versions the
-implementation will pin; they are recorded here so that future readers can tell what was
-current when the decisions were made.
+Versions below match the pnpm **catalog** and root pins as of **2026-09-06**. The catalog in
+`pnpm-workspace.yaml` is the source of truth; Renovate moves these pins. The matrix is a snapshot
+so a future reader can tell what was current when the architecture was last reviewed.
 
 ### Foundation
 
-| Concern             | Choice                      | Version |
-| ------------------- | --------------------------- | ------- |
-| Runtime             | Node.js LTS                 | 24.x    |
-| Package manager     | pnpm (via Corepack)         | 12.3.0  |
-| Monorepo            | Turborepo                   | 2.10.7  |
-| Language            | TypeScript (strict, native) | 7.0.2   |
-| Compat escape hatch | `@typescript/typescript6`   | 6.0.2   |
+| Concern         | Choice                      | Version |
+| --------------- | --------------------------- | ------- |
+| Runtime         | Node.js LTS                 | 24.x    |
+| Package manager | pnpm (via Corepack)         | 12.3.0  |
+| Monorepo        | Turborepo                   | 2.10.11 |
+| Language        | TypeScript (strict, native) | 7.0.2   |
 
 ### Application
 
 | Concern           | Choice                        | Version |
 | ----------------- | ----------------------------- | ------- |
-| Framework         | Next.js (App Router)          | 16.2.12 |
+| Framework         | Next.js (App Router)          | 16.3.4  |
 | UI runtime        | React                         | 19.2.8  |
 | Styling           | Tailwind CSS                  | 4.3.3   |
-| Component recipes | shadcn/ui (CLI, Base UI mode) | 4.16.0  |
-| UI primitives     | `@base-ui/react`              | 1.6.0   |
-| Icons             | `@hugeicons/react`            | 1.1.9   |
-| Animation         | Motion                        | 12.43.0 |
+| Component recipes | shadcn/ui (CLI, Base UI mode) | —       |
+| UI primitives     | `@base-ui/react`              | 1.7.0   |
+| Icons             | `@hugeicons/react`            | 1.1.10  |
+| Animation         | Motion                        | 13.1.0  |
 | Forms             | React Hook Form               | 7.83.0  |
 | Validation        | Zod                           | 4.4.3   |
-| Server state      | TanStack Query                | 5.101.4 |
-| Client state      | Zustand                       | 5.0.14  |
+| Server state      | TanStack Query                | 5.102.0 |
 | Tables            | TanStack Table                | 8.21.3  |
-| Rich text         | Tiptap                        | 3.29.2  |
+| Rich text         | Tiptap                        | 3.29.0  |
 | Charts            | Recharts                      | 3.10.1  |
 | Theming           | next-themes                   | 0.4.6   |
-| i18n              | next-intl                     | 4.13.4  |
-| Toasts            | Sonner                        | 2.0.7   |
-| Dates             | date-fns                      | 4.4.0   |
+| i18n              | next-intl                     | 4.13.7  |
+| Toasts            | Sonner                        | 2.0.8   |
 | URL state         | nuqs                          | 2.9.3   |
 
-> **Note on Base UI:** the package was renamed. The old `@base-ui-components/react` stopped at
-> `1.0.0-rc.0`; the maintained package is **`@base-ui/react`, now at 1.6.0**. shadcn/ui made
-> Base UI its **default** primitive base in July 2026 (Radix remains supported via
-> `shadcn init -b radix`). We initialise on Base UI, which means our shadcn components are on
-> the path the upstream project actively develops.
+Zustand is **allowed** for ephemeral UI state that is neither server state nor URL state
+([04](./04-conventions.md)); the product currently has no client store. Dates are formatted with
+`Intl` via `@repo/i18n`.
+
+shadcn/ui initialises on **Base UI** (`@base-ui/react`), the path the upstream project actively
+develops. Radix remains available via `shadcn init -b radix` if a fork needs it.
 
 ### Backend
 
-| Concern          | Choice                     | Version                       |
-| ---------------- | -------------------------- | ----------------------------- |
-| Private API      | oRPC                       | 1.15.0                        |
-| Public API       | Hono + `@hono/zod-openapi` | 4.12.32 / 1.5.1               |
-| API reference UI | Scalar                     | 0.11.11                       |
-| Auth             | Better Auth                | 1.6.25                        |
-| Database         | PostgreSQL                 | 18.x                          |
-| ORM              | Drizzle ORM                | 0.45.2 (see open question Q1) |
-| Migrations       | drizzle-kit                | 0.31.10                       |
-| Schema bridge    | drizzle-zod                | 0.8.3                         |
-| Cache            | Redis (via ioredis)        | 5.11.1                        |
-| Queues           | BullMQ                     | 5.81.2                        |
-| Object storage   | S3 API (R2 / MinIO)        | —                             |
-| Images           | Sharp                      | 0.35.4                        |
-| Email delivery   | Resend                     | 6.18.1                        |
-| Email templates  | React Email                | 1.0.12                        |
-| Payments         | Stripe                     | 22.3.2                        |
+| Concern          | Choice                     | Version         |
+| ---------------- | -------------------------- | --------------- |
+| Private API      | oRPC                       | 1.15.0          |
+| Public API       | Hono + `@hono/zod-openapi` | 4.12.32 / 1.5.1 |
+| API reference UI | Scalar                     | 0.11.16         |
+| Auth             | Better Auth                | 1.6.25          |
+| Database         | PostgreSQL                 | 18.x            |
+| ORM              | Drizzle ORM                | 0.45.2          |
+| Migrations       | drizzle-kit                | 0.31.10         |
+| Cache            | Redis (via ioredis)        | 6.0.0           |
+| Queues           | BullMQ                     | 6.2.2           |
+| Object storage   | S3 API (R2 / MinIO)        | —               |
+| Images           | Sharp                      | 0.35.4          |
+| Email delivery   | Resend                     | 6.18.1          |
+| Email templates  | React Email                | 6.9.2           |
+| Payments         | Stripe                     | 22.3.0          |
+
+Wire contracts live in `@repo/contracts` as hand-written Zod schemas. Table-derived schemas are
+not the API surface — a column addition must not change a public DTO by default. See
+[ADR-0008](../adr/0008-drizzle-version-selection.md) for the Drizzle 0.45 vs 1.0 choice, and
+[ADR-0010](../adr/0010-bullmq-6-pluggable-backends.md) for BullMQ 6 / ioredis 6.
 
 ### Observability
 
@@ -191,28 +190,27 @@ current when the decisions were made.
 | ----------------- | ----------------- | ------- |
 | Traces/metrics    | OpenTelemetry SDK | 0.221.0 |
 | Logging           | Pino              | 10.3.1  |
-| Errors            | Sentry            | 10.69.0 |
+| Errors            | Sentry            | 10.70.0 |
 | Product analytics | PostHog           | 1.408.0 |
 
 ### Quality & testing
 
-| Concern          | Choice                            | Version      |
-| ---------------- | --------------------------------- | ------------ |
-| Lint             | Oxlint                            | 1.76.0       |
-| Type-aware lint  | `oxlint-tsgolint`                 | 7.0.2001     |
-| Format           | Oxfmt                             | 0.61.0       |
-| Unused code/deps | Knip                              | 6.29.0       |
-| React lint       | React Doctor                      | 0.9.13       |
-| Spelling         | CSpell                            | 10.0.1       |
-| Git hooks        | Lefthook                          | 2.1.10       |
-| Commit lint      | commitlint                        | 21.2.1       |
-| Versioning       | Changesets                        | 2.31.1       |
-| Unit/integration | Vitest                            | 4.1.10       |
-| E2E              | Playwright                        | 1.62.0       |
-| Network mocking  | MSW                               | 2.15.0       |
-| Accessibility    | axe-core + `@axe-core/playwright` | 4.12.1       |
-| Load testing     | k6                                | 1.x (binary) |
-| Docs site        | Fumadocs                          | 16.13.0      |
+| Concern          | Choice                            | Version         |
+| ---------------- | --------------------------------- | --------------- |
+| Lint             | Oxlint                            | 1.76.0          |
+| Type-aware lint  | `oxlint-tsgolint`                 | 7.0.2001        |
+| Format           | Oxfmt                             | 0.61.0          |
+| Unused code/deps | Knip                              | 6.32.2          |
+| React lint       | React Doctor                      | 0.9.13          |
+| Spelling         | CSpell                            | 10.1.0          |
+| Git hooks        | Lefthook                          | 2.1.10          |
+| Commit lint      | commitlint                        | 21.2.2          |
+| Versioning       | Changesets                        | 3.0.1           |
+| Unit/integration | Vitest                            | 4.1.11          |
+| E2E              | Playwright                        | 1.62.0          |
+| Accessibility    | axe-core + `@axe-core/playwright` | 4.12.1 / 4.13.0 |
+| Load testing     | k6                                | 1.x (binary)    |
+| Docs site        | Fumadocs                          | 16.13.0         |
 
 ### Runtime & deployability
 
@@ -238,7 +236,7 @@ flowchart TB
 
     subgraph host["Host / Docker network"]
         TR["Reverse proxy<br/>routing + TLS"]
-        WEB["apps/web<br/>Next.js 16 — RSC, oRPC, Server Actions"]
+        WEB["apps/web<br/>Next.js 16 — RSC, oRPC"]
         API["apps/api<br/>Hono — REST /v1, OpenAPI, webhooks"]
         WORKER["apps/worker<br/>BullMQ consumers + schedulers"]
         DOCS["apps/docs<br/>Fumadocs"]
@@ -316,7 +314,7 @@ the executive summary.
 | Database             | PostgreSQL 18, single schema, UUIDv7 keys                                          | Time-sortable keys, boring and portable schema                                                        |
 | Migrations           | drizzle-kit generate → reviewed SQL → applied by a CD job                          | Never on app boot, never `push` outside local                                                         |
 | Multi-tenancy        | Shared schema + `organization_id` + scoped query helpers, RLS as optional defence  | Simplest model that scales; RLS interacts badly with poolers                                          |
-| Jobs                 | BullMQ only, shared payload contracts via `@repo/jobs`                             | No durable-workflow workload yet; see [ADR-0009](../adr/0009-bullmq-only-background-work.md)          |
+| Jobs                 | BullMQ only, shared payload contracts via `@repo/jobs`                             | No durable-workflow workload; see [ADR-0009](../adr/0009-bullmq-only-background-work.md)              |
 | Storage              | S3 API only, presigned direct uploads                                              | R2 in prod and MinIO locally with identical code                                                      |
 | Config               | Hand-rolled Zod env module                                                         | ~80 lines beats a dependency; we need custom composition anyway                                       |
 | Secrets              | Injected at deploy; SOPS + age is one adopter pattern                              | Boilerplate stays host-agnostic; no encrypted secret tree required                                    |
@@ -330,45 +328,58 @@ the executive summary.
 
 ---
 
-## 7. Validated decisions
+## 7. Foundational product choices
 
-Five forks depended on intent rather than engineering merit. All were decided on **2026-07-30**;
-each recommendation was accepted.
+These five choices were settled before implementation and still hold. They are not open questions.
 
-**Q1 — Drizzle version: `0.45.2` stable.** ✅
-`1.0.0-rc.4` would have made the v3 migration-folder conversion free, but an RC pinned into a
-foundation repository is the kind of thing that gets forgotten at exactly the wrong moment, and
-"production-ready by default" is a stated principle here. The v1 upgrade is **tracked, scheduled
-work** with a defined trigger (v1 GA), recorded in
-[ADR-0008](../adr/0008-drizzle-version-selection.md) and risk register R4. If v1 reaches GA before
-Phase 3 begins, we adopt it from the start instead.
+**Drizzle `0.45.2` stable, not the 1.0 RC.** An RC pinned into a foundation repository is the
+kind of thing that gets forgotten at the wrong moment. The v1 upgrade is tracked work with a
+defined trigger (v1 GA) in [ADR-0008](../adr/0008-drizzle-version-selection.md) and risk
+register R4.
 
-**Q2 — Background work: BullMQ only; Trigger.dev dropped.** ✅
-No durable-workflow workload has emerged, and `apps/tasks` was never scaffolded. BullMQ covers all
-current jobs via `apps/worker`; the `JobQueue` port and transactional outbox remain
-([06 §6](./06-data-and-storage.md#6-jobs),
-[ADR-0009](../adr/0009-bullmq-only-background-work.md), superseding
-[ADR-0007](../adr/0007-split-background-work-bullmq-triggerdev.md)). Revisit if durable workflows
-become central.
+**BullMQ only; Trigger.dev was never scaffolded.** No durable-workflow workload has emerged.
+The `JobQueue` port and transactional outbox remain. Revisit if durable workflows become
+central — [ADR-0009](../adr/0009-bullmq-only-background-work.md), superseding
+[ADR-0007](../adr/0007-split-background-work-bullmq-triggerdev.md).
 
-**Q3 — Multi-tenancy: organization-scoped from day one.** ✅
-`organization_id` on every tenant-scoped table, isolation enforced primarily by the `TenantCtx`
-type so a missing tenant filter is a compile error. Single-user products get an automatically
-created personal organization, so the model is present but invisible in the UI
+**Organization-scoped multi-tenancy from the first migration.** `organization_id` on every
+tenant-scoped table; isolation enforced primarily by the `TenantCtx` type so a missing tenant
+filter is a compile error. Single-user products get an automatically created personal
+organization, so the model is present but can stay invisible in the UI
 ([ADR-0006](../adr/0006-organization-scoped-multi-tenancy.md)).
 
-**Q4 — Primary deployment target: self-hosted Docker + Traefik.** ✅
-Built and tested first because it is the strictly harder target; Vercel for `apps/web` then works
-without special-casing ([11 §5](./11-infrastructure-and-deployment.md#5-deployment-strategy)).
+**Primary deployment target: self-hosted Docker.** Built and tested first because it is the
+strictly harder target; Vercel for `apps/web` then works without special-casing
+([11](./11-infrastructure-and-deployment.md)).
 
-**Q5 — Product surface: auth + organizations + settings, plus one worked vertical slice.** ✅
-The slice exercises every layer (oRPC + REST + policy + job + storage + both test levels) and
-becomes the reference implementation every future feature is copied from. Phase 17 added Stripe
-SaaS billing (`@repo/payments`) and the implemented `@repo/ui` chart/editor/table subpaths.
+**Product surface: auth + organizations + settings, plus one worked vertical slice (billing
+invoices) and Stripe SaaS billing.** The slice exercises every layer (oRPC + REST + policy +
+job + storage + both test levels) and is the reference every future feature is copied from.
 
 ---
 
-## 8. How to change this document
+## 8. Known gaps (honest, not a backlog)
+
+The architecture is implemented. These are incomplete call sites or operator workflows, not
+unbuilt phases:
+
+- **Audit log coverage** is partial. Invoice voiding writes `invoice.voided` in the same
+  transaction; auth events, membership changes, API-key lifecycle, and impersonation do not
+  yet have call sites ([07](./07-auth.md#audit-log)).
+- **Impersonation** is modelled on the actor (`isImpersonating`, destructive actions barred)
+  but has no support UI, banner, or reason capture. Do not expose it as an operator workflow
+  until those land.
+- **Server Actions** are an allowed transport for progressively-enhanced forms
+  ([05](./05-runtime-and-api.md)); none ship today. Auth screens use the Better Auth client;
+  product mutations use oRPC.
+- **Outbound webhooks** (HMAC-signed, retried via BullMQ) are specified as the public-API
+  pattern and are not implemented. Inbound Stripe webhooks are.
+- **CSP / HSTS** belong at the adopter's TLS edge, not in the app
+  ([security review](../security/security-review.md)).
+
+---
+
+## 9. How to change this document
 
 The architecture document describes the _current_ intended design. When a decision changes:
 

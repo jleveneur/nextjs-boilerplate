@@ -2,7 +2,7 @@
  * Locale-correct formatting via `Intl`.
  *
  * Shared by the web app and email templates so a price in an inbox matches the
- * price on the page. Arithmetic stays in `date-fns` (or the future Temporal);
+ * price on the page. Arithmetic stays native (or date-fns / Temporal if it grows);
  * formatting stays here so we do not ship locale data in a third-party library.
  */
 

@@ -21,7 +21,7 @@ Silent breach of this inequality is a common outage mode (`too many clients` —
 
 ---
 
-## Observed saturation (Phase 16 baseline)
+## Observed saturation (hardening baseline)
 
 Measured 2026-08-03 against local `make prod-up` (Traefik `:8080`, default pool
 sizes from `compose.prod.yaml`: web/api pool 10, worker 5). Authenticated run used

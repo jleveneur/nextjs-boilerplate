@@ -2,7 +2,7 @@
   "name": "@repo/docs",
   "version": "0.0.3",
   "private": true,
-  "description": "Fumadocs documentation site — architecture, ADRs, runbooks, and OpenAPI reference.",
+  "description": "Fumadocs documentation site — architecture, ADRs, runbooks, security, and OpenAPI reference.",
   "type": "module",
   "scripts": {
     "prepare-content": "node --experimental-strip-types ./scripts/prepare-content.ts",

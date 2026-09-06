@@ -3,7 +3,7 @@ title: Getting started
 description: Install the monorepo, start local dependencies, and run the apps.
 ---
 
-Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 11+, and
+Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
 [Docker](https://docs.docker.com/get-docker/). `make help` lists every target.
 
 ## Install
@@ -32,10 +32,20 @@ the public preset in `apps/docs/.env`.
 ## Run the apps
 
 ```bash
-pnpm --filter @repo/web dev      # http://127.0.0.1:3000
-pnpm --filter @repo/api dev      # http://127.0.0.1:3001
-pnpm --filter @repo/worker dev   # health on :3002
-pnpm --filter @repo/docs dev     # this site on :3003
+make dev         # deps + all apps → https://web.localhost
+```
+
+Portless serves HTTPS `*.localhost` URLs (proxy on 443). First start may prompt
+to trust the local CA (`portless trust`). `PORTLESS=0` uses localhost ports
+instead: web `3000`, api `3001`, worker `3002`, docs `3003`.
+
+Individual apps:
+
+```bash
+pnpm --filter @repo/web dev
+pnpm --filter @repo/api dev
+pnpm --filter @repo/worker dev
+pnpm --filter @repo/docs dev
 ```
 
 Or build images and run the prod-like stack:

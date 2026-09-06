@@ -230,7 +230,7 @@ images: ## Build web/api/worker/docs images tagged *:local
 	$(MAKE) image-size
 
 
-image-size: ## Fail if local app images exceed Phase 11 budgets
+image-size: ## Fail if local app images exceed size budgets
 	node --experimental-strip-types scripts/check-image-size.ts
 
 ## ----------------------------------------------------------------------------

@@ -3,7 +3,8 @@
 An ADR records **one decision**: the context that forced it, the options considered, what was
 chosen, and the consequences accepted. It captures the reasoning that is invisible in the diff.
 
-The [architecture documents](../architecture/README.md) describe the system as it is _now_. ADRs
+The [architecture documents](../architecture/README.md) describe the system as it is _now_ (the
+foundation is implemented). ADRs
 describe _why_ it became that way, and are append-only. When the present changes, write a new ADR
 superseding the old one and update the architecture document — never rewrite history.
 

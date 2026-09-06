@@ -128,7 +128,7 @@ define exactly three runtime classes and never blur them.
 ```mermaid
 flowchart LR
     subgraph browser["Browser"]
-        B1["React components<br/>Zustand, TanStack Query<br/>@repo/ui, @repo/contracts"]
+        B1["React components<br/>TanStack Query, nuqs<br/>@repo/ui, @repo/contracts"]
     end
     subgraph node["Node.js 24 (server)"]
         N1["RSC / Server Actions<br/>oRPC handlers<br/>Hono routes<br/>Workers<br/>@repo/core and all adapters"]
@@ -157,14 +157,14 @@ flowchart LR
 An honest architecture names its own costs. These are the places we knowingly spend complexity,
 and what we get for it.
 
-| Accepted cost                   | What it buys                                                                 | Why it is worth it                                                                       |
-| ------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| A monorepo with ~20 packages    | Enforced boundaries, independent testability, one core behind two transports | The alternative (one `src/lib`) has no enforceable boundaries at all                     |
-| Ports/adapters for side effects | Core is testable without network, vendors are swappable                      | Only applied where vendors actually change: email, storage, payments, jobs, flags, clock |
-| Two API surfaces (oRPC + REST)  | Best-in-class internal DX _and_ a stable public contract                     | Cost is near zero because both are thin transports over the same services                |
-| Two job systems                 | Right tool per workload class                                                | Contracts are shared; either can be removed without touching core                        |
-| Generated OpenAPI from Zod      | Docs and spec cannot drift from the code                                     | Hand-written specs are always wrong within a month                                       |
-| Multi-tenancy from day one      | No brutal retrofit later                                                     | Q3 in the [index](./README.md#7-open-questions-requiring-your-decision)                  |
+| Accepted cost                   | What it buys                                                                 | Why it is worth it                                                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| A monorepo with ~20 packages    | Enforced boundaries, independent testability, one core behind two transports | The alternative (one `src/lib`) has no enforceable boundaries at all                                      |
+| Ports/adapters for side effects | Core is testable without network, vendors are swappable                      | Only applied where vendors actually change: email, storage, payments, jobs, flags, clock                  |
+| Two API surfaces (oRPC + REST)  | Best-in-class internal DX _and_ a stable public contract                     | Cost is near zero because both are thin transports over the same services                                 |
+| One job system (BullMQ)         | Right tool for the current workload                                          | Durable workflows were considered and dropped; see [ADR-0009](../adr/0009-bullmq-only-background-work.md) |
+| Generated OpenAPI from Zod      | Docs and spec cannot drift from the code                                     | Hand-written specs are always wrong within a month                                                        |
+| Multi-tenancy from day one      | No brutal retrofit later                                                     | [ADR-0006](../adr/0006-organization-scoped-multi-tenancy.md)                                              |
 
 And the places we deliberately refuse complexity: no CQRS, no event sourcing, no message broker
 beyond Redis, no microservices, no GraphQL, no generic repository interface over the ORM, no
@@ -174,8 +174,8 @@ DI container framework (plain function composition instead), no custom Babel/SWC
 
 ## 5. The test of this architecture
 
-A foundation is good if these operations are cheap. Each is used later as an acceptance check on
-the implementation.
+A foundation is good if these operations stay cheap. Each is an ongoing acceptance check, not a
+one-time implementation gate.
 
 1. **Add a feature.** Create one folder in `packages/core`, one oRPC router file, optionally one
    REST route, one migration, one test file. No changes to shared plumbing.

@@ -16,7 +16,7 @@ export const publicApp = z.object({
   NEXT_PUBLIC_APP_ENV: z.enum(appEnvs),
 });
 
-/** Optional Stripe publishable key for client Checkout / Elements (Phase 17). */
+/** Optional Stripe publishable key for client Checkout / Elements. */
 export const stripeClient = z.object({
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z
     .string()

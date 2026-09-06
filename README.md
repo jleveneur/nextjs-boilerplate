@@ -4,10 +4,11 @@ A production-grade monorepo foundation: typed end to end, self-hostable, and
 cloud-agnostic. Built to be the starting point for real products rather than a
 demo.
 
-**Status:** Foundation complete through Phase 17 (payments + UI widgets). Docs at
-[`apps/docs`](apps/docs); Stripe billing via `@repo/payments`; hardening evidence
-under `perf/` and `docs/security/`. See
-[the implementation plan](docs/architecture/14-implementation-plan.md).
+The foundation is **implemented** — Next.js product app, public REST API,
+workers, docs site, auth, billing slice, and Stripe SaaS billing. Architecture
+lives in [`docs/architecture/`](docs/architecture/README.md). How it was
+sequenced is archived in
+[build history](docs/architecture/14-build-history.md).
 
 ---
 
@@ -18,7 +19,7 @@ Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
 
 ```bash
 make setup            # install, root `.env`, `apps/docs/.env`, deps, migrate, seed
-make check            # every quality gate — the same set CI runs
+make check            # the fast local quality gate (not full CI)
 make dev              # deps + apps → https://web.localhost
 pnpm --filter @repo/docs dev   # docs → https://docs.localhost
 ```
@@ -56,17 +57,18 @@ The load-bearing ideas:
 
 ## Documentation
 
-| Read this                                                                        | For                                                 |
-| -------------------------------------------------------------------------------- | --------------------------------------------------- |
-| Local docs site (`pnpm --filter @repo/docs dev`)                                 | Architecture, ADRs, runbooks, API reference         |
-| [Architecture overview](docs/architecture/README.md)                             | The whole design, in reading order                  |
-| [Principles and constraints](docs/architecture/01-principles-and-constraints.md) | What is optimised for, and what is deliberately not |
-| [Repository topology](docs/architecture/02-repository-topology.md)               | What lives where                                    |
-| [Package graph](docs/architecture/03-package-graph-and-boundaries.md)            | The layer rule and how it is enforced               |
-| [Conventions](docs/architecture/04-conventions.md)                               | Naming, TypeScript settings, patterns               |
-| [Dependency review](docs/architecture/13-dependency-review.md)                   | Why each dependency is here, and what replaces it   |
-| [ADRs](docs/adr/README.md)                                                       | Decisions, with their alternatives and consequences |
-| [AGENTS.md](AGENTS.md)                                                           | Rules for AI coding agents                          |
+| Read this                                                                        | For                                                   |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Local docs site (`pnpm --filter @repo/docs dev`)                                 | Architecture, ADRs, runbooks, security, API reference |
+| [Architecture overview](docs/architecture/README.md)                             | The whole design, in reading order                    |
+| [Principles and constraints](docs/architecture/01-principles-and-constraints.md) | What is optimised for, and what is deliberately not   |
+| [Repository topology](docs/architecture/02-repository-topology.md)               | What lives where                                      |
+| [Package graph](docs/architecture/03-package-graph-and-boundaries.md)            | The layer rule and how it is enforced                 |
+| [Conventions](docs/architecture/04-conventions.md)                               | Naming, TypeScript settings, patterns                 |
+| [Dependency review](docs/architecture/13-dependency-review.md)                   | Why each dependency is here, and what replaces it     |
+| [ADRs](docs/adr/README.md)                                                       | Decisions, with their alternatives and consequences   |
+| [Security review](docs/security/security-review.md)                              | Authorization matrix, headers, scanning               |
+| [AGENTS.md](AGENTS.md)                                                           | Rules for AI coding agents                            |
 
 Authorship stays in [`docs/`](docs/) — the site syncs that tree at build time. Getting
 started and contribution guides live only under `apps/docs/content/docs/`.
@@ -80,7 +82,7 @@ apps/        Deployable units (web, api, worker, docs)
 packages/    Shared libraries, arranged in layers
 tooling/     Build, lint, and type configuration
 docker/      Images and Compose stacks (incl. local prod-like)
-docs/        Architecture, ADRs, runbooks, security review
+docs/        Architecture, ADRs, runbooks, security
 perf/        k6 load scenarios + ZAP baseline (nightly, not PR CI)
 scripts/     Repository automation, with its own tests
 ```

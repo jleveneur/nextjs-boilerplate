@@ -41,9 +41,9 @@ explicit currency, formatted only at the presentation edge via `Intl.NumberForma
 ### Drizzle usage
 
 - Schema in `packages/db/src/schema/<module>.sql.ts`, one file per module, aggregated in an index.
-- `drizzle-zod` derives base insert/select schemas, which are then **refined** in
-  `@repo/contracts` — never exposed directly. A table-derived schema is not an API contract:
-  exposing it means every column addition changes your API, and internal fields leak by default.
+- Public DTOs are **hand-written Zod schemas in `@repo/contracts`**, not derived from the table.
+  A table-derived schema is not an API contract: exposing it means every column addition changes
+  the API, and internal fields leak by default.
 - Repository functions per feature. No generic repository interface (see
   [03](./03-package-graph-and-boundaries.md#4-ports-and-adapters--applied-narrowly)).
 - Relational queries for reads that map cleanly to the object graph; explicit joins where the
@@ -135,7 +135,6 @@ available as optional defence in depth.**
 erDiagram
     USER ||--o{ MEMBER : "belongs to orgs via"
     ORGANIZATION ||--o{ MEMBER : has
-    ORGANIZATION ||--o{ TEAM : has
     ORGANIZATION ||--o{ INVITATION : has
     ORGANIZATION ||--o{ DOMAIN_RESOURCE : owns
     MEMBER }o--|| ROLE : "has"
@@ -168,7 +167,7 @@ pooling model. Types are a cheaper, more reliable primary control.
 
 The intended pattern for admin and support paths that must cross tenants is an explicit system
 actor, a separate repository function, and an audit-log entry rather than an ambient capability.
-The audit table schema exists, but no cross-tenant support path or audit writer is implemented
+`writeAuditLog` exists and invoice voiding uses it. No cross-tenant support path is implemented
 yet. Any such path must add the capability and its transactional audit write together.
 
 ---

@@ -7,7 +7,7 @@
 
 ## Context
 
-Drizzle is chosen as the ORM ([13](../architecture/13-dependency-review.md#drizzle-orm-045--drizzle-kit--drizzle-zod)).
+Drizzle is chosen as the ORM ([13](../architecture/13-dependency-review.md#drizzle-orm-045--drizzle-kit)).
 Which _version_ to start on is a genuine fork, and it must be decided before the first migration is
 written — because that is the moment the decision becomes expensive.
 
@@ -80,9 +80,8 @@ Supporting measures that make this cheap to reverse and cheap to execute:
   risk register pointing at it, so quarterly review cannot lose it.
 - **Renovate is configured not to auto-merge Drizzle updates**, so the move is always a deliberate,
   reviewed PR.
-- **If v1 reaches GA before implementation reaches the database phase** (Phase 3 in the
-  [implementation plan](../architecture/14-implementation-plan.md)), we start on v1 instead and this ADR
-  is superseded. That is the most likely happy outcome and worth watching for.
+- **If v1 reaches GA**, schedule the upgrade immediately and supersede this ADR. The database
+  layer shipped on 0.45.2; see [build history](../architecture/14-build-history.md).
 
 ## Consequences
 
@@ -106,6 +105,4 @@ Supporting measures that make this cheap to reverse and cheap to execute:
 
 ## Revisit if
 
-Drizzle 1.0 reaches GA — at which point the upgrade is scheduled immediately. Or if v1 reaches GA
-before Phase 3 of implementation begins, in which case we adopt v1 from the start and supersede this
-ADR rather than performing a migration at all.
+Drizzle 1.0 reaches GA — at which point the upgrade is scheduled immediately.

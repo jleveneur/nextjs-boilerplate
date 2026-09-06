@@ -11,7 +11,7 @@ Each entry carries:
 
 - **Why** — what it does that we will not do ourselves.
 - **Instead of** — the alternatives considered and why they lost.
-- **Health** — maintenance, adoption, ecosystem maturity, as of 2026-07-30.
+- **Health** — maintenance, adoption, ecosystem maturity, as of 2026-09-06.
 - **Exit** — migration difficulty if we must leave. **Low** = days, contained. **Medium** = weeks,
   touches many files mechanically. **High** = months or a rewrite.
 
@@ -72,14 +72,13 @@ and multi-million-line codebases (VS Code, Bluesky, Linear, Vercel).
 programmatic API** until 7.1 (~Q4 2026), and that has ecosystem consequences we plan around
 explicitly.
 
-### `@typescript/typescript6`
+### `@typescript/typescript6` (escape hatch, not installed)
 
-**Why** Ships a `tsc6` binary re-exporting the TypeScript 6 API, so any tool that still needs the old
-programmatic API can run side by side. This is the insurance policy that makes adopting TypeScript 7
-a reversible decision.
+**Why** Ships a `tsc6` binary re-exporting the TypeScript 6 API. Add it if a tool we adopt still
+needs the old programmatic API. No current workspace package depends on it.
 **Instead of** Pinning the whole repo to TypeScript 6.
 **Health** Maintained by the TypeScript team explicitly as a transition bridge.
-**Exit** Remove it once every tool we use targets the 7.1 API.
+**Exit** Remove the pin once every tool we use targets the 7.1 API.
 
 ---
 
@@ -137,7 +136,7 @@ so we own and can modify it, with no version to upgrade and no wrapper API to fi
 the hard parts underneath — focus management, keyboard interaction, ARIA, portalling, positioning.
 **Note on the current state:** as of **July 2026, Base UI is shadcn/ui's default** primitive base
 (Radix remains fully supported via `shadcn init -b radix`, and is not deprecated). Base UI is at
-**1.6.0** with 6M+ weekly downloads. The package was **renamed**: the maintained package is
+**1.7.0** with 6M+ weekly downloads. The package was **renamed**: the maintained package is
 `@base-ui/react`, not the older `@base-ui-components/react` (which stopped at `1.0.0-rc.0`). We
 initialise on Base UI, so our components sit on the path upstream actively develops, and a
 first-party migration skill exists in the other direction if we ever need it.
@@ -145,7 +144,7 @@ first-party migration skill exists in the other direction if we ever need it.
 because it is where shadcn/ui's new work lands, and because it is built by the same core team with
 the benefit of Radix's lessons. _MUI / Mantine / Chakra_ — prescriptive design and heavy runtime
 theming; customisation means fighting the library. _Headless UI_ — narrower component set.
-**Health** Base UI: 1.6.0 stable, regular releases, MUI-team provenance. shadcn/ui: the dominant
+**Health** Base UI: 1.7.0 stable, regular releases, MUI-team provenance. shadcn/ui: the dominant
 pattern for React design systems.
 **Exit** Low for shadcn/ui (the code is ours). Medium for Base UI, and the existence of an official
 Radix↔Base migration skill bounds it further.
@@ -187,14 +186,14 @@ progressive-enhancement forms; insufficient for complex client-side validation U
 a static type, an OpenAPI schema, and a form resolver. Version 4 is substantially faster with a
 smaller footprint than v3.
 **Instead of** _Valibot_ — smaller bundles via modularity and a real contender; Zod wins on ecosystem
-integration (oRPC, drizzle-zod, `@hono/zod-openapi`, RHF all target it first), which for us outweighs
+integration (oRPC, `@hono/zod-openapi`, RHF all target it first), which for us outweighs
 kilobytes. _ArkType_ — impressive performance, younger. _Yup_ — weaker inference. _TypeBox_ —
 JSON-Schema-first, less ergonomic. _io-ts_ — functional style we do not want repo-wide.
 **Health** The standard for TypeScript validation.
 **Exit** High — it is woven through contracts, env, forms, API, and jobs. This is an accepted,
 deliberate concentration: the alternative is a weaker abstraction in the place we most rely on.
 
-### TanStack Query 5.101
+### TanStack Query 5.102
 
 **Why** Server-state caching, deduplication, background refetching, pagination, and optimistic updates
 — roughly 3,000 lines of subtle logic we would otherwise write badly.
@@ -204,11 +203,12 @@ exists.
 **Health** Framework-agnostic core, huge adoption, exemplary maintenance.
 **Exit** Medium — hooks are wrapped per feature, so the surface is contained.
 
-### Zustand 5.0
+### Zustand (permitted, not currently a dependency)
 
-**Why** Minimal client state with no provider, no boilerplate, and a hook-based selector API. Used
-**only** for genuine client state — server data belongs to TanStack Query, URL state to nuqs, form
-state to RHF. That narrow scope is why a tiny library suffices.
+**Why** Minimal client state with no provider, no boilerplate, and a hook-based selector API.
+**Scope:** genuine client state only — server data belongs to TanStack Query, URL state to nuqs,
+form state to RHF. The product currently has no Zustand store; add the catalog pin when a
+feature actually needs one.
 **Instead of** _Redux Toolkit_ — far more ceremony than our scope needs. _Jotai / Valtio_ — fine
 alternatives with different mental models. _Context + `useReducer`_ — no selector granularity, so
 re-render storms.
@@ -278,16 +278,16 @@ same result. _Hand-rolled_ — animation and a11y details make this bigger than 
 **Health** Small, stable, widely adopted (and the shadcn/ui default).
 **Exit** Low — one wrapper in `@repo/ui`.
 
-### date-fns 4.4
+### Date arithmetic
 
-**Why** Immutable, tree-shakeable date arithmetic with first-class time-zone support in v4. We use it
-for **arithmetic and parsing only** — formatting goes through `Intl` so it is locale-correct without
-shipping locale data.
-**Instead of** _Day.js_ — smaller but plugin-based and mutable-ish. _Luxon_ — good, larger, class-based.
-_Moment_ — deprecated by its own authors. _Temporal_ — the eventual right answer; once runtime support
-is universal this dependency largely disappears, which is a point in its favour.
-**Health** Very widely used, stable.
-**Exit** Low — function-level, mechanical.
+**Why** Formatting goes through `Intl` via `@repo/i18n` so it is locale-correct without shipping
+locale data. Arithmetic today is native `Date` (and Postgres `timestamptz`). If calendar arithmetic
+grows beyond that, **date-fns** is the nominated library (immutable, tree-shakeable, time-zone
+support in v4) — add it to the catalog when a call site needs it. **Temporal** is the eventual
+right answer once runtime support is universal.
+**Instead of** _Day.js_ / _Luxon_ / _Moment_ — plugin-based, larger, or deprecated.
+**Health** Native `Intl` and `Date` are the platform. date-fns remains widely used if we adopt it.
+**Exit** Low.
 
 ### nuqs 2.9
 
@@ -378,7 +378,7 @@ _MongoDB_ — we have relational data with real invariants. _CockroachDB / Yugab
 we do not need, with the operational cost we would inherit.
 **Exit** High — but it is the choice least likely to need one.
 
-### Drizzle ORM 0.45 + drizzle-kit + drizzle-zod
+### Drizzle ORM 0.45 + drizzle-kit
 
 **Why** SQL-shaped TypeScript: queries look like the SQL they generate, so there is no hidden query
 behaviour to discover in production. No code-generation step (types come from the schema definition),
@@ -390,12 +390,15 @@ monorepo. Prisma's recent direction improves this, and it remains the main alter
 _Kysely_ — excellent typed query builder; Drizzle covers the same ground plus schema and migrations.
 _TypeORM / Sequelize_ — decorator-era designs with weaker inference. _Raw SQL + a mapper_ — a
 legitimate senior choice, but we would then hand-roll migrations, types, and composition.
-**Health** Very widely adopted and actively developed.
+**Health** Very widely adopted and actively developed. Public DTOs are hand-written in
+`@repo/contracts`, not derived from tables (`drizzle-zod` was considered and not adopted — a
+column addition must not change an API by default).
 **Exit** Medium — queries are confined to `*.repository.ts` files, which is the seam that makes this
 bounded rather than repo-wide.
 **Open issue:** `1.0.0-rc.4` exists (rewritten kit, v3 migration folders, RQB v2) but `latest` is
-still `0.45.2`, roughly a year after the v1 betas began. See Q1 in the
-[index](./README.md#7-open-questions-requiring-your-decision) and the risk register below.
+still `0.45.2`, roughly a year after the v1 betas began. Decided in
+[ADR-0008](../adr/0008-drizzle-version-selection.md); trigger to revisit is v1 GA. See the risk
+register below.
 
 ### ioredis 6.0
 
@@ -631,7 +634,7 @@ prompt, complementary rather than an alternative.
 **Health** Stable, the standard.
 **Exit** Very low.
 
-### Changesets 2.31
+### Changesets 3.0
 
 **Why** Explicit, author-declared release intent per package, reviewed alongside the code. See
 [12 §5](./12-git-ci-release.md#why-changesets-rather-than-semantic-release).
@@ -762,7 +765,7 @@ Things a repo like this often includes, and why this one does not.
 | **tRPC**                                       | Replaced by oRPC 1.15 for the private API ([ADR-0011](../adr/0011-orpc-private-api.md)). Same compile-time types; we no longer want SuperJSON or a React provider.                                                                                                                |
 | **GraphQL (Apollo, Pothos, urql)**             | We control the only internal consumer (oRPC is better there) and third parties want REST. GraphQL adds a schema, resolvers, N+1 concerns, and a client cache for no gain here.                                                                                                    |
 | **Prisma**                                     | Considered seriously; rejected for the Rust engine binary, a separate schema language, and generated-client friction in a monorepo.                                                                                                                                               |
-| **Redux Toolkit**                              | Our client state is small; Zustand covers it without the ceremony.                                                                                                                                                                                                                |
+| **Redux Toolkit**                              | Client state is small; Zustand is the allowed tool if a store is ever needed.                                                                                                                                                                                                     |
 | **Storybook**                                  | Genuinely useful, and genuinely heavy: a second build system, a second dependency graph, and constant maintenance. Component tests plus a route in `apps/web` that renders the design system cover our needs at a fraction of the cost. Revisit if a dedicated design team joins. |
 | **Kubernetes**                                 | A control plane to operate, upgrade, and secure for orchestration a Compose file already provides at this scale. Images are standard OCI, so the door stays open.                                                                                                                 |
 | **Terraform**                                  | OpenTofu is the MIT-licensed, neutrally-governed continuation.                                                                                                                                                                                                                    |
@@ -784,22 +787,22 @@ The dependencies that need active watching, with the trigger that would make us 
 exists because the honest answer to "is this stack safe" is "mostly, and here is precisely where it
 is not".
 
-| #   | Risk                                                                                                                                                               | Severity   | Assessment & mitigation                                                                                                                                                                                                                                                                                                   |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | **TypeScript 7 has no stable programmatic API until 7.1** (~Q4 2026). typescript-eslint declined TS 7 support; Volar-based template checking cannot run on it.     | High       | Our toolchain is chosen to be unaffected: Oxlint's type-aware backend is built on `typescript-go` directly, and we use no Vue/Svelte/Astro template checking. `@typescript/typescript6` provides `tsc6` for any tool that needs the old API. **Trigger to revisit:** a tool we depend on turns out to embed the compiler. |
-| R2  | **Oxfmt is pre-1.0 (0.61.0)** with weekly releases and no Prettier-plugin support.                                                                                 | Low        | It passes 100 % of Prettier's JS/TS conformance tests, and a formatter is the single most replaceable tool in any repo — worst case is one reformat commit back to Prettier. Version pinned exactly; upgrades are their own PR so a formatting-diff commit is never mixed with logic.                                     |
-| R3  | **`oxlint-tsgolint` is version-locked to a specific TypeScript release.**                                                                                          | Medium     | Renovate groups `typescript` and `oxlint-tsgolint` so they move together. If tsgolint lags a TypeScript release, we hold both back — a typecheck and a linter that disagree about the language is worse than being one patch behind.                                                                                      |
-| R4  | **Drizzle v1 has been in beta/RC for ~a year**; `latest` is still 0.45.2.                                                                                          | Medium     | Q1 in the [index](./README.md#7-open-questions-requiring-your-decision). Whichever way it is decided, queries are confined to `*.repository.ts`, and the migration-folder format change is far cheaper before production migrations exist. Tracked as a scheduled task with an ADR either way.                            |
-| R5  | **Base UI stabilised recently** (1.6.0) and was **renamed** from `@base-ui-components/react`.                                                                      | Low-Medium | It is now shadcn/ui's default with 6M+ weekly downloads, and an official Radix↔Base migration skill exists in both directions. shadcn components live in our repo, so we can patch them ourselves.                                                                                                                        |
-| R6  | **TanStack Table v9 is in beta.**                                                                                                                                  | Low        | Stay on stable v8; v9 is evaluated when it ships. Confined to `@repo/ui/table`.                                                                                                                                                                                                                                           |
-| R7  | **Better Auth moves fast** (1.6.25, with 1.7 in RC).                                                                                                               | Medium     | Pin exactly, read changelogs, and treat minor upgrades as reviewed PRs with the auth E2E suite as the gate. Auth tables are ours, so a bad release is a hold, not an outage.                                                                                                                                              |
-| R8  | **Next.js majors are disruptive** (the 15→16 `middleware`→`proxy` rename is the current example, and `middleware.ts` still compiles while silently doing nothing). | Medium     | Business logic is outside `apps/web`, so a Next migration is one app. Majors get a dedicated PR, the official codemods, and an explicit check that deprecated file conventions are actually gone.                                                                                                                         |
-| R9  | **Durable workflows may need a platform later** (dunning, multi-day sequences). BullMQ cannot checkpoint waits.                                                    | Low        | No current workload; revisit per [ADR-0009](../adr/0009-bullmq-only-background-work.md) if durable execution becomes central.                                                                                                                                                                                             |
-| R10 | **Zod is used everywhere** — contracts, env, forms, API, jobs.                                                                                                     | Medium     | Accepted deliberately. A migration would be large but mechanical, and the alternative (a weaker validation abstraction) is worse in the place we depend on most.                                                                                                                                                          |
-| R11 | **Vendor concentration**: Cloudflare provides DNS, CDN, WAF, and object storage.                                                                                   | Medium     | Each is individually replaceable (S3 API for storage, any DNS provider, any CDN), and none is imported in application code. Documented as a known concentration rather than pretended away.                                                                                                                               |
-| R12 | **Sharp is a native module.**                                                                                                                                      | Low        | Worker base image and architecture are pinned; multi-arch images are built and tested.                                                                                                                                                                                                                                    |
-| R13 | **Supply-chain compromise of any dependency.**                                                                                                                     | High       | Renovate enforces a 3-day minimum release age for non-security updates, lockfiles are committed and frozen in CI, `pnpm audit` and CodeQL run in CI, Trivy scans images, action SHAs are pinned, and provenance attestations are generated.                                                                               |
-| R14 | **oRPC 2 is still on the beta channel** while we pin 1.15.                                                                                                         | Low        | 1.x covers the private-API requirements. Trigger: `latest` on npm points at 2.x — then a dedicated ADR and catalog bump, not a rewrite. Do not generate public OpenAPI from oRPC.                                                                                                                                         |
+| #   | Risk                                                                                                                                                               | Severity   | Assessment & mitigation                                                                                                                                                                                                                                                                                                                                                |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | **TypeScript 7 has no stable programmatic API until 7.1** (~Q4 2026). typescript-eslint declined TS 7 support; Volar-based template checking cannot run on it.     | High       | Our toolchain is chosen to be unaffected: Oxlint's type-aware backend is built on `typescript-go` directly, and we use no Vue/Svelte/Astro template checking. `@typescript/typescript6` is the escape hatch if a tool we adopt embeds the old API (not currently a workspace dependency). **Trigger to revisit:** a tool we depend on turns out to embed the compiler. |
+| R2  | **Oxfmt is pre-1.0 (0.61.0)** with weekly releases and no Prettier-plugin support.                                                                                 | Low        | It passes 100 % of Prettier's JS/TS conformance tests, and a formatter is the single most replaceable tool in any repo — worst case is one reformat commit back to Prettier. Version pinned exactly; upgrades are their own PR so a formatting-diff commit is never mixed with logic.                                                                                  |
+| R3  | **`oxlint-tsgolint` is version-locked to a specific TypeScript release.**                                                                                          | Medium     | Renovate groups `typescript` and `oxlint-tsgolint` so they move together. If tsgolint lags a TypeScript release, we hold both back — a typecheck and a linter that disagree about the language is worse than being one patch behind.                                                                                                                                   |
+| R4  | **Drizzle v1 has been in beta/RC for ~a year**; `latest` is still 0.45.2.                                                                                          | Medium     | Stay on 0.45.2 until v1 GA ([ADR-0008](../adr/0008-drizzle-version-selection.md)). Queries are confined to `*.repository.ts`, so the migration-folder format change is bounded.                                                                                                                                                                                        |
+| R5  | **Base UI** (`@base-ui/react` 1.7.0) was **renamed** from `@base-ui-components/react`.                                                                             | Low-Medium | It is now shadcn/ui's default with 6M+ weekly downloads, and an official Radix↔Base migration skill exists in both directions. shadcn components live in our repo, so we can patch them ourselves.                                                                                                                                                                     |
+| R6  | **TanStack Table v9 is in beta.**                                                                                                                                  | Low        | Stay on stable v8; v9 is evaluated when it ships. Confined to `@repo/ui/table`.                                                                                                                                                                                                                                                                                        |
+| R7  | **Better Auth moves fast** (1.6.25, with 1.7 in RC).                                                                                                               | Medium     | Pin exactly, read changelogs, and treat minor upgrades as reviewed PRs with the auth E2E suite as the gate. Auth tables are ours, so a bad release is a hold, not an outage.                                                                                                                                                                                           |
+| R8  | **Next.js majors are disruptive** (the 15→16 `middleware`→`proxy` rename is the current example, and `middleware.ts` still compiles while silently doing nothing). | Medium     | Business logic is outside `apps/web`, so a Next migration is one app. Majors get a dedicated PR, the official codemods, and an explicit check that deprecated file conventions are actually gone.                                                                                                                                                                      |
+| R9  | **Durable workflows may need a platform later** (dunning, multi-day sequences). BullMQ cannot checkpoint waits.                                                    | Low        | No current workload; revisit per [ADR-0009](../adr/0009-bullmq-only-background-work.md) if durable execution becomes central.                                                                                                                                                                                                                                          |
+| R10 | **Zod is used everywhere** — contracts, env, forms, API, jobs.                                                                                                     | Medium     | Accepted deliberately. A migration would be large but mechanical, and the alternative (a weaker validation abstraction) is worse in the place we depend on most.                                                                                                                                                                                                       |
+| R11 | **Vendor concentration**: Cloudflare provides DNS, CDN, WAF, and object storage.                                                                                   | Medium     | Each is individually replaceable (S3 API for storage, any DNS provider, any CDN), and none is imported in application code. Documented as a known concentration rather than pretended away.                                                                                                                                                                            |
+| R12 | **Sharp is a native module.**                                                                                                                                      | Low        | Worker base image and architecture are pinned; multi-arch images are built and tested.                                                                                                                                                                                                                                                                                 |
+| R13 | **Supply-chain compromise of any dependency.**                                                                                                                     | High       | Renovate enforces a 3-day minimum release age for non-security updates, lockfiles are committed and frozen in CI, `pnpm audit` and CodeQL run in CI, Trivy scans images, action SHAs are pinned, and provenance attestations are generated.                                                                                                                            |
+| R14 | **oRPC 2 is still on the beta channel** while we pin 1.15.                                                                                                         | Low        | 1.x covers the private-API requirements. Trigger: `latest` on npm points at 2.x — then a dedicated ADR and catalog bump, not a rewrite. Do not generate public OpenAPI from oRPC.                                                                                                                                                                                      |
 
 ### Review cadence
 

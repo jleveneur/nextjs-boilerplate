@@ -166,8 +166,9 @@ which errors are thrown, since throw sites are not in the type signature.
   possible — a `"use client"` at the top of a page ships the whole page to the browser.
 - **Data fetching:** RSC for initial render; TanStack Query via oRPC for anything interactive,
   paginated, or refetched. Do not fetch in `useEffect`.
-- **Mutations:** oRPC mutations for app interactions; Server Actions for progressively-enhanced
-  forms. Both delegate to `@repo/core` and both revalidate explicitly.
+- **Mutations:** oRPC mutations for app interactions. Server Actions are an allowed transport
+  for progressively-enhanced forms when a flow needs them; none ship today (auth uses the
+  Better Auth client). Both must delegate to `@repo/core` and revalidate explicitly.
 - **Caching is explicit.** With `cacheComponents: true`, `use cache` is opt-in per boundary with
   a declared `cacheLife`, and invalidation uses tags (`revalidateTag(tag, profile)` for SWR
   semantics, `updateTag(tag)` inside Actions for read-your-writes). Cache decisions are commented
