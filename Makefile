@@ -14,14 +14,14 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix example-inventory bundle-budget openapi-check \
+        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix example-inventory new-slice bundle-budget openapi-check \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
         changeset clean clean-all \
         deps-up deps-up-observability deps-up-test deps-up-test-worker deps-down \
         prod-up prod-down \
-        db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push db-studio \
+        db-up db-up-test db-down db-wait db-generate db-migrate db-seed db-reset db-push db-studio \
         email dev proxy
 
 
@@ -131,6 +131,10 @@ authz-matrix: ## Regenerate the documented authorization matrix from the registr
 
 example-inventory: ## List what to remove to drop an optional subsystem (billing, assets, …)
 	node scripts/example-inventory.ts $(FEATURE)
+
+new-slice: ## Scaffold a domain slice across every layer (NAME=widget [PLURAL=widgets])
+	@test -n "$(NAME)" || (echo 'Usage: make new-slice NAME=widget [PLURAL=widgets]' >&2 && exit 1)
+	node scripts/new-slice.ts $(NAME) $(PLURAL)
 
 env-catalog: ## Assert .env*.example files share one key catalog
 	pnpm check:env
@@ -369,6 +373,9 @@ db-wait: ## Block until local Postgres accepts connections
 	@until $(COMPOSE) exec -T postgres pg_isready -U postgres -d app >/dev/null 2>&1; do \
 		sleep 0.5; \
 	done
+
+db-generate: ## Generate a migration from schema changes
+	pnpm --filter @repo/db exec drizzle-kit generate
 
 db-migrate: ## Apply pending Drizzle migrations
 	pnpm --filter @repo/db exec tsx --env-file=$(CURDIR)/$(ENV_FILE) src/migrate.ts

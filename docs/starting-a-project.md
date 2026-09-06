@@ -125,30 +125,53 @@ permission row for you. That is the point of the gate being strict.
 
 ## 5. Adding your first slice
 
-Budget ~20–25 files for one CRUD resource. Again, that is the registries, not ceremony. Copy the
-invoice slice as the template _before_ you delete it — it is the most complete worked example in
-the repo, and it demonstrates every layer boundary you are about to cross.
+Don't write the wiring by hand:
 
-The path a request takes, and the file you add at each step:
+```bash
+make new-slice NAME=widget          # or NAME=person PLURAL=people
+```
 
-| Layer | File                                                               |
-| ----- | ------------------------------------------------------------------ |
-| 0     | `packages/types/src/ids.ts` — branded id                           |
-| 0     | `packages/contracts/src/<thing>.ts` — Zod schemas                  |
-| 0     | `packages/permissions/src/registry.ts` — `thing:create`, …         |
-| 0     | `packages/errors/src/codes.ts` — failure codes                     |
-| 1     | `packages/db/src/schema/<thing>.sql.ts` + a migration              |
-| 2     | `packages/core/src/<thing>/` — service, repository, policy, mapper |
-| 3     | `packages/orpc/src/routers/<thing>.ts`                             |
-| 4     | `apps/web/src/features/<thing>/` + a route                         |
+That scaffolds seven files and registers the slice in ten more — the id union, the
+permission registry and its role grants, the schema barrel, the core barrel, both id
+generators, and the oRPC root. `make check` passes immediately afterwards, generated
+tests included, so you start from green rather than from a compile error.
 
-Rules that are enforced, not suggested — see [AGENTS.md](../AGENTS.md):
+What you get is the boring half, written the way the rest of the repo is written:
+
+| Layer | File                                     | What it already does                                   |
+| ----- | ---------------------------------------- | ------------------------------------------------------ |
+| 0     | `contracts/src/widget.ts`                | Zod schemas for create / get / list, cursor-paginated  |
+| 0     | _(registry edits)_                       | `WidgetId`, `widget:create                             | read | update | delete`, grants |
+| 1     | `db/src/schema/widget.sql.ts`            | tenant column, soft delete, the index keyset needs     |
+| 2     | `core/src/widget/widget.repository.ts`   | every query through `scopedWhere`                      |
+| 2     | `core/src/widget/widget.service.ts`      | authorize → load → map, actor explicit                 |
+| 2     | `core/src/widget/widget.service.test.ts` | 9 tests: each grant denied, not-found, cursor rejected |
+| 3     | `orpc/src/routers/widget.ts`             | three procedures, no queries                           |
+
+Then replace the two `TODO(widget)` markers — one in the contract, one in the table —
+with your actual fields, and:
+
+```bash
+make db-generate     # migration for the new table
+make authz-matrix    # document the four new permissions
+make check
+```
+
+The generator refuses to run if any of its anchors have moved, rather than writing a
+half-registered slice; `scripts/new-slice.test.ts` fails the gate in that case too, so
+you find out from CI rather than mid-feature.
+
+Rules it follows, which are enforced anyway — see [AGENTS.md](../AGENTS.md):
 
 - Services take an explicit **actor**, authorize **first**, and scope **every** query by
-  `organization_id`. Use `TenantCtx` and `scopedWhere`; a repository that takes a bare database
-  handle is a tenant leak waiting to happen.
+  `organization_id`. A repository that takes a bare database handle is a tenant leak
+  waiting to happen.
 - Transports translate. No queries in an oRPC procedure or a route handler.
 - Money is an integer in minor units. Ids are UUIDv7 and branded.
+
+What it deliberately leaves to you: update and delete, domain events and the outbox,
+record-level policy beyond RBAC, and the UI. Those are where the actual decisions live,
+and a template would only be something to delete.
 
 ---
 
