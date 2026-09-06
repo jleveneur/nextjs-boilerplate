@@ -5,6 +5,7 @@ import {
   db,
   featureFlags,
   otel,
+  sentry,
   posthog,
   redis,
   resend,
@@ -28,7 +29,7 @@ const worker = z.object({
  * for `make dev`; compose/images set `WORKER_PORT`.
  */
 export const env = createEnv({
-  server: [base, db, redis, s3, resend, smtp, otel, posthog, featureFlags, stripe, worker],
+  server: [base, db, redis, s3, resend, smtp, otel, sentry, posthog, featureFlags, stripe, worker],
   runtimeEnv: {
     NODE_ENV: process.env["NODE_ENV"],
     APP_ENV: process.env["APP_ENV"],
@@ -49,6 +50,7 @@ export const env = createEnv({
     OTEL_ENABLED: process.env["OTEL_ENABLED"],
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
     OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
+    SENTRY_DSN: process.env["SENTRY_DSN"],
     POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
     POSTHOG_HOST: process.env["POSTHOG_HOST"],
     FLAGS_JSON: process.env["FLAGS_JSON"],

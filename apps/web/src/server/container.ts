@@ -8,7 +8,7 @@ import { createDb, type Database } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
 import { createLogger, type Logger } from "@repo/logger";
-import { getTraceContext } from "@repo/observability";
+import { createSentryErrorTracker, getTraceContext, type ErrorTracker } from "@repo/observability";
 
 import { env } from "@/env/server.ts";
 
@@ -30,6 +30,7 @@ const authSchema = {
 export type AppContainer = {
   db: Database;
   logger: Logger;
+  errorTracker: ErrorTracker;
   auth: Auth;
   ports: CtxPorts;
   emailMailer: EmailMailer;
@@ -48,6 +49,12 @@ function createEmailMailer(): EmailMailer {
 
 function buildContainer(): AppContainer {
   const release = process.env["GITHUB_SHA"];
+  // No DSN is the default: this returns the no-op tracker and nothing else changes.
+  const errorTracker = createSentryErrorTracker({
+    ...(env.SENTRY_DSN === undefined ? {} : { dsn: env.SENTRY_DSN }),
+    environment: env.APP_ENV,
+    ...(release === undefined ? {} : { release }),
+  });
   const logger = createLogger({
     service: "web",
     env: env.APP_ENV,
@@ -155,7 +162,7 @@ function buildContainer(): AppContainer {
     },
   });
 
-  return { db, logger, auth, ports, emailMailer, closeAnalytics };
+  return { db, logger, errorTracker, auth, ports, emailMailer, closeAnalytics };
 }
 
 const globalForContainer = globalThis as typeof globalThis & {

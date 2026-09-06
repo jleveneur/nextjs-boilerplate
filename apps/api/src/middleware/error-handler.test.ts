@@ -11,11 +11,16 @@ function createTestApp(thrown: unknown): {
   app: Hono<ApiEnv>;
   error: ReturnType<typeof vi.fn>;
   warn: ReturnType<typeof vi.fn>;
+  capture: ReturnType<typeof vi.fn>;
 } {
   const error = vi.fn();
   const warn = vi.fn();
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- handler only reads logger
-  const container = { logger: { error, warn } } as unknown as AppContainer;
+  const capture = vi.fn();
+  const container = {
+    logger: { error, warn },
+    errorTracker: { capture },
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- handler reads only these
+  } as unknown as AppContainer;
 
   const app = new Hono<ApiEnv>();
   app.use("*", async (c, next) => {
@@ -28,7 +33,7 @@ function createTestApp(thrown: unknown): {
     throw thrown;
   });
 
-  return { app, error, warn };
+  return { app, error, warn, capture };
 }
 
 describe("errorHandler", () => {
@@ -52,6 +57,12 @@ describe("errorHandler", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
+  it("does not report an expected error to the tracker", () => {
+    const { capture } = createTestApp(new NotFoundError({ resource: "invoice", id: "inv_1" }));
+
+    expect(capture).not.toHaveBeenCalled();
+  });
+
   it("logs an unexpected error and withholds its message", async () => {
     const { app, warn, error } = createTestApp(new Error("connection string user:pw@host"));
 
@@ -62,6 +73,20 @@ describe("errorHandler", () => {
     expect(JSON.stringify(body)).not.toContain("user:pw@host");
     expect(error).toHaveBeenCalledOnce();
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("reports an unexpected error to the tracker, with the correlation keys", async () => {
+    const { app, capture } = createTestApp(new Error("boom"));
+
+    await app.request("/thing");
+
+    // Same condition as the log line, so the two never disagree about what an
+    // incident is.
+    expect(capture).toHaveBeenCalledOnce();
+    expect(capture.mock.calls[0]?.[1]).toMatchObject({
+      requestId: "req-1",
+      operation: "GET /thing",
+    });
   });
 
   it("does not expose an internal error's message", async () => {

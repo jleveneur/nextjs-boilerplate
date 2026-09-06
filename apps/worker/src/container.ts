@@ -25,7 +25,7 @@ import {
   type JobHandlers,
 } from "@repo/jobs";
 import { createLogger, runWithLogger, type Logger } from "@repo/logger";
-import { getTraceContext } from "@repo/observability";
+import { createSentryErrorTracker, getTraceContext, type ErrorTracker } from "@repo/observability";
 import { createPaymentGateway } from "@repo/payments";
 import { createFileStore } from "@repo/storage";
 import type { Actor } from "@repo/types";
@@ -41,6 +41,7 @@ export type AppContainer = {
   db: Database;
   sql: SqlClient;
   logger: Logger;
+  errorTracker: ErrorTracker;
   ports: CtxPorts;
   emailMailer: EmailMailer;
   jobs: BullMqJobQueue;
@@ -63,6 +64,12 @@ function createEmailMailer(): EmailMailer {
 
 export function buildContainer(): AppContainer {
   const release = process.env["GITHUB_SHA"];
+  // No DSN is the default: this returns the no-op tracker and nothing else changes.
+  const errorTracker = createSentryErrorTracker({
+    ...(env.SENTRY_DSN === undefined ? {} : { dsn: env.SENTRY_DSN }),
+    environment: env.APP_ENV,
+    ...(release === undefined ? {} : { release }),
+  });
   const logger = createLogger({
     service: "worker",
     env: env.APP_ENV,
@@ -213,6 +220,13 @@ export function buildContainer(): AppContainer {
         },
         "job moved to dead-letter queue",
       );
+      // A job that exhausted its retries is the worker's incident signal —
+      // BullMQ's failure is a string, so give the tracker something it can
+      // group by job name rather than by whatever the reason happened to say.
+      errorTracker.capture(new Error(`${record.jobName} dead-lettered: ${record.failedReason}`), {
+        operation: `job ${record.jobName}`,
+        code: "JOB_DEAD_LETTERED",
+      });
     },
     onDeadLetterError({ record, stage, error }) {
       logger.error(
@@ -227,6 +241,11 @@ export function buildContainer(): AppContainer {
         },
         "failed to process job dead-lettering",
       );
+      // The dead-letter path itself failing means the job is lost with no record.
+      errorTracker.capture(error, {
+        operation: `dlq ${record.jobName}`,
+        code: "DEAD_LETTER_FAILED",
+      });
     },
   });
 
@@ -234,6 +253,7 @@ export function buildContainer(): AppContainer {
     db,
     sql,
     logger,
+    errorTracker,
     ports,
     emailMailer,
     jobs,

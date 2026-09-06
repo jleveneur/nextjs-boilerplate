@@ -143,16 +143,45 @@ duration, queue depth and job duration and DLQ size per queue, cache hit ratio, 
 lag. Business metrics (signups, subscriptions, revenue) go to PostHog, not Prometheus — mixing
 system and product metrics produces dashboards nobody owns.
 
-### Error tracking — logs until a tracker is wired
+### Error tracking
 
-Unexpected errors go to **Pino** at the transport boundary (`logger.error`). Expected domain
-errors (`ValidationError`, `NotFoundError`, `ForbiddenError`) are logged at `warn` and never
-treated as incidents, because an alert channel with false positives is an alert channel nobody
-reads.
+Unexpected errors go to **Pino** at the transport boundary (`logger.error`) and, on the same
+condition, to an **`ErrorTracker`**. Expected domain errors (`ValidationError`, `NotFoundError`,
+`ForbiddenError`) are logged at `warn` and never reported, because an alert channel with false
+positives is an alert channel nobody reads.
 
-There is no dedicated error tracker in this repo right now. Grouping, release regression
-detection, and source-map upload will be added later. Until then, correlate with `requestId` /
-`traceId` in logs and Jaeger.
+The split is the point: logs answer _what happened in this request_, a tracker answers _what is
+broken this week_ — the same exception grouped across requests, releases and hosts, which no log
+query does well.
+
+Three boundaries report, and they are the three that already logged:
+
+| Boundary                                   | Reports                                            |
+| ------------------------------------------ | -------------------------------------------------- |
+| `apps/api/src/middleware/error-handler.ts` | any `AppError` that is not `expected`              |
+| `apps/web` RPC route                       | any failure `describeRpcFailure` calls an incident |
+| `apps/worker` container                    | dead-lettered jobs, and DLQ failures               |
+
+`SENTRY_DSN` is the whole switch. Unset selects `createNoopErrorTracker()`, which is the
+supported state for local runs, CI, and self-hosted deployments without a tracker. A self-hosted
+**GlitchTip** DSN works unchanged — same protocol, so the choice is a DSN and not an
+architecture.
+
+**The adapter runs Sentry in capture-only mode, deliberately.** `@sentry/node` v8+ ships its own
+OpenTelemetry SDK and initialises it by default; this repo already starts a `NodeSDK` with its
+own instrumentations. Two SDKs registering a global `TracerProvider` in one process is how an
+earlier attempt at this went in circles. So `skipOpenTelemetrySetup: true` and
+`defaultIntegrations: false` reduce Sentry to the one job OTel does not do, and
+`sentry-tracker.test.ts` pins that the global provider is untouched. Tracing stays with OTel and
+Jaeger.
+
+Consequences worth knowing: no browser errors, no session replay, and no source maps — server
+stack traces are readable because the deployed code is the built code, but a client-side
+exception never reaches the tracker. Adding that means `@sentry/nextjs` and its build plugin,
+which is the part that was painful before.
+
+`capture()` never throws and shutdown flushes with a bounded timeout: a tracker outage must not
+become an outage.
 
 Alerting is on symptoms, not causes: error-rate spikes, p95 latency regressions, queue depth
 growth, DLQ arrivals, and failed deploys. Every alert must be actionable and have an owner; an

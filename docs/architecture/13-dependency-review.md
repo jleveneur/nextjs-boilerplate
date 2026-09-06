@@ -474,6 +474,24 @@ levels, structure, or redaction.
 **Health** Stable and widely used.
 **Exit** Low — behind `@repo/logger`.
 
+### `@sentry/node` 10.73 (capture-only)
+
+**Why** Logs answer "what happened in this request"; nothing answered "what is broken this week".
+Sentry groups the same exception across requests, releases and hosts, which is the one thing OTel
+and Pino do not do. Used purely as an exception sink — no tracing, no auto-instrumentation.
+**Instead of** _GlitchTip_ — not an alternative but the same protocol, so this adapter drives a
+self-hosted GlitchTip unchanged; the choice is a DSN. _`@sentry/nextjs`_ — rejected: its build
+plugin, edge/node instrumentation and source-map upload are what made a previous attempt fail.
+_Loki + Grafana_ — already self-hosted here and good at log search, but it matches text rather
+than fingerprinting exceptions, so "three occurrences of one bug" stays manual work.
+**Health** Actively maintained, the reference implementation of its own protocol.
+**Exit** Low — behind the `ErrorTracker` port in `@repo/observability`. Removing it is deleting
+one adapter file; every boundary already falls back to `createNoopErrorTracker()`.
+**Version note:** v8+ bundles its own OpenTelemetry SDK and initialises it by default, which
+collides with the `NodeSDK` this repo already starts. `skipOpenTelemetrySetup: true` and
+`defaultIntegrations: false` are load-bearing, not tuning — `sentry-tracker.test.ts` asserts the
+global `TracerProvider` is untouched. Treat an upgrade that changes those options as breaking.
+
 ### PostHog 1.408
 
 **Why** Product analytics, funnels, session replay, and feature flags in one tool, **self-hostable**,

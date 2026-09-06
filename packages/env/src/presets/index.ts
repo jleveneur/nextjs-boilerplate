@@ -9,6 +9,7 @@ export { publicApp, stripeClient } from "./public.ts";
 export { redis } from "./redis.ts";
 export { resend } from "./resend.ts";
 export { s3 } from "./s3.ts";
+export { sentry } from "./sentry.ts";
 export { smtp } from "./smtp.ts";
 export { appEnvs, nodeEnvs, shared, type AppEnv, type NodeEnv } from "./shared.ts";
 export { stripe } from "./stripe.ts";
