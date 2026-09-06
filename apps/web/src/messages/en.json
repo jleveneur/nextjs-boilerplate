@@ -90,6 +90,8 @@
     "loadError": "Could not load invoices.",
     "saveError": "Could not save the invoice.",
     "voidError": "Could not void the invoice.",
+    "voidErrorAlreadyPaid": "This invoice is already paid and cannot be voided.",
+    "voidErrorAlreadyVoid": "This invoice is already void.",
     "retry": "Retry"
   },
   "Settings": {
