@@ -102,6 +102,13 @@
       "automerge": false
     },
     {
+      // ADR-0012: oRPC 2 is still beta. A bump can change the wire format or
+      // handler API, and server + client must move together.
+      "matchPackageNames": ["@orpc/**"],
+      "groupName": "orpc",
+      "automerge": false
+    },
+    {
       // Digests only, gated by Trivy in the images job.
       "matchManagers": ["dockerfile", "docker-compose"],
       "groupName": "docker images",

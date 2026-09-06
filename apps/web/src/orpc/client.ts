@@ -3,25 +3,23 @@
 import type { RouterClient } from "@orpc/server";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-import { BatchLinkPlugin, SimpleCsrfProtectionLinkPlugin } from "@orpc/client/plugins";
+import { BatchLinkPlugin } from "@orpc/client/plugins";
 import type { AppRouter } from "@repo/orpc/router";
 
 import { env } from "../env/client.ts";
 
-function rpcUrl(): string {
-  return `${env.NEXT_PUBLIC_APP_URL}/api/rpc`;
-}
-
 /**
  * Browser oRPC client — credentials included for Better Auth session cookies.
- * The CSRF plugin sends `x-csrf-token`, so cookie-authenticated calls cannot
- * be issued from a cross-site HTML form.
+ *
+ * Calls are POST-only (the RPC handler rejects GET). Cross-site cookie CSRF
+ * is covered by SameSite=Lax session cookies plus that POST default; v2
+ * removed the v1 custom-header CSRF plugin pair.
  */
 const link = new RPCLink({
-  url: rpcUrl(),
-  fetch: (request, init) => globalThis.fetch(request, { ...init, credentials: "include" }),
+  origin: env.NEXT_PUBLIC_APP_URL,
+  url: "/api/rpc",
+  fetch: (url, init) => globalThis.fetch(url, { ...init, credentials: "include" }),
   plugins: [
-    new SimpleCsrfProtectionLinkPlugin(),
     new BatchLinkPlugin({
       groups: [
         {

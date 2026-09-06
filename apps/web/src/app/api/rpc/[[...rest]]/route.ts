@@ -2,7 +2,7 @@ import { isAppError, normalizeError } from "@repo/errors";
 import { captureUnexpectedException } from "@repo/observability";
 import { ORPCError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
-import { BatchHandlerPlugin, SimpleCsrfProtectionHandlerPlugin } from "@orpc/server/plugins";
+import { BatchHandlerPlugin } from "@orpc/server/plugins";
 
 import { getContainer } from "../../../../server/container.ts";
 import { createOrpcContext } from "../../../../server/context.ts";
@@ -22,7 +22,6 @@ const EXPECTED_ORPC_CODES = new Set([
   "UNPROCESSABLE_CONTENT",
   "TOO_MANY_REQUESTS",
   "CLIENT_CLOSED_REQUEST",
-  "CSRF_TOKEN_MISMATCH",
 ]);
 
 function isOrpcError(error: unknown): error is ORPCError<string, unknown> {
@@ -37,7 +36,8 @@ function orpcErrorCode(error: unknown): string | undefined {
 }
 
 const handler = new RPCHandler(appRouter, {
-  plugins: [new SimpleCsrfProtectionHandlerPlugin(), new BatchHandlerPlugin()],
+  allowMethods: ["POST"],
+  plugins: [new BatchHandlerPlugin()],
   clientInterceptors: [
     async (options) => {
       try {
@@ -103,5 +103,4 @@ async function handleRequest(request: Request) {
   return response;
 }
 
-export const GET = handleRequest;
 export const POST = handleRequest;

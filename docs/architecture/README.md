@@ -164,7 +164,7 @@ develops. Radix remains available via `shadcn init -b radix` if a fork needs it.
 
 | Concern          | Choice                     | Version         |
 | ---------------- | -------------------------- | --------------- |
-| Private API      | oRPC                       | 1.15.0          |
+| Private API      | oRPC                       | 2.0.0-beta.33   |
 | Public API       | Hono + `@hono/zod-openapi` | 4.12.32 / 1.5.1 |
 | API reference UI | Scalar                     | 0.11.16         |
 | Auth             | Better Auth                | 1.6.25          |
@@ -305,7 +305,7 @@ the executive summary.
 | Layering             | Numbered layers, downward-only deps                                                | Cheap to explain, impossible to violate accidentally under pnpm                                       |
 | Business logic       | `packages/core`, feature modules                                                   | One implementation behind both transports                                                             |
 | Dependency inversion | Ports only for side effects (email, storage, payments, jobs, clock)                | Inverting the ORM is a well-known anti-pattern; Drizzle _is_ the data layer                           |
-| Private API          | oRPC 1.15                                                                          | End-to-end types for a first-party client, no codegen step                                            |
+| Private API          | oRPC 2                                                                             | End-to-end types for a first-party client, no codegen step                                            |
 | Public API           | Hono + zod-openapi                                                                 | Spec generated from the same Zod schemas, so docs cannot drift                                        |
 | Errors               | Typed `AppError` hierarchy with stable codes, thrown in core, mapped at transports | Stable machine-readable contract, RFC 9457 on REST, no leaking internals                              |
 | Result types         | Rejected (`neverthrow`)                                                            | Viral generics across every layer for a benefit exceptions already give us at the boundary            |

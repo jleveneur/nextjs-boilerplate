@@ -5,7 +5,8 @@
 - **Deciders:** platform engineering
 - **Related:** [05 — Runtime architecture & API strategy](../architecture/05-runtime-and-api.md)
 - **Amended by:** [0011 — oRPC for the private API](./0011-orpc-private-api.md) (private transport
-  library only; the one-core-two-transports rule is unchanged)
+  library only; the one-core-two-transports rule is unchanged), [0012 — oRPC 2 for the private
+  API](./0012-orpc-2-private-api.md) (oRPC major line)
 
 ## Context
 

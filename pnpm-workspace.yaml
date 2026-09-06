@@ -135,9 +135,11 @@ catalog:
   "@better-auth/api-key": 1.6.25
   "@better-auth/passkey": 1.6.25
   # Private API transport (docs/architecture/13-dependency-review.md §4).
-  "@orpc/server": 1.15.0
-  "@orpc/client": 1.15.0
-  "@orpc/tanstack-query": 1.15.0
+  # 2.x is still the `beta` dist-tag (`latest` remains 1.15); pin the exact
+  # beta and upgrade server + client together (ADR-0012).
+  "@orpc/server": 2.0.0-beta.33
+  "@orpc/client": 2.0.0-beta.33
+  "@orpc/tanstack-query": 2.0.0-beta.33
   "@tanstack/react-query": 5.102.0
   nuqs: 2.9.3
   "react-hook-form": 7.83.0
@@ -188,6 +190,13 @@ catalog:
 # soon as it ages past the window — this list is a waiver, not a setting.
 minimumReleaseAgeExclude:
   - bullmq@6.2.2
+  - "@orpc/client@2.0.0-beta.33"
+  - "@orpc/contract@2.0.0-beta.33"
+  - "@orpc/json-schema@2.0.0-beta.33"
+  - "@orpc/openapi@2.0.0-beta.33"
+  - "@orpc/server@2.0.0-beta.33"
+  - "@orpc/shared@2.0.0-beta.33"
+  - "@orpc/tanstack-query@2.0.0-beta.33"
 
 # react-doctor depends on playwright-core ^1.62.1. With resolution-mode=highest
 # that pulls 1.62.1 for @axe-core/playwright as well, while @playwright/test

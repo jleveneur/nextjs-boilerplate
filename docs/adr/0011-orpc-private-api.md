@@ -4,6 +4,7 @@
 - **Date:** 2026-09-02
 - **Deciders:** platform engineering
 - **Related:** [0003 — One domain core behind two API transports](./0003-one-domain-core-two-transports.md), [05 — Runtime architecture & API strategy](../architecture/05-runtime-and-api.md)
+- **Amended by:** [0012 — oRPC 2 for the private API](./0012-orpc-2-private-api.md) (major line only; oRPC remains the private transport)
 
 ## Context
 

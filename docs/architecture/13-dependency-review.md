@@ -304,25 +304,27 @@ requirement.
 
 ## 4. Backend
 
-### oRPC 1.15
+### oRPC 2
 
 **Why** Compile-time end-to-end types between our own client and server with no codegen and no
 schema-drift window. Middleware composition gives us the layered `public`/`protected`/`org`
-procedures that make authorization structural. First-party TanStack Query helpers, a built-in
-serializer (no SuperJSON), and a CSRF custom-header plugin that matches the threat model in
-[07](./07-auth.md). See [ADR-0011](../adr/0011-orpc-private-api.md).
+procedures that make authorization structural. First-party TanStack Query helpers and a built-in
+serializer (no SuperJSON). CSRF for cookie-authenticated RPC is POST-only handling plus
+`SameSite=Lax` session cookies — v2 deleted the v1 custom-header plugin pair. See
+[ADR-0011](../adr/0011-orpc-private-api.md) and [ADR-0012](../adr/0012-orpc-2-private-api.md).
 **Instead of** _tRPC 11_ — the previous private transport; same job, larger client, SuperJSON, and
-a React provider we no longer want. Exit cost is low _now_ (thin core wrappers) and would only
-rise. _REST for internal calls too_ — loses type safety or requires codegen. _GraphQL_ — a schema,
-resolvers, N+1 concerns, and a client cache for a problem we do not have. _oRPC 2 beta_ — newest
-APIs, but this repo pins stable `latest`; 2.x is its own ADR when it leaves beta. _Unifying public
-REST onto oRPC OpenAPI_ — would collapse the two-audience split ADR-0003 exists to protect.
-_Server Actions only_ — insufficient for queries, caching, and non-form interactions. _TS-Rest_ —
-similar idea, smaller RPC/client story.
-**Health** Active 1.x line; v1 is what `latest` currently points at. Smaller ecosystem than tRPC.
+a React provider we no longer want. _oRPC 1.15_ — still what `latest` points at; staying would
+defer a wire-incompatible upgrade that does not get cheaper. _REST for internal calls too_ —
+loses type safety or requires codegen. _GraphQL_ — a schema, resolvers, N+1 concerns, and a
+client cache for a problem we do not have. _Unifying public REST onto oRPC OpenAPI_ — would
+collapse the two-audience split ADR-0003 exists to protect. _Server Actions only_ — insufficient
+for queries, caching, and non-form interactions. _TS-Rest_ — similar idea, smaller RPC/client
+story.
+**Health** 2.x is on the `beta` dist-tag (`2.0.0-beta.33`); `latest` remains 1.15. Smaller
+ecosystem than tRPC. Pin exact, upgrade server and client together, do not automerge.
 **Exit** Medium — resolvers are thin over `@repo/core`, so replacing the transport is a
-transport-layer job. This is precisely what the one-core-two-transports design protects. The
-planned 1 → 2 upgrade is a catalog bump plus an ADR, not a rewrite.
+transport-layer job. This is precisely what the one-core-two-transports design protects. Leaving
+beta for 2.0.0 `latest` is a catalog bump.
 
 ### tsdown 0.22
 
@@ -762,7 +764,7 @@ Things a repo like this often includes, and why this one does not.
 | **`@t3-oss/env-nextjs`**                       | ~80 lines of Zod, and we need per-app schema composition and custom cross-field rules anyway.                                                                                                                                                                                     |
 | **clsx + tailwind-merge as separate concerns** | Both are needed, but exposed only through a single `cn()` in `@repo/ui`, so call sites depend on our helper, not the libraries.                                                                                                                                                   |
 | **A DI container (tsyringe, TypeDI)**          | Plain function composition gives the same testability without decorators, `reflect-metadata`, or startup-order magic.                                                                                                                                                             |
-| **tRPC**                                       | Replaced by oRPC 1.15 for the private API ([ADR-0011](../adr/0011-orpc-private-api.md)). Same compile-time types; we no longer want SuperJSON or a React provider.                                                                                                                |
+| **tRPC**                                       | Replaced by oRPC for the private API ([ADR-0011](../adr/0011-orpc-private-api.md), [ADR-0012](../adr/0012-orpc-2-private-api.md)). Same compile-time types; we no longer want SuperJSON or a React provider.                                                                      |
 | **GraphQL (Apollo, Pothos, urql)**             | We control the only internal consumer (oRPC is better there) and third parties want REST. GraphQL adds a schema, resolvers, N+1 concerns, and a client cache for no gain here.                                                                                                    |
 | **Prisma**                                     | Considered seriously; rejected for the Rust engine binary, a separate schema language, and generated-client friction in a monorepo.                                                                                                                                               |
 | **Redux Toolkit**                              | Client state is small; Zustand is the allowed tool if a store is ever needed.                                                                                                                                                                                                     |
@@ -802,7 +804,7 @@ is not".
 | R11 | **Vendor concentration**: Cloudflare provides DNS, CDN, WAF, and object storage.                                                                                   | Medium     | Each is individually replaceable (S3 API for storage, any DNS provider, any CDN), and none is imported in application code. Documented as a known concentration rather than pretended away.                                                                                                                                                                            |
 | R12 | **Sharp is a native module.**                                                                                                                                      | Low        | Worker base image and architecture are pinned; multi-arch images are built and tested.                                                                                                                                                                                                                                                                                 |
 | R13 | **Supply-chain compromise of any dependency.**                                                                                                                     | High       | Renovate enforces a 3-day minimum release age for non-security updates, lockfiles are committed and frozen in CI, `pnpm audit` and CodeQL run in CI, Trivy scans images, action SHAs are pinned, and provenance attestations are generated.                                                                                                                            |
-| R14 | **oRPC 2 is still on the beta channel** while we pin 1.15.                                                                                                         | Low        | 1.x covers the private-API requirements. Trigger: `latest` on npm points at 2.x — then a dedicated ADR and catalog bump, not a rewrite. Do not generate public OpenAPI from oRPC.                                                                                                                                                                                      |
+| R14 | **oRPC 2 is still on the `beta` dist-tag** (`latest` remains 1.15). We pin `2.0.0-beta.33`.                                                                        | Medium     | Accepted in [ADR-0012](../adr/0012-orpc-2-private-api.md). Server and client must upgrade together (wire-incompatible with v1). Renovate does not automerge `@orpc/*`. Trigger: `latest` points at 2.x — catalog bump off the beta pin. Do not generate public OpenAPI from oRPC. Do not enable GET without the GET CSRF plugin.                                       |
 
 ### Review cadence
 

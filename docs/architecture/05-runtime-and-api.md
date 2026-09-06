@@ -90,7 +90,7 @@ the mistake this design avoids.
 |                  | Private API                                      | Public API                              |
 | ---------------- | ------------------------------------------------ | --------------------------------------- |
 | Consumer         | Our own web app (and future first-party clients) | Third parties, customer integrations    |
-| Technology       | oRPC 1.15                                        | Hono + `@hono/zod-openapi`              |
+| Technology       | oRPC 2                                           | Hono + `@hono/zod-openapi`              |
 | Transport        | HTTP POST batch, JSON (oRPC serializer)          | REST/JSON                               |
 | Auth             | Session cookie                                   | API key / bearer token, scoped          |
 | Versioning       | None — deployed together with the client         | `/v1`, with a deprecation policy        |
@@ -123,7 +123,8 @@ flowchart LR
 **Why oRPC:** the client and server ship together, so a compile-time contract is strictly better
 than a runtime one. No codegen step, no schema drift window, and refactors propagate as type
 errors. TanStack Query helpers give caching, invalidation, and optimistic updates without a
-React provider. See [ADR-0011](../adr/0011-orpc-private-api.md).
+React provider. See [ADR-0011](../adr/0011-orpc-private-api.md) and
+[ADR-0012](../adr/0012-orpc-2-private-api.md).
 
 Structure:
 
@@ -140,8 +141,9 @@ Structure:
 - Middleware converts `AppError` → `ORPCError` with the stable code on `data.appCode`, so the
   client can map codes to localized messages.
 - oRPC's built-in serializer covers `Date`, `Map`, and `Set`. SuperJSON is not used.
-- Session cookies plus `SimpleCsrfProtection*` plugins (custom `x-csrf-token` header). Batch
-  requests stay enabled.
+- Session cookies (`SameSite=Lax`) plus POST-only RPC (the handler rejects GET). Batch
+  requests stay enabled. v2 removed the v1 custom-header CSRF plugin pair; see
+  [ADR-0012](../adr/0012-orpc-2-private-api.md).
 
 Resolvers stay under ~15 lines. A resolver that grows is a service that was not written.
 

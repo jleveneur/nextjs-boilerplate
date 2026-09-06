@@ -106,6 +106,12 @@ export function createAuth(options: CreateAuthOptions) {
       // NODE_ENV=production defaults Secure cookies; those are dropped on plain
       // HTTP (local `next start`, Playwright). Match the public base URL.
       useSecureCookies: new URL(options.baseURL).protocol === "https:",
+      // oRPC CSRF (ADR-0012) assumes Lax: the handler is POST-only, and Lax
+      // cookies are not sent on cross-site fetch. Do not switch to None
+      // without a new CSRF control.
+      defaultCookieAttributes: {
+        sameSite: "lax",
+      },
     },
     plugins: [
       organization({
