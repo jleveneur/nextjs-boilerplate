@@ -44,7 +44,7 @@ Object storage: restore deleted objects from versioning; quarterly spot-check on
 | ------------------ | ------------------------------------------------------------- |
 | Date (UTC)         | 2026-08-03                                                    |
 | Operator           | agent / local                                                 |
-| Environment        | local (`make deps-up` Postgres `:55432`, database `app`)      |
+| Environment        | local (`make deps-up` Postgres `:15432`, database `app`)      |
 | Restore point      | live `pg_dump` of `app` → scratch `app_restore_drill`         |
 | RTO achieved       | under 1 minute (script wall clock)                            |
 | Smoke results      | **pass** — 14 public tables in scratch DB after migrate       |

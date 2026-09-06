@@ -7,7 +7,7 @@
  * (see docs/runbooks/restore.md).
  *
  * Usage: make restore-drill
- * Requires: docker compose postgres from `make deps-up` (host port 55432).
+ * Requires: docker compose postgres from `make deps-up` (host port 15432).
  */
 
 import { execFileSync } from "node:child_process";
@@ -51,7 +51,7 @@ function main(): void {
   });
 
   // Schema should already match; re-running migrate is a no-op when at head.
-  const scratchUrl = `postgres://postgres:postgres@127.0.0.1:55432/${SCRATCH_DB}`;
+  const scratchUrl = `postgres://postgres:postgres@127.0.0.1:15432/${SCRATCH_DB}`;
   execFileSync("pnpm", ["--filter", "@repo/db", "exec", "tsx", "src/migrate.ts"], {
     encoding: "utf8",
     env: { ...process.env, DATABASE_URL: scratchUrl },

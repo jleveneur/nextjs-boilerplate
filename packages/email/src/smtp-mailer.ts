@@ -8,7 +8,7 @@ import { resolveHtml } from "./render.ts";
 import type { Mailer } from "./types.ts";
 
 export type CreateSmtpMailerOptions = {
-  /** e.g. `smtp://127.0.0.1:55438` */
+  /** e.g. `smtp://127.0.0.1:15438` */
   smtpUrl: string;
   from: string;
 };

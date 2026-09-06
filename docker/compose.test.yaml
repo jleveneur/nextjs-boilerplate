@@ -2,6 +2,13 @@
 # `make db-reset` cannot wipe a mid-run test database.
 #
 # Usage: `make deps-up-test`
+#
+# Host ports are 154xx, deliberately below the kernel's ephemeral range
+# (32768-60999 on Linux). They used to be 554xx, which sits inside it: the
+# kernel can hand any of those to an outgoing connection as a source port, and
+# the bind then fails with "address already in use". That is what made CI flaky
+# — mailpit first, then minio — and no retry fixes it, because the collision is
+# random rather than a leftover container. Keep new ports in 1024-32767.
 
 name: repo-test
 
@@ -9,7 +16,7 @@ services:
   postgres:
     image: postgres:18@sha256:1957b2ff3137e4ef7f3bc813e74fff50b1e1ffddc85c8b9d6f14ade972be8687
     ports:
-      - "55433:5432"
+      - "15433:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -26,7 +33,7 @@ services:
   redis:
     image: redis:7-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
     ports:
-      - "55435:6379"
+      - "15435:6379"
     command: ["redis-server", "--maxmemory-policy", "noeviction"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -37,7 +44,7 @@ services:
   minio:
     image: minio/minio:latest@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     ports:
-      - "55440:9000"
+      - "15440:9000"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
@@ -67,8 +74,8 @@ services:
   mailpit:
     image: axllent/mailpit:latest@sha256:c96991d9bef73594c246d89ca81411d4e916f03e76a7d2d72fa2ab5dd3c9ce24
     ports:
-      - "55441:1025"
-      - "55442:8025"
+      - "15441:1025"
+      - "15442:8025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1

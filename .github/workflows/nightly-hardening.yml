@@ -82,7 +82,7 @@ jobs:
         if: success() || failure()
         run: make db-migrate
         env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55432/app
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:15432/app
 
       - name: Restore drill
         if: success() || failure()

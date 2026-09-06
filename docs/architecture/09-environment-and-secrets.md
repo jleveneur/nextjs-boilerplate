@@ -140,8 +140,8 @@ api `3001`, worker `3002`).
 Local services in `docker/compose.yaml`: PostgreSQL 18, Redis, MinIO (with the bucket
 pre-created), Mailpit (SMTP catcher with a web UI so email is inspectable without sending),
 OTel collector (OTLP → Jaeger traces + Prometheus metrics), Jaeger UI, Prometheus, and Grafana.
-Host ports: Postgres `55432`, Redis `55434`, MinIO `55436`/`55437`, Mailpit `55438`/`55439`,
-Jaeger `55443`, OTLP `55444`/`55445`, Prometheus `55447`, Grafana `55448`.
+Host ports: Postgres `15432`, Redis `15434`, MinIO `15436`/`15437`, Mailpit `15438`/`15439`,
+Jaeger `15443`, OTLP `15444`/`15445`, Prometheus `15447`, Grafana `15448`.
 
 `.env.example` is committed, exhaustively commented, and contains working defaults for every local
 service. It is the reference for what exists; a variable added without a documented entry there is

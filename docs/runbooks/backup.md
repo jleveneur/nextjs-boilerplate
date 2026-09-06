@@ -19,7 +19,7 @@ Application images are immutable in GHCR (`:sha`) — do not treat the registry 
 
 ## Local / self-hosted dump
 
-With `make deps-up` Postgres on host port `55432`:
+With `make deps-up` Postgres on host port `15432`:
 
 ```bash
 docker compose -f docker/compose.yaml exec -T postgres \

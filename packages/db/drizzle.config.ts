@@ -12,6 +12,6 @@ export default defineConfig({
   verbose: true,
   dbCredentials: {
     // Validated by seed/migrate scripts; the kit only needs a string here.
-    url: process.env["DATABASE_URL"] ?? "postgres://postgres:postgres@127.0.0.1:55432/app",
+    url: process.env["DATABASE_URL"] ?? "postgres://postgres:postgres@127.0.0.1:15432/app",
   },
 });

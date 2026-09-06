@@ -170,15 +170,15 @@ test-scripts: ## Test the repo's own tooling scripts
 	pnpm test:scripts
 
 test-integration: ## Run integration tests (requires `make deps-up-test`)
-	DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55433/app_test \
-		REDIS_URL=redis://127.0.0.1:55435 \
-		S3_ENDPOINT=http://127.0.0.1:55440 \
+	DATABASE_URL=postgres://postgres:postgres@127.0.0.1:15433/app_test \
+		REDIS_URL=redis://127.0.0.1:15435 \
+		S3_ENDPOINT=http://127.0.0.1:15440 \
 		S3_REGION=auto \
 		S3_BUCKET=app-test \
 		S3_ACCESS_KEY_ID=minioadmin \
 		S3_SECRET_ACCESS_KEY=minioadmin \
-		SMTP_URL=smtp://127.0.0.1:55441 \
-		MAILPIT_API_URL=http://127.0.0.1:55442 \
+		SMTP_URL=smtp://127.0.0.1:15441 \
+		MAILPIT_API_URL=http://127.0.0.1:15442 \
 		EMAIL_FROM=noreply@example.com \
 		RESEND_API_KEY=re_test_replace_me \
 		BETTER_AUTH_SECRET=dev-local-better-auth-secret-min-32-chars \
@@ -194,16 +194,16 @@ E2E_ENV := \
 	NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000 \
 	NEXT_PUBLIC_APP_ENV=test \
 	LOG_LEVEL=error \
-	DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55433/app_test \
+	DATABASE_URL=postgres://postgres:postgres@127.0.0.1:15433/app_test \
 	DATABASE_POOL_SIZE=5 \
-	REDIS_URL=redis://127.0.0.1:55435 \
+	REDIS_URL=redis://127.0.0.1:15435 \
 	BETTER_AUTH_SECRET=dev-local-better-auth-secret-min-32-chars \
 	BETTER_AUTH_URL=http://127.0.0.1:3000 \
 	EMAIL_FROM=noreply@example.com \
 	RESEND_API_KEY=re_test_replace_me \
-	SMTP_URL=smtp://127.0.0.1:55441 \
-	MAILPIT_API_URL=http://127.0.0.1:55442 \
-	S3_ENDPOINT=http://127.0.0.1:55440 \
+	SMTP_URL=smtp://127.0.0.1:15441 \
+	MAILPIT_API_URL=http://127.0.0.1:15442 \
+	S3_ENDPOINT=http://127.0.0.1:15440 \
 	S3_REGION=auto \
 	S3_BUCKET=app-test \
 	S3_ACCESS_KEY_ID=minioadmin \
@@ -271,8 +271,9 @@ deps-up-observability: ## Start Jaeger, OTel collector, Prometheus, and Grafana
 	$(COMPOSE) up -d jaeger otel-collector prometheus grafana
 
 deps-up-test: ## Start ephemeral dependency stack for integration tests
-	# Retry once after a clean down — GHA occasionally races host port binds
-	# (especially mailpit UI on 55442) on a fresh runner.
+	# Retry once after a clean down. The port-bind flake this was written for is
+	# fixed at its source (see the note in docker/compose.test.yaml); this stays
+	# as a cheap guard against a genuinely leftover container.
 	@$(COMPOSE_TEST) up -d postgres redis minio minio-init mailpit || ( \
 		$(COMPOSE_TEST) down --remove-orphans; \
 		$(COMPOSE_TEST) up -d postgres redis minio minio-init mailpit; \
@@ -369,7 +370,7 @@ db-up: ## Start local Postgres only
 	$(COMPOSE) up -d postgres
 	@$(MAKE) db-wait
 
-db-up-test: ## Start ephemeral Postgres for integration tests (port 55433)
+db-up-test: ## Start ephemeral Postgres for integration tests (port 15433)
 	$(COMPOSE_TEST) up -d postgres
 	@until $(COMPOSE_TEST) exec -T postgres pg_isready -U postgres -d app_test >/dev/null 2>&1; do \
 		sleep 0.5; \

@@ -333,8 +333,8 @@ jobs:
       - run: make deps-up-test
       - name: Run API integration tests
         env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55433/app_test
-          REDIS_URL: redis://127.0.0.1:55435
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:15433/app_test
+          REDIS_URL: redis://127.0.0.1:15435
           NODE_ENV: test
         run: pnpm --filter @repo/api test:integration
 
@@ -348,13 +348,13 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           turbo_team: ${{ vars.TURBO_TEAM }}
-      # Worker proofs use a noop mailer — skip mailpit (and its flaky UI port bind).
+      # Worker proofs use a noop mailer, so mailpit is not started.
       - run: make deps-up-test-worker
       - name: Run worker integration tests
         env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:55433/app_test
-          REDIS_URL: redis://127.0.0.1:55435
-          S3_ENDPOINT: http://127.0.0.1:55440
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:15433/app_test
+          REDIS_URL: redis://127.0.0.1:15435
+          S3_ENDPOINT: http://127.0.0.1:15440
           S3_REGION: auto
           S3_BUCKET: app-test
           S3_ACCESS_KEY_ID: minioadmin
