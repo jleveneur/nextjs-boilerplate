@@ -2,10 +2,10 @@ import { Writable } from "node:stream";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { permissionsForRole } from "@repo/authz";
 import { insertAuditLog } from "@repo/db";
 import type * as DbModule from "@repo/db";
 import { createLogger } from "@repo/logger";
+import { permissionsForRole } from "@repo/permissions";
 import type { Actor, OrganizationId, UserId } from "@repo/types";
 
 import type { Ctx } from "./ctx.ts";

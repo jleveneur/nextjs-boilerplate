@@ -3,12 +3,12 @@ import { Writable } from "node:stream";
 import type { ORPCError } from "@orpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { permissionsForRole } from "@repo/auth";
 import type { Asset, Invoice, RequestUploadOutput } from "@repo/contracts";
 import * as core from "@repo/core";
 import { createTestPorts } from "@repo/core/testing";
 import { ForbiddenError, NotFoundError } from "@repo/errors";
 import { createLogger } from "@repo/logger";
+import { permissionsForRole } from "@repo/permissions";
 import type { Actor, AssetId, InvoiceId, OrganizationId, UserId } from "@repo/types";
 
 import type { OrpcContext } from "./context.ts";

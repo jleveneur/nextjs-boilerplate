@@ -32,6 +32,7 @@
     "@repo/observability": "workspace:*",
     "@repo/orpc": "workspace:*",
     "@repo/payments": "workspace:*",
+    "@repo/permissions": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",
     "@scalar/hono-api-reference": "catalog:",

@@ -1,9 +1,10 @@
 // oxlint-disable-next-line import/no-unassigned-import -- credential firewall
 import "server-only";
 
-import { isOrganizationRole, permissionsForRole, resolveActor, type Auth } from "@repo/auth";
+import { resolveActor, type Auth } from "@repo/auth";
 import { organizationIdSchema, userIdSchema } from "@repo/contracts";
 import type { OrpcContext } from "@repo/orpc";
+import { isOrganizationRole, permissionsForRole } from "@repo/permissions";
 import type { Actor } from "@repo/types";
 
 import { getContainer } from "./container.ts";

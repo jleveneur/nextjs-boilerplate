@@ -4,7 +4,7 @@
  * Authorize → load → decide → persist (+ outbox) → emit.
  */
 
-import { authorize, PERMISSIONS } from "@repo/authz";
+import { authorize } from "@repo/authz";
 import {
   createdAtIdCursorSchema,
   parseCursorPayload,
@@ -17,6 +17,7 @@ import {
 } from "@repo/contracts";
 import { findOrganizationOwnerEmail, withTransaction, type TenantCtx } from "@repo/db";
 import { NotFoundError, ValidationError } from "@repo/errors";
+import { PERMISSIONS } from "@repo/permissions";
 import type { OrganizationId } from "@repo/types";
 import { encodeCursor } from "@repo/utils";
 

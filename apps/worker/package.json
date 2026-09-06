@@ -16,7 +16,6 @@
   "dependencies": {
     "@hono/node-server": "catalog:",
     "@repo/analytics": "workspace:*",
-    "@repo/authz": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/core": "workspace:*",
     "@repo/db": "workspace:*",
@@ -27,6 +26,7 @@
     "@repo/logger": "workspace:*",
     "@repo/observability": "workspace:*",
     "@repo/payments": "workspace:*",
+    "@repo/permissions": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
     "bullmq": "catalog:",

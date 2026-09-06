@@ -463,6 +463,9 @@ importers:
       '@repo/payments':
         specifier: workspace:*
         version: link:../../packages/payments
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../../packages/permissions
       '@repo/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -633,6 +636,9 @@ importers:
       '@repo/payments':
         specifier: workspace:*
         version: link:../../packages/payments
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../../packages/permissions
       '@repo/storage':
         specifier: workspace:*
         version: link:../../packages/storage
@@ -733,9 +739,6 @@ importers:
       '@repo/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
-      '@repo/authz':
-        specifier: workspace:*
-        version: link:../../packages/authz
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -766,6 +769,9 @@ importers:
       '@repo/payments':
         specifier: workspace:*
         version: link:../../packages/payments
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../../packages/permissions
       '@repo/storage':
         specifier: workspace:*
         version: link:../../packages/storage
@@ -1018,6 +1024,9 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../permissions
       '@repo/storage':
         specifier: workspace:*
         version: link:../storage
@@ -1384,9 +1393,6 @@ importers:
       '@orpc/server':
         specifier: 'catalog:'
         version: 2.0.0-beta.33(@opentelemetry/api@1.9.1)
-      '@repo/auth':
-        specifier: workspace:*
-        version: link:../auth
       '@repo/contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -1402,6 +1408,9 @@ importers:
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../permissions
       '@repo/types':
         specifier: workspace:*
         version: link:../types

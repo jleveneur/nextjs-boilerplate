@@ -19,3 +19,8 @@ registry and still agree with the plugin's built-in role grants.
 
 Breaking for consumers: `permissionsForOrganizationRole` is now `permissionsForRole`,
 exported from `@repo/permissions` and re-exported by `@repo/auth` and `@repo/authz`.
+
+Neither `@repo/auth` nor `@repo/authz` republishes the registry. A package exports
+what it owns; `PERMISSIONS`, `ROLE_PERMISSIONS`, and `permissionsForRole` come from
+`@repo/permissions` directly. `@repo/authz` still re-exports `type Action`, because
+that is the parameter type of its own `can`.

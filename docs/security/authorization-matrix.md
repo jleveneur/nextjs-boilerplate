@@ -10,8 +10,6 @@ fails if it drifts. Edit the registry, not this file.
 Cross-tenant resources are denied for non-system actors. Destructive actions are barred while
 impersonating ([07 — auth](../architecture/07-auth.md)).
 
-<!-- begin:authz-matrix -->
-
 | Action                | member | admin | owner |
 | --------------------- | ------ | ----- | ----- |
 | `organization:update` |        | yes   | yes   |
@@ -33,8 +31,6 @@ impersonating ([07 — auth](../architecture/07-auth.md)).
 | `apiKey:list`         | yes    | yes   | yes   |
 | `asset:create`        | yes    | yes   | yes   |
 | `asset:read`          | yes    | yes   | yes   |
-
-<!-- end:authz-matrix -->
 
 REST/oRPC must produce the same outcomes for the same `Actor` —
 [`apps/api/src/authz-parity.integration.test.ts`](../../apps/api/src/authz-parity.integration.test.ts).

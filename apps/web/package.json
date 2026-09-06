@@ -37,6 +37,7 @@
     "@repo/observability": "workspace:*",
     "@repo/orpc": "workspace:*",
     "@repo/payments": "workspace:*",
+    "@repo/permissions": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { permissionsForRole } from "@repo/authz";
 import type * as DbModule from "@repo/db";
 import { ForbiddenError, NotFoundError, ValidationError } from "@repo/errors";
+import { permissionsForRole } from "@repo/permissions";
 import type { Actor, OrganizationId, UserId } from "@repo/types";
 
 import type { Ctx } from "../ctx.ts";

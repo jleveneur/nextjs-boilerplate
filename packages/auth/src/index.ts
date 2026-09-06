@@ -10,8 +10,6 @@ export {
   type ResolveActorFromApiKeyInput,
   type ResolveActorFromSessionInput,
 } from "./resolve-actor.ts";
-// Re-exported from the layer-0 registry so an auth consumer needs one import.
-export { isOrganizationRole, permissionsForRole } from "@repo/permissions";
 export type {
   AuthAuditEvent,
   AuthDatabase,

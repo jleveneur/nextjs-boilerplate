@@ -5,8 +5,9 @@
  * `@repo/core` graph (API and Next.js request paths).
  */
 
-import { authorize, PERMISSIONS } from "@repo/authz";
+import { authorize } from "@repo/authz";
 import { findAssetById } from "@repo/db";
+import { PERMISSIONS } from "@repo/permissions";
 import { derivativeObjectKey } from "@repo/storage";
 import { deriveImageVariants } from "@repo/storage/image";
 import type { AssetId } from "@repo/types";

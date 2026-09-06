@@ -22,8 +22,15 @@ import { ROLE_PERMISSIONS } from "../packages/permissions/src/roles.ts";
 
 const DOC_PATH = resolve(import.meta.dirname, "../docs/security/authorization-matrix.md");
 
-const BEGIN = "<!-- begin:authz-matrix -->";
-const END = "<!-- end:authz-matrix -->";
+/**
+ * The table is located by its own header rather than by comment markers.
+ *
+ * `docs/security/` is synced into the Fumadocs site as MDX, and MDX rejects HTML
+ * comments — `<!-- … -->` fails the docs build with "Unexpected character `!`".
+ * Anchoring on the header keeps this file pure Markdown, which is what both
+ * GitHub and MDX want.
+ */
+const HEADER = /^\| Action\s+\|/u;
 
 const ROLES = ["member", "admin", "owner"] as const;
 
@@ -53,13 +60,18 @@ export function renderMatrix(): string {
 }
 
 function replaceBlock(source: string, table: string): string {
-  const begin = source.indexOf(BEGIN);
-  const end = source.indexOf(END);
-  if (begin === -1 || end === -1 || end < begin) {
-    throw new Error(`authorization-matrix.md is missing the ${BEGIN} / ${END} markers`);
+  const lines = source.split("\n");
+  const start = lines.findIndex((line) => HEADER.test(line));
+  if (start === -1) {
+    throw new Error("authorization-matrix.md has no `| Action … |` table to regenerate");
   }
 
-  return `${source.slice(0, begin + BEGIN.length)}\n\n${table}\n\n${source.slice(end)}`;
+  let end = start;
+  while (end < lines.length && lines[end]?.startsWith("|") === true) {
+    end += 1;
+  }
+
+  return [...lines.slice(0, start), table, ...lines.slice(end)].join("\n");
 }
 
 async function main(): Promise<void> {

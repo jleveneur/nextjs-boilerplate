@@ -15,12 +15,12 @@
   },
   "dependencies": {
     "@orpc/server": "catalog:",
-    "@repo/auth": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/core": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/errors": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/permissions": "workspace:*",
     "@repo/types": "workspace:*",
     "server-only": "catalog:",
     "zod": "catalog:"

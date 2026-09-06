@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { permissionsForRole } from "@repo/authz";
+import { permissionsForRole } from "@repo/permissions";
 import type { Actor, OrganizationId, UserId } from "@repo/types";
 
 import { canVoidInvoice } from "./billing.policy.ts";
