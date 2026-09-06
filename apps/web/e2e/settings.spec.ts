@@ -34,8 +34,8 @@ test.describe("settings", () => {
     await page.getByRole("link", { name: "Account" }).click();
     await expect(page).toHaveURL(/\/settings\/account/);
     await expect(page.getByRole("button", { name: "Save profile" })).toBeVisible();
-    await expect(page.getByText("Two-factor authentication")).toBeVisible();
-    await expect(page.getByText("Passkeys")).toBeVisible();
+    await expect(page.getByText("Two-factor authentication", { exact: true })).toBeVisible();
+    await expect(page.getByText("Passkeys", { exact: true })).toBeVisible();
 
     await page.locator("#profile-name").fill("Settings User Updated");
     await page.getByRole("button", { name: "Save profile" }).click();
