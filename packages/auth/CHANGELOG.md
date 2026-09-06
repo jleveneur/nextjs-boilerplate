@@ -1,5 +1,11 @@
 # @repo/auth
 
+## 0.2.0
+
+### Minor Changes
+
+- 6aae087: Ship settings (account, org, members, API keys), wire auth audit events, show billing in the nav, and drop unused UI widgets plus dummy flags.
+
 ## 0.1.2
 
 ### Patch Changes

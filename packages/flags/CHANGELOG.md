@@ -1,5 +1,11 @@
 # @repo/flags
 
+## 1.0.0
+
+### Major Changes
+
+- 6aae087: Ship settings (account, org, members, API keys), wire auth audit events, show billing in the nav, and drop unused UI widgets plus dummy flags.
+
 ## 0.1.1
 
 ### Patch Changes
