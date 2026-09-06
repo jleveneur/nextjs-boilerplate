@@ -60,11 +60,19 @@ export function registerStripeWebhook(app: OpenAPIHono<ApiEnv>): void {
       ports: container.ports,
     };
 
-    await enqueueStripeWebhookEvent(ctx, {
-      eventId: event.id,
-      eventType: event.type,
-      payloadJson: event.payloadJson,
-    });
+    // The claim above is what makes a Stripe retry a no-op. Holding it after a
+    // failed enqueue would answer that retry `replay: true` and drop the event,
+    // so the claim is released on any failure and the 500 lets Stripe retry.
+    try {
+      await enqueueStripeWebhookEvent(ctx, {
+        eventId: event.id,
+        eventType: event.type,
+        payloadJson: event.payloadJson,
+      });
+    } catch (error) {
+      await container.cache.del(cacheKey);
+      throw error;
+    }
 
     await container.cache.set({ ...cacheKey, ttlSeconds: REPLAY_TTL_SECONDS }, true);
 

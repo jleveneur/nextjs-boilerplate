@@ -97,18 +97,32 @@ export const idempotencyMiddleware: MiddlewareHandler<ApiEnv> = async (c, next) 
     return;
   }
 
-  await next();
+  // An unfinished request must not keep the key: the pending claim is what
+  // makes a concurrent duplicate 409, so holding it after a failure would 409
+  // the client's own retry for the whole pending TTL instead of replaying a
+  // stored response. Errors propagate to `app.onError` without passing here,
+  // hence the explicit release.
+  try {
+    await next();
+  } catch (error) {
+    await cache.del(cacheKey);
+    throw error;
+  }
 
   const response = c.res;
   const responseBody = await response.clone().text();
   const contentType = response.headers.get("content-type") ?? "application/json";
 
-  if (response.status >= 200 && response.status < 500) {
-    await cache.set({ ...cacheKey, ttlSeconds: IDEMPOTENCY_TTL_SECONDS }, {
-      bodyHash,
-      status: response.status,
-      body: responseBody,
-      contentType,
-    } satisfies StoredResponse);
+  // 5xx is not a settled outcome — release so the same key can be retried.
+  if (response.status < 200 || response.status >= 500) {
+    await cache.del(cacheKey);
+    return;
   }
+
+  await cache.set({ ...cacheKey, ttlSeconds: IDEMPOTENCY_TTL_SECONDS }, {
+    bodyHash,
+    status: response.status,
+    body: responseBody,
+    contentType,
+  } satisfies StoredResponse);
 };
