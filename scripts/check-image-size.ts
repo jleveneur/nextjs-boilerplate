@@ -16,7 +16,7 @@ const MiB = 1024 * 1024;
 
 /**
  * Headroom over slimmed linux/amd64 CI measurements (~10%).
- * API raised after Phase 14 OTel/Sentry (maps stay out of the image; JS still grew).
+ * API raised after Phase 14 OTel (maps stay out of the image; JS still grew).
  * Web raised after pnpm 12 + OpenSSL 3.5.8 (265 MB measured on linux/amd64).
  * Docs shares the web-class budget (Next standalone + Alpine); calibrate after
  * the first amd64 CI measure if needed.

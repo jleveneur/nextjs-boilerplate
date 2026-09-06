@@ -3,7 +3,7 @@
  *
  * Core throws these; transports catch and map. We considered `Result<T, E>` and
  * rejected it — see docs/architecture/05-runtime-and-api.md §5. The hierarchy is
- * the contract: a `ValidationError` is never a Sentry incident, an `InternalError`
+ * the contract: a `ValidationError` is never an incident, an `InternalError`
  * always is, and the boundary does not re-derive that from a string.
  */
 
@@ -13,7 +13,7 @@ import type { ErrorSeverity } from "./severity.ts";
 /**
  * Structured, redactable context attached to an error.
  *
- * Values reach logs and Sentry. Do not put secrets, tokens, or full request
+ * Values reach logs. Do not put secrets, tokens, or full request
  * bodies here — `@repo/logger` redacts known keys, but redaction is a backstop,
  * not a licence to attach anything.
  */
@@ -24,7 +24,7 @@ export type AppErrorOptions = {
   code?: ErrorCode;
   /** Human message. Safe for clients only when `expose` is true. */
   message: string;
-  /** Structured context for logs and Sentry. Never sent to clients. */
+  /** Structured context for logs. Never sent to clients. */
   context?: ErrorContext;
   /** Underlying error. Always set when wrapping — stack traces must survive. */
   cause?: unknown;
@@ -44,18 +44,18 @@ export abstract class AppError extends Error {
   /** HTTP status the REST transport should use. oRPC maps via its own table. */
   readonly httpStatus: number;
 
-  /** Whether this is expected domain traffic or a bug. Drives Sentry. */
+  /** Whether this is expected domain traffic or a bug. Drives incident reporting. */
   readonly severity: ErrorSeverity;
 
   /**
    * Whether {@link message} is safe to return to a client.
    *
    * When false, the transport returns a generic message plus the request id; the
-   * real detail goes to logs and Sentry only.
+   * real detail goes to logs only.
    */
   readonly expose: boolean;
 
-  /** Structured context for logs and Sentry. Never serialised to clients. */
+  /** Structured context for logs. Never serialised to clients. */
   readonly context: ErrorContext;
 
   constructor(
@@ -79,7 +79,7 @@ export abstract class AppError extends Error {
 /**
  * Input failed validation.
  *
- * Expected. Exposed. Not a Sentry incident — invalid input is traffic.
+ * Expected. Exposed. Not an incident — invalid input is traffic.
  */
 export class ValidationError extends AppError {
   /** Field-level errors for forms and `errors` in problem+json. */
@@ -255,7 +255,7 @@ export class ExternalServiceError extends AppError {
 /**
  * A programmer error — an invariant was violated, or something impossible happened.
  *
- * Always reported to Sentry. Never exposed. The transport error mapper produces
+ * Always treated as an incident. Never exposed. The transport error mapper produces
  * one of these when it sees an error named `InvariantViolation` from `@repo/utils`,
  * which is the seam across the same-layer boundary that forbids either package from
  * importing the other.

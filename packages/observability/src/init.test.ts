@@ -10,11 +10,10 @@ afterEach(async () => {
 });
 
 describe("initObservability", () => {
-  it("is a safe no-op when otel and sentry are disabled", async () => {
+  it("is a safe no-op when otel is disabled", async () => {
     const handle = initObservability({
       serviceName: "test",
       otel: { enabled: false },
-      sentry: { enabled: false },
     });
     handles.push(handle);
 
@@ -27,28 +26,7 @@ describe("initObservability", () => {
       initObservability({
         serviceName: "test",
         otel: { enabled: true },
-        sentry: { enabled: false },
       }),
     ).toThrow(/OTEL_EXPORTER_OTLP_ENDPOINT/);
-  });
-
-  it("requires a DSN when sentry is enabled", () => {
-    expect(() =>
-      initObservability({
-        serviceName: "test",
-        otel: { enabled: false },
-        sentry: { enabled: true },
-      }),
-    ).toThrow(/SENTRY_DSN/);
-  });
-
-  it("initializes sentry with service tag and shuts down cleanly", async () => {
-    const handle = initObservability({
-      serviceName: "api",
-      otel: { enabled: false },
-      sentry: { enabled: true, dsn: "https://public@sentry.example.com/1" },
-    });
-    handles.push(handle);
-    await expect(handle.shutdown()).resolves.toBeUndefined();
   });
 });

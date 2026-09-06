@@ -2,7 +2,7 @@
   "name": "@repo/observability",
   "version": "0.2.0",
   "private": true,
-  "description": "OpenTelemetry and Sentry initialisation with getTraceContext for logger wiring.",
+  "description": "OpenTelemetry initialisation with getTraceContext for logger wiring.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -25,7 +25,6 @@
     "@opentelemetry/sdk-metrics": "catalog:",
     "@opentelemetry/sdk-node": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
-    "@sentry/node": "catalog:",
     "server-only": "catalog:"
   },
   "devDependencies": {

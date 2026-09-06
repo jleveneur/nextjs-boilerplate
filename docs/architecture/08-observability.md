@@ -4,7 +4,7 @@ Error handling is covered in [05 §5](./05-runtime-and-api.md#5-error-handling-s
 document covers what happens _after_ something is observed.
 
 The organising idea: **one correlation id links everything.** Given a request id from a support
-ticket, an engineer can find the log lines, the distributed trace, the Sentry issue, the job runs
+ticket, an engineer can find the log lines, the distributed trace, the job runs
 it spawned, and the analytics events it produced. Observability that requires cross-referencing
 timestamps by hand is not observability.
 
@@ -111,7 +111,6 @@ flowchart LR
     WK["apps/worker"] --> COL
     COL --> T["Traces → Tempo / Jaeger"]
     COL --> M["Metrics → Prometheus"]
-    COL --> S["Errors → Sentry"]
 ```
 
 ### What is instrumented
@@ -144,28 +143,20 @@ duration, queue depth and job duration and DLQ size per queue, cache hit ratio, 
 lag. Business metrics (signups, subscriptions, revenue) go to PostHog, not Prometheus — mixing
 system and product metrics produces dashboards nobody owns.
 
-### Error tracking — Sentry
+### Error tracking — logs until a tracker is wired
 
-Sentry receives **unexpected** errors only. Expected domain errors (`ValidationError`,
-`NotFoundError`, `ForbiddenError`) are logged and never reported, because an alert channel with
-false positives is an alert channel nobody reads.
+Unexpected errors go to **Pino** at the transport boundary (`logger.error`). Expected domain
+errors (`ValidationError`, `NotFoundError`, `ForbiddenError`) are logged at `warn` and never
+treated as incidents, because an alert channel with false positives is an alert channel nobody
+reads.
 
-**Single project across all apps:** To eliminate setup friction, all services (`web`, `api`,
-`worker`, and the browser client) report to a single Sentry project by default, differentiated
-by the `service` tag (`service: "web" | "api" | "worker"`). A single DSN (`SENTRY_DSN` for server,
-`NEXT_PUBLIC_SENTRY_DSN` for browser) and single CI variable (`SENTRY_PROJECT`) are all that is
-needed to configure error tracking across the entire monorepo. (Per-service overrides like
-`SENTRY_DSN_API` or `SENTRY_PROJECT_API` remain supported if separation is ever required).
+There is no dedicated error tracker in this repo right now. Grouping, release regression
+detection, and source-map upload will be added later. Until then, correlate with `requestId` /
+`traceId` in logs and Jaeger.
 
-Configuration: source maps uploaded from [`publish.yml`](../../.github/workflows/publish.yml)
-on pushes to `main` (same SHA as GHCR tags; not on PRs) and **not** publicly served; release
-tagged with the git SHA so regressions are attributable to a deploy; `tracesSampleRate` aligned
-with OTel sampling; `beforeSend` scrubbing PII; user context limited to a hashed user id and
-tenant id; trace ids attached so a Sentry issue links to its distributed trace.
-
-Alerting is on symptoms, not causes: error-rate spikes, new issue types in a release, p95 latency
-regressions, queue depth growth, DLQ arrivals, and failed deploys. Every alert must be actionable
-and have an owner; an alert with no runbook gets deleted rather than muted.
+Alerting is on symptoms, not causes: error-rate spikes, p95 latency regressions, queue depth
+growth, DLQ arrivals, and failed deploys. Every alert must be actionable and have an owner; an
+alert with no runbook gets deleted rather than muted.
 
 ---
 
@@ -283,7 +274,7 @@ paths that theoretically exist and are never tested.
 The acceptance criteria, written as questions an engineer must be able to answer in minutes:
 
 1. A customer reports an error at 14:32 with request id `req_abc`. → Find the log lines, the trace,
-   the Sentry issue, the actor, and the tenant.
+   the actor, and the tenant.
 2. p95 latency doubled after the 15:10 deploy. → Compare traces across the two release tags and
    identify the slower span.
 3. A job has been retrying for an hour. → Find its DLQ entry, payload, error, and the request that
@@ -305,8 +296,8 @@ gets fixed rather than worked around.
 
 | #   | Question                                 | Where to look locally                                                                                                          |
 | --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`55443`), Sentry issue, `ctx.actor` in oRPC context                                           |
-| 2   | p95 latency doubled after deploy         | Grafana RED dashboard (`55448`), compare `service.version` / Sentry `release` tags                                             |
+| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`55443`), `ctx.actor` in oRPC context                                                         |
+| 2   | p95 latency doubled after deploy         | Grafana RED dashboard (`55448`), compare `service.version` tags                                                                |
 | 3   | Job retrying for an hour                 | Worker logs (`jobId`, `attempt`), Grafana Queue dashboard (`bullmq_queue_waiting`), Jaeger job span via envelope `traceparent` |
 | 4   | Emails not arriving                      | Domain event → outbox table → `email.send` job → Resend span in trace                                                          |
 | 5   | Signup conversion dropped                | PostHog funnel; segment by `release` property and flag variant from server bootstrap                                           |

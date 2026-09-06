@@ -15,9 +15,8 @@ export default mergeConfig(
         exclude: [
           "src/index.ts",
           "src/types.ts",
-          // SDK wiring — exercised when flags are on; needs a collector / DSN.
+          // SDK wiring — exercised when flags are on; needs a collector.
           "src/init-otel.ts",
-          "src/init-sentry.ts",
           "src/testing/**",
           "src/**/*.test.ts",
           "src/**/*.d.ts",

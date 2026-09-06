@@ -40,7 +40,7 @@ packages/env/src/
 ├── server.ts    # Secrets and server-only config. Imports "server-only".
 ├── client.ts    # NEXT_PUBLIC_* only. Safe in the browser.
 ├── shared.ts    # Present and identical in both (NODE_ENV, APP_URL, APP_ENV)
-└── presets/     # Composable groups: db, redis, s3, stripe, resend, otel, posthog, sentry, auth
+└── presets/     # Composable groups: db, redis, s3, stripe, resend, otel, posthog, auth
 ```
 
 Each app composes the presets it needs:
@@ -255,34 +255,23 @@ key is missing.
 | `S3_BUCKET`                                 | runtime        | Bucket name                                  |
 | `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | runtime secret | S3 API credentials                           |
 
-### Public client (`publicApp` + optional analytics/error presets)
+### Public client (`publicApp` + optional analytics/payments presets)
 
-| Variable                                           | Kind           | Notes                                       |
-| -------------------------------------------------- | -------------- | ------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL`                              | **build-time** | Baked into the web / docs images            |
-| `NEXT_PUBLIC_APP_ENV`                              | **build-time** | Baked into the web / docs images            |
-| `NEXT_PUBLIC_POSTHOG_*` / `NEXT_PUBLIC_SENTRY_DSN` | **build-time** | Only when those client presets are composed |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`               | **build-time** | Optional; must start with `pk_`             |
+| Variable                             | Kind           | Notes                                       |
+| ------------------------------------ | -------------- | ------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`                | **build-time** | Baked into the web / docs images            |
+| `NEXT_PUBLIC_APP_ENV`                | **build-time** | Baked into the web / docs images            |
+| `NEXT_PUBLIC_POSTHOG_*`              | **build-time** | Only when those client presets are composed |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | **build-time** | Optional; must start with `pk_`             |
 
 ### Observability / payments presets (composed by web, api, worker as needed)
 
-| Variable                                                                  | Kind           | Notes                                                            |
-| ------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------- |
-| `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_SERVICE_NAME`      | runtime        | Off by default                                                   |
-| `SENTRY_ENABLED` / `SENTRY_DSN` / `SENTRY_ENVIRONMENT` / `SENTRY_RELEASE` | runtime        | Off by default; DSN required when enabled                        |
-| `POSTHOG_API_KEY` / `POSTHOG_HOST`                                        | runtime        | Server capture; host required when the key is set                |
-| `FLAGS_JSON`                                                              | runtime        | JSON object of boolean flag overrides                            |
-| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`                             | runtime secret | Pair required together; test keys rejected in staging/production |
-
-### CI source maps (not runtime)
-
-Set on the publish workflow, not in the running container. One project for all apps.
-
-| Variable            | Kind        | Notes                       |
-| ------------------- | ----------- | --------------------------- |
-| `SENTRY_ORG`        | CI variable | Sentry org slug             |
-| `SENTRY_PROJECT`    | CI variable | Single project for all apps |
-| `SENTRY_AUTH_TOKEN` | CI secret   | Source-map upload           |
+| Variable                                                             | Kind           | Notes                                                            |
+| -------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------- |
+| `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_SERVICE_NAME` | runtime        | Off by default                                                   |
+| `POSTHOG_API_KEY` / `POSTHOG_HOST`                                   | runtime        | Server capture; host required when the key is set                |
+| `FLAGS_JSON`                                                         | runtime        | JSON object of boolean flag overrides                            |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`                        | runtime secret | Pair required together; test keys rejected in staging/production |
 
 ### Process ports (app-local)
 
@@ -314,7 +303,7 @@ An easy thing to get wrong with Next.js, and expensive to discover late.
 
 Consequence for the image strategy: **`NEXT_PUBLIC_*` values are baked into the image**, so an
 image is tied to the public configuration it was built with. We therefore keep the
-`NEXT_PUBLIC_*` set deliberately minimal (app URL, PostHog key, Sentry DSN) and everything else at
+`NEXT_PUBLIC_*` set deliberately minimal (app URL, PostHog key) and everything else at
 runtime, so **one image can be promoted from staging to production unchanged** — which is the
 property the whole deployment strategy depends on. Where a public value must differ per
 environment, it is served from a runtime-read endpoint rather than inlined.

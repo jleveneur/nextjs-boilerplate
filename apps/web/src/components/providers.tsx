@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { AnalyticsProvider } from "./analytics-provider.tsx";
-import { SentryProvider } from "./sentry-provider.tsx";
 import { ThemeProvider } from "./theme-provider.tsx";
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -24,11 +23,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <NuqsAdapter>
-        <SentryProvider>
-          <AnalyticsProvider>
-            <ThemeProvider>{children}</ThemeProvider>
-          </AnalyticsProvider>
-        </SentryProvider>
+        <AnalyticsProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </AnalyticsProvider>
       </NuqsAdapter>
     </QueryClientProvider>
   );

@@ -19,7 +19,7 @@ export default defineConfig({
   outDir: "dist",
   clean: true,
   dts: false,
-  // Hidden source maps for Sentry upload — not served publicly.
+  // Hidden source maps — not served publicly; stripped from the runtime image.
   sourcemap: "hidden",
   treeshake: false,
   alias: {

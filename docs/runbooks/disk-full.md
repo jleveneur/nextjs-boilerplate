@@ -10,7 +10,7 @@ Symptoms: Postgres or MinIO write failures, container restarts, elevated I/O wai
 1. Host: `df -h` on data volumes (Postgres, MinIO/R2 mount, Docker volume path).
 2. Docker: `docker system df` — reclaimable images/build cache vs volume growth.
 3. Postgres: check table/index bloat and WAL size if using self-hosted Postgres.
-4. App logs / Sentry for write errors correlated with the same window.
+4. App logs for write errors correlated with the same window.
 
 ---
 

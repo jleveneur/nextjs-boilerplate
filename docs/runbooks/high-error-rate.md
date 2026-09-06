@@ -1,6 +1,6 @@
 # High error rate
 
-Symptoms: Sentry or Prometheus alert `HighErrorRate`, elevated 5xx in Grafana RED dashboard,
+Symptoms: Prometheus alert `HighErrorRate`, elevated 5xx in Grafana RED dashboard,
 customer reports of failures.
 
 ---
@@ -9,11 +9,10 @@ customer reports of failures.
 
 1. Open Grafana **RED — web & api** (`http://127.0.0.1:55448`, local) — check which
    `service_name` spiked and when.
-2. In Sentry, filter by `environment` and `release` — correlate with a recent deploy.
+2. Filter logs by `environment` / `service.version` (git SHA) — correlate with a recent deploy.
 3. Pick one failing `requestId` from logs or a customer report and trace it:
    - Logs: filter `service` + `requestId`
    - Jaeger: `http://127.0.0.1:55443` — search by trace id from the log line
-   - Sentry issue → linked trace id when OTel + Sentry are both enabled
 
 ---
 
@@ -38,5 +37,3 @@ customer reports of failures.
 
 - Add or extend integration tests for the failing path.
 - Ensure new endpoints have RED metrics visible on the dashboard before full rollout.
-- Every `main` commit should have Sentry source maps uploaded when `SENTRY_AUTH_TOKEN` is set
-  (`publish.yml`, same SHA as the GHCR image tags).

@@ -25,7 +25,7 @@ import {
   type JobHandlers,
 } from "@repo/jobs";
 import { createLogger, runWithLogger, type Logger } from "@repo/logger";
-import { captureUnexpectedException, getTraceContext } from "@repo/observability";
+import { getTraceContext } from "@repo/observability";
 import { createPaymentGateway } from "@repo/payments";
 import { createFileStore } from "@repo/storage";
 import type { Actor } from "@repo/types";
@@ -62,7 +62,7 @@ function createEmailMailer(): EmailMailer {
 }
 
 export function buildContainer(): AppContainer {
-  const release = env.SENTRY_RELEASE ?? process.env["GITHUB_SHA"];
+  const release = process.env["GITHUB_SHA"];
   const logger = createLogger({
     service: "worker",
     env: env.APP_ENV,
@@ -213,13 +213,6 @@ export function buildContainer(): AppContainer {
         },
         "job moved to dead-letter queue",
       );
-      captureUnexpectedException(new Error(record.failedReason), {
-        extra: {
-          jobId: record.jobId,
-          jobName: record.jobName,
-          attemptsMade: record.attemptsMade,
-        },
-      });
     },
     onDeadLetterError({ record, stage, error }) {
       logger.error(
@@ -234,14 +227,6 @@ export function buildContainer(): AppContainer {
         },
         "failed to process job dead-lettering",
       );
-      captureUnexpectedException(error, {
-        extra: {
-          jobId: record.jobId,
-          jobName: record.jobName,
-          attemptsMade: record.attemptsMade,
-          deadLetterStage: stage,
-        },
-      });
     },
   });
 

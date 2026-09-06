@@ -21,5 +21,4 @@ export {
 } from "./create-env.ts";
 export { posthogClient } from "./presets/posthog.ts";
 export { publicApp, stripeClient } from "./presets/public.ts";
-export { sentryClient } from "./presets/sentry.ts";
 export { appEnvs, type AppEnv } from "./presets/shared.ts";

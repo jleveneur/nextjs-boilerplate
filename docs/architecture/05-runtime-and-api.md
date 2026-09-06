@@ -252,7 +252,7 @@ Points that matter:
    session.
 3. **The transaction wraps state change and outbox insert together**, so an event cannot be lost
    after a commit or emitted after a rollback.
-4. **Every response carries a request id**, also attached to logs, spans, and Sentry events.
+4. **Every response carries a request id**, also attached to logs and spans.
 
 ---
 
@@ -319,8 +319,8 @@ Current forms use the Better Auth client or oRPC mutations.
 3. **Log once, at the boundary.** Logging at every level produces five lines per error and hides
    the real one.
 4. **Never leak internals.** `expose: false` errors return a generic message plus the request id;
-   the detail goes to logs and Sentry only.
-5. **Only unexpected errors go to Sentry.** A `ValidationError` is not an incident; alert fatigue
+   the detail goes to logs only.
+5. **Only unexpected errors are incidents.** A `ValidationError` is not an incident; alert fatigue
    is what makes real incidents invisible.
 6. **Expected failures are typed; bugs are not.** A programmer error (`invariant` violation)
    becomes `InternalError` and is always reported.

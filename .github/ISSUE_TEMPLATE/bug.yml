@@ -49,7 +49,7 @@ body:
     attributes:
       label: Evidence
       description: >
-        Trace ID, request ID, Sentry link, correlation ID, or a redacted log
+        Trace ID, request ID, correlation ID, or a redacted log
         excerpt. A trace ID usually turns an hour of searching into a minute.
     validations:
       required: false

@@ -96,7 +96,7 @@ describe("hierarchy defaults", () => {
 describe("AppError", () => {
   it("preserves cause so the stack survives wrapping", () => {
     // The wrap-don't-replace rule. Without cause, the original stack is gone the
-    // moment a boundary re-throws, and Sentry shows only the wrapper.
+    // moment a boundary re-throws, and logs show only the wrapper.
     const cause = new Error("root");
     const error = new InternalError({ message: "wrapped", cause });
 

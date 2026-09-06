@@ -11,22 +11,9 @@ export type OtelInitOptions = {
   version?: string;
 };
 
-export type SentryInitOptions = {
-  enabled: boolean;
-  dsn?: string;
-  environment?: string;
-  /** Release tag — typically a git SHA. */
-  release?: string;
-  /** Align with OTel sampling; default 0 (errors only via captureException). */
-  tracesSampleRate?: number;
-  /** Service name tag (e.g. `api`, `worker`, `web`) for filtering in a unified Sentry project. */
-  serviceName?: string;
-};
-
 export type InitObservabilityOptions = {
   serviceName: string;
   otel: OtelInitOptions;
-  sentry: SentryInitOptions;
 };
 
 export type ObservabilityHandle = {

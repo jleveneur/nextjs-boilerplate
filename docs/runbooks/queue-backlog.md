@@ -24,7 +24,7 @@ Symptoms: Prometheus alert `QueueBacklogGrowing`, Grafana **Queue — worker** s
 
 ## Root-cause investigation
 
-1. Read the job error from worker logs or Sentry (`captureUnexpectedException` on handler failure).
+1. Read the job error from worker logs (`onDeadLetter` / handler failure).
 2. Trace upstream: domain event → outbox row → enqueue → consumer span.
 3. Check external deps (Resend, S3/MinIO, Postgres) for timeouts in the same window.
 

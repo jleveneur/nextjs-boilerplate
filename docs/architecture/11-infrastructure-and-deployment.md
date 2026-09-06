@@ -16,7 +16,7 @@
    (CI gate): web &lt; 275 MB, api &lt; 165 MB, worker &lt; 190 MB. Arm64 locals run smaller;
    do not calibrate against them. Runners start from Alpine and copy only the `node`
    binary (plus Sharp on the worker), so yarn/npm from the Node image never ship.
-   Hidden sourcemaps are built for Sentry upload but stripped before the runtime `COPY`.
+   Hidden sourcemaps are built for debugging but stripped before the runtime `COPY`.
 7. **Observable**: `HEALTHCHECK`, graceful `SIGTERM` handling, build metadata as labels.
 
 ### Build shape

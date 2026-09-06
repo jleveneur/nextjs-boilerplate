@@ -10,7 +10,6 @@ import {
   posthog,
   redis,
   resend,
-  sentry,
   smtp,
   stripe,
 } from "@repo/env/server";
@@ -27,7 +26,7 @@ const api = z.object({
  * `API_PORT`. Prefer the process `PORT` when present so the proxy can reach us.
  */
 export const env = createEnv({
-  server: [base, db, redis, auth, resend, smtp, otel, sentry, posthog, featureFlags, stripe, api],
+  server: [base, db, redis, auth, resend, smtp, otel, posthog, featureFlags, stripe, api],
   runtimeEnv: {
     NODE_ENV: process.env["NODE_ENV"],
     APP_ENV: process.env["APP_ENV"],
@@ -49,10 +48,6 @@ export const env = createEnv({
     OTEL_ENABLED: process.env["OTEL_ENABLED"],
     OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
     OTEL_SERVICE_NAME: process.env["OTEL_SERVICE_NAME"],
-    SENTRY_ENABLED: process.env["SENTRY_ENABLED"],
-    SENTRY_DSN: process.env["SENTRY_DSN"],
-    SENTRY_ENVIRONMENT: process.env["SENTRY_ENVIRONMENT"],
-    SENTRY_RELEASE: process.env["SENTRY_RELEASE"],
     POSTHOG_API_KEY: process.env["POSTHOG_API_KEY"],
     POSTHOG_HOST: process.env["POSTHOG_HOST"],
     FLAGS_JSON: process.env["FLAGS_JSON"],

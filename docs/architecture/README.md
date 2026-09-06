@@ -186,7 +186,7 @@ not the API surface — a column addition must not change a public DTO by defaul
 | ----------------- | ----------------- | ------- |
 | Traces/metrics    | OpenTelemetry SDK | 0.221.0 |
 | Logging           | Pino              | 10.3.1  |
-| Errors            | Sentry            | 10.70.0 |
+| Errors            | Pino (logs only)  | —       |
 | Product analytics | PostHog           | 1.408.0 |
 
 ### Quality & testing
@@ -249,7 +249,6 @@ flowchart TB
         STR["Stripe"]
         RES["Resend"]
         PH["PostHog"]
-        SEN["Sentry"]
     end
 
     CF --> TR
@@ -274,8 +273,6 @@ flowchart TB
     STR -.->|webhook| API
     WORKER --> RES
     WEB --> PH
-    WEB --> SEN
-    API --> SEN
 
     OTEL["OTel Collector"]
     WEB --> OTEL
@@ -315,7 +312,7 @@ the executive summary.
 | Config               | Hand-rolled Zod env module                                                         | ~80 lines beats a dependency; we need custom composition anyway                                       |
 | Secrets              | Injected at deploy; SOPS + age is one adopter pattern                              | Boilerplate stays host-agnostic; no encrypted secret tree required                                    |
 | Deploy               | SHA-tagged OCI images + migrate-then-roll                                          | Same artifact everywhere; orchestration is bring-your-own                                             |
-| Observability        | OTLP to a collector we own; Sentry for errors                                      | Backend-swappable, no vendor agent in app code                                                        |
+| Observability        | OTLP to a collector we own; unexpected errors to Pino                              | `@repo/observability` (OTel) + `@repo/logger`; no error tracker wired yet                             |
 | Feature flags        | Own `@repo/flags` interface, env provider by default, PostHog provider optional    | Works offline and self-hosted; flags are not a hard dependency                                        |
 | Lint/format          | Oxlint + tsgolint + Oxfmt                                                          | The only path that keeps type-aware linting on TypeScript 7                                           |
 | Tests                | Vitest + Testing Library + Playwright, real Postgres for repository tests          | Mocked databases test the mock                                                                        |

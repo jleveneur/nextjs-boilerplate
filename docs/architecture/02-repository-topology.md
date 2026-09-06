@@ -87,7 +87,7 @@ apps/web/
 │   ├── i18n/                       # next-intl routing, request, navigation
 │   ├── messages/                   # next-intl catalogs (`en.json`)
 │   ├── orpc/                       # Browser client + TanStack Query helpers
-│   ├── instrumentation.ts          # OTel + Sentry process instrumentation
+│   ├── instrumentation.ts          # OTel process instrumentation
 │   └── proxy.ts                    # Next 16 proxy (formerly middleware.ts)
 ├── e2e/                            # Playwright + axe specs (`make e2e`)
 ├── lighthouserc.cjs                # LHCI budgets (`make lighthouse`)
@@ -183,7 +183,7 @@ response shapes are defined once.
 | Package               | Responsibility                                                                                                                                        |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@repo/logger`        | Pino instance factory, redaction, request-scoped child loggers via `AsyncLocalStorage`, trace-id correlation.                                         |
-| `@repo/observability` | OTel SDK setup, Sentry init, span helpers, trace/log/error correlation.                                                                               |
+| `@repo/observability` | OTel SDK setup, span helpers, trace/log correlation.                                                                                                  |
 | `@repo/db`            | Drizzle schema (one file per module), client factory, pool config, migrations, seeds, transaction helper, tenant-scoped query helpers.                |
 | `@repo/cache`         | Redis client, namespaced keys, TTL policy, stampede protection, tag invalidation.                                                                     |
 | `@repo/storage`       | S3 API client, presigned upload/download, key conventions. Sharp derivatives live on `@repo/storage/image` so Next.js and the API never load libvips. |

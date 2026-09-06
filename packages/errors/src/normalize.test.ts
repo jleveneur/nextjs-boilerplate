@@ -13,7 +13,7 @@ describe("normalizeError", () => {
   it("maps an invariant violation to InternalError", () => {
     // The same-layer seam: utils names the error InvariantViolation, we recognise
     // it here. If this mapping breaks, invariant failures become silent 500s with
-    // no Sentry report — or worse, get exposed.
+    // no incident log — or worse, get exposed.
     const invariant = new Error("member vanished");
     invariant.name = "InvariantViolation";
 

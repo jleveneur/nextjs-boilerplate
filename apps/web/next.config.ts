@@ -11,8 +11,6 @@ const nextConfig: NextConfig = {
   // Standalone output is what the web Docker image copies — a minimal Node
   // server plus traced deps, not the full monorepo node_modules.
   output: "standalone",
-  // Browser maps for Sentry upload (CI); not served publicly in standalone.
-  productionBrowserSourceMaps: true,
   cacheComponents: true,
   transpilePackages: ["@repo/ui", "@repo/i18n", "@repo/env", "@repo/analytics", "@repo/flags"],
   // Portless (and other reverse proxies) serve Next from a *.localhost Host

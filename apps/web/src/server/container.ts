@@ -47,7 +47,7 @@ function createEmailMailer(): EmailMailer {
 }
 
 function buildContainer(): AppContainer {
-  const release = env.SENTRY_RELEASE ?? process.env["GITHUB_SHA"];
+  const release = process.env["GITHUB_SHA"];
   const logger = createLogger({
     service: "web",
     env: env.APP_ENV,

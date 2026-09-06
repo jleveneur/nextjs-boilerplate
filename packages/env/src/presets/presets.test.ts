@@ -10,13 +10,12 @@ import { publicApp, stripeClient } from "./public.ts";
 import { redis } from "./redis.ts";
 import { resend } from "./resend.ts";
 import { s3 } from "./s3.ts";
-import { sentry, sentryClient } from "./sentry.ts";
 import { stripe } from "./stripe.ts";
 
 describe("presets", () => {
   it("compose a full worker-shaped server env", () => {
     const env = createEnv({
-      server: [base, db, redis, s3, resend, otel, posthog, sentry, auth, stripe],
+      server: [base, db, redis, s3, resend, otel, posthog, auth, stripe],
       runtimeEnv: {
         NODE_ENV: "production",
         APP_ENV: "staging",
@@ -37,10 +36,6 @@ describe("presets", () => {
         OTEL_SERVICE_NAME: undefined,
         POSTHOG_API_KEY: "phc_abc",
         POSTHOG_HOST: "https://eu.posthog.com",
-        SENTRY_ENABLED: "false",
-        SENTRY_DSN: undefined,
-        SENTRY_ENVIRONMENT: undefined,
-        SENTRY_RELEASE: undefined,
         BETTER_AUTH_SECRET: "s".repeat(32),
         BETTER_AUTH_URL: "https://staging.example.com",
         GITHUB_CLIENT_ID: undefined,
@@ -73,29 +68,27 @@ describe("presets", () => {
     ).toThrow(/REDIS_URL/);
   });
 
-  it("requires SENTRY_DSN when Sentry is enabled", () => {
+  it("requires an OTLP endpoint when OpenTelemetry is enabled", () => {
     expect(() =>
       createEnv({
-        server: [sentry],
+        server: [otel],
         runtimeEnv: {
-          SENTRY_ENABLED: "true",
-          SENTRY_DSN: undefined,
-          SENTRY_ENVIRONMENT: undefined,
-          SENTRY_RELEASE: undefined,
+          OTEL_ENABLED: "true",
+          OTEL_EXPORTER_OTLP_ENDPOINT: undefined,
+          OTEL_SERVICE_NAME: undefined,
         },
       }),
-    ).toThrow(/SENTRY_DSN/);
+    ).toThrow(/OTEL_EXPORTER_OTLP_ENDPOINT/);
   });
 
-  it("accepts client analytics and error-tracking presets", () => {
+  it("accepts client analytics and payments presets", () => {
     const env = createEnv({
-      client: [publicApp, posthogClient, sentryClient, stripeClient],
+      client: [publicApp, posthogClient, stripeClient],
       runtimeEnv: {
         NEXT_PUBLIC_APP_URL: "https://app.example.com",
         NEXT_PUBLIC_APP_ENV: "production",
         NEXT_PUBLIC_POSTHOG_KEY: "phc_x",
         NEXT_PUBLIC_POSTHOG_HOST: "https://eu.posthog.com",
-        NEXT_PUBLIC_SENTRY_DSN: "https://a@b.ingest.sentry.io/1",
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_abc",
       },
     });
@@ -115,15 +108,14 @@ describe("presets", () => {
 
   it("treats empty optional strings as absent", () => {
     const env = createEnv({
-      server: [sentry],
+      server: [otel],
       runtimeEnv: {
-        SENTRY_ENABLED: "false",
-        SENTRY_DSN: "",
-        SENTRY_ENVIRONMENT: undefined,
-        SENTRY_RELEASE: undefined,
+        OTEL_ENABLED: "false",
+        OTEL_EXPORTER_OTLP_ENDPOINT: "",
+        OTEL_SERVICE_NAME: undefined,
       },
     });
 
-    expect(env.SENTRY_DSN).toBeUndefined();
+    expect(env.OTEL_EXPORTER_OTLP_ENDPOINT).toBeUndefined();
   });
 });

@@ -32,8 +32,6 @@ export {
   redis,
   resend,
   s3,
-  sentry,
-  sentryClient,
   smtp,
   shared,
   stripe,

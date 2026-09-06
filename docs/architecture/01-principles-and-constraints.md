@@ -184,6 +184,6 @@ one-time implementation gate.
 4. **Onboard an engineer.** `make setup && make dev` works on a clean machine, and the vertical
    slice shows them the pattern for everything else.
 5. **Trace a production incident.** One correlation ID links a browser session, a log line, a
-   trace, a Sentry issue, and a job run.
+   trace, and a job run.
 6. **Migrate the database with zero downtime.** Expand/contract is the documented default, not a
    heroic exception.
