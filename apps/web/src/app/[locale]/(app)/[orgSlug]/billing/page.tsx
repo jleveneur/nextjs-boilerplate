@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-
-import { Skeleton } from "@repo/ui";
+import { getTranslations } from "next-intl/server";
 
 import { SubscriptionPanel } from "@/features/billing/subscription-panel.tsx";
 
@@ -9,24 +7,20 @@ type Props = {
   params: Promise<{ locale: string; orgSlug: string }>;
 };
 
-export function generateMetadata(): Metadata {
-  return { title: "Billing" };
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  "use cache";
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Billing" });
+  return { title: t("portalTitle") };
 }
 
-export default function BillingPage({ params }: Props) {
-  return (
-    <Suspense fallback={<Skeleton className="h-48 w-full" />}>
-      <BillingContent params={params} />
-    </Suspense>
-  );
-}
-
-async function BillingContent({ params }: Props) {
+export default async function BillingPage({ params }: Props) {
   const { orgSlug } = await params;
+  const t = await getTranslations("Billing");
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <h1 className="text-2xl font-semibold tracking-tight">{t("portalTitle")}</h1>
       <SubscriptionPanel orgSlug={orgSlug} />
     </div>
   );

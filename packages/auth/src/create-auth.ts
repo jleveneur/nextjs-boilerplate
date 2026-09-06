@@ -16,6 +16,7 @@ import { generateUuidV7 } from "@repo/utils";
 
 import { ac, organizationRoles } from "./access-control.ts";
 import { apiKeyPrefixForEnv } from "./api-key-prefix.ts";
+import { createApiKeyAuditMiddleware, emitAuthAudit } from "./audit-event.ts";
 import { createRedisSecondaryStorage } from "./secondary-storage.ts";
 import type { CreateAuthOptions } from "./types.ts";
 
@@ -133,6 +134,111 @@ export function createAuth(options: CreateAuthOptions) {
             url: `${options.baseURL}/accept-invitation/${data.id}`,
           });
         },
+        organizationHooks: {
+          afterCreateOrganization: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "organization.created",
+              resourceType: "organization",
+              resourceId: data.organization.id,
+              organizationId: data.organization.id,
+              actorUserId: data.user.id,
+              metadata: { name: data.organization.name, slug: data.organization.slug },
+            });
+          },
+          afterUpdateOrganization: async (data) => {
+            if (data.organization === null) {
+              return;
+            }
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "organization.updated",
+              resourceType: "organization",
+              resourceId: data.organization.id,
+              organizationId: data.organization.id,
+              actorUserId: data.user.id,
+              metadata: { name: data.organization.name, slug: data.organization.slug },
+            });
+          },
+          afterDeleteOrganization: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "organization.deleted",
+              resourceType: "organization",
+              resourceId: data.organization.id,
+              organizationId: data.organization.id,
+              actorUserId: data.user.id,
+              metadata: { name: data.organization.name, slug: data.organization.slug },
+            });
+          },
+          afterAddMember: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "member.added",
+              resourceType: "member",
+              resourceId: data.member.id,
+              organizationId: data.organization.id,
+              actorUserId: data.user.id,
+              metadata: { role: data.member.role, userId: data.member.userId },
+            });
+          },
+          afterRemoveMember: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "member.removed",
+              resourceType: "member",
+              resourceId: data.member.id,
+              organizationId: data.organization.id,
+              actorUserId: data.user.id,
+              metadata: { userId: data.member.userId },
+            });
+          },
+          afterUpdateMemberRole: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "member.role_updated",
+              resourceType: "member",
+              resourceId: data.member.id,
+              organizationId: data.organization.id,
+              actorUserId: data.user.id,
+              metadata: { role: data.member.role, previousRole: data.previousRole },
+            });
+          },
+          afterCreateInvitation: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "invitation.created",
+              resourceType: "invitation",
+              resourceId: data.invitation.id,
+              organizationId: data.organization.id,
+              actorUserId: data.inviter.id,
+              metadata: { email: data.invitation.email, role: data.invitation.role },
+            });
+          },
+          afterAcceptInvitation: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "invitation.accepted",
+              resourceType: "invitation",
+              resourceId: data.invitation.id,
+              organizationId: data.organization.id,
+              actorUserId: data.user.id,
+              metadata: { memberId: data.member.id },
+            });
+          },
+          afterRejectInvitation: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "invitation.rejected",
+              resourceType: "invitation",
+              resourceId: data.invitation.id,
+              organizationId: data.organization.id,
+              actorUserId: data.user.id,
+              metadata: {},
+            });
+          },
+          afterCancelInvitation: async (data) => {
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "invitation.cancelled",
+              resourceType: "invitation",
+              resourceId: data.invitation.id,
+              organizationId: data.organization.id,
+              actorUserId: data.cancelledBy.id,
+              metadata: {},
+            });
+          },
+        },
       }),
       apiKey({
         references: "organization",
@@ -171,6 +277,9 @@ export function createAuth(options: CreateAuthOptions) {
         impersonationSessionDuration: 60 * 60,
       }),
     ],
+    hooks: {
+      after: createApiKeyAuditMiddleware(options.onAuditEvent),
+    },
     databaseHooks: {
       user: {
         create: {
@@ -196,6 +305,14 @@ export function createAuth(options: CreateAuthOptions) {
             await options.onOrganizationCreated?.({
               organizationId: personalOrg.id,
               plan: "free",
+            });
+            await emitAuthAudit(options.onAuditEvent, {
+              action: "user.created",
+              resourceType: "user",
+              resourceId: user.id,
+              organizationId: personalOrg.id,
+              actorUserId: user.id,
+              metadata: { method: "password" },
             });
           },
         },

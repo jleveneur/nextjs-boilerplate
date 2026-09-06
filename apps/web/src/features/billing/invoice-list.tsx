@@ -4,7 +4,6 @@ import type { InvoiceStatus } from "@repo/contracts";
 import { Badge, Button } from "@repo/ui";
 
 import { Link } from "@/i18n/navigation.ts";
-import { getBootstrappedFlags } from "@/server/flag-bootstrap.ts";
 import { createServerCaller } from "@/server/router.ts";
 
 import { formatAmountMinor, formatInvoiceDate, invoiceStatusBadgeVariant } from "./format-money.ts";
@@ -19,10 +18,9 @@ type Props = {
 };
 
 export async function InvoiceList({ orgSlug, status }: Props) {
-  const [t, locale, flags, caller] = await Promise.all([
+  const [t, locale, caller] = await Promise.all([
     getTranslations("Billing"),
     getLocale(),
-    getBootstrappedFlags(),
     createServerCaller(orgSlug),
   ]);
   const page = await caller.billing.list({ limit: 50 });
@@ -40,15 +38,6 @@ export async function InvoiceList({ orgSlug, status }: Props) {
           {t("create")}
         </Button>
       </div>
-
-      {flags["new-billing-portal"] ? (
-        <p className="text-muted-foreground text-sm">
-          {t("newPortalHint")}{" "}
-          <Link className="underline" href={`/${orgSlug}/billing`}>
-            Billing
-          </Link>
-        </p>
-      ) : null}
 
       <InvoiceStatusFilter />
 

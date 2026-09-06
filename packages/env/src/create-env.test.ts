@@ -492,10 +492,10 @@ describe("createEnv", () => {
   it("parses FLAGS_JSON into a boolean record", () => {
     const env = createEnv({
       server: [featureFlags],
-      runtimeEnv: { FLAGS_JSON: '{"new-billing-portal":true}' },
+      runtimeEnv: { FLAGS_JSON: '{"maintenance-mode":true}' },
     });
 
-    expect(env.FLAGS_JSON).toEqual({ "new-billing-portal": true });
+    expect(env.FLAGS_JSON).toEqual({ "maintenance-mode": true });
     expectTypeOf(env.FLAGS_JSON).toEqualTypeOf<Record<string, boolean> | undefined>();
   });
 
@@ -510,7 +510,7 @@ describe("createEnv", () => {
     expect(() =>
       createEnv({
         server: [featureFlags],
-        runtimeEnv: { FLAGS_JSON: '{"new-billing-portal":"yes"}' },
+        runtimeEnv: { FLAGS_JSON: '{"maintenance-mode":"yes"}' },
       }),
     ).toThrow(/boolean/);
   });

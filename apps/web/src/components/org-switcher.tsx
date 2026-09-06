@@ -15,6 +15,7 @@ import {
   Skeleton,
 } from "@repo/ui";
 
+import { CreateOrgDialog } from "@/features/settings/create-org-dialog.tsx";
 import { useRouter } from "@/i18n/navigation.ts";
 import { authClient } from "@/lib/auth-client.ts";
 
@@ -33,6 +34,7 @@ export function OrgSwitcher({ currentSlug }: Props) {
   const router = useRouter();
   const [orgs, setOrgs] = useState<Org[] | null>(null);
   const [pending, setPending] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,33 +77,44 @@ export function OrgSwitcher({ currentSlug }: Props) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={<Button type="button" variant="outline" size="sm" disabled={pending} />}
-      >
-        {current?.name ?? t("switchOrg")}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-48">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("switchOrg")}</DropdownMenuLabel>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        {orgs.length === 0 ? (
-          <DropdownMenuItem disabled>{t("noOrganizations")}</DropdownMenuItem>
-        ) : (
-          orgs.map((org) => (
-            <DropdownMenuItem
-              key={org.id}
-              disabled={pending || org.slug === currentSlug}
-              onClick={() => {
-                void selectOrg(org);
-              }}
-            >
-              {org.name}
-            </DropdownMenuItem>
-          ))
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={<Button type="button" variant="outline" size="sm" disabled={pending} />}
+        >
+          {current?.name ?? t("switchOrg")}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("switchOrg")}</DropdownMenuLabel>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          {orgs.length === 0 ? (
+            <DropdownMenuItem disabled>{t("noOrganizations")}</DropdownMenuItem>
+          ) : (
+            orgs.map((org) => (
+              <DropdownMenuItem
+                key={org.id}
+                disabled={pending || org.slug === currentSlug}
+                onClick={() => {
+                  void selectOrg(org);
+                }}
+              >
+                {org.name}
+              </DropdownMenuItem>
+            ))
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              setCreateOpen(true);
+            }}
+          >
+            {t("createOrg")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <CreateOrgDialog open={createOpen} onOpenChange={setCreateOpen} />
+    </>
   );
 }

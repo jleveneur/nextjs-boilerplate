@@ -89,3 +89,7 @@ docker/data/
 
 # Claude Code per-developer overrides. The shared project settings are committed.
 .claude/settings.local.json
+
+# Next.js 16 writes these on `next dev`. Repo instructions live in /AGENTS.md.
+apps/web/AGENTS.md
+apps/web/CLAUDE.md

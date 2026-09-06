@@ -22,12 +22,6 @@ export default async function MarketingHomePage() {
         >
           {t("signUp")}
         </Link>
-        <Link
-          href="/design-system"
-          className="text-primary underline-offset-4 hover:underline focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none"
-        >
-          {t("designSystem")}
-        </Link>
       </p>
     </main>
   );

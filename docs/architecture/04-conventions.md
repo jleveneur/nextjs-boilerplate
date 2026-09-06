@@ -44,7 +44,7 @@ and fail in CI. One rule, no exceptions, no class of bug.
 | Event names                      | `<aggregate>.<past-tense>`                                  | `invoice.paid`, `member.invited`                           |
 | Job names                        | `<domain>.<action>`                                         | `email.send`, `image.derive`                               |
 | Error codes                      | `SCREAMING_SNAKE_CASE`, stable forever                      | `INVOICE_ALREADY_PAID`                                     |
-| Feature flags                    | `kebab-case`                                                | `new-billing-portal`                                       |
+| Feature flags                    | `kebab-case`                                                | `maintenance-mode`                                         |
 | Env vars                         | `SCREAMING_SNAKE_CASE`; client-visible ones `NEXT_PUBLIC_*` |                                                            |
 | DB tables                        | `snake_case`, **singular**                                  | `organization_member`                                      |
 | DB columns                       | `snake_case`; `*_id` for FKs; `*_at` for timestamps         | `created_at`                                               |
@@ -180,7 +180,10 @@ which errors are thrown, since throw sites are not in the type signature.
 - **Caching is explicit.** With `cacheComponents: true`, `use cache` is opt-in per boundary with
   a declared `cacheLife`, and invalidation uses tags (`revalidateTag(tag, profile)` for SWR
   semantics, `updateTag(tag)` inside Actions for read-your-writes). Cache decisions are commented
-  with _why_ that lifetime.
+  with _why_ that lifetime. `generateMetadata` that awaits `params` starts with `"use cache"` so
+  the title is keyed by locale rather than blocking the prerender.
+- **Layouts keep `{children}` outside Suspense that awaits runtime params** (`[orgSlug]`).
+  Wrapping the slot inside the suspended child drops the segment (`instant-unrendered-segment`).
 - **Loading and error states are required**, not optional: every route segment that suspends has
   `loading.tsx`, every one that can fail has `error.tsx`. Skeletons match final layout to avoid
   shift.

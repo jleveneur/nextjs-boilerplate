@@ -1,6 +1,7 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui";
 
-import { getBootstrappedFlags } from "@/server/flag-bootstrap.ts";
 import { createServerCaller } from "@/server/router.ts";
 
 import { SubscribeButton, SubscriptionActions } from "./subscription-actions.tsx";
@@ -10,11 +11,7 @@ type Props = {
 };
 
 export async function SubscriptionPanel({ orgSlug }: Props) {
-  const flags = await getBootstrappedFlags();
-  if (!flags["new-billing-portal"]) {
-    return null;
-  }
-
+  const t = await getTranslations("Billing");
   const caller = await createServerCaller(orgSlug);
   const [catalog, subscription] = await Promise.all([
     caller.billing.catalog(),
@@ -24,18 +21,18 @@ export async function SubscriptionPanel({ orgSlug }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Subscription</CardTitle>
-        <CardDescription>Stripe Billing — checkout and customer portal.</CardDescription>
+        <CardTitle>{t("subscriptionTitle")}</CardTitle>
+        <CardDescription>{t("subscriptionDescription")}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {subscription === null ? (
-          <p className="text-muted-foreground text-sm">No active subscription.</p>
+          <p className="text-muted-foreground text-sm">{t("noSubscription")}</p>
         ) : (
           <p className="text-sm">
-            Status: <strong>{subscription.status}</strong>
+            {t("status")}: <strong>{subscription.status}</strong>
             {subscription.currentPeriodEnd === null
               ? null
-              : ` · renews ${subscription.currentPeriodEnd}`}
+              : ` · ${t("renews")} ${subscription.currentPeriodEnd}`}
           </p>
         )}
 

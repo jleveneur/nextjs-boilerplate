@@ -39,6 +39,7 @@
     "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@repo/utils": "workspace:*",
     "@sentry/browser": "catalog:",
     "@tanstack/react-query": "catalog:",
     "better-auth": "catalog:",

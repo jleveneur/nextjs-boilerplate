@@ -108,7 +108,7 @@ system.
 
 **Why** Server Components, Actions, `useOptimistic`, `useFormStatus`, and the compiler.
 **Instead of** _Vue / Svelte / Solid_ — all technically fine; React wins on ecosystem depth, hiring, and
-the fact that every other choice in this stack (shadcn/ui, Base UI, TanStack, Tiptap) targets it
+the fact that every other choice in this stack (shadcn/ui, Base UI, TanStack Query) targets it
 first.
 **Health** Meta + a large independent contributor base.
 **Exit** High, by definition.
@@ -160,16 +160,6 @@ aggregates many sets with inconsistent metrics and poor tree-shaking.
 file plus a name mapping. That wrapper exists specifically because this is the dependency most
 likely to be replaced for non-technical reasons.
 
-### Motion 12.43
-
-**Why** Declarative animation with a spring-physics model, layout animations, gesture support, and a
-hardware-accelerated path. Layout animation in particular is genuinely hard to hand-roll.
-**Instead of** _CSS transitions_ — used for the simple majority of cases anyway; Motion is for the rest.
-_GSAP_ — more powerful for timeline work, heavier, and its licensing model is less comfortable for a
-foundation. _React Spring_ — similar capability, smaller community. _Anime.js_ — not React-shaped.
-**Health** The dominant React animation library (formerly Framer Motion), now independent.
-**Exit** Low — animations are localised and degrade gracefully to CSS.
-
 ### React Hook Form 7.83 + Zod resolver
 
 **Why** Uncontrolled-input architecture means typing in a field does not re-render the form, which is
@@ -214,39 +204,6 @@ alternatives with different mental models. _Context + `useReducer`_ — no selec
 re-render storms.
 **Health** Small, stable, widely used.
 **Exit** Low — few stores, small surface.
-
-### TanStack Table 8.21
-
-**Why** Headless table logic (sorting, filtering, grouping, pagination, virtualisation-ready) with
-markup and styling entirely ours.
-**Instead of** _AG Grid_ — enormously capable, heavy, and commercially licensed for the useful
-features. _MUI DataGrid_ — ties us to MUI. _Hand-rolled_ — feasible until column pinning and grouped
-sorting arrive.
-**Health** Stable v8. **A v9 is in beta** — we stay on v8 until it is stable (see risk register).
-**Exit** Medium — behind `@repo/ui/table`.
-
-### Tiptap 3.29
-
-**Why** ProseMirror is the only genuinely correct rich-text model (document schema, transactions,
-collaborative-editing-ready), and Tiptap makes it usable with a React-friendly extension API.
-**Instead of** _Lexical_ — Meta-built, strong, smaller extension ecosystem. _Slate_ — flexible with
-a history of instability. _Quill / TinyMCE / CKEditor_ — jQuery-era architecture or restrictive
-licensing. _contenteditable directly_ — a well-documented path to despair.
-**Health** Active commercial project on ProseMirror's stable foundation. Some advanced extensions are
-paid, which is worth knowing before designing a feature around them.
-**Exit** High — editor content format and extensions are deeply coupled. Isolated behind
-`@repo/ui/editor` and lazy-loaded, and content is stored as ProseMirror JSON (portable to any
-ProseMirror-based editor), which is the mitigation.
-
-### Recharts 3.10
-
-**Why** Declarative, composable React charting on SVG; covers the dashboard cases (line, bar, area,
-pie, composed) without a custom visualisation grammar.
-**Instead of** _Chart.js_ — canvas-based, imperative, awkward in React. _Visx_ — lower-level Airbnb
-primitives, more power and more code per chart. _D3 directly_ — the right answer for bespoke
-visualisation, overkill for dashboards. _Observable Plot_ — grammar-of-graphics, less React-idiomatic.
-**Health** Mature and stable; the library shadcn/ui's chart components build on.
-**Exit** Low-Medium — behind `@repo/ui/chart` and lazy-loaded.
 
 ### next-themes 0.4
 
@@ -757,29 +714,29 @@ _PlantUML_ — needs Java. _D2_ — nicer output, needs a binary and lacks nativ
 
 Things a repo like this often includes, and why this one does not.
 
-| Rejected                                       | Why                                                                                                                                                                                                                                                                               |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ESLint + Prettier**                          | ESLint's type-aware path is blocked on TypeScript 7 (typescript-eslint: "not planned"); Oxlint + Oxfmt are 30–100× faster and cover both.                                                                                                                                         |
-| **neverthrow / fp-ts**                         | `Result` types are viral across every layer; exceptions plus typed errors mapped at the boundary give us the same guarantees where they matter, with readable orchestration code.                                                                                                 |
-| **`@t3-oss/env-nextjs`**                       | ~80 lines of Zod, and we need per-app schema composition and custom cross-field rules anyway.                                                                                                                                                                                     |
-| **clsx + tailwind-merge as separate concerns** | Both are needed, but exposed only through a single `cn()` in `@repo/ui`, so call sites depend on our helper, not the libraries.                                                                                                                                                   |
-| **A DI container (tsyringe, TypeDI)**          | Plain function composition gives the same testability without decorators, `reflect-metadata`, or startup-order magic.                                                                                                                                                             |
-| **tRPC**                                       | Replaced by oRPC for the private API ([ADR-0011](../adr/0011-orpc-private-api.md), [ADR-0012](../adr/0012-orpc-2-private-api.md)). Same compile-time types; we no longer want SuperJSON or a React provider.                                                                      |
-| **GraphQL (Apollo, Pothos, urql)**             | We control the only internal consumer (oRPC is better there) and third parties want REST. GraphQL adds a schema, resolvers, N+1 concerns, and a client cache for no gain here.                                                                                                    |
-| **Prisma**                                     | Considered seriously; rejected for the Rust engine binary, a separate schema language, and generated-client friction in a monorepo.                                                                                                                                               |
-| **Redux Toolkit**                              | Client state is small; Zustand is the allowed tool if a store is ever needed.                                                                                                                                                                                                     |
-| **Storybook**                                  | Genuinely useful, and genuinely heavy: a second build system, a second dependency graph, and constant maintenance. Component tests plus a route in `apps/web` that renders the design system cover our needs at a fraction of the cost. Revisit if a dedicated design team joins. |
-| **Kubernetes**                                 | A control plane to operate, upgrade, and secure for orchestration a Compose file already provides at this scale. Images are standard OCI, so the door stays open.                                                                                                                 |
-| **Terraform**                                  | OpenTofu is the MIT-licensed, neutrally-governed continuation.                                                                                                                                                                                                                    |
-| **Husky + lint-staged**                        | Lefthook does both, faster, as one binary.                                                                                                                                                                                                                                        |
-| **semantic-release**                           | Changesets makes release intent explicit and reviewable in a monorepo.                                                                                                                                                                                                            |
-| **Lodash**                                     | Modern JavaScript covers nearly all of it; the handful we want lives in `@repo/utils`.                                                                                                                                                                                            |
-| **Axios**                                      | Native `fetch` is universal in Node 24 and the browser.                                                                                                                                                                                                                           |
-| **Moment.js**                                  | Deprecated by its own maintainers.                                                                                                                                                                                                                                                |
-| **A separate feature-flag vendor**             | PostHog provides flags, and our interface makes the provider swappable.                                                                                                                                                                                                           |
-| **A separate cron service**                    | BullMQ job schedulers cover scheduled work.                                                                                                                                                                                                                                       |
-| **`uuid`**                                     | Postgres 18 has native `uuidv7()`; the application-side generator is a few lines using `node:crypto`.                                                                                                                                                                             |
-| **A logging SaaS SDK**                         | Pino writes JSON to stdout; shipping is the platform's job, which keeps the aggregator swappable.                                                                                                                                                                                 |
+| Rejected                                       | Why                                                                                                                                                                                                                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **ESLint + Prettier**                          | ESLint's type-aware path is blocked on TypeScript 7 (typescript-eslint: "not planned"); Oxlint + Oxfmt are 30–100× faster and cover both.                                                                                |
+| **neverthrow / fp-ts**                         | `Result` types are viral across every layer; exceptions plus typed errors mapped at the boundary give us the same guarantees where they matter, with readable orchestration code.                                        |
+| **`@t3-oss/env-nextjs`**                       | ~80 lines of Zod, and we need per-app schema composition and custom cross-field rules anyway.                                                                                                                            |
+| **clsx + tailwind-merge as separate concerns** | Both are needed, but exposed only through a single `cn()` in `@repo/ui`, so call sites depend on our helper, not the libraries.                                                                                          |
+| **A DI container (tsyringe, TypeDI)**          | Plain function composition gives the same testability without decorators, `reflect-metadata`, or startup-order magic.                                                                                                    |
+| **tRPC**                                       | Replaced by oRPC for the private API ([ADR-0011](../adr/0011-orpc-private-api.md), [ADR-0012](../adr/0012-orpc-2-private-api.md)). Same compile-time types; we no longer want SuperJSON or a React provider.             |
+| **GraphQL (Apollo, Pothos, urql)**             | We control the only internal consumer (oRPC is better there) and third parties want REST. GraphQL adds a schema, resolvers, N+1 concerns, and a client cache for no gain here.                                           |
+| **Prisma**                                     | Considered seriously; rejected for the Rust engine binary, a separate schema language, and generated-client friction in a monorepo.                                                                                      |
+| **Redux Toolkit**                              | Client state is small; Zustand is the allowed tool if a store is ever needed.                                                                                                                                            |
+| **Storybook**                                  | Genuinely useful, and genuinely heavy: a second build system, a second dependency graph, and constant maintenance. Component tests in `@repo/ui` cover the primitives we ship. Revisit if a dedicated design team joins. |
+| **Kubernetes**                                 | A control plane to operate, upgrade, and secure for orchestration a Compose file already provides at this scale. Images are standard OCI, so the door stays open.                                                        |
+| **Terraform**                                  | OpenTofu is the MIT-licensed, neutrally-governed continuation.                                                                                                                                                           |
+| **Husky + lint-staged**                        | Lefthook does both, faster, as one binary.                                                                                                                                                                               |
+| **semantic-release**                           | Changesets makes release intent explicit and reviewable in a monorepo.                                                                                                                                                   |
+| **Lodash**                                     | Modern JavaScript covers nearly all of it; the handful we want lives in `@repo/utils`.                                                                                                                                   |
+| **Axios**                                      | Native `fetch` is universal in Node 24 and the browser.                                                                                                                                                                  |
+| **Moment.js**                                  | Deprecated by its own maintainers.                                                                                                                                                                                       |
+| **A separate feature-flag vendor**             | PostHog provides flags, and our interface makes the provider swappable.                                                                                                                                                  |
+| **A separate cron service**                    | BullMQ job schedulers cover scheduled work.                                                                                                                                                                              |
+| **`uuid`**                                     | Postgres 18 has native `uuidv7()`; the application-side generator is a few lines using `node:crypto`.                                                                                                                    |
+| **A logging SaaS SDK**                         | Pino writes JSON to stdout; shipping is the platform's job, which keeps the aggregator swappable.                                                                                                                        |
 
 ---
 
@@ -796,7 +753,6 @@ is not".
 | R3  | **`oxlint-tsgolint` is version-locked to a specific TypeScript release.**                                                                                          | Medium     | Renovate groups `typescript` and `oxlint-tsgolint` so they move together. If tsgolint lags a TypeScript release, we hold both back — a typecheck and a linter that disagree about the language is worse than being one patch behind.                                                                                                                                   |
 | R4  | **Drizzle v1 has been in beta/RC for ~a year**; `latest` is still 0.45.2.                                                                                          | Medium     | Stay on 0.45.2 until v1 GA ([ADR-0008](../adr/0008-drizzle-version-selection.md)). Queries are confined to `*.repository.ts`, so the migration-folder format change is bounded.                                                                                                                                                                                        |
 | R5  | **Base UI** (`@base-ui/react` 1.7.0) was **renamed** from `@base-ui-components/react`.                                                                             | Low-Medium | It is now shadcn/ui's default with 6M+ weekly downloads, and an official Radix↔Base migration skill exists in both directions. shadcn components live in our repo, so we can patch them ourselves.                                                                                                                                                                     |
-| R6  | **TanStack Table v9 is in beta.**                                                                                                                                  | Low        | Stay on stable v8; v9 is evaluated when it ships. Confined to `@repo/ui/table`.                                                                                                                                                                                                                                                                                        |
 | R7  | **Better Auth moves fast** (1.6.25, with 1.7 in RC).                                                                                                               | Medium     | Pin exactly, read changelogs, and treat minor upgrades as reviewed PRs with the auth E2E suite as the gate. Auth tables are ours, so a bad release is a hold, not an outage.                                                                                                                                                                                           |
 | R8  | **Next.js majors are disruptive** (the 15→16 `middleware`→`proxy` rename is the current example, and `middleware.ts` still compiles while silently doing nothing). | Medium     | Business logic is outside `apps/web`, so a Next migration is one app. Majors get a dedicated PR, the official codemods, and an explicit check that deprecated file conventions are actually gone.                                                                                                                                                                      |
 | R9  | **Durable workflows may need a platform later** (dunning, multi-day sequences). BullMQ cannot checkpoint waits.                                                    | Low        | No current workload; revisit per [ADR-0009](../adr/0009-bullmq-only-background-work.md) if durable execution becomes central.                                                                                                                                                                                                                                          |

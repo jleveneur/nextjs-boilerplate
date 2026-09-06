@@ -141,13 +141,9 @@ so a future reader can tell what was current when the architecture was last revi
 | Component recipes | shadcn/ui (CLI, Base UI mode) | —       |
 | UI primitives     | `@base-ui/react`              | 1.7.0   |
 | Icons             | `@hugeicons/react`            | 1.1.10  |
-| Animation         | Motion                        | 13.1.0  |
 | Forms             | React Hook Form               | 7.83.0  |
 | Validation        | Zod                           | 4.4.3   |
 | Server state      | TanStack Query                | 5.102.0 |
-| Tables            | TanStack Table                | 8.21.3  |
-| Rich text         | Tiptap                        | 3.29.0  |
-| Charts            | Recharts                      | 3.10.1  |
 | Theming           | next-themes                   | 0.4.6   |
 | i18n              | next-intl                     | 4.13.7  |
 | Toasts            | Sonner                        | 2.0.8   |
@@ -364,8 +360,10 @@ The architecture is implemented. These are incomplete call sites or operator wor
 unbuilt phases:
 
 - **Audit log coverage** is partial. Invoice voiding writes `invoice.voided` in the same
-  transaction; auth events, membership changes, API-key lifecycle, and impersonation do not
-  yet have call sites ([07](./07-auth.md#audit-log)).
+  transaction; Better Auth organization, membership, invitation, user-created, and API-key
+  lifecycle events write through `onAuditEvent` → `recordAuditLog`. Impersonation still has
+  no call site, and there is no customer-facing audit viewer
+  ([07](./07-auth.md#audit-log)).
 - **Impersonation** is modelled on the actor (`isImpersonating`, destructive actions barred)
   but has no support UI, banner, or reason capture. Do not expose it as an operator workflow
   until those land.

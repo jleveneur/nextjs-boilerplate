@@ -1,7 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
-
-import { Skeleton } from "@repo/ui";
 
 import { CreateInvoiceForm } from "@/features/billing/create-invoice-form.tsx";
 import { Link } from "@/i18n/navigation.ts";
@@ -10,15 +7,7 @@ type Props = {
   params: Promise<{ locale: string; orgSlug: string }>;
 };
 
-export default function NewInvoicePage({ params }: Props) {
-  return (
-    <Suspense fallback={<Skeleton className="h-64 w-full max-w-md" />}>
-      <NewInvoiceContent params={params} />
-    </Suspense>
-  );
-}
-
-async function NewInvoiceContent({ params }: Props) {
+export default async function NewInvoicePage({ params }: Props) {
   const { orgSlug } = await params;
   const t = await getTranslations("Billing");
 

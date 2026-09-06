@@ -1,6 +1,6 @@
 export { Icon, type IconProps } from "./icon.tsx";
 
-// Re-export a small curated set so gallery/apps avoid deep icon imports.
+// Re-export a small curated set so apps avoid deep icon imports.
 export {
   Cancel01Icon,
   CheckmarkCircle02Icon,

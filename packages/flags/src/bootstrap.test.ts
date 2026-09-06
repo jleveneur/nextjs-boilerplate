@@ -4,13 +4,9 @@ import { bootstrapFlags } from "./bootstrap.ts";
 import { createStaticFlagProvider } from "./static-provider.ts";
 
 describe("bootstrapFlags", () => {
-  it("returns every registered flag", async () => {
-    const provider = createStaticFlagProvider({
-      "new-billing-portal": true,
-      "disable-exports": false,
-    });
+  it("returns an empty object when no flags are registered", async () => {
+    const provider = createStaticFlagProvider({});
     const bootstrapped = await bootstrapFlags(provider);
-    expect(bootstrapped["new-billing-portal"]).toBe(true);
-    expect(bootstrapped["disable-exports"]).toBe(false);
+    expect(bootstrapped).toEqual({});
   });
 });

@@ -4,7 +4,7 @@
 
 import { invariant } from "@repo/utils";
 
-import { flags, type FlagName } from "./registry.ts";
+import { getFlagDefinition } from "./registry.ts";
 import type { FlagContext, FlagProvider } from "./types.ts";
 
 /**
@@ -13,10 +13,10 @@ import type { FlagContext, FlagProvider } from "./types.ts";
  */
 export async function resolveFlag(
   provider: FlagProvider,
-  name: FlagName,
+  name: string,
   context?: FlagContext,
 ): Promise<boolean> {
-  const definition = flags[name];
+  const definition = getFlagDefinition(name);
   invariant(definition !== undefined, `Unknown feature flag: ${name}`);
 
   try {

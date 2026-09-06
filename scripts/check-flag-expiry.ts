@@ -16,7 +16,7 @@ if (import.meta.main) {
     console.error(`\n✗ ${String(expired.length)} expired feature flag(s):\n`);
     for (const flag of expired) {
       console.error(
-        `  • ${flag.name} (${flag.kind}) expired ${flag.expires} — owner ${flag.owner}\n`,
+        `  • ${String(flag.name)} (${flag.kind}) expired ${flag.expires} — owner ${flag.owner}\n`,
       );
     }
     console.error("Remove or extend the flag in packages/flags/src/registry.ts\n");

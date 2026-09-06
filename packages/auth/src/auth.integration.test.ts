@@ -80,6 +80,7 @@ describe("@repo/auth integration", () => {
   });
 
   it("signs up, verifies email, creates personal org, and resolves matching Actors", async () => {
+    const auditEvents: Array<{ action: string }> = [];
     const created = createAuth({
       db,
       schema: authSchema,
@@ -92,6 +93,10 @@ describe("@repo/auth integration", () => {
       sendVerificationEmail: (input) => mailers.sendVerificationEmail(input),
       sendMagicLink: (input) => mailers.sendMagicLink(input),
       sendInvitationEmail: (input) => mailers.sendInvitationEmail(input),
+      onAuditEvent: (event) => {
+        auditEvents.push({ action: event.action });
+        return Promise.resolve();
+      },
     });
     auth = created.auth;
     closeAuth = async () => {
@@ -189,6 +194,16 @@ describe("@repo/auth integration", () => {
 
     const invite = mailers.sent.find((m) => m.kind === "invitation");
     expect(invite).toBeDefined();
+
+    const auditActions = auditEvents.map((event) => event.action);
+    expect(auditActions).toEqual(
+      expect.arrayContaining([
+        "user.created",
+        "organization.created",
+        "api_key.created",
+        "invitation.created",
+      ]),
+    );
 
     // Two-factor / passkey endpoints are registered (browser ceremony deferred to Phase 8 UI).
     expect(typeof auth.api.enableTwoFactor).toBe("function");

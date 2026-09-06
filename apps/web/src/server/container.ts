@@ -3,7 +3,7 @@ import "server-only";
 
 import { capture } from "@repo/analytics";
 import { createAuth, type Auth } from "@repo/auth";
-import type { CtxPorts } from "@repo/core";
+import { recordAuditLog, type CtxPorts } from "@repo/core";
 import { createDb, type Database } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
@@ -145,6 +145,13 @@ function buildContainer(): AppContainer {
     },
     onOrganizationCreated: async ({ organizationId, plan }) => {
       await capture(ports.analytics, "organization.created", { organizationId, plan });
+    },
+    onAuditEvent: async (event) => {
+      try {
+        await recordAuditLog(db, event);
+      } catch (error) {
+        logger.error({ err: error, action: event.action }, "failed to record auth audit event");
+      }
     },
   });
 

@@ -63,8 +63,9 @@ Stateless JWTs are rejected for browser sessions because the property people wan
 Security defaults that ship enabled: rate limiting on all auth endpoints (per IP and per
 identifier), constant-time responses on login and password reset to resist user enumeration,
 single-use tokens with short expiry, secure cookie attributes, and CSRF protection on
-state-changing form posts. Authentication-event audit writes are not wired yet; see
-[Audit log](#audit-log).
+state-changing form posts. Authentication-event audit writes for organization, membership,
+invitation, user-created, and API-key lifecycle go through `CreateAuthOptions.onAuditEvent`.
+See [Audit log](#audit-log).
 
 ### Where session verification happens
 
@@ -238,14 +239,13 @@ The concrete failure modes this design is built against:
 ### Audit log
 
 The append-only `audit_log` table records the tenant, nullable actor user, action, resource type
-and id, metadata, and creation time. `@repo/core` provides `writeAuditLog`, which uses the active
-transaction when one is present and records system actors without a user id. Invoice voiding is
-the first wired call site: it writes `invoice.voided` in the same transaction as the invoice
-update.
+and id, metadata, and creation time. `@repo/core` provides `writeAuditLog` (request `Ctx`, used
+by invoice voiding in the same transaction as the update) and `recordAuditLog` (composition-root
+writer for Better Auth hooks that cannot import `@repo/core` themselves).
 
-Coverage is otherwise incomplete. Authentication events, permission and role changes, membership
-changes, Better Auth API-key lifecycle events, impersonation, other billing changes, destructive
-deletes, and cross-tenant system access still need call sites. Metadata redaction is the caller's
-responsibility, and customer-facing querying and retention enforcement are not implemented. IP
-address, user agent, request id, and redacted diffs have no dedicated columns; a caller may
-include appropriately redacted values in `metadata`.
+Wired call sites today: `invoice.voided`; `user.created`; organization create/update/delete;
+member add/remove/role-update; invitation create/accept/reject/cancel; API-key create/revoke.
+Impersonation still has no call site. Metadata redaction is the caller's responsibility, and
+customer-facing querying and retention enforcement are not implemented. IP address, user agent,
+request id, and redacted diffs have no dedicated columns; a caller may include appropriately
+redacted values in `metadata`.

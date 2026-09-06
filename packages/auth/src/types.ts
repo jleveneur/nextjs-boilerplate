@@ -1,5 +1,7 @@
 import type { drizzleAdapter } from "better-auth/adapters/drizzle";
 
+import type { OnAuditEvent } from "./audit-event.ts";
+
 /**
  * Drizzle database handle from the composition root (`createDb().db`).
  * Typed via Better Auth's adapter so `@repo/auth` never imports `@repo/db`
@@ -49,6 +51,8 @@ export type OnOrganizationCreatedInput = {
   plan: string;
 };
 
+export type { AuthAuditEvent, OnAuditEvent } from "./audit-event.ts";
+
 export type CreateAuthOptions = {
   db: AuthDatabase;
   schema: AuthSchema;
@@ -76,4 +80,9 @@ export type CreateAuthOptions = {
   onUserCreated?: (input: OnUserCreatedInput) => Promise<void>;
   /** Fired after the personal organization is created at signup. */
   onOrganizationCreated?: (input: OnOrganizationCreatedInput) => Promise<void>;
+  /**
+   * Fired after org, membership, invitation, and API-key mutations.
+   * Composition roots map this to `recordAuditLog` — await it, do not detach.
+   */
+  onAuditEvent?: OnAuditEvent;
 };

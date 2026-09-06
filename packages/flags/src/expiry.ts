@@ -2,7 +2,7 @@
  * Stale-flag enforcement: non-permanent flags past their `expires` date.
  */
 
-import { flags, hasFlagName, type FlagName } from "./registry.ts";
+import { flags, getFlagDefinition, hasFlagName, type FlagName } from "./registry.ts";
 
 export type ExpiredFlag = {
   name: FlagName;
@@ -23,7 +23,10 @@ export function listExpiredFlags(now: Date): ExpiredFlag[] {
     if (!hasFlagName(name)) {
       continue;
     }
-    const definition = flags[name];
+    const definition = getFlagDefinition(name);
+    if (definition === undefined) {
+      continue;
+    }
     if (definition.kind === "kill-switch") {
       continue;
     }

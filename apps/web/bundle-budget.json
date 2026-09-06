@@ -4,20 +4,7 @@
       "maxFirstLoadJsBytes": 1150000,
       "manifestPath": "server/app/[locale]/(marketing)/page_client-reference-manifest.js",
       "entrySuffix": "/[locale]/(marketing)/page",
-      "forbiddenModuleSubstrings": [
-        "packages/ui/src/components/",
-        "@base-ui/",
-        "recharts",
-        "@tiptap/",
-        "@tanstack/react-table",
-        "sonner",
-        "node_modules/motion/"
-      ]
-    },
-    "/en/design-system": {
-      "maxFirstLoadJsBytes": 1700000,
-      "manifestPath": "server/app/[locale]/(marketing)/design-system/page_client-reference-manifest.js",
-      "entrySuffix": "/[locale]/(marketing)/design-system/page"
+      "forbiddenModuleSubstrings": ["packages/ui/src/components/", "@base-ui/", "sonner"]
     }
   }
 }

@@ -4,7 +4,7 @@ const flagsRecord = z.record(z.string(), z.boolean());
 
 /**
  * Feature-flag overrides as a JSON object string
- * (e.g. `{"new-billing-portal":true}`). Parsed here so a typo fails boot
+ * (e.g. `{"maintenance-mode":true}`). Parsed here so a typo fails boot
  * instead of becoming a silent empty map in `@repo/flags`.
  */
 export const featureFlags = z.object({

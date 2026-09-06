@@ -1,9 +1,10 @@
 /**
  * Schema for the planned append-only audit trail.
  *
- * Application writers are not wired yet. When they are, rows must never be
- * updated or soft-deleted, and cross-tenant support paths must write here in the
- * same transaction as the change they describe.
+ * Application writers must never update or soft-delete rows. Cross-tenant
+ * support paths must write here in the same transaction as the change they
+ * describe. Auth/org/API-key events are recorded from Better Auth hooks via
+ * `recordAuditLog`; invoice voiding uses `writeAuditLog`.
  */
 
 import { index, jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";

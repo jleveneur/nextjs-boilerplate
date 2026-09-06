@@ -56,6 +56,7 @@ export {
   type WriteOutboxEventInput,
 } from "./outbox/write-outbox-event.ts";
 export { writeAuditLog, type WriteAuditLogInput } from "./write-audit-log.ts";
+export { recordAuditLog, type RecordAuditLogInput } from "./record-audit-log.ts";
 export {
   adaptEmailMailer,
   createInProcessEventBus,

@@ -20,6 +20,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  "use cache";
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Metadata" });
   return {

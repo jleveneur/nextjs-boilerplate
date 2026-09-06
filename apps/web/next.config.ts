@@ -32,6 +32,14 @@ const nextConfig: NextConfig = {
         source: "/ingest/:path*",
         destination: `${posthogHost}/:path*`,
       },
+      {
+        source: "/:locale/ingest/static/:path*",
+        destination: `${posthogHost}/static/:path*`,
+      },
+      {
+        source: "/:locale/ingest/:path*",
+        destination: `${posthogHost}/:path*`,
+      },
     ];
   },
 };

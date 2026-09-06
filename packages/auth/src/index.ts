@@ -12,10 +12,12 @@ export {
 } from "./resolve-actor.ts";
 export { isOrganizationRole, permissionsForOrganizationRole } from "./role-permissions.ts";
 export type {
+  AuthAuditEvent,
   AuthDatabase,
   AuthSchema,
   CreateAuthOptions,
   OAuthProviderConfig,
+  OnAuditEvent,
   OnOrganizationCreatedInput,
   OnUserCreatedInput,
   SendInvitationEmailInput,

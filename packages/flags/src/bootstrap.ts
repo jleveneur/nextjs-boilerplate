@@ -18,7 +18,7 @@ function registeredFlagNames(): FlagName[] {
   return names;
 }
 
-function isCompleteBootstrap(value: Partial<Record<FlagName, boolean>>): value is FlagBootstrap {
+function isCompleteBootstrap(value: Record<string, boolean>): value is FlagBootstrap {
   for (const name of registeredFlagNames()) {
     if (typeof value[name] !== "boolean") {
       return false;
@@ -33,7 +33,7 @@ export async function bootstrapFlags(
   context?: FlagContext,
 ): Promise<FlagBootstrap> {
   const names = registeredFlagNames();
-  const bootstrapped: Partial<Record<FlagName, boolean>> = {};
+  const bootstrapped: Record<string, boolean> = {};
 
   await Promise.all(
     names.map(async (name) => {

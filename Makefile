@@ -19,7 +19,7 @@ SHELL := bash
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
         changeset clean clean-all \
-        deps-up deps-up-test deps-up-test-worker deps-down \
+        deps-up deps-up-observability deps-up-test deps-up-test-worker deps-down \
         prod-up prod-down \
         db-up db-up-test db-down db-wait db-migrate db-seed db-reset db-push \
         email dev proxy
@@ -237,10 +237,13 @@ image-size: ## Fail if local app images exceed size budgets
 ## Local dependencies (Docker)
 ## ----------------------------------------------------------------------------
 
-deps-up: ## Start Postgres, Redis, MinIO, Mailpit, OTel, Jaeger, Prometheus, Grafana
-	$(COMPOSE) up -d postgres redis minio minio-init mailpit jaeger otel-collector prometheus grafana
+deps-up: ## Start Postgres, Redis, MinIO, Mailpit (not Jaeger/Prometheus/Grafana)
+	$(COMPOSE) up -d postgres redis minio minio-init mailpit
 	@$(MAKE) db-wait
 	@until $(COMPOSE) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
+
+deps-up-observability: ## Start Jaeger, OTel collector, Prometheus, and Grafana
+	$(COMPOSE) up -d jaeger otel-collector prometheus grafana
 
 deps-up-test: ## Start ephemeral dependency stack for integration tests
 	# Retry once after a clean down — GHA occasionally races host port binds

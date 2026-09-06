@@ -6,8 +6,8 @@
  *   rootMainFiles + polyfillFiles + the route's entryJSFiles
  *
  * Budgets live in `apps/web/bundle-budget.json`. The `/` route also forbids
- * heavy module path substrings so chart/editor/table (and the design-system
- * client graph) cannot land on the base route unnoticed.
+ * heavy module path substrings so interactive UI kits cannot land on the
+ * marketing homepage unnoticed.
  *
  * Run: pnpm --filter @repo/web bundle-budget
  * Test: node --test scripts/check-bundle-budget.test.ts

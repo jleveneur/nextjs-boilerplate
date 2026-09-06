@@ -86,9 +86,10 @@ variable set is kept deliberately small so a single image is promotable from sta
 
 ### Local development
 
-`docker/compose.yaml` runs **dependencies only** — Postgres 18, Redis, MinIO, Mailpit, OTel
-collector (traces → Jaeger, metrics → Prometheus), Jaeger, Prometheus, and Grafana. Applications
-run on the host via `pnpm dev`, wrapped in Portless (`https://web.localhost` and siblings).
+`docker/compose.yaml` runs **dependencies only**. `make deps-up` starts Postgres 18, Redis, MinIO,
+and Mailpit. `make deps-up-observability` starts the OTel collector (traces → Jaeger, metrics →
+Prometheus), Jaeger, Prometheus, and Grafana. Applications run on the host via `pnpm dev`, wrapped
+in Portless (`https://web.localhost` and siblings).
 
 This is a deliberate choice against running apps in containers locally: HMR through a bind mount is
 slow and unreliable on macOS, `node_modules` mounting is fragile, and debugger attachment is

@@ -15,7 +15,7 @@ const flagsJsonSchema = z.record(z.string(), z.boolean());
 export type CreateEnvFlagProviderOptions = {
   /**
    * Raw JSON object string, typically from `FLAGS_JSON`
-   * (e.g. `{"new-billing-portal":true}`).
+   * (e.g. `{"maintenance-mode":true}`).
    */
   flagsJson?: string;
   /** Pre-parsed overrides. Merged over {@link flagsJson} when both are set. */

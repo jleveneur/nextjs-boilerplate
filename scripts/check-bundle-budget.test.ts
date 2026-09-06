@@ -35,13 +35,10 @@ describe("entryKeyForRoute", () => {
   it("resolves / and nested app routes", () => {
     const entries = {
       "[project]/apps/web/src/app/page": ["a.js"],
-      "[project]/apps/web/src/app/design-system/page": ["b.js"],
+      "[project]/apps/web/src/app/sign-in/page": ["b.js"],
     };
     assert.equal(entryKeyForRoute("/", entries), "[project]/apps/web/src/app/page");
-    assert.equal(
-      entryKeyForRoute("/design-system", entries),
-      "[project]/apps/web/src/app/design-system/page",
-    );
+    assert.equal(entryKeyForRoute("/sign-in", entries), "[project]/apps/web/src/app/sign-in/page");
   });
 });
 
@@ -70,12 +67,12 @@ describe("firstLoadBytes", () => {
 describe("findForbiddenModules", () => {
   it("returns only needles that appear in the manifest", () => {
     assert.deepEqual(
-      findForbiddenModules("...packages/ui/src/button...recharts...", [
+      findForbiddenModules("...packages/ui/src/button...sonner...", [
         "packages/ui/",
-        "recharts",
+        "sonner",
         "@tiptap/",
       ]),
-      ["packages/ui/", "recharts"],
+      ["packages/ui/", "sonner"],
     );
   });
 });
@@ -111,7 +108,7 @@ describe("checkBundleBudget", () => {
     const report = checkBundleBudget({
       budget: {
         routes: {
-          "/": { maxFirstLoadJsBytes: 500, forbiddenModuleSubstrings: ["recharts"] },
+          "/": { maxFirstLoadJsBytes: 500, forbiddenModuleSubstrings: ["sonner"] },
         },
       },
       buildManifest: {

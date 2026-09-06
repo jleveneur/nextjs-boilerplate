@@ -1,6 +1,6 @@
 import { createAuth, type Auth } from "@repo/auth";
 import { createCache, type Cache } from "@repo/cache";
-import type { CtxPorts } from "@repo/core";
+import { recordAuditLog, type CtxPorts } from "@repo/core";
 import { createDb, type Database, type SqlClient } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
@@ -97,6 +97,13 @@ function buildContainer(): AppContainer {
         subject: `Join ${organizationName}`,
         html: `<p>${inviterName} invited you to ${organizationName}. Accept: <a href="${url}">${url}</a></p>`,
       });
+    },
+    onAuditEvent: async (event) => {
+      try {
+        await recordAuditLog(db, event);
+      } catch (error) {
+        logger.error({ err: error, action: event.action }, "failed to record auth audit event");
+      }
     },
   });
 

@@ -206,7 +206,9 @@ Server-side capture is wired to **domain events**, not sprinkled into services: 
 business logic and can be removed entirely without touching core.
 
 Client capture is proxied through a Next rewrite (`/ingest/*` → PostHog), which both reduces
-blocker loss and avoids a third-party origin in the CSP.
+blocker loss and avoids a third-party origin in the CSP. `proxy.ts` excludes `/ingest` from
+locale prefixing and the session-cookie gate so capture is not rewritten to `/en/ingest` or
+bounced to sign-in.
 
 ### Privacy
 
@@ -242,11 +244,10 @@ Providers:
 Flags are declared with a default, an owner, and an expiry:
 
 ```
-// illustrative
+// illustrative — the registry is empty until a real rollout needs a flag
 export const flags = {
-  "new-billing-portal": { kind: "release",    default: false, owner: "@team", expires: "2026-10-01" },
-  "checkout-v2":        { kind: "experiment", default: false, owner: "@team", expires: "2026-09-15" },
-  "disable-exports":    { kind: "kill-switch", default: false, owner: "@team" },
+  "maintenance-mode": { kind: "kill-switch", default: false, owner: "@team" },
+  "checkout-v2":      { kind: "experiment",  default: false, owner: "@team", expires: "2026-09-15" },
 } as const
 ```
 
@@ -311,6 +312,7 @@ gets fixed rather than worked around.
 | 5   | Signup conversion dropped                | PostHog funnel; segment by `release` property and flag variant from server bootstrap                                           |
 | 6   | Who still uses REST endpoint X?          | `apikey.request_count` / `last_request` via Better Auth `verifyApiKey` (see `@repo/auth`)                                      |
 
-**Local URLs** (after `make deps-up`): Jaeger `http://127.0.0.1:55443`, Prometheus
+**Local URLs** (after `make deps-up-observability`): Jaeger `http://127.0.0.1:55443`, Prometheus
 `http://127.0.0.1:55447`, Grafana `http://127.0.0.1:55448` (admin/admin). Enable
 `OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:55445` in `.env`.
+`make deps-up` starts Postgres, Redis, MinIO, and Mailpit only.

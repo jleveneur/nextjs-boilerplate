@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { isLocale } from "@repo/i18n";
 
 import { routing } from "./i18n/routing.ts";
+import { isPostHogIngestPath } from "./lib/ingest-path.ts";
 import { SESSION_COOKIE_NAMES } from "./lib/session-cookie.ts";
 
 const handleI18nRouting = createMiddleware(routing);
@@ -11,7 +12,6 @@ const handleI18nRouting = createMiddleware(routing);
 /** First path segments after the locale that do not require a session cookie. */
 const PUBLIC_SEGMENTS = new Set([
   "",
-  "design-system",
   "sign-in",
   "sign-up",
   "verify-email",
@@ -57,6 +57,11 @@ function withSecurityHeaders(response: NextResponse): NextResponse {
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // PostHog first-party proxy: do not locale-prefix `/ingest/*` or cookie-gate it.
+  if (isPostHogIngestPath(pathname)) {
+    return NextResponse.next();
+  }
+
   if (requiresSessionCookie(pathname)) {
     const hasSession = SESSION_COOKIE_NAMES.some((name) => request.cookies.has(name));
     if (!hasSession) {
@@ -72,5 +77,5 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/((?!api|_next|_vercel|.*\\..*).*)",
+  matcher: "/((?!api|_next|_vercel|ingest|.*\\..*).*)",
 };

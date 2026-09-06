@@ -1,25 +1,27 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
 import { Button } from "@repo/ui";
 import { Icon, Moon02Icon, Sun03Icon } from "@repo/ui/icons";
 
 export function ThemeToggle() {
+  const t = useTranslations("Shell");
   const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
 
   return (
     <Button
       type="button"
       variant="outline"
       size="icon"
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      aria-label={t("theme")}
       onClick={() => {
-        setTheme(isDark ? "light" : "dark");
+        setTheme(resolvedTheme === "dark" ? "light" : "dark");
       }}
     >
-      <Icon icon={isDark ? Sun03Icon : Moon02Icon} />
+      <Icon icon={Moon02Icon} className="dark:hidden" />
+      <Icon icon={Sun03Icon} className="hidden dark:block" />
     </Button>
   );
 }
