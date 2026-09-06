@@ -69,7 +69,9 @@ Common mistakes:
   <KanbanBoard>
     {Object.entries(cols).map(([id, items]) => (
       <KanbanColumn key={id} value={id}>
-        <KanbanColumnHandle><h3>{id}</h3></KanbanColumnHandle>
+        <KanbanColumnHandle>
+          <h3>{id}</h3>
+        </KanbanColumnHandle>
         <KanbanColumnContent value={id}>
           {items.map((i) => (
             <KanbanItem key={i.id} value={i.id}>
@@ -80,7 +82,9 @@ Common mistakes:
       </KanbanColumn>
     ))}
   </KanbanBoard>
-  <KanbanOverlay><div className="bg-muted size-full rounded-md" /></KanbanOverlay>
+  <KanbanOverlay>
+    <div className="bg-muted size-full rounded-md" />
+  </KanbanOverlay>
 </Kanban>
 ```
 
@@ -95,7 +99,9 @@ Common mistakes:
 <Sortable value={items} onValueChange={setItems} getItemValue={(i) => i.id}>
   {items.map((i) => (
     <SortableItem key={i.id} value={i.id}>
-      <SortableItemHandle><GripVertical /></SortableItemHandle>
+      <SortableItemHandle>
+        <GripVertical />
+      </SortableItemHandle>
       {i.label}
     </SortableItem>
   ))}
@@ -200,11 +206,15 @@ const [value, setValue] = useState<DateSelectorValue | undefined>()
 <Stepper defaultValue={1}>
   <StepperNav>
     <StepperItem step={1}>
-      <StepperTrigger><StepperIndicator>1</StepperIndicator></StepperTrigger>
+      <StepperTrigger>
+        <StepperIndicator>1</StepperIndicator>
+      </StepperTrigger>
       <StepperSeparator />
     </StepperItem>
     <StepperItem step={2}>
-      <StepperTrigger><StepperIndicator>2</StepperIndicator></StepperTrigger>
+      <StepperTrigger>
+        <StepperIndicator>2</StepperIndicator>
+      </StepperTrigger>
     </StepperItem>
   </StepperNav>
   <StepperPanel>
@@ -249,7 +259,9 @@ const [value, setValue] = useState<DateSelectorValue | undefined>()
     <AutocompleteEmpty>No results found.</AutocompleteEmpty>
     <AutocompleteList>
       {(item) => (
-        <AutocompleteItem key={item.value} value={item}>{item.label}</AutocompleteItem>
+        <AutocompleteItem key={item.value} value={item}>
+          {item.label}
+        </AutocompleteItem>
       )}
     </AutocompleteList>
   </AutocompleteContent>
@@ -264,7 +276,12 @@ const [value, setValue] = useState<DateSelectorValue | undefined>()
 **Shape:**
 
 ```tsx
-<PhoneInput placeholder="Enter phone number" defaultCountry="US" value={value} onChange={setValue} />
+<PhoneInput
+  placeholder="Enter phone number"
+  defaultCountry="US"
+  value={value}
+  onChange={setValue}
+/>
 ```
 
 **Gotcha:** `value`/`onChange` use an E.164 string (e.g. `"+14155551234"`), not a display-formatted string; `onChange` can fire `undefined`. `defaultCountry` is a 2-letter ISO code. Wraps `react-phone-number-input`.
@@ -372,7 +389,9 @@ const [value, setValue] = useState<DateSelectorValue | undefined>()
   <ShieldCheckIcon />
   <AlertTitle>Security update</AlertTitle>
   <AlertDescription>Enable two-factor authentication.</AlertDescription>
-  <AlertAction><Button size="xs">Update</Button></AlertAction>
+  <AlertAction>
+    <Button size="xs">Update</Button>
+  </AlertAction>
 </Alert>
 ```
 

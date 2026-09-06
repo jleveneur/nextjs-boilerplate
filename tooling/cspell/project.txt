@@ -138,6 +138,18 @@ rolldown
 voidzero
 dprint
 biome
+bunx
+
+# --- ReUI (skill docs and registry) ----------------------------------------
+cascader
+llms
+remixicon
+retint
+reui
+REUI
+rollups
+scrollspy
+tabler
 
 # --- Domain / architecture -------------------------------------------------
 authz
