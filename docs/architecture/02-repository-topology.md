@@ -70,7 +70,7 @@ apps/web/
 │   │   │   ├── (marketing)/        # Public, statically cached
 │   │   │   ├── (auth)/             # sign-in, sign-up, reset, verify, passkey, 2FA
 │   │   │   └── (app)/              # Authenticated product
-│   │   │       └── [orgSlug]/      # Tenant-scoped surface (invoices, billing)
+│   │   │       └── [orgSlug]/      # Tenant-scoped surface (invoices, billing, settings)
 │   │   ├── api/
 │   │   │   ├── rpc/[[...rest]]/    # oRPC fetch adapter
 │   │   │   ├── auth/[...all]/      # Better Auth handler

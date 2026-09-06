@@ -24,6 +24,20 @@ type KeyRow = {
   prefix: string | null;
 };
 
+/**
+ * Better Auth's `start` is the first characters of the full secret, which
+ * already includes `prefix`. Concatenating the two doubled the prefix.
+ */
+function apiKeyListHint(prefix: string | null, start: string | null): string {
+  if (start !== null && start.length > 0) {
+    return start;
+  }
+  if (prefix !== null && prefix.length > 0) {
+    return prefix;
+  }
+  return "—";
+}
+
 type Props = {
   organizationId: string;
   userId: string;
@@ -157,8 +171,7 @@ export function ApiKeysPanel({ organizationId, userId }: Props) {
                 <tr key={key.id} className="border-border border-b last:border-0">
                   <td className="px-2 py-3">{key.name ?? "—"}</td>
                   <td className="px-2 py-3 font-mono text-xs">
-                    {key.prefix ?? ""}
-                    {key.start ?? ""}
+                    {apiKeyListHint(key.prefix, key.start)}
                   </td>
                   <td className="px-2 py-3">
                     <Button

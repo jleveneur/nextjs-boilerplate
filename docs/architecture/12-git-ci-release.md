@@ -239,7 +239,8 @@ token is short-lived and scoped to this repository, which a personal access toke
 This requires a GitHub App installed on the repository with **Contents: read and write** and
 **Pull requests: read and write**, its id in the `RELEASE_APP_ID` variable and its private key in
 the `RELEASE_APP_PRIVATE_KEY` secret. The app must also be exempt from any ruleset that would
-block it from pushing `changeset-release/main`.
+block it from pushing `changeset-release/main`. If `RELEASE_APP_ID` is unset, the workflow **skips**
+so a fork without the GitHub App does not fail `main`.
 
 ### Semver applied to internal packages
 

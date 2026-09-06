@@ -60,6 +60,7 @@
     "switchOrg": "Organisation",
     "createOrg": "Créer une organisation",
     "theme": "Thème",
+    "language": "Langue",
     "noOrganizations": "Aucune organisation",
     "errorTitle": "Une erreur est survenue",
     "errorRetry": "Réessayer"

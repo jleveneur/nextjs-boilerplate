@@ -6,6 +6,7 @@ import { Skeleton } from "@repo/ui";
 import { Toaster } from "@repo/ui/toast";
 
 import { EnsureActiveOrg } from "@/components/ensure-active-org.tsx";
+import { LocaleSwitcher } from "@/components/locale-switcher.tsx";
 import { OrgSwitcher } from "@/components/org-switcher.tsx";
 import { SignOutButton } from "@/components/sign-out-button.tsx";
 import { ThemeToggle } from "@/components/theme-toggle.tsx";
@@ -68,6 +69,7 @@ async function AppHeader({ params }: { params: Promise<{ orgSlug: string }> }) {
         </nav>
         <div className="flex items-center gap-2">
           <OrgSwitcher currentSlug={orgSlug} />
+          <LocaleSwitcher />
           <ThemeToggle />
           <SignOutButton />
         </div>
@@ -92,6 +94,7 @@ function HeaderFallback() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-8 w-10" />
           <Skeleton className="h-8 w-8" />
           <Skeleton className="h-8 w-20" />
         </div>

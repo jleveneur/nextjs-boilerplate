@@ -60,6 +60,7 @@
     "switchOrg": "Organization",
     "createOrg": "Create organization",
     "theme": "Theme",
+    "language": "Language",
     "noOrganizations": "No organizations",
     "errorTitle": "Something went wrong",
     "errorRetry": "Try again"

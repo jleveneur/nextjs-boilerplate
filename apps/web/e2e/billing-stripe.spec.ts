@@ -13,9 +13,9 @@ const hasStripe =
 test.describe("stripe billing", () => {
   test.skip(!hasStripe, "requires STRIPE_SECRET_KEY + NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY");
 
-  test("billing page shows subscription panel when flag enabled", async ({ page }) => {
-    // Full checkout against Stripe is a manual / Stripe CLI drill; this asserts
-    // the gated surface mounts when credentials and the flag are present.
+  test("sign-in is reachable when Stripe keys are configured", async ({ page }) => {
+    // Checkout and Customer Portal are a Stripe CLI / test-mode drill.
+    // The billing page is always in the signed-in nav (no feature flag).
     await page.goto("/en/sign-in");
     await expect(page.getByRole("heading", { name: /sign in|connexion/i })).toBeVisible();
   });

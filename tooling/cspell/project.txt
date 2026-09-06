@@ -288,7 +288,9 @@ nosniff # X-Content-Type-Options header value
 créer
 déconnecter
 envoyer
+Langue
 magique
 montant
 numéro
+Paramètres
 s'inscrire

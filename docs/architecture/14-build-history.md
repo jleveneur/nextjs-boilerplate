@@ -41,6 +41,11 @@ Two rules governed the order and still govern new work:
 
 Phases 7 and 9 ran in parallel with neighbours once their dependencies landed.
 
+Later adjustments (not new phases): Sentry was removed after phase 14 — unexpected
+errors go to Pino until a tracker is wired ([08](./08-observability.md)). The
+`@repo/ui/{chart,editor,table}` subpaths from phases 7 and 17 were removed; the
+design system is Base UI primitives plus toast.
+
 ---
 
 ## Working agreement that still applies
