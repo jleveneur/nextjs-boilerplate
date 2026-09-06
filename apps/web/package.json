@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "portless web -- node --experimental-strip-types ../../scripts/with-portless-origin.ts next dev",
+    "typegen": "next typegen",
+    "pretypecheck": "pnpm typegen",
     "build": "next build",
     "start": "next start --port 3000",
     "typecheck": "tsc --noEmit",

@@ -94,6 +94,10 @@ packages, `@repo/*`, `@/` internals, relative `./`, then CSS. Same-group imports
 type-stripped rather than compiled, which is what keeps source-only internal packages viable
 across Next, Vitest, and Node.
 
+Next apps run `next typegen` before typecheck and type-aware lint so generated `.next/types` exist
+on a fresh checkout. Those files must be listed **before** `src` in `tsconfig` `include`: otherwise
+Next's empty `next/root-params` placeholder wins and every export is `any`.
+
 ### Rules
 
 - **No `any`.** Use `unknown` and narrow. Type-aware Oxlint rules (`no-unsafe-assignment`,
