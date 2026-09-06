@@ -7,12 +7,12 @@ customer reports of failures.
 
 ## Confirm
 
-1. Open Grafana **RED — web & api** (`http://127.0.0.1:55448`, local) — check which
+1. Open Grafana **RED — web & api** (`http://127.0.0.1:15448`, local) — check which
    `service_name` spiked and when.
 2. Filter logs by `environment` / `service.version` (git SHA) — correlate with a recent deploy.
 3. Pick one failing `requestId` from logs or a customer report and trace it:
    - Logs: filter `service` + `requestId`
-   - Jaeger: `http://127.0.0.1:55443` — search by trace id from the log line
+   - Jaeger: `http://127.0.0.1:15443` — search by trace id from the log line
 
 ---
 

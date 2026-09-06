@@ -25,8 +25,8 @@ import {
 const LOCAL = `NODE_ENV=development
 APP_ENV=local
 APP_URL=http://localhost:3000
-DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55432/app
-# SMTP_URL=smtp://127.0.0.1:55438
+DATABASE_URL=postgres://postgres:postgres@127.0.0.1:15432/app
+# SMTP_URL=smtp://127.0.0.1:15438
 `;
 
 const STAGING = `NODE_ENV=production
@@ -79,7 +79,7 @@ describe("catalogBodyStructure", () => {
   it("treats commented and set lines as the same key slot", () => {
     assert.deepEqual(
       catalogBodyStructure("NODE_ENV=development\n# SMTP_URL=\n"),
-      catalogBodyStructure("NODE_ENV=production\nSMTP_URL=smtp://127.0.0.1:55438\n"),
+      catalogBodyStructure("NODE_ENV=production\nSMTP_URL=smtp://127.0.0.1:15438\n"),
     );
   });
 });
@@ -116,7 +116,7 @@ APP_URL=https://staging.example.com
     const example = `NODE_ENV=development
 APP_ENV=local
 # Database
-DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55432/app
+DATABASE_URL=postgres://postgres:postgres@127.0.0.1:15432/app
 `;
     const staging = `NODE_ENV=production
 APP_ENV=staging

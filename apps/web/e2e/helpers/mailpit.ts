@@ -1,7 +1,7 @@
 /* Sequential Mailpit polling — await-in-loop is intentional. */
 /* eslint-disable eslint/no-await-in-loop -- polling */
 
-const mailpitApi = process.env["MAILPIT_API_URL"] ?? "http://127.0.0.1:55442";
+const mailpitApi = process.env["MAILPIT_API_URL"] ?? "http://127.0.0.1:15442";
 
 type MailpitMessage = {
   ID: string;

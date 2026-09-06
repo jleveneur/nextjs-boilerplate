@@ -369,11 +369,11 @@ describe("createEnv", () => {
       runtimeEnv: {
         EMAIL_FROM: "noreply@example.com",
         RESEND_API_KEY: undefined,
-        SMTP_URL: "smtp://127.0.0.1:55438",
+        SMTP_URL: "smtp://127.0.0.1:15438",
         MAILPIT_API_URL: undefined,
       },
     });
-    expect(viaSmtp.SMTP_URL).toBe("smtp://127.0.0.1:55438");
+    expect(viaSmtp.SMTP_URL).toBe("smtp://127.0.0.1:15438");
     expect(viaSmtp.RESEND_API_KEY).toBeUndefined();
   });
 

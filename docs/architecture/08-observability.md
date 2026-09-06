@@ -332,14 +332,14 @@ gets fixed rather than worked around.
 
 | #   | Question                                 | Where to look locally                                                                                                          |
 | --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`55443`), `ctx.actor` in oRPC context                                                         |
-| 2   | p95 latency doubled after deploy         | Grafana RED dashboard (`55448`), compare `service.version` tags                                                                |
+| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`15443`), `ctx.actor` in oRPC context                                                         |
+| 2   | p95 latency doubled after deploy         | Grafana RED dashboard (`15448`), compare `service.version` tags                                                                |
 | 3   | Job retrying for an hour                 | Worker logs (`jobId`, `attempt`), Grafana Queue dashboard (`bullmq_queue_waiting`), Jaeger job span via envelope `traceparent` |
 | 4   | Emails not arriving                      | Domain event → outbox table → `email.send` job → Resend span in trace                                                          |
 | 5   | Signup conversion dropped                | PostHog funnel; segment by `release` property and flag variant from server bootstrap                                           |
 | 6   | Who still uses REST endpoint X?          | `apikey.request_count` / `last_request` via Better Auth `verifyApiKey` (see `@repo/auth`)                                      |
 
-**Local URLs** (after `make deps-up-observability`): Jaeger `http://127.0.0.1:55443`, Prometheus
-`http://127.0.0.1:55447`, Grafana `http://127.0.0.1:55448` (admin/admin). Enable
-`OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:55445` in `.env`.
+**Local URLs** (after `make deps-up-observability`): Jaeger `http://127.0.0.1:15443`, Prometheus
+`http://127.0.0.1:15447`, Grafana `http://127.0.0.1:15448` (admin/admin). Enable
+`OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:15445` in `.env`.
 `make deps-up` starts Postgres, Redis, MinIO, and Mailpit only.

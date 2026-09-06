@@ -16,7 +16,7 @@ describe("createDb", () => {
 
   it("returns a db handle and a closable client", async () => {
     const { db, client } = createDb({
-      connectionString: "postgres://postgres:postgres@127.0.0.1:55432/app",
+      connectionString: "postgres://postgres:postgres@127.0.0.1:15432/app",
       max: 1,
     });
 
@@ -30,7 +30,7 @@ describe("createDb", () => {
   it("forwards logQuery when provided", async () => {
     const logQuery = vi.fn();
     const { db, client } = createDb({
-      connectionString: "postgres://postgres:postgres@127.0.0.1:55432/app",
+      connectionString: "postgres://postgres:postgres@127.0.0.1:15432/app",
       max: 1,
       logQuery,
     });
