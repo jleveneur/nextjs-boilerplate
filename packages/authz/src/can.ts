@@ -6,10 +6,10 @@
  */
 
 import { ERROR_CODES } from "@repo/errors";
+import { ALL_ACTIONS, DESTRUCTIVE_WHILE_IMPERSONATING, type Action } from "@repo/permissions";
 import type { Actor, OrganizationId } from "@repo/types";
 
 import { allow, deny, type Decision } from "./decision.ts";
-import { ALL_ACTIONS, DESTRUCTIVE_WHILE_IMPERSONATING, type Action } from "./permissions.ts";
 
 export type AuthzResource = {
   organizationId: OrganizationId;

@@ -4,7 +4,7 @@ import "server-only";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
-import { isOrganizationRole } from "@repo/auth";
+import { isOrganizationRole } from "@repo/permissions";
 
 import { redirect } from "@/i18n/navigation.ts";
 import { getContainer } from "@/server/container.ts";

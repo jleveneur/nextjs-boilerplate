@@ -191,13 +191,18 @@ response shapes are defined once.
 | `@repo/payments`      | Stripe adapter: catalog sync, checkout/portal sessions, webhook handlers, entitlement mapping.                                                        |
 | `@repo/jobs`          | Job **contracts** (name registry + Zod payload per job) and the `enqueue` facade. Owns no execution semantics.                                        |
 | `@repo/auth`          | Better Auth server config (Drizzle adapter, plugins), server-side session helpers, typed client.                                                      |
-| `@repo/authz`         | Permission registry, roles, `can()` / `authorize()`, policy primitives. Pure and dependency-free by design.                                           |
+| `@repo/authz`         | `can()` / `authorize()` and policy primitives, over the `@repo/permissions` registry. Pure and dependency-free by design.                             |
 | `@repo/analytics`     | Typed product-event registry and server/client capture adapters (PostHog).                                                                            |
 | `@repo/flags`         | Feature-flag interface, typed flag registry, env + PostHog providers.                                                                                 |
 
 `@repo/authz` is deliberately pure (no DB, no session): it takes an actor and a resource and
 returns a decision, which makes the entire authorization model unit-testable in milliseconds
 and impossible to accidentally couple to a transport.
+
+The registry it reads lives one layer down in `@repo/permissions`, because `@repo/auth` needs the
+same declaration and the two may not import each other. Keeping it in layer 0 is what lets session
+RBAC and API-key RBAC be _derived_ from one `resource:action` list rather than hand-synchronised —
+see [07 — auth](./07-auth.md#permissions).
 
 ### Layer 2 — domain
 

@@ -13,7 +13,7 @@ lower layers, with one exception below.** No upward dependencies, ever.
 
 | Layer | Name              | Runtime        | Packages                                                                                                                |
 | ----- | ----------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 0     | Foundation        | Browser + Node | `types`, `utils`, `env`, `errors`, `contracts`, `i18n`                                                                  |
+| 0     | Foundation        | Browser + Node | `types`, `utils`, `env`, `errors`, `contracts`, `i18n`, `permissions`                                                   |
 | 1     | Platform adapters | Node only      | `logger`, `observability`, `db`, `cache`, `storage`, `email`, `payments`, `jobs`, `auth`, `authz`, `analytics`, `flags` |
 | 2     | Domain            | Node only      | `core`                                                                                                                  |
 | 3     | Transport         | Node only      | `orpc`                                                                                                                  |
@@ -96,21 +96,22 @@ flowchart BT
 
 ### Selected concrete dependency lists
 
-| Package           | Depends on                                                                                                                                                                          |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@repo/utils`     | _(nothing internal)_                                                                                                                                                                |
-| `@repo/types`     | _(nothing internal)_                                                                                                                                                                |
-| `@repo/errors`    | `types`                                                                                                                                                                             |
-| `@repo/contracts` | `types`, `utils`                                                                                                                                                                    |
-| `@repo/env`       | _(nothing internal)_ — Zod only                                                                                                                                                     |
-| `@repo/db`        | `env`, `types`, `utils`, `logger` ✗ — see note                                                                                                                                      |
-| `@repo/authz`     | `types`, `errors`                                                                                                                                                                   |
-| `@repo/auth`      | `types` — db schema + email/Redis callbacks are injected (same-layer ban)                                                                                                           |
-| `@repo/core`      | layer 0 + `db`, `authz`, `logger`, `jobs` (side-effect ports for mail/files/flags/analytics; adapters injected)                                                                     |
-| `@repo/orpc`      | `core`, `auth`, `errors`, `contracts`, `logger`, `db`, `types`                                                                                                                      |
-| `@repo/ui`        | _(nothing internal yet)_ — may use layer 0 only (`types`, `utils`, `i18n`); theme CSS from `@repo/tailwind-config` (dev/build)                                                      |
-| `apps/web`        | `ui`, `orpc`, `core`, `auth`, `db`, `email`, `env`, `i18n`, `jobs`, `logger`, `observability`, `analytics`, `flags`, `payments`, `storage`, `contracts`, `types`, `utils`, `errors` |
-| `apps/api`        | `core`, `auth`, `orpc` (parity tests), `contracts`, `errors`, `env`, `logger`, `cache`, `db`, `email`, `jobs`, `payments`, `types`, `utils`                                         |
+| Package             | Depends on                                                                                                                                                                          |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/utils`       | _(nothing internal)_                                                                                                                                                                |
+| `@repo/types`       | _(nothing internal)_                                                                                                                                                                |
+| `@repo/errors`      | `types`                                                                                                                                                                             |
+| `@repo/contracts`   | `types`, `utils`                                                                                                                                                                    |
+| `@repo/permissions` | `types` — the RBAC registry both layer-1 auth packages read                                                                                                                         |
+| `@repo/env`         | _(nothing internal)_ — Zod only                                                                                                                                                     |
+| `@repo/db`          | `env`, `types`, `utils`, `logger` ✗ — see note                                                                                                                                      |
+| `@repo/authz`       | `types`, `errors`, `permissions`                                                                                                                                                    |
+| `@repo/auth`        | `types`, `permissions` — db schema + email/Redis callbacks are injected (same-layer ban)                                                                                            |
+| `@repo/core`        | layer 0 + `db`, `authz`, `logger`, `jobs` (side-effect ports for mail/files/flags/analytics; adapters injected)                                                                     |
+| `@repo/orpc`        | `core`, `auth`, `errors`, `contracts`, `logger`, `db`, `types`                                                                                                                      |
+| `@repo/ui`          | _(nothing internal yet)_ — may use layer 0 only (`types`, `utils`, `i18n`); theme CSS from `@repo/tailwind-config` (dev/build)                                                      |
+| `apps/web`          | `ui`, `orpc`, `core`, `auth`, `db`, `email`, `env`, `i18n`, `jobs`, `logger`, `observability`, `analytics`, `flags`, `payments`, `storage`, `contracts`, `types`, `utils`, `errors` |
+| `apps/api`          | `core`, `auth`, `orpc` (parity tests), `contracts`, `errors`, `env`, `logger`, `cache`, `db`, `email`, `jobs`, `payments`, `types`, `utils`                                         |
 
 > **Note on `db` → `logger`:** both are layer 1, so `@repo/db` may not import `@repo/logger`.
 > This is not pedantry — it is what keeps `@repo/db` usable in migration scripts and tests

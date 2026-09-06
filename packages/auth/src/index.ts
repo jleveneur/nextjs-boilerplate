@@ -10,7 +10,6 @@ export {
   type ResolveActorFromApiKeyInput,
   type ResolveActorFromSessionInput,
 } from "./resolve-actor.ts";
-export { isOrganizationRole, permissionsForOrganizationRole } from "./role-permissions.ts";
 export type {
   AuthAuditEvent,
   AuthDatabase,

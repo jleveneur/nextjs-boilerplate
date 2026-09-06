@@ -103,21 +103,38 @@ Pure RBAC cannot express ownership, state, or relationship conditions, and every
 needs them. Systems that try end up encoding ownership into role names
 (`invoice-editor-for-org-123`), which does not scale and cannot be audited.
 
+### Permissions — one registry, two consumers
+
+Every grant is declared **once**, as `resource:action`, in
+[`packages/permissions/src/registry.ts`](../../packages/permissions/src/registry.ts). Role grants
+sit beside it in `roles.ts`. That package is layer 0 for a specific reason: `@repo/auth` and
+`@repo/authz` are both layer 1 and may not import each other, so a registry either lives below
+them or gets copied into both.
+
+It got copied into both. Session RBAC read `@repo/authz`, API-key RBAC read a hand-written Better
+Auth statement map, and a third list in `@repo/auth` mapped roles to permissions for `Actor`. The
+comment on that third file said "kept in sync by hand" — and it wasn't: `asset:create` and
+`asset:read` were enforced for sessions and entirely unknown to API keys.
+
+Better Auth still needs its nested shape, so it is **derived** rather than written:
+
+```ts
+// packages/auth/src/access-control.ts
+const statement = { ...defaultStatements, ...toStatements(ROLE_PERMISSIONS.owner) };
+```
+
+`toStatements` groups `"invoice:void"` into `{ invoice: ["void"] }` and drops the resources the
+organization plugin already governs. Adding a permission is one line in the registry plus a role
+grant; nothing else needs editing, and `access-control.test.ts` fails if the derived statements
+stop covering the registry.
+
+The documented [authorization matrix](../security/authorization-matrix.md) is generated from the
+same registry (`make authz-matrix`), and `make check` fails when it drifts.
+
 ### RBAC via Better Auth's organization plugin
 
 `createAccessControl` defines resources and actions; roles are sets of permissions. The built-in
-roles (`owner`, `admin`, `member`) are extended with our own statements:
-
-```
-// illustrative
-const statement = {
-  organization: ["update", "delete"],
-  member:       ["create", "update", "delete"],
-  invitation:   ["create", "cancel"],
-  invoice:      ["create", "read", "update", "void", "export"],
-  apiKey:       ["create", "revoke", "list"],
-} as const
-```
+roles (`owner`, `admin`, `member`) are extended with the statements derived above.
 
 Two details discovered from the plugin's behaviour that must be respected:
 

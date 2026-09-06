@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { permissionsForRole } from "@repo/authz";
 import { findAssetById, updateAssetStatus, type AssetRow } from "@repo/db";
 import type * as DbModule from "@repo/db";
 import { ForbiddenError } from "@repo/errors";
+import { permissionsForRole } from "@repo/permissions";
 import { derivativeObjectKey } from "@repo/storage";
 import { deriveImageVariants } from "@repo/storage/image";
 import type * as StorageImageModule from "@repo/storage/image";

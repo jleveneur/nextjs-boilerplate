@@ -2,11 +2,12 @@
  * Stripe subscription / entitlement application services.
  */
 
-import { authorize, PERMISSIONS } from "@repo/authz";
+import { authorize } from "@repo/authz";
 import { withTransaction, type TenantCtx } from "@repo/db";
 import type { SubscriptionStatus } from "@repo/db/schema";
 import { NotFoundError, ValidationError } from "@repo/errors";
 import { JOB_NAMES } from "@repo/jobs";
+import { PERMISSIONS } from "@repo/permissions";
 import type { OrganizationId } from "@repo/types";
 
 import type { Ctx } from "../ctx.ts";

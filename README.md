@@ -18,11 +18,16 @@ Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
 [Docker](https://docs.docker.com/get-docker/). `make help` lists everything.
 
 ```bash
-make setup            # install, root `.env`, `apps/docs/.env`, deps, migrate, seed
+make setup            # install, `.env` for root/web/docs, deps, migrate, seed
 make check            # the fast local quality gate (not full CI)
 make dev              # deps + apps → https://web.localhost
 pnpm --filter @repo/docs dev   # docs → https://docs.localhost
 ```
+
+Starting a real project from this? Read
+[**docs/starting-a-project.md**](docs/starting-a-project.md) first — what to rename, what is
+already optional (Stripe, S3, PostHog all no-op without credentials), and what deleting the
+worked example actually costs. `make example-inventory` computes the list for you.
 
 Apps through Portless: web, api, worker, docs. `PORTLESS=0` uses localhost:3000–3003.
 With `make prod-up`, Traefik on `:8080` serves docs at
@@ -59,6 +64,7 @@ The load-bearing ideas:
 
 | Read this                                                                        | For                                                   |
 | -------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [**Starting a project**](docs/starting-a-project.md)                             | **Read first if you cloned this to build something**  |
 | Local docs site (`pnpm --filter @repo/docs dev`)                                 | Architecture, ADRs, runbooks, security, API reference |
 | [Architecture overview](docs/architecture/README.md)                             | The whole design, in reading order                    |
 | [Principles and constraints](docs/architecture/01-principles-and-constraints.md) | What is optimised for, and what is deliberately not   |

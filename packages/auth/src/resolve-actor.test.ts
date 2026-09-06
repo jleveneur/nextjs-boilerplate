@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { permissionsForRole } from "@repo/permissions";
+
 import type { Auth } from "./create-auth.ts";
 import { resolveActorFromApiKey } from "./resolve-actor.ts";
-import { permissionsForOrganizationRole } from "./role-permissions.ts";
 
 type VerifyApiKeyResult = Awaited<ReturnType<Auth["api"]["verifyApiKey"]>>;
 type VerifiedApiKey = NonNullable<Extract<VerifyApiKeyResult, { error: null }>["key"]>;
@@ -77,7 +78,7 @@ describe("resolveActorFromApiKey", () => {
         fallbackRole: "member",
       });
 
-      expect(actor?.permissions).toEqual(permissionsForOrganizationRole("member"));
+      expect(actor?.permissions).toEqual(permissionsForRole("member"));
     },
   );
 

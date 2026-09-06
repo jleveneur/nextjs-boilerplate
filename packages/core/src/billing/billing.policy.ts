@@ -5,8 +5,9 @@
  * actor void _this_ invoice?".
  */
 
-import { can, deny, PERMISSIONS, type Decision } from "@repo/authz";
+import { can, deny, type Decision } from "@repo/authz";
 import { ERROR_CODES, ForbiddenError } from "@repo/errors";
+import { PERMISSIONS } from "@repo/permissions";
 import type { Actor, OrganizationId } from "@repo/types";
 
 import { InvoiceAlreadyPaidError, InvoiceAlreadyVoidError } from "./billing.errors.ts";

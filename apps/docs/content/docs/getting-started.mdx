@@ -9,7 +9,7 @@ Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
 ## Install
 
 ```bash
-make setup       # install, root `.env`, `apps/docs/.env`, deps, migrate, seed
+make setup       # install, `.env` for root/web/docs, deps, migrate, seed
 make check       # format, lint, typecheck, layers, tests — same gates as CI
 ```
 
@@ -19,7 +19,8 @@ Or step by step:
 pnpm install
 cp .env.example .env
 cp apps/docs/.env.example apps/docs/.env   # docs site (port 3003)
-make deps-up     # Postgres, Redis, MinIO, Mailpit, OTel/Jaeger, …
+make deps-up     # Postgres, Redis, MinIO, Mailpit
+                 # (make deps-up-observability adds Jaeger, Prometheus, Grafana)
 make db-migrate
 make db-seed     # optional demo data
 ```
@@ -57,6 +58,8 @@ make prod-up     # Traefik on :8080 — web at localhost, docs at docs.localhost
 
 ## Where to read next
 
+0. **Building a real project from this?** Read `docs/starting-a-project.md` in the repo — what to
+   rename, what is already optional, and what removing the worked example costs.
 1. [Architecture overview](/docs/architecture/README) — reading order for the design docs
 2. [Principles](/docs/architecture/01-principles-and-constraints) — what is optimised for
 3. [Package graph](/docs/architecture/03-package-graph-and-boundaries) — layer rules

@@ -4,7 +4,7 @@
  * Authorize → validate/load → perform work → persist (+ outbox) → return.
  */
 
-import { authorize, PERMISSIONS } from "@repo/authz";
+import { authorize } from "@repo/authz";
 import {
   MAX_UPLOAD_BYTES,
   type ConfirmUploadInput,
@@ -21,6 +21,7 @@ import {
   type TenantCtx,
 } from "@repo/db";
 import { NotFoundError, ValidationError } from "@repo/errors";
+import { PERMISSIONS } from "@repo/permissions";
 import { buildObjectKey } from "@repo/storage";
 import type { AssetId, OrganizationId } from "@repo/types";
 
