@@ -15,6 +15,21 @@ import type {
   CreateCacheOptions,
 } from "./types.ts";
 
+/**
+ * `INCR` plus a first-write `EXPIRE`, as one round trip that cannot interleave.
+ *
+ * Doing this as two commands from the client would leave the key without a TTL
+ * whenever the process dies between them, turning a rate-limit window into a
+ * permanent block.
+ */
+const INCR_WITH_TTL = `
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then
+  redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return count
+`;
+
 export function createCache(options: CreateCacheOptions): Cache {
   const redis = new Redis(options.redisUrl, {
     maxRetriesPerRequest: 1,
@@ -74,6 +89,16 @@ export function createCache(options: CreateCacheOptions): Cache {
         "NX",
       );
       return result === "OK";
+    },
+    async incr(input: CacheSetOptions): Promise<number> {
+      const key = buildCacheKey(options.appEnv, input);
+      const result: unknown = await redis.eval(INCR_WITH_TTL, 1, key, String(input.ttlSeconds));
+
+      if (typeof result !== "number") {
+        throw new Error(`cache incr expected a number from Redis, got ${typeof result}`);
+      }
+
+      return result;
     },
     async del(input: CacheKeyInput): Promise<void> {
       await redis.del(buildCacheKey(options.appEnv, input));

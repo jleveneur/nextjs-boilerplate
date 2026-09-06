@@ -129,4 +129,49 @@ describe("getOrSetWithBackend stampede", () => {
     expect(value).toBe("fresh");
     expect(store.get("k")).toContain("fresh");
   });
+
+  it("increments a counter and restarts it after the TTL", async () => {
+    vi.useFakeTimers();
+    try {
+      const cache = createMemoryCache("local");
+      const key = { namespace: "counter", version: 1, key: "window-1", ttlSeconds: 60 };
+
+      await expect(cache.incr(key)).resolves.toBe(1);
+      await expect(cache.incr(key)).resolves.toBe(2);
+
+      // The TTL is armed by the first increment only, so the counter expires a
+      // fixed interval after it opened rather than sliding on every hit.
+      vi.advanceTimersByTime(59_000);
+      await expect(cache.incr(key)).resolves.toBe(3);
+      vi.advanceTimersByTime(2000);
+      await expect(cache.incr(key)).resolves.toBe(1);
+
+      await cache.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("counts every concurrent increment", async () => {
+    const cache = createMemoryCache("local");
+    const key = { namespace: "counter", version: 1, key: "concurrent", ttlSeconds: 60 };
+
+    const counts = await Promise.all(Array.from({ length: 50 }, () => cache.incr(key)));
+
+    expect(counts.toSorted((a, b) => a - b)).toEqual(Array.from({ length: 50 }, (_, i) => i + 1));
+    await cache.close();
+  });
+
+  it("keeps counters separate from envelope values", async () => {
+    const cache = createMemoryCache("local");
+    const key = { namespace: "counter", version: 1, key: "mixed", ttlSeconds: 60 };
+
+    await cache.incr(key);
+    // Counters are stored as plain integers, so the envelope reader skips them.
+    await expect(cache.get(key)).resolves.toBeUndefined();
+
+    await cache.set(key, { not: "a counter" });
+    expect(() => cache.incr(key)).toThrow(/non-integer/);
+    await cache.close();
+  });
 });
