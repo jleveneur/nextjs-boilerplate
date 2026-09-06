@@ -1,6 +1,6 @@
-# @repo/authz
+# @repo/permissions
 
-## 0.2.0
+## 0.1.0
 
 ### Minor Changes
 
@@ -24,20 +24,3 @@
   what it owns; `PERMISSIONS`, `ROLE_PERMISSIONS`, and `permissionsForRole` come from
   `@repo/permissions` directly. `@repo/authz` still re-exports `type Action`, because
   that is the parameter type of its own `can`.
-
-### Patch Changes
-
-- Updated dependencies [26b826e]
-  - @repo/permissions@0.1.0
-
-## 0.1.1
-
-### Patch Changes
-
-- 771731a: Resolve `server-only` through the workspace catalog so every server-boundary package shares one version.
-
-## 0.1.0
-
-### Minor Changes
-
-- 268f531: Phase 17: Stripe Billing via `@repo/payments` (checkout, portal, webhooks, entitlements), billing permissions/jobs, and `@repo/ui` chart/editor/table exports. Trigger.dev path removed (BullMQ-only, ADR-0009).
