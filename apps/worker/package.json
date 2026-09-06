@@ -29,6 +29,7 @@
     "@repo/permissions": "workspace:*",
     "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
+    "@repo/utils": "workspace:*",
     "bullmq": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",

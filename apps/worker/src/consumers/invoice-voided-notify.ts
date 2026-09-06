@@ -9,6 +9,7 @@ import {
 import type { Mailer as EmailMailer } from "@repo/email";
 import { TerminalJobError, type JobHandler } from "@repo/jobs";
 import type { Actor } from "@repo/types";
+import { escapeHtml } from "@repo/utils";
 
 import {
   beginJobIdempotency,
@@ -45,7 +46,7 @@ export function createInvoiceVoidedNotifyHandler(options: {
       await options.mailer.send({
         to: recipientEmail,
         subject: `Invoice ${payload.invoiceId} voided`,
-        html: `<p>Invoice ${payload.invoiceId} was voided for ${String(payload.amountMinor)} minor units.</p>`,
+        html: `<p>Invoice ${escapeHtml(payload.invoiceId)} was voided for ${String(payload.amountMinor)} minor units.</p>`,
         headers: { "Idempotency-Key": payload.idempotencyKey },
       });
       ctx.logger.info(

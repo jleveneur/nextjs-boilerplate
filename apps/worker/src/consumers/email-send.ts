@@ -5,6 +5,7 @@ import type { Ctx } from "@repo/core";
 import type { Mailer as EmailMailer } from "@repo/email";
 import type { JobHandler } from "@repo/jobs";
 import type { Actor, OrganizationId } from "@repo/types";
+import { escapeHtml } from "@repo/utils";
 
 import {
   beginJobIdempotency,
@@ -41,7 +42,7 @@ export function createEmailSendHandler(options: {
       await options.mailer.send({
         to: payload.to,
         subject: payload.subject,
-        html: `<p>${payload.subject}</p>`,
+        html: `<p>${escapeHtml(payload.subject)}</p>`,
         headers: { "Idempotency-Key": payload.idempotencyKey },
       });
       ctx.logger.info(

@@ -6,6 +6,7 @@ import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
 import { createLogger, type Logger } from "@repo/logger";
 import { createSentryErrorTracker, getTraceContext, type ErrorTracker } from "@repo/observability";
+import { escapeHtml } from "@repo/utils";
 
 import { env } from "../env.ts";
 import { createAppPorts } from "./ports.ts";
@@ -88,21 +89,21 @@ function buildContainer(): AppContainer {
       await sendHtml({
         to: user.email,
         subject: "Verify your email",
-        html: `<p>Verify your email: <a href="${url}">${url}</a></p>`,
+        html: `<p>Verify your email: <a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`,
       });
     },
     sendMagicLink: async ({ email, url }) => {
       await sendHtml({
         to: email,
         subject: "Your magic link",
-        html: `<p>Sign in: <a href="${url}">${url}</a></p>`,
+        html: `<p>Sign in: <a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`,
       });
     },
     sendInvitationEmail: async ({ email, url, organizationName, inviterName }) => {
       await sendHtml({
         to: email,
         subject: `Join ${organizationName}`,
-        html: `<p>${inviterName} invited you to ${organizationName}. Accept: <a href="${url}">${url}</a></p>`,
+        html: `<p>${escapeHtml(inviterName)} invited you to ${escapeHtml(organizationName)}. Accept: <a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`,
       });
     },
     onAuditEvent: async (event) => {
