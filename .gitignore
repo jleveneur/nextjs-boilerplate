@@ -93,3 +93,4 @@ docker/data/
 # Next.js 16 writes these on `next dev`. Repo instructions live in /AGENTS.md.
 apps/web/AGENTS.md
 apps/web/CLAUDE.md
+next-env.d.ts
