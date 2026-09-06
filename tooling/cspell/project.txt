@@ -200,6 +200,7 @@ checkin
 checkpointed
 maxmemory
 noeviction
+allkeys # Redis maxmemory-policy values (allkeys-lru, allkeys-random)
 pitr
 poolers
 tfstate

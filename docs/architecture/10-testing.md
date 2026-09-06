@@ -43,9 +43,24 @@ rather than a repo-wide number, which averages away exactly the information you 
 | `@repo/contracts`, `@repo/utils` | 90 %                                             |
 | Layer 1 adapters                 | 70 % — thin wrappers over vendor SDKs            |
 | `@repo/ui`                       | 60 % — behaviour and a11y, not visual            |
-| `apps/*`                         | No threshold — covered by E2E                    |
+| `apps/api`                       | 90 % — request-path middleware and webhooks      |
+| `apps/worker`                    | 70 % — job handlers and the outbox relay         |
+| `apps/web`                       | No threshold — covered by E2E                    |
 
 Uncovered branches are reviewed for _why_, never chased for the number.
+
+**What an app's threshold measures.** `apps/api` and `apps/worker` scope coverage to the code
+that decides something on the request or job path. Composition roots, env modules, process
+entry points, and route registration are excluded in their `vitest.config.ts`: they are
+exercised by the integration suite against real Postgres and Redis, and by the container images
+booting in CI. Including them would drag the number down until the threshold stopped protecting
+the code it does cover — a threshold nobody can raise is one nobody reads.
+
+`apps/web` keeps no threshold because most of it is Server Components whose behaviour is only
+observable through a running server; Playwright is the right instrument there. Its unit tests
+cover the framework-free logic those journeys route through — redirect-target sanitising, path
+matching, the cookie gate — where a browser round trip is a slow way to assert a pure function
+and an E2E run only ever walks the happy path.
 
 ---
 
