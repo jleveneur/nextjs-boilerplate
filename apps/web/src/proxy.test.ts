@@ -110,5 +110,54 @@ describe("proxy", () => {
       expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
       expect(response.headers.get("X-Frame-Options")).toBe("DENY");
     });
+
+    it.each([
+      ["the oRPC handler", "/api/rpc"],
+      ["a nested oRPC path", "/api/rpc/billing/listInvoices"],
+      ["the Better Auth catch-all", "/api/auth/sign-in/email"],
+      ["the health probe", "/api/health"],
+    ])("sets them on %s", (_label, pathname) => {
+      // These are the app's own transport surface. `nosniff` is the one that
+      // earns its place here: without it a browser may re-interpret a JSON body
+      // as HTML, which is how a reflected value in an error response becomes
+      // script. The matcher used to exclude `api` outright, so none were set.
+      const response = proxy(request(pathname));
+
+      expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+      expect(response.headers.get("X-Frame-Options")).toBe("DENY");
+      expect(response.headers.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
+    });
+  });
+
+  describe("api routes", () => {
+    it.each([["/api/rpc"], ["/api/auth/sign-in/email"], ["/api/health"]])(
+      "does not redirect %s",
+      (pathname) => {
+        // Locale routing would rewrite these to `/en/api/...` and the handler
+        // would never run. Asserted per path rather than once, because the
+        // i18n middleware treats an unprefixed path as one to redirect.
+        const response = proxy(request(pathname));
+
+        expect(redirectTarget(response)).toBeUndefined();
+        expect(response.status).toBe(200);
+      },
+    );
+
+    it("does not cookie-gate an unauthenticated api call", () => {
+      // An RPC client sends `Accept: application/json` and cannot act on a 307
+      // to an HTML sign-in page. Authentication for these routes happens in the
+      // handler, which answers with a typed error the client understands.
+      const response = proxy(request("/api/rpc/billing/listInvoices"));
+
+      expect(redirectTarget(response)).toBeUndefined();
+    });
+
+    it("does not treat a product route merely containing 'api' as an api path", () => {
+      // `startsWith("/api/")` rather than `includes("api")`: an organization
+      // slugged "api-team" owns a real page that still needs the session gate.
+      const response = proxy(request("/en/api-team/invoices"));
+
+      expect(redirectTarget(response)?.pathname).toBe("/en/sign-in");
+    });
   });
 });

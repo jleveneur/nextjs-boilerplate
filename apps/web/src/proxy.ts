@@ -48,6 +48,11 @@ function withSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
+/** Route handlers this app serves itself: oRPC and the Better Auth catch-all. */
+function isApiPath(pathname: string): boolean {
+  return pathname === "/api" || pathname.startsWith("/api/");
+}
+
 /**
  * Locale negotiation + cookie *presence* gates for product routes.
  *
@@ -60,6 +65,14 @@ export default function proxy(request: NextRequest) {
   // PostHog first-party proxy: do not locale-prefix `/ingest/*` or cookie-gate it.
   if (isPostHogIngestPath(pathname)) {
     return NextResponse.next();
+  }
+
+  // `/api/*` is this app's own transport surface — oRPC and Better Auth. It gets
+  // the headers and nothing else: locale routing would rewrite the path to
+  // `/en/api/...`, and the cookie gate would answer an unauthenticated RPC call
+  // with an HTML redirect instead of the JSON error the client expects.
+  if (isApiPath(pathname)) {
+    return withSecurityHeaders(NextResponse.next());
   }
 
   if (requiresSessionCookie(pathname)) {
@@ -77,5 +90,10 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/((?!api|_next|_vercel|ingest|.*\\..*).*)",
+  // `api` is deliberately absent from the exclusions: the handlers under it need
+  // the security headers, and `nosniff` on a JSON response is the one that earns
+  // its place — it stops a browser from re-interpreting an API body as HTML.
+  // `_next` and `_vercel` are framework-internal, `ingest` is rewritten to
+  // PostHog, and `.*\..*` is static files, all of which this must not touch.
+  matcher: "/((?!_next|_vercel|ingest|.*\\..*).*)",
 };
