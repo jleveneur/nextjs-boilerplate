@@ -1,6 +1,6 @@
 {
   "name": "@repo/observability",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "OpenTelemetry initialisation with getTraceContext for logger wiring.",
   "type": "module",

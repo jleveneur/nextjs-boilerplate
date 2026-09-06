@@ -1,5 +1,33 @@
 # @repo/orpc
 
+## 0.4.0
+
+### Minor Changes
+
+- 1e64899: `billing.void` declares a typed error contract: `CONFLICT` with `data.appCode`
+  narrowed to the refusals a caller can act on (`INVOICE_ALREADY_PAID`,
+  `INVOICE_ALREADY_VOID`).
+
+  `appCode` was already on the wire but untyped, so no client could branch on it
+  without matching message text. The oRPC code stays `CONFLICT` rather than becoming
+  the domain code: a custom code is absent from `COMMON_ERROR_STATUS_MAP` and the
+  response would lose its 409.
+
+- 3dd67e6: `createCallerFactory` takes an optional failure reporter.
+
+  Server Components call services through the in-process caller, which never touches
+  the `/api/rpc` route and its interceptor. Their failures surfaced as a rendered
+  `error.tsx` and nothing else — no log line, no tracker event. The hook runs the same
+  `describeRpcFailure` policy as the RPC route, so the two entry points cannot disagree
+  about what counts as an incident.
+
+  Optional: existing callers, including tests, keep working unchanged.
+
+### Patch Changes
+
+- @repo/db@0.2.3
+  - @repo/core@1.1.2
+
 ## 0.3.1
 
 ### Patch Changes
