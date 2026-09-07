@@ -1,7 +1,7 @@
 /**
  * Payment gateway surface used by composition roots.
  *
- * Structurally matches `@repo/core` `PaymentGateway` — payments must not import core
+ * Structurally matches `@repo/kernel`'s `PaymentGateway` — payments is layer 1 and
  * (layer boundary).
  */
 

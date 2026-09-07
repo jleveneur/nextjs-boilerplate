@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
+import { SECURITY_HEADERS } from "./src/lib/security-headers.ts";
+
 /**
  * Product Next 16 app.
  *
@@ -18,6 +20,10 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["*.localhost"],
   experimental: {
     useTypeScriptCli: true,
+  },
+  // `proxy.ts` cannot set these on `/api/*` — its matcher excludes `api`.
+  headers() {
+    return Promise.resolve([{ source: "/:path*", headers: [...SECURITY_HEADERS] }]);
   },
   rewrites() {
     const posthogHost = process.env["NEXT_PUBLIC_POSTHOG_HOST"] ?? "https://us.i.posthog.com";

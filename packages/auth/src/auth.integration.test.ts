@@ -8,7 +8,7 @@ import { PERMISSIONS } from "@repo/permissions";
 import { isUuidV7 } from "@repo/utils";
 
 import { createAuth, type Auth } from "./create-auth.ts";
-import { resolveActor, resolveActorFromApiKey } from "./resolve-actor.ts";
+import { resolveActor } from "./resolve-actor.ts";
 import { createRecordingMailers } from "./testing/recording-mailers.ts";
 
 const authSchema = {
@@ -21,7 +21,6 @@ const authSchema = {
   invitation: dbSchema.invitation,
   twoFactor: dbSchema.twoFactor,
   passkey: dbSchema.passkey,
-  apikey: dbSchema.apikey,
 };
 
 function requireRedisUrl(): string {
@@ -151,33 +150,6 @@ describe("@repo/auth integration", () => {
     expect(sessionActor?.role).toBe("owner");
     expect(sessionActor?.organizationId).toBe(personal?.id);
 
-    // Passing `headers` marks the call as a client request: do not send
-    // server-only fields (`permissions`, `remaining`, rate-limit knobs).
-    // Metadata + organizationId are allowed; defaultPermissions come from config.
-    const apiKeyResult = await auth.api.createApiKey({
-      body: {
-        name: "integration",
-        organizationId: personal?.id ?? "",
-        metadata: { userId: sessionActor?.userId },
-      },
-      headers: activeHeaders,
-    });
-
-    expect(apiKeyResult.key).toMatch(/^sk_test_/);
-
-    const keyActor = await resolveActorFromApiKey({
-      auth,
-      key: apiKeyResult.key,
-      fallbackRole: "owner",
-    });
-
-    expect(keyActor).toBeDefined();
-    expect(keyActor?.userId).toBe(sessionActor?.userId);
-    expect(keyActor?.organizationId).toBe(sessionActor?.organizationId);
-    expect(keyActor?.role).toBe(sessionActor?.role);
-    expect(keyActor?.isSystem).toBe(false);
-    expect(Array.isArray(keyActor?.permissions)).toBe(true);
-
     const second = await auth.api.createOrganization({
       body: { name: "Second Org", slug: `second-${Date.now()}` },
       headers: activeHeaders,
@@ -198,12 +170,7 @@ describe("@repo/auth integration", () => {
 
     const auditActions = auditEvents.map((event) => event.action);
     expect(auditActions).toEqual(
-      expect.arrayContaining([
-        "user.created",
-        "organization.created",
-        "api_key.created",
-        "invitation.created",
-      ]),
+      expect.arrayContaining(["user.created", "organization.created", "invitation.created"]),
     );
 
     // Two-factor / passkey endpoints are registered (browser ceremony deferred to Phase 8 UI).
@@ -269,6 +236,6 @@ describe("@repo/auth integration", () => {
     }
 
     expect(can(impActor, PERMISSIONS["organization:delete"]).allowed).toBe(false);
-    expect(can(impActor, PERMISSIONS["apiKey:revoke"]).allowed).toBe(false);
+    expect(can(impActor, PERMISSIONS["member:delete"]).allowed).toBe(false);
   });
 });

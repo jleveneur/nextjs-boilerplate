@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { canVoidInvoice } from "@repo/billing";
 import { invoiceIdSchema } from "@repo/contracts";
-import { canVoidInvoice } from "@repo/core";
 
 import { InvoiceDetail } from "@/features/billing/invoice-detail.tsx";
 import { createServerCaller } from "@/server/router.ts";

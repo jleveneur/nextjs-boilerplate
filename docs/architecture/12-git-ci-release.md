@@ -135,7 +135,7 @@ Practices that keep it honest:
   stale run.
 - **`--affected`** limits typecheck and unit tests to packages the diff touches on PRs and
   merge-group runs; **`main` always runs the full set**.
-- **React Doctor** scans `apps/web`, `apps/docs`, and `packages/ui`. Pull requests report only
+- **React Doctor** scans `apps/web` and `packages/ui`. Pull requests report only
   newly introduced findings (`--scope changed`); **`main` runs a full scan**. Errors fail the
   job; existing warnings do not.
 - **Path filters** skip image, E2E, Lighthouse, and integration jobs when the diff cannot affect

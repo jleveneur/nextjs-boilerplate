@@ -124,8 +124,6 @@ describe("role × action matrix", () => {
       const allowed = can(actor, action).allowed;
       if (
         action === PERMISSIONS["organization:delete"] ||
-        action === PERMISSIONS["apiKey:revoke"] ||
-        action === PERMISSIONS["apiKey:create"] ||
         action === PERMISSIONS["member:delete"]
       ) {
         expect(allowed, action).toBe(false);

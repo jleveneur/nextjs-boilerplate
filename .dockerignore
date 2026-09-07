@@ -13,9 +13,12 @@ node_modules
 **/playwright-report
 **/test-results
 **/*.tsbuildinfo
-.env
-.env.*
-!.env.example
+# `**/` matters: a bare `.env` pattern only matches the context root, so
+# `apps/web/.env` was copied in and Next traced it into the standalone output —
+# baking a developer's real local credentials into the runtime image.
+**/.env
+**/.env.*
+!**/.env.example
 infra
 agent-transcripts
 **/.DS_Store
@@ -25,6 +28,3 @@ apps/**/vitest*.ts
 **/*.spec.ts
 **/*.md
 !README.md
-# Docs site content source (Phase 15) — prepare-content reads these at build.
-!docs/**/*.md
-!apps/api/openapi.json

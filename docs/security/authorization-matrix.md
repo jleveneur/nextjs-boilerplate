@@ -26,11 +26,11 @@ impersonating ([07 — auth](../architecture/07-auth.md)).
 | `invoice:export`      | yes    | yes   | yes   |
 | `billing:read`        | yes    | yes   | yes   |
 | `billing:manage`      |        | yes   | yes   |
-| `apiKey:create`       |        | yes   | yes   |
-| `apiKey:revoke`       |        | yes   | yes   |
-| `apiKey:list`         | yes    | yes   | yes   |
 | `asset:create`        | yes    | yes   | yes   |
 | `asset:read`          | yes    | yes   | yes   |
 
-REST/oRPC must produce the same outcomes for the same `Actor` —
-[`apps/api/src/authz-parity.integration.test.ts`](../../apps/api/src/authz-parity.integration.test.ts).
+Every transport must produce the same outcome for the same `Actor`. There is one transport today
+([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)), so the parity test that
+proved this across oRPC and REST is gone. What still enforces it: `resolveActor` is the only place
+an `Actor` is built, and `authorize()` runs inside the slice service rather than at the transport —
+so a new entry point cannot reach a service without passing the same check.

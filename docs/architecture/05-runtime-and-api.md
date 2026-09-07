@@ -22,15 +22,15 @@ flowchart TB
         T1["oRPC procedures"]
         T2["REST routes"]
         T3["Server Actions"]
-        T4["Job consumers"]
+        T4["Outbox handlers"]
         T5["Webhook handlers"]
     end
 
-    subgraph application["Application — @repo/core services"]
+    subgraph application["Application — slice services"]
         A1["Use cases: authorize → load → decide → persist → emit"]
     end
 
-    subgraph domain["Domain — @repo/core domain + @repo/authz + @repo/contracts"]
+    subgraph domain["Domain — slice policies + @repo/authz + @repo/contracts"]
         D1["Invariants, policies, domain errors, value objects"]
     end
 
@@ -39,8 +39,7 @@ flowchart TB
         I2["@repo/storage"]
         I3["@repo/email"]
         I4["@repo/payments"]
-        I5["@repo/jobs"]
-        I6["@repo/cache"]
+        I5["@repo/cache"]
     end
 
     transport --> application
@@ -84,36 +83,27 @@ through timing or error differences.
 
 ## 2. API strategy
 
-Two API surfaces with genuinely different requirements. Trying to serve both with one surface is
-the mistake this design avoids.
+**One transport: oRPC.** The public REST/OpenAPI surface was removed in
+[ADR-0014](../adr/0014-single-transport-and-no-background-worker.md) — read
+[ADR-0003](../adr/0003-one-domain-core-two-transports.md) before adding one back, because its
+reasoning about implementing the same rules twice has not changed, and the layering that makes a
+second transport cheap is still in place.
 
-|                  | Private API                                      | Public API                              |
-| ---------------- | ------------------------------------------------ | --------------------------------------- |
-| Consumer         | Our own web app (and future first-party clients) | Third parties, customer integrations    |
-| Technology       | oRPC 2                                           | Hono + `@hono/zod-openapi`              |
-| Transport        | HTTP POST batch, JSON (oRPC serializer)          | REST/JSON                               |
-| Auth             | Session cookie                                   | API key / bearer token, scoped          |
-| Versioning       | None — deployed together with the client         | `/v1`, with a deprecation policy        |
-| Contract         | TypeScript types, compile-time                   | OpenAPI 3.1 document, runtime-validated |
-| Breaking changes | Free (single deploy)                             | Expensive (never within a major)        |
-| Casing           | `camelCase`                                      | `snake_case`                            |
-| Rate limits      | Generous, abuse-oriented                         | Per-key quotas                          |
-
-They share: `@repo/contracts` Zod schemas, `@repo/core` services, the `AppError` hierarchy, and
-authorization policies. They differ only in framing.
+What "one transport" does _not_ mean: the separation between transport and domain is unchanged.
+Every entry point still parses input, resolves an actor, calls exactly one slice service, and maps
+errors to its wire format. That is what keeps the Stripe webhook and the outbox handlers from
+growing their own copies of the rules.
 
 ```mermaid
 flowchart LR
     BROWSER["Browser<br/>TanStack Query"] -->|"POST /api/rpc"| ORPC["oRPC router<br/>@repo/orpc"]
-    THIRD["Third-party client"] -->|"GET /v1/…"| REST["Hono routes<br/>apps/api"]
-    STRIPE["Stripe"] -->|webhook| WH["apps/api/webhooks"]
-    QUEUE["BullMQ"] --> CONS["apps/worker consumers"]
+    STRIPE["Stripe"] -->|webhook| WH["apps/web<br/>/api/webhooks/stripe"]
+    OUTBOX["Outbox rows"] --> HANDLERS["Outbox handlers<br/>apps/web"]
     FORM["HTML form"] -->|Better Auth client / oRPC| SA["apps/web"]
 
-    ORPC --> CORE["@repo/core services"]
-    REST --> CORE
+    ORPC --> CORE["Slice services<br/>billing · subscription · assets"]
     WH --> CORE
-    CONS --> CORE
+    HANDLERS --> CORE
     SA --> CORE
     CORE --> DB[("PostgreSQL")]
 ```
@@ -150,40 +140,25 @@ Resolvers stay under ~15 lines. A resolver that grows is a service that was not 
 oRPC can generate OpenAPI from the same procedures. **We do not.** The public API is a
 deliberately different contract (see 2.2).
 
-### 2.2 Public API — REST + OpenAPI
+### 2.2 Public API — not present
 
-**Why REST rather than exposing oRPC:** oRPC's wire format is an implementation detail (batching,
-RPC paths, POST-for-reads) and coupling third parties to it makes internal refactors breaking
-changes for customers. Public consumers need caching semantics, ordinary HTTP verbs, generated
-SDKs, and a spec their tooling understands. Generating OpenAPI from the private router would
-collapse the two-audience split [ADR-0003](../adr/0003-one-domain-core-two-transports.md) exists
-to protect.
+There is no public REST surface, no `/v1`, no committed `openapi.json`, and no `make openapi-check`.
+Removed along with `apps/api`.
 
-**Why Hono:** small, fast, Web-standard `Request`/`Response`, and `@hono/zod-openapi` derives the
-OpenAPI 3.1 document _from the same Zod schemas used for validation_. The spec cannot drift from
-the implementation because there is no second source of truth. It also runs anywhere, which keeps
-the deployment story open.
+The conventions it followed are worth keeping in mind if you add one, because most of them are
+decisions rather than defaults: cursor-only pagination with opaque signed cursors; RFC 9457
+`application/problem+json` errors where `code` is the stable contract and `detail` is human text;
+`Idempotency-Key` on every mutation, replayed from Redis; per-IP and per-key fixed-window rate
+limits; and an explicit filter/sort allowlist rather than a query DSL. The full reasoning is in
+[ADR-0003](../adr/0003-one-domain-core-two-transports.md).
 
-Conventions:
+One thing not to assume: OpenAPI generation is not a port swap. The old pipeline derived the
+document from the Hono route registry, so the spec could not drift from validation. oRPC can emit
+OpenAPI, but through a different generator over a different router — that is a project, not a
+re-wiring.
 
-| Aspect            | Decision                                                                                                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Versioning        | URL prefix `/v1`. New major only for genuinely breaking changes; additive changes ship in place.                                                                         |
-| Deprecation       | `Deprecation` and `Sunset` headers, a changelog entry, minimum 6 months' notice, and usage telemetry per key so we know who to contact.                                  |
-| Errors            | RFC 9457 `application/problem+json`: `{ type, title, status, detail, code, errors?, request_id }`. `code` is the stable contract; `detail` is human text and may change. |
-| Pagination        | Cursor-only: `?limit=&cursor=` → `{ data, next_cursor }`. Opaque, signed cursors.                                                                                        |
-| Idempotency       | `Idempotency-Key` on all mutations; key + request hash + response stored in Redis (24 h) and replayed on retry. Non-negotiable for a payments-adjacent API.              |
-| Rate limiting     | Fixed window in Redis via an atomic counter: per IP before auth, per API key after. `RateLimit-*` headers, `429` + `Retry-After`.                                        |
-| Filtering/sorting | Explicit allowlist per resource. No arbitrary query DSL — it becomes a permanent contract and a query-planner hazard.                                                    |
-| Field selection   | `?fields=` allowlist where payloads are large.                                                                                                                           |
-| Partial updates   | `PATCH` with merge semantics; `exactOptionalPropertyTypes` makes "absent vs null" tractable in types.                                                                    |
-| Webhooks out      | Specified pattern: signed (HMAC-SHA256, timestamped), retried with exponential backoff via BullMQ. **Not implemented.** Inbound Stripe webhooks are (see 2.4).           |
-
-**Spec as a tested artifact.** `openapi.json` is generated and **committed**. CI regenerates it
-and fails if the working copy differs, then diffs it against the previous release to detect
-breaking changes. The spec is the contract, so it gets the same treatment as code.
-
-**Scalar** renders the reference, mounted in `apps/api` and embedded in `apps/docs`.
+Idempotency in particular is **gone, not relocated**. `apps/web` has per-IP rate limiting on
+`/api/rpc` and nothing else; there is no `Idempotency-Key` handling anywhere.
 
 ### 2.3 Server Actions
 
@@ -200,10 +175,17 @@ result`.
 
 ### 2.4 Webhook ingestion
 
-Inbound webhooks (Stripe today) live in `apps/api` because Hono gives clean raw-body access for
-signature verification. The handler: verify signature → check event id for replay → enqueue →
-return 200 fast. Processing happens in a worker, because a slow webhook handler causes provider
-retries and duplicate side effects.
+Inbound webhooks (Stripe today) live in `apps/web/src/app/api/webhooks/stripe/route.ts`. Next
+route handlers give raw-body access via `await request.text()`, which signature verification needs.
+
+The handler: verify signature → claim a replay guard in Redis → **apply the event inline** →
+return 200. Applying inline is a consequence of having no queue
+([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)) and it changes the failure
+model: the HTTP response is the only signal Stripe has, so a failure must surface as a non-2xx and
+let Stripe retry. Returning 200 and then failing would silently drop the event.
+
+The replay claim is released on any failure. Holding it would answer Stripe's retry `replay: true`
+and lose the event — which is exactly the bug the guard exists to prevent.
 
 ---
 
@@ -217,14 +199,15 @@ sequenceDiagram
     participant P as proxy.ts (Node)
     participant R as oRPC handler
     participant C as Context builder
-    participant S as core service
+    participant S as slice service
     participant Z as authz policy
     participant D as PostgreSQL
-    participant Q as BullMQ
+    participant X as outbox drain
 
     B->>P: POST /api/rpc/billing.void (cookie)
     P->>P: Locale + cookie presence only. No authorization.
     P->>R: forward
+    R->>R: per-IP rate limit (Redis counter). 429 before any DB work.
     R->>C: build Ctx
     C->>C: verify session (Better Auth), load actor + memberships
     C->>C: create request logger + trace span + request id
@@ -235,9 +218,10 @@ sequenceDiagram
     S->>D: load invoice (tenant-scoped)
     S->>S: domain decision → typed error if invalid
     S->>D: BEGIN; update invoice; insert outbox row; COMMIT
-    S->>Q: enqueue from outbox
     S-->>R: Invoice DTO
-    R-->>B: JSON (or problem+json with stable code)
+    R->>X: drain outbox (after commit)
+    X->>D: claim pending rows, run handlers, mark published
+    R-->>B: JSON (with a stable error code on failure)
 ```
 
 Points that matter:
@@ -250,9 +234,18 @@ Points that matter:
    unprotected.
 2. **The actor is resolved once per request** and carried on `ctx`. No service re-reads the
    session.
-3. **The transaction wraps state change and outbox insert together**, so an event cannot be lost
+3. **The rate limit runs before the context builder.** Resolving the session and the active
+   organization each cost a database round trip, so a limiter behind them would leave the cheap
+   path for brute force and saturation unmetered.
+4. **The transaction wraps state change and outbox insert together**, so an event cannot be lost
    after a commit or emitted after a rollback.
-4. **Every response carries a request id**, also attached to logs and spans.
+5. **The outbox is drained after the response is built, not inside the transaction.** With no
+   worker there is nothing polling it, so a mutating request drains it. The relay _leases_ rows by
+   pushing `available_at` forward and commits that immediately, then runs handlers outside any
+   transaction — handlers do network I/O, and holding a row lock across it would exhaust the pool.
+   The catch: a row is only picked up when some _later_ request arrives — see
+   `apps/web/src/server/drain-outbox.ts` for the full caveats.
+6. **Every response carries a request id**, also attached to logs and spans.
 
 ---
 
@@ -261,12 +254,12 @@ Points that matter:
 Four distinct caches, each with an explicit owner and invalidation strategy. Undocumented caches
 are how stale data reaches users.
 
-| Layer              | Technology                     | Contents                                                        | Invalidation                                                  |
-| ------------------ | ------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------- |
-| CDN                | Cloudflare                     | Static assets, marketing pages                                  | Immutable hashed filenames; purge on deploy                   |
-| Full/partial route | Next `use cache` + `cacheLife` | RSC output for cacheable segments                               | `revalidateTag(tag, profile)`, `updateTag(tag)` in Actions    |
-| Application        | Redis (`@repo/cache`)          | Expensive query results, entitlements, rate limits, idempotency | Explicit tag invalidation on domain events; TTL as a backstop |
-| Client             | TanStack Query                 | Server state in the browser                                     | Query-key invalidation after mutations                        |
+| Layer              | Technology                     | Contents                                                                                             | Invalidation                                                  |
+| ------------------ | ------------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| CDN                | Cloudflare                     | Static assets, marketing pages                                                                       | Immutable hashed filenames; purge on deploy                   |
+| Full/partial route | Next `use cache` + `cacheLife` | RSC output for cacheable segments                                                                    | `revalidateTag(tag, profile)`, `updateTag(tag)` in Actions    |
+| Application        | Redis (`@repo/cache`)          | Expensive query results, entitlements, rate limits, webhook replay guards, outbox side-effect claims | Explicit tag invalidation on domain events; TTL as a backstop |
+| Client             | TanStack Query                 | Server state in the browser                                                                          | Query-key invalidation after mutations                        |
 
 Rules: cache reads, never writes. Every cached value has a TTL even when it also has explicit
 invalidation — a missed invalidation should self-heal rather than persist forever. Tenant-scoped
@@ -329,19 +322,24 @@ Current forms use the Better Auth client or oRPC mutations.
 
 ## 6. Runtime shape of each app
 
-| App      | Process model                                           | Health                                         | Shutdown                                                             |
-| -------- | ------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------- |
-| `web`    | Next standalone server, Node 24                         | `/api/health` (liveness)                       | SIGTERM → stop accepting, drain, exit                                |
-| `api`    | Hono on `@hono/node-server`                             | `/health`, `/health/ready`                     | Same                                                                 |
-| `worker` | Long-running Node process, no HTTP except a health port | `/health`, `/health/ready` on an internal port | SIGTERM → stop pulling jobs, finish in-flight (bounded), close Redis |
-| `docs`   | Next server (Fumadocs)                                  | `/api/health`                                  | —                                                                    |
+| Unit      | Process model                           | Health                                                  | Shutdown                              |
+| --------- | --------------------------------------- | ------------------------------------------------------- | ------------------------------------- |
+| `web`     | Next standalone server, Node 24         | `/api/health` (liveness), `/api/health/ready` (DB ping) | SIGTERM → stop accepting, drain, exit |
+| `migrate` | One-shot container, exits 0 or non-zero | —                                                       | Runs to completion; never long-lived  |
 
-Graceful shutdown is implemented on day one, not retrofitted: without it, every deploy drops
-in-flight requests and re-runs partially completed jobs, and the resulting bugs are attributed
-to anything but the deploy.
+`/api/health/ready` is what deploy tooling waits on before shifting traffic; `/api/health` only
+says the process is up. Graceful shutdown is implemented on day one, not retrofitted: without it,
+every deploy drops in-flight requests and the resulting bugs get attributed to anything but the
+deploy.
 
-Concurrency and pool sizing are configuration, not code: `DB_POOL_MAX` per app, worker
-concurrency per queue. `web` and `api` share a database that has a finite connection limit, so
-pool sizes are documented together with the deployment topology
-([11](./11-infrastructure-and-deployment.md)) — exhausting Postgres connections is the most
-common self-hosted outage.
+**One caveat specific to having no worker.** A mutating request drains the outbox after its own
+transaction commits, so in-flight work at SIGTERM can include outbox handlers — sending an email,
+deriving an image. `drainOutbox` never throws and the relay marks a row failed rather than
+published if a handler dies, so the row is retried by a later request. Nothing is lost, but
+nothing is prompt either.
+
+Pool sizing is configuration, not code (`DATABASE_POOL_SIZE`). With one app the connection
+arithmetic is simpler than it was, but Postgres still has a finite limit and the migrate job takes
+a connection too — see the deployment topology
+([11](./11-infrastructure-and-deployment.md)); exhausting Postgres connections is the most common
+self-hosted outage.

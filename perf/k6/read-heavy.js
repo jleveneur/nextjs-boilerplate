@@ -1,10 +1,10 @@
 import { check, sleep } from "k6";
 /**
- * Read-heavy browsing: web public pages + optional authenticated invoice list.
+ * Read-heavy browsing: web public pages.
  */
 import http from "k6/http";
 
-import { authHeaders, baseUrl, expectApiStatuses, missingAuth, organizationId } from "./lib/env.js";
+import { baseUrl } from "./lib/env.js";
 
 export const options = {
   vus: 10,
@@ -27,18 +27,6 @@ export default function () {
   check(health, {
     "web health ok": (r) => r.status === 200,
   });
-
-  if (!missingAuth()) {
-    expectApiStatuses();
-    const org = organizationId();
-    const list = http.get(`${root}/v1/organizations/${org}/invoices?limit=20`, {
-      headers: authHeaders(),
-    });
-    check(list, {
-      "invoice list ok or empty": (r) =>
-        (r.status >= 200 && r.status < 300) || r.status === 404 || r.status === 429,
-    });
-  }
 
   sleep(0.3);
 }

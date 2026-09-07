@@ -43,7 +43,6 @@ Alternatives and why not:
 | Performance        | Better Auth's cookie cache carries a short-lived signed snapshot of the session | Avoids a database round trip on every request without giving up revocability                                                                |
 | Lifetime           | 30-day session, 24-hour refresh, absolute 90-day cap                            |                                                                                                                                             |
 | Rotation           | On privilege change and on password change; all other sessions invalidated      |                                                                                                                                             |
-| Public API         | API keys (hashed at rest, scoped, expiring), `Authorization: Bearer`            | Different consumer, different lifecycle                                                                                                     |
 | Service-to-service | Short-lived signed internal tokens, never a shared static secret                |                                                                                                                                             |
 
 Stateless JWTs are rejected for browser sessions because the property people want from them
@@ -64,7 +63,7 @@ Security defaults that ship enabled: rate limiting on all auth endpoints (per IP
 identifier), constant-time responses on login and password reset to resist user enumeration,
 single-use tokens with short expiry, secure cookie attributes, and CSRF protection on
 state-changing form posts. Authentication-event audit writes for organization, membership,
-invitation, user-created, and API-key lifecycle go through `CreateAuthOptions.onAuditEvent`.
+invitation and user-created lifecycle events go through `CreateAuthOptions.onAuditEvent`.
 See [Audit log](#audit-log).
 
 ### Where session verification happens
@@ -115,6 +114,9 @@ It got copied into both. Session RBAC read `@repo/authz`, API-key RBAC read a ha
 Auth statement map, and a third list in `@repo/auth` mapped roles to permissions for `Actor`. The
 comment on that third file said "kept in sync by hand" — and it wasn't: `asset:create` and
 `asset:read` were enforced for sessions and entirely unknown to API keys.
+
+The API-key consumer is gone now (§3), so there is one fewer place to drift. The reason the registry
+sits in layer 0 is unchanged: `@repo/auth` and `@repo/authz` are still layer-1 peers.
 
 Better Auth still needs its nested shape, so it is **derived** rather than written:
 
@@ -213,27 +215,19 @@ they remain requirements before impersonation is exposed as a supported operator
 
 ---
 
-## 3. Public API authentication
+## 3. Machine authentication — not present
 
-| Aspect        | Decision                                                                                                                          |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Credential    | API key: displayed once, stored as a SHA-256 hash with a short lookup prefix                                                      |
-| Format        | `sk_live_<random>` / `sk_test_<random>` — prefixes make keys greppable in leak scanning and obvious in support tickets            |
-| Scoping       | Per organization; effective permissions = key scope ∩ creator role                                                                |
-| Expiry        | Optional, encouraged; the dashboard warns about non-expiring keys                                                                 |
-| Rotation      | Overlapping keys supported so rotation needs no downtime                                                                          |
-| Revocation    | Immediate; keys are cached in Redis with a short TTL and evicted on revoke                                                        |
-| Observability | `last_used_at`, request counts, and per-key rate limits — so a deprecation can be communicated to the specific customers affected |
+There is no API-key credential and no machine-callable surface. `apps/web` used to issue keys that
+only the deleted `apps/api` consumed, so with the REST transport gone the keys authenticated
+against nothing; the feature was removed rather than left dangling
+([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)). The `apikey` table is
+dropped in `migrations/0004_drop_api_keys.sql`.
 
-Keys resolve to the same `Actor` shape as a session, which means **`@repo/core` cannot tell
-whether it is serving the web app or a third party**, and therefore cannot apply weaker rules to
-one of them. That is the entire benefit of a shared actor abstraction.
-
-Effective permissions are the **intersection** of the key's explicit scope and the creating
-member's role permissions (`resolveActorFromApiKey`). A key without a scope inherits the role
-permissions. Keys without `metadata.userId` do not resolve — creators must set it.
-
----
+The property worth preserving if you add one back: a key and a session must resolve to the **same
+`Actor` shape**, so a slice service cannot tell whether it is serving the web app or a third party
+and therefore cannot apply weaker rules to one of them. `resolveActor` is the single place that
+shape is built. The old key path also intersected the key's explicit scope with the creating
+member's role permissions, so a key could never exceed its creator.
 
 ## 4. Threat model and mitigations
 
@@ -248,7 +242,6 @@ The concrete failure modes this design is built against:
 | Credential stuffing                                                   | Rate limiting per IP and per identifier, breach-list check, passkey/2FA available                                                |
 | User enumeration                                                      | Constant-time, identical responses on login/reset/signup                                                                         |
 | CSRF                                                                  | `SameSite=Lax` cookies + Better Auth CSRF protection on form posts; oRPC is POST-only so cross-site GET cannot invoke procedures |
-| Leaked API key                                                        | Prefixed keys are detected by Gitleaks and provider leak scanners; revocation is instant; scopes bound the blast radius          |
 | Insider access                                                        | Destructive actions are blocked while impersonating; reason capture, support UI, and audit wiring remain required                |
 | Webhook forgery                                                       | HMAC signature + timestamp window + event-id replay check                                                                        |
 | Open redirect after login                                             | `returnTo` validated against a same-origin allowlist                                                                             |
@@ -256,12 +249,12 @@ The concrete failure modes this design is built against:
 ### Audit log
 
 The append-only `audit_log` table records the tenant, nullable actor user, action, resource type
-and id, metadata, and creation time. `@repo/core` provides `writeAuditLog` (request `Ctx`, used
+and id, metadata, and creation time. `@repo/kernel` provides `writeAuditLog` (request `Ctx`, used
 by invoice voiding in the same transaction as the update) and `recordAuditLog` (composition-root
-writer for Better Auth hooks that cannot import `@repo/core` themselves).
+writer for Better Auth hooks, which sit at layer 1 and so cannot import the kernel).
 
 Wired call sites today: `invoice.voided`; `user.created`; organization create/update/delete;
-member add/remove/role-update; invitation create/accept/reject/cancel; API-key create/revoke.
+member add/remove/role-update; invitation create/accept/reject/cancel.
 Impersonation still has no call site. Metadata redaction is the caller's responsibility, and
 customer-facing querying and retention enforcement are not implemented. IP address, user agent,
 request id, and redacted diffs have no dedicated columns; a caller may include appropriately

@@ -15,12 +15,15 @@
   },
   "dependencies": {
     "@orpc/server": "catalog:",
+    "@repo/assets": "workspace:*",
+    "@repo/billing": "workspace:*",
     "@repo/contracts": "workspace:*",
-    "@repo/core": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/errors": "workspace:*",
+    "@repo/kernel": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/permissions": "workspace:*",
+    "@repo/subscription": "workspace:*",
     "@repo/types": "workspace:*",
     "server-only": "catalog:",
     "zod": "catalog:"
@@ -34,7 +37,7 @@
     "vitest": "catalog:"
   },
   "repo": {
-    "layer": 3,
+    "layer": 4,
     "runtime": "node"
   }
 }

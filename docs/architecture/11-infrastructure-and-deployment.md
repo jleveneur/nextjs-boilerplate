@@ -8,7 +8,7 @@
 
 1. **One image per app**, built once in CI, promoted unchanged through environments.
 2. **Multi-stage builds** — build tooling never reaches the runtime image.
-3. **Minimal, pruned build context** via `turbo prune`, so a change in `apps/api` does not
+3. **Minimal, pruned build context** via `turbo prune`, so a change in a slice package does not
    invalidate the `apps/web` build cache.
 4. **Non-root, read-only filesystem where possible, no shell in the final stage** unless required.
 5. **Reproducible**: pinned base image digests, `--frozen-lockfile`, no `latest`.
@@ -47,7 +47,7 @@ FROM alpine:3.24 AS runner
 RUN apk add --no-cache libstdc++ libgcc ca-certificates \
   && addgroup -S nodejs && adduser -S app -G nodejs
 COPY --from=base /usr/local/bin/node /usr/local/bin/node
-COPY --from=builder --chown=app:nodejs /app/apps/api/dist ./dist
+COPY --from=builder --chown=app:nodejs /app/packages/db/dist ./dist
 USER app
 HEALTHCHECK CMD node -e "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1))"
 CMD ["node", "dist/index.mjs"]
@@ -128,7 +128,8 @@ labels, so routing configuration lives beside the service definition and cannot 
 actually running. Adopters may use nginx, Caddy, an ingress controller, or a cloud load balancer
 instead — apps only need to expose HTTP and healthchecks.
 
-In `compose.prod.yaml`, Traefik terminates HTTP on the laptop (`:8080`) with no ACME. For a real
+In `compose.prod.yaml`, Traefik terminates HTTP on the laptop (`:8080`, reachable at
+`web.localhost`) with no ACME. For a real
 host, TLS, DNS, CDN, and WAF are adopter choices. One common pattern:
 
 ```mermaid
@@ -269,7 +270,6 @@ value of a runbook is realised at 3 a.m. by someone who did not write it:
 | ---------------------------------------------------------------------- | ------------------------------------------------------- |
 | [deploy.md](../runbooks/deploy.md)                                     | Portable migrate-then-roll sequence + connection budget |
 | [high-error-rate.md](../runbooks/high-error-rate.md)                   | Error-rate spike                                        |
-| [queue-backlog.md](../runbooks/queue-backlog.md)                       | BullMQ depth / DLQ                                      |
 | [db-connections-exhausted.md](../runbooks/db-connections-exhausted.md) | Postgres pool saturation                                |
 | [disk-full.md](../runbooks/disk-full.md)                               | Host disk                                               |
 | [backup.md](../runbooks/backup.md)                                     | Backup expectations                                     |

@@ -16,7 +16,6 @@
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@better-auth/api-key": "catalog:",
     "@better-auth/passkey": "catalog:",
     "@repo/permissions": "workspace:*",
     "@repo/types": "workspace:*",

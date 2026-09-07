@@ -1,13 +1,12 @@
 import { createAnalyticsSink, subscribeToAnalytics } from "@repo/analytics";
+import type { Mailer as EmailMailer } from "@repo/email";
 import {
   adaptEmailMailer,
   createInProcessEventBus,
   createSystemClock,
   createUuidIdGenerator,
   type CtxPorts,
-} from "@repo/core";
-import type { Mailer as EmailMailer } from "@repo/email";
-import { createLazyBullMqJobQueue } from "@repo/jobs";
+} from "@repo/kernel";
 import { createPaymentGateway } from "@repo/payments";
 import { createFileStore } from "@repo/storage";
 
@@ -21,7 +20,6 @@ export type AppPortsHandle = {
 
 export function createAppPorts(options: {
   appEnv: string;
-  redisUrl: string;
   emailMailer: EmailMailer;
   posthogApiKey?: string;
   posthogHost?: string;
@@ -36,7 +34,6 @@ export function createAppPorts(options: {
   };
 }): AppPortsHandle {
   const events = createInProcessEventBus();
-  const jobs = createLazyBullMqJobQueue({ redisUrl: options.redisUrl });
   const analytics = createAnalyticsSink({
     apiKey: options.posthogApiKey,
     host: options.posthogHost,
@@ -50,7 +47,6 @@ export function createAppPorts(options: {
       clock: createSystemClock(),
       ids: createUuidIdGenerator(),
       events,
-      jobs,
       mailer: adaptEmailMailer(options.emailMailer),
       files: createFileStore({
         endpoint: options.s3.endpoint,

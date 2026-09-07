@@ -14,12 +14,12 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix example-inventory new-slice bundle-budget docs-build openapi-check \
+        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix example-inventory new-slice bundle-budget \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
         changeset clean clean-all \
-        deps-up deps-up-observability deps-up-test deps-up-test-worker deps-down \
+        deps-up deps-up-observability deps-up-test deps-down \
         prod-up prod-down \
         db-up db-up-test db-down db-wait db-generate db-migrate db-seed db-reset db-push db-studio \
         email dev proxy
@@ -62,7 +62,6 @@ setup: ## Idempotent clean-machine bootstrap (tools, deps, .env, services, migra
 	pnpm install
 	@if [ ! -f .env ]; then cp .env.example .env; echo "Created .env from .env.example"; fi
 	@if [ ! -f apps/web/.env ]; then cp .env apps/web/.env; echo "Created apps/web/.env from .env"; fi
-	@if [ ! -f apps/docs/.env ]; then cp apps/docs/.env.example apps/docs/.env; echo "Created apps/docs/.env from apps/docs/.env.example"; fi
 	$(MAKE) deps-up
 
 	$(MAKE) db-migrate
@@ -86,7 +85,6 @@ proxy: ## Start the Portless reverse proxy (HTTPS :443; auto-starts on make dev)
 check: ## Run the fast local quality gate (not full CI)
 	pnpm check
 	$(MAKE) bundle-budget
-	$(MAKE) docs-build
 
 verify: check ## Alias for `check`
 
@@ -144,17 +142,6 @@ bundle-budget: ## Build apps/web and assert First Load JS budgets
 	pnpm --filter @repo/web build
 	pnpm --filter @repo/web bundle-budget
 
-docs-build: ## Build apps/docs — the only check that compiles docs/ as MDX
-	# `docs/{architecture,adr,runbooks,security}` is synced into Fumadocs and
-	# compiled as MDX, which accepts less than Markdown does: an HTML comment
-	# fails the build. Nothing else in the gate parses those files, so this ran
-	# only in CI until a container-image job went red for a `<!-- -->`.
-	pnpm --filter @repo/docs build
-
-openapi-check: ## Regenerate apps/api OpenAPI and fail on drift
-	pnpm --filter @repo/api openapi:generate
-	@git diff --exit-code -- apps/api/openapi.json || \
-		(echo "apps/api/openapi.json is out of date; commit the regenerated file." && exit 1)
 
 ## ----------------------------------------------------------------------------
 ## Tests
@@ -247,11 +234,9 @@ lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
 # shipping in the runnable image config we care about for budgets.
 DOCKER_BUILD := docker build --provenance=false --sbom=false
 
-images: ## Build web/api/worker/docs images tagged *:local
+images: ## Build the web and migrate images tagged *:local
 	$(DOCKER_BUILD) -f docker/web.Dockerfile -t repo-web:local .
-	$(DOCKER_BUILD) -f docker/api.Dockerfile -t repo-api:local .
-	$(DOCKER_BUILD) -f docker/worker.Dockerfile -t repo-worker:local .
-	$(DOCKER_BUILD) -f docker/docs.Dockerfile -t repo-docs:local .
+	$(DOCKER_BUILD) -f docker/migrate.Dockerfile -t repo-migrate:local .
 	$(MAKE) image-size
 
 
@@ -283,16 +268,6 @@ deps-up-test: ## Start ephemeral dependency stack for integration tests
 	done
 	@until $(COMPOSE_TEST) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
 
-deps-up-test-worker: ## Postgres + Redis + MinIO for worker proofs (no mailpit)
-	@$(COMPOSE_TEST) up -d postgres redis minio minio-init || ( \
-		$(COMPOSE_TEST) down --remove-orphans; \
-		$(COMPOSE_TEST) up -d postgres redis minio minio-init; \
-	)
-	@until $(COMPOSE_TEST) exec -T postgres pg_isready -U postgres -d app_test >/dev/null 2>&1; do \
-		sleep 0.5; \
-	done
-	@until $(COMPOSE_TEST) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
-
 deps-down: ## Stop local dependency containers
 	-$(COMPOSE) down
 	-$(COMPOSE_TEST) down
@@ -300,7 +275,9 @@ deps-down: ## Stop local dependency containers
 
 prod-up: ## Build, migrate, then start the local production-like stack (Traefik on :8080)
 	$(COMPOSE_PROD) up -d --build
-	@echo "Stack ready: http://localhost:8080 (Traefik dashboard :8081)"
+	@echo "Stack ready: http://web.localhost:8080 (Traefik dashboard :8081)"
+	@echo "Use web.localhost, not localhost: APP_URL and BETTER_AUTH_URL point there, so"
+	@echo "auth redirects and magic links only resolve on that origin."
 
 prod-down: ## Stop the local production-like stack
 	-$(COMPOSE_PROD) down
@@ -334,10 +311,7 @@ endef
 
 load: ## Run k6 scenarios via Docker (grafana/k6) against LOAD_BASE_URL
 	$(call K6_RUN,health.js)
-	$(call K6_RUN,public-api-burst.js)
 	$(call K6_RUN,read-heavy.js)
-	$(call K6_RUN,write-heavy.js)
-	$(call K6_RUN,upload.js)
 
 
 zap: ## OWASP ZAP baseline against ZAP_DOCKER_TARGET (Traefik on host :8080)

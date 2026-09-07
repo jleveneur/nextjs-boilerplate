@@ -4,7 +4,7 @@
  * Services emit domain events; this subscriber translates them. Analytics adds
  * no lines to business logic and can be removed without touching core.
  *
- * The bus shape is local so this layer-1 package does not depend on `@repo/core`
+ * The bus shape is local so this layer-1 package does not depend on `@repo/kernel`
  * (layer 2).
  */
 

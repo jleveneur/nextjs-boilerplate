@@ -4,8 +4,8 @@ A production-grade monorepo foundation: typed end to end, self-hostable, and
 cloud-agnostic. Built to be the starting point for real products rather than a
 demo.
 
-The foundation is **implemented** — Next.js product app, public REST API,
-workers, docs site, auth, billing slice, and Stripe SaaS billing. Architecture
+The foundation is **implemented** — Next.js product app, auth, authorization,
+a billing slice, and Stripe SaaS billing. Architecture
 lives in [`docs/architecture/`](docs/architecture/README.md). How it was
 sequenced is archived in
 [build history](docs/architecture/14-build-history.md).
@@ -18,10 +18,9 @@ Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
 [Docker](https://docs.docker.com/get-docker/). `make help` lists everything.
 
 ```bash
-make setup            # install, `.env` for root/web/docs, deps, migrate, seed
+make setup            # install, `.env` for root/web, deps, migrate, seed
 make check            # the fast local quality gate (not full CI)
-make dev              # deps + apps → https://web.localhost
-pnpm --filter @repo/docs dev   # docs → https://docs.localhost
+make dev              # deps + web → https://web.localhost
 ```
 
 Starting a real project from this? Read
@@ -29,9 +28,10 @@ Starting a real project from this? Read
 already optional (Stripe, S3, PostHog all no-op without credentials), and what deleting the
 worked example actually costs. `make example-inventory` computes the list for you.
 
-Apps through Portless: web, api, worker, docs. `PORTLESS=0` uses localhost:3000–3003.
-With `make prod-up`, Traefik on `:8080` serves docs at
-[http://docs.localhost:8080](http://docs.localhost:8080).
+The web app is served through Portless at https://web.localhost. `PORTLESS=0` uses
+localhost:3000. `make prod-up` runs the prod-like stack behind Traefik at
+http://web.localhost:8080 — that origin, not plain `localhost`, because the stack sets
+`APP_ENV=staging` and `@repo/env` rejects a URL whose host _is_ `localhost` under a live env.
 
 ---
 
@@ -49,9 +49,10 @@ The load-bearing ideas:
   physically unresolvable, and `make layers` rejects a declared dependency that
   breaks the layering. An architecture rule that only exists in a document is a
   rule that erodes.
-- **One domain core, two transports.** Business logic lives in one place; oRPC
-  serves the app and REST/OpenAPI serves third parties. Neither transport owns a
-  rule the other would have to duplicate.
+- **A domain core behind a thin transport.** Business logic lives in slice
+  packages that know nothing about HTTP; oRPC translates. There is one transport
+  today, and the separation is what makes adding a second a route file rather
+  than a second codebase.
 - **Multi-tenant from the first migration.** Tenancy is not something a schema
   grows later without a rewrite.
 - **Self-hostable by default.** OCI images, Compose, and a portable migrate-then-roll
@@ -62,22 +63,22 @@ The load-bearing ideas:
 
 ## Documentation
 
-| Read this                                                                        | For                                                   |
-| -------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| [**Starting a project**](docs/starting-a-project.md)                             | **Read first if you cloned this to build something**  |
-| Local docs site (`pnpm --filter @repo/docs dev`)                                 | Architecture, ADRs, runbooks, security, API reference |
-| [Architecture overview](docs/architecture/README.md)                             | The whole design, in reading order                    |
-| [Principles and constraints](docs/architecture/01-principles-and-constraints.md) | What is optimised for, and what is deliberately not   |
-| [Repository topology](docs/architecture/02-repository-topology.md)               | What lives where                                      |
-| [Package graph](docs/architecture/03-package-graph-and-boundaries.md)            | The layer rule and how it is enforced                 |
-| [Conventions](docs/architecture/04-conventions.md)                               | Naming, TypeScript settings, patterns                 |
-| [Dependency review](docs/architecture/13-dependency-review.md)                   | Why each dependency is here, and what replaces it     |
-| [ADRs](docs/adr/README.md)                                                       | Decisions, with their alternatives and consequences   |
-| [Security review](docs/security/security-review.md)                              | Authorization matrix, headers, scanning               |
-| [AGENTS.md](AGENTS.md)                                                           | Rules for AI coding agents                            |
+| Read this                                                                        | For                                                  |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [**Starting a project**](docs/starting-a-project.md)                             | **Read first if you cloned this to build something** |
+| [Getting started](docs/getting-started.md)                                       | Install, local stack, first request                  |
+| [Contributing](docs/contributing.md)                                             | Checks, commits, changesets, ADRs                    |
+| [Architecture overview](docs/architecture/README.md)                             | The whole design, in reading order                   |
+| [Principles and constraints](docs/architecture/01-principles-and-constraints.md) | What is optimised for, and what is deliberately not  |
+| [Repository topology](docs/architecture/02-repository-topology.md)               | What lives where                                     |
+| [Package graph](docs/architecture/03-package-graph-and-boundaries.md)            | The layer rule and how it is enforced                |
+| [Conventions](docs/architecture/04-conventions.md)                               | Naming, TypeScript settings, patterns                |
+| [Dependency review](docs/architecture/13-dependency-review.md)                   | Why each dependency is here, and what replaces it    |
+| [ADRs](docs/adr/README.md)                                                       | Decisions, with their alternatives and consequences  |
+| [Security review](docs/security/security-review.md)                              | Authorization matrix, headers, scanning              |
+| [AGENTS.md](AGENTS.md)                                                           | Rules for AI coding agents                           |
 
-Authorship stays in [`docs/`](docs/) — the site syncs that tree at build time. Getting
-started and contribution guides live only under `apps/docs/content/docs/`.
+All documentation lives in [`docs/`](docs/) and renders on GitHub.
 
 ---
 

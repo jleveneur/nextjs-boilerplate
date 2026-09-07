@@ -60,6 +60,112 @@ export function templates(n: Names): Record<string, string> {
   const { camel, pascal, plural } = n;
 
   return {
+    // A slice is its own layer-3 package (ADR-0013), so the scaffold has to
+    // emit the package boundary too — manifest, tsconfig, vitest config, the
+    // server-only stub, and a barrel — not just the source files.
+    [`packages/${camel}/package.json`]: `{
+  "name": "@repo/${camel}",
+  "version": "0.0.0",
+  "private": true,
+  "description": "${pascal} slice.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@repo/authz": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/errors": "workspace:*",
+    "@repo/kernel": "workspace:*",
+    "@repo/permissions": "workspace:*",
+    "@repo/types": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "server-only": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/logger": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "repo": {
+    "layer": 3,
+    "runtime": "node"
+  }
+}
+`,
+
+    [`packages/${camel}/tsconfig.json`]: `{
+  "extends": "@repo/tsconfig/node.json",
+  "include": ["src/**/*.ts", "vitest.config.ts"]
+}
+`,
+
+    [`packages/${camel}/vitest.server-only-stub.ts`]: `/** Stub so Vitest can load modules that import \`server-only\`. */
+export const serverOnlyStub = true;
+`,
+
+    [`packages/${camel}/vitest.config.ts`]: `import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { defineConfig, mergeConfig } from "vitest/config";
+
+import { defineLibraryConfig } from "@repo/vitest-config";
+
+const root = path.dirname(fileURLToPath(import.meta.url));
+
+const base = defineLibraryConfig({
+  name: "@repo/${camel}",
+  // Documented floor for this package (docs/architecture/10-testing.md).
+  coverage: { lines: 90, functions: 90, branches: 90, statements: 90 },
+});
+
+export default mergeConfig(
+  base,
+  defineConfig({
+    resolve: {
+      alias: {
+        "server-only": path.join(root, "vitest.server-only-stub.ts"),
+      },
+    },
+    test: {
+      coverage: {
+        exclude: [
+          "src/index.ts",
+          // A repository is queries with no policy; a mapper is row-to-DTO
+          // translation. Both are exercised against real Postgres instead.
+          "src/**/*.repository.ts",
+          "src/**/*.mapper.ts",
+          "src/**/*.test.ts",
+          "src/**/*.integration.test.ts",
+          "src/**/*.d.ts",
+        ],
+      },
+    },
+  }),
+);
+`,
+
+    [`packages/${camel}/src/index.ts`]: `// oxlint-disable-next-line import/no-unassigned-import
+import "server-only";
+
+export {
+  create${pascal},
+  get${pascal},
+  list${pascal}sForOrg,
+} from "./${camel}.service.ts";
+`,
+
     [`packages/contracts/src/${camel}.ts`]: `/**
  * ${pascal} wire contracts.
  *
@@ -136,7 +242,7 @@ export const ${camel} = pgTable(
 );
 `,
 
-    [`packages/core/src/${camel}/${camel}.repository.ts`]: `/**
+    [`packages/${camel}/src/${camel}.repository.ts`]: `/**
  * ${pascal} persistence — the only ${camel} file that touches \`@repo/db\`.
  *
  * Queries contain no policy. Every one is scoped through \`scopedWhere\`.
@@ -219,7 +325,7 @@ export async function list${pascal}s(
 }
 `,
 
-    [`packages/core/src/${camel}/${camel}.mapper.ts`]: `import type { ${pascal} } from "@repo/contracts";
+    [`packages/${camel}/src/${camel}.mapper.ts`]: `import type { ${pascal} } from "@repo/contracts";
 import type { OrganizationId, ${pascal}Id } from "@repo/types";
 
 import type { ${pascal}Row } from "./${camel}.repository.ts";
@@ -247,7 +353,7 @@ export function to${pascal}Dto(row: ${pascal}Row): ${pascal} {
 }
 `,
 
-    [`packages/core/src/${camel}/${camel}.service.ts`]: `/**
+    [`packages/${camel}/src/${camel}.service.ts`]: `/**
  * ${pascal} application services.
  *
  * Authorize → load → decide → persist. Every function takes an explicit actor
@@ -269,7 +375,7 @@ import { NotFoundError, ValidationError } from "@repo/errors";
 import { PERMISSIONS } from "@repo/permissions";
 import { encodeCursor } from "@repo/utils";
 
-import type { Ctx } from "../ctx.ts";
+import type { Ctx } from "@repo/kernel";
 import { to${pascal}Dto } from "./${camel}.mapper.ts";
 import { find${pascal}ById, insert${pascal}, list${pascal}s } from "./${camel}.repository.ts";
 
@@ -340,7 +446,7 @@ export async function list${pascal}sForOrg(
 }
 `,
 
-    [`packages/core/src/${camel}/${camel}.service.test.ts`]: `import { Writable } from "node:stream";
+    [`packages/${camel}/src/${camel}.service.test.ts`]: `import { Writable } from "node:stream";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -349,8 +455,8 @@ import { createLogger } from "@repo/logger";
 import { permissionsForRole } from "@repo/permissions";
 import type { Actor, OrganizationId, UserId, ${pascal}Id } from "@repo/types";
 
-import type { Ctx } from "../ctx.ts";
-import { createTestPorts, type TestPorts } from "../testing/create-test-ports.ts";
+import type { Ctx } from "@repo/kernel";
+import { createTestPorts, type TestPorts } from "@repo/kernel/testing";
 import * as repository from "./${camel}.repository.ts";
 import { create${pascal}, get${pascal}, list${pascal}sForOrg } from "./${camel}.service.ts";
 
@@ -518,7 +624,7 @@ describe("list${pascal}sForOrg", () => {
 `,
 
     [`packages/orpc/src/routers/${camel}.ts`]: `/**
- * ${pascal} transport — thin wrappers over \`@repo/core\` services.
+ * ${pascal} transport — thin wrappers over \`@repo/${camel}\` services.
  *
  * Transports translate; they do not decide. No queries here.
  */
@@ -530,7 +636,7 @@ import {
   list${pascal}sOutputSchema,
   ${camel}Schema,
 } from "@repo/contracts";
-import { create${pascal}, get${pascal}, list${pascal}sForOrg } from "@repo/core";
+import { create${pascal}, get${pascal}, list${pascal}sForOrg } from "@repo/${camel}";
 
 import { orgProcedure } from "../procedures.ts";
 
@@ -625,7 +731,7 @@ export function patches(n: Names): readonly Patch[] {
     },
     {
       file: "packages/permissions/src/roles.ts",
-      anchor: '  PERMISSIONS["apiKey:revoke"],',
+      anchor: '  PERMISSIONS["billing:manage"],',
       insert: `  PERMISSIONS["${camel}:delete"],`,
     },
     {
@@ -634,25 +740,36 @@ export function patches(n: Names): readonly Patch[] {
       insert: `export { ${camel} } from "./${camel}.sql.ts";`,
     },
     {
-      file: "packages/core/src/index.ts",
-      anchor: 'export { writeAuditLog, type WriteAuditLogInput } from "./write-audit-log.ts";',
-      before: true,
-      insert: `export {\n  create${pascal},\n  get${pascal},\n  list${pascal}sForOrg,\n} from "./${camel}/${camel}.service.ts";`,
-    },
-    {
-      file: "packages/core/src/ports/id-generator.ts",
+      file: "packages/kernel/src/ports/id-generator.ts",
       anchor: "  invoiceId(): InvoiceId;",
       insert: `  ${camel}Id(): ${pascal}Id;`,
     },
     {
-      file: "packages/core/src/ports/id-generator.ts",
+      file: "packages/kernel/src/ports/id-generator.ts",
       anchor: "    invoiceId: () => brandInvoiceId(generateUuidV7()),",
       insert: `    ${camel}Id: () => brand${pascal}Id(generateUuidV7()),`,
     },
     {
-      file: "packages/core/src/testing/uuid-id-generator.ts",
+      file: "packages/kernel/src/testing/uuid-id-generator.ts",
       anchor: "    invoiceId: () => brandInvoiceId(next()),",
       insert: `    ${camel}Id: () => brand${pascal}Id(next()),`,
+    },
+    {
+      // The server-only stub is reachable only through the Vitest alias, so
+      // Knip reports it as an unused file until the workspace is declared.
+      file: "knip.json",
+      anchor: '    "packages/kernel": {',
+      before: true,
+      insert: `    "packages/${camel}": {\n      "entry": ["vitest.server-only-stub.ts"]\n    },`,
+    },
+    {
+      // Each slice is its own package now, so the transport has to declare the
+      // dependency: pnpm's isolated node_modules makes an undeclared import
+      // physically unresolvable. Anchored on the first slice entry; the
+      // resulting key order is cosmetic, nothing sorts this file.
+      file: "packages/orpc/package.json",
+      anchor: '    "@repo/assets": "workspace:*",',
+      insert: `    "@repo/${camel}": "workspace:*",`,
     },
     {
       file: "packages/orpc/src/root.ts",
@@ -736,11 +853,11 @@ async function main(): Promise<void> {
 
   for (const [file, marker] of [
     [
-      "packages/core/src/ports/id-generator.ts",
+      "packages/kernel/src/ports/id-generator.ts",
       "/** Create production UUIDv7-backed domain identifiers. */",
     ],
     [
-      "packages/core/src/testing/uuid-id-generator.ts",
+      "packages/kernel/src/testing/uuid-id-generator.ts",
       "/** Deterministic sequence for unit tests. */",
     ],
   ] as const) {

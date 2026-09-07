@@ -3,10 +3,11 @@ import "server-only";
 
 import { capture } from "@repo/analytics";
 import { createAuth, type Auth } from "@repo/auth";
-import { recordAuditLog, type CtxPorts } from "@repo/core";
+import { createCache, type Cache } from "@repo/cache";
 import { createDb, type Database } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
+import { recordAuditLog, type CtxPorts } from "@repo/kernel";
 import { createLogger, type Logger } from "@repo/logger";
 import { createSentryErrorTracker, getTraceContext, type ErrorTracker } from "@repo/observability";
 
@@ -24,7 +25,6 @@ const authSchema = {
   invitation: dbSchema.invitation,
   twoFactor: dbSchema.twoFactor,
   passkey: dbSchema.passkey,
-  apikey: dbSchema.apikey,
 };
 
 export type AppContainer = {
@@ -34,6 +34,8 @@ export type AppContainer = {
   auth: Auth;
   ports: CtxPorts;
   emailMailer: EmailMailer;
+  /** Redis-backed. Rate limiting and the Stripe webhook replay guard. */
+  cache: Cache;
   closeAnalytics: () => Promise<void>;
 };
 
@@ -68,6 +70,8 @@ function buildContainer(): AppContainer {
     max: env.DATABASE_POOL_SIZE,
   });
 
+  const cache = createCache({ redisUrl: env.REDIS_URL, appEnv: env.APP_ENV });
+
   const emailMailer = createEmailMailer();
 
   const sendHtml = async (input: { to: string; subject: string; html: string }): Promise<void> => {
@@ -81,7 +85,6 @@ function buildContainer(): AppContainer {
   // Ports before auth so signup hooks can capture through the analytics sink.
   const { ports, closeAnalytics } = createAppPorts({
     appEnv: env.APP_ENV,
-    redisUrl: env.REDIS_URL,
     emailMailer,
     ...(env.POSTHOG_API_KEY !== undefined ? { posthogApiKey: env.POSTHOG_API_KEY } : {}),
     ...(env.POSTHOG_HOST !== undefined ? { posthogHost: env.POSTHOG_HOST } : {}),
@@ -162,7 +165,7 @@ function buildContainer(): AppContainer {
     },
   });
 
-  return { db, logger, errorTracker, auth, ports, emailMailer, closeAnalytics };
+  return { db, logger, errorTracker, auth, ports, emailMailer, cache, closeAnalytics };
 }
 
 const globalForContainer = globalThis as typeof globalThis & {

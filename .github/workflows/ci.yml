@@ -233,16 +233,6 @@ jobs:
           git fetch origin main
           pnpm changeset:status
 
-  openapi:
-    name: OpenAPI drift
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - run: make openapi-check
-
   images:
     name: Container images
     runs-on: ubuntu-latest
@@ -262,26 +252,10 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           format: table
-      - name: Scan api image
+      - name: Scan migrate image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: repo-api:local
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          ignore-unfixed: true
-          format: table
-      - name: Scan worker image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: repo-worker:local
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          ignore-unfixed: true
-          format: table
-      - name: Scan docs image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: repo-docs:local
+          image-ref: repo-migrate:local
           severity: HIGH,CRITICAL
           exit-code: "1"
           ignore-unfixed: true
@@ -320,52 +294,6 @@ jobs:
         run: pnpm --filter @repo/web exec playwright install --with-deps chromium
       - run: make lighthouse
 
-  api-integration:
-    name: API authz parity
-    runs-on: ubuntu-latest
-    needs: changes
-    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - run: make deps-up-test
-      - name: Run API integration tests
-        env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:15433/app_test
-          REDIS_URL: redis://127.0.0.1:15435
-          NODE_ENV: test
-        run: pnpm --filter @repo/api test:integration
-
-  worker-integration:
-    name: Worker proofs
-    runs-on: ubuntu-latest
-    needs: changes
-    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      # Worker proofs use a noop mailer, so mailpit is not started.
-      - run: make deps-up-test-worker
-      - name: Run worker integration tests
-        env:
-          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:15433/app_test
-          REDIS_URL: redis://127.0.0.1:15435
-          S3_ENDPOINT: http://127.0.0.1:15440
-          S3_REGION: auto
-          S3_BUCKET: app-test
-          S3_ACCESS_KEY_ID: minioadmin
-          S3_SECRET_ACCESS_KEY: minioadmin
-          EMAIL_FROM: noreply@example.com
-          RESEND_API_KEY: re_test_replace_me
-          APP_URL: http://localhost:3000
-          APP_ENV: test
-          NODE_ENV: test
-        run: pnpm --filter @repo/worker test:integration
-
   # A single required status check. Branch protection points at this one job, so
   # adding or renaming a job above never means editing repository settings — and
   # a skipped or cancelled dependency cannot be mistaken for a pass.
@@ -387,12 +315,9 @@ jobs:
       - secrets
       - commits
       - changeset
-      - openapi
       - images
       - e2e
       - lighthouse
-      - api-integration
-      - worker-integration
     steps:
       - name: Verify every job succeeded
         run: |

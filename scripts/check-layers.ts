@@ -10,7 +10,7 @@
  * Each package declares its own layer, so there is no central registry to drift
  * out of date:
  *
- *   { "name": "@repo/core", "repo": { "layer": 2, "runtime": "node" } }
+ *   { "name": "@repo/kernel", "repo": { "layer": 2, "runtime": "node" } }
  *
  * Run: node scripts/check-layers.ts
  * Test: node --test scripts/check-layers.test.ts
@@ -24,7 +24,7 @@ export const UI_LAYER = "ui";
 export const TOOLING_LAYER = "tooling";
 
 /** Apps are the top layer: they compose everything and are composed by nothing. */
-const APP_LAYER = 4;
+const APP_LAYER = 5;
 
 export type Layer = number | typeof UI_LAYER | typeof TOOLING_LAYER;
 export type Runtime = "browser" | "node" | "build";

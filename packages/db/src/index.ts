@@ -7,6 +7,7 @@ export {
   DEFAULT_IDLE_IN_TRANSACTION_TIMEOUT_MS,
   DEFAULT_POOL_SIZE,
   DEFAULT_STATEMENT_TIMEOUT_MS,
+  pingDatabase,
   type CreateDbOptions,
   type Database,
   type QueryLogEvent,
@@ -27,6 +28,7 @@ export {
 } from "./repositories/asset.repository.ts";
 export {
   claimPendingOutboxEvents,
+  leaseDueOutboxEvents,
   markOutboxFailed,
   markOutboxPublished,
   type OutboxClaimRow,

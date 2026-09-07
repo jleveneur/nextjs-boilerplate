@@ -46,6 +46,27 @@ errors go to Pino until a tracker is wired ([08](./08-observability.md)). The
 `@repo/ui/{chart,editor,table}` subpaths from phases 7 and 17 were removed; the
 design system is Base UI primitives plus toast.
 
+**Then the programme was deliberately reversed in part.** The result of phases 9,
+10, and 15 was removed, because a boilerplate that ships four apps makes
+subtraction an adopter's first task:
+
+- Phase 15's `apps/docs` deleted. `docs/**` renders on GitHub; the three pages
+  authored only in the site moved into `docs/`.
+- Phase 9's `apps/api` deleted, with the Stripe webhook, rate limiting,
+  `/health/ready`, and `@repo/cache` re-homed into `apps/web`
+  ([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)). The
+  API-key credential went with it.
+- Phase 10's `apps/worker` deleted along with BullMQ and the job concept. The
+  transactional outbox from that phase **stayed** — it carries the guarantee —
+  but is now drained in-process.
+- Phase 6's `@repo/core` split into `@repo/kernel` plus one package per slice, and
+  layers renumbered to keep the same-layer ban intact
+  ([ADR-0013](../adr/0013-kernel-and-slice-packages.md)).
+
+The phases above are left as written. They record what was built and why, which
+is the point of an archive — the reversal is a later decision, not a correction
+of the record.
+
 ---
 
 ## Working agreement that still applies

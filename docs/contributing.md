@@ -1,0 +1,53 @@
+# Contributing
+
+## Quality gate
+
+Every change must leave CI green. Locally:
+
+```bash
+make check
+```
+
+That runs format, type-aware lint, typecheck, layer boundaries, flag expiry, env
+catalog, spelling, knip, React Doctor, script tests, unit tests, and the web
+bundle budget — the fast local gate. CI adds history- and service-dependent
+work (see [12](architecture/12-git-ci-release.md)).
+
+Faster loops: `make lint`, `make typecheck`, `make test`, `make layers`.
+
+## Commits
+
+[Conventional Commits](https://www.conventionalcommits.org), enforced by
+commitlint: `feat(scope): summary`, `fix(db): …`, `chore(deps): …`.
+
+The PR title becomes the squashed commit message.
+
+## Packages and changesets
+
+When a `packages/*` public API changes, run `pnpm changeset` in the same PR.
+App-only, docs, and tooling changes do not need a changeset.
+
+## Layer boundaries
+
+Packages may depend **only on strictly lower layers**. Same-layer and upward
+dependencies are banned (`make layers`). See
+[Package graph](architecture/03-package-graph-and-boundaries.md).
+
+## Architecture decisions
+
+If a change affects the package graph, a transport, the data model, auth,
+deployment topology, or a load-bearing dependency — write an ADR under
+`docs/adr/` using the existing numbering and format. Update architecture docs
+in the **same** change.
+
+## Agents
+
+AI coding agents should read [`AGENTS.md`](../AGENTS.md) before editing. Humans
+should prefer the architecture docs over that file.
+
+## Non-negotiables (short list)
+
+- No `any`, no non-null assertions, no `console` in app code
+- No ad hoc `process.env` reads in libraries; app env modules feed `createEnv`
+- Validate external input with Zod at the boundary
+- Money is an integer in minor units; IDs are UUIDv7 branded types

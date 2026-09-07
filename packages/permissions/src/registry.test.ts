@@ -77,7 +77,7 @@ describe("productResources", () => {
   it("lists what the app owns, not what the plugin owns", () => {
     const resources = productResources();
 
-    expect(resources).toEqual(expect.arrayContaining(["invoice", "billing", "apiKey", "asset"]));
+    expect(resources).toEqual(expect.arrayContaining(["invoice", "billing", "asset"]));
     for (const builtIn of BUILT_IN_RESOURCES) {
       expect(resources).not.toContain(builtIn);
     }

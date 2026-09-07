@@ -1,6 +1,6 @@
 import { check, sleep } from "k6";
 /**
- * Baseline smoke: web and API health via Traefik (make prod-up).
+ * Baseline smoke: web health via Traefik (make prod-up).
  */
 import http from "k6/http";
 
@@ -22,14 +22,9 @@ export default function () {
     "web health 200": (r) => r.status === 200,
   });
 
-  const api = http.get(`${root}/health`);
-  check(api, {
-    "api health 200": (r) => r.status === 200,
-  });
-
-  const ready = http.get(`${root}/health/ready`);
+  const ready = http.get(`${root}/api/health/ready`);
   check(ready, {
-    "api ready 200": (r) => r.status === 200,
+    "web ready 200": (r) => r.status === 200,
   });
 
   sleep(0.2);

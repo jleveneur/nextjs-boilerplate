@@ -177,7 +177,7 @@ which errors are thrown, since throw sites are not in the type signature.
   paginated, or refetched. Do not fetch in `useEffect`.
 - **Mutations:** oRPC mutations for app interactions. Server Actions are an allowed transport
   for progressively-enhanced forms when a flow needs them; none ship today (auth uses the
-  Better Auth client). Both must delegate to `@repo/core` and revalidate explicitly.
+  Better Auth client). Both must delegate to a slice service and revalidate explicitly.
 - **Caching is explicit.** With `cacheComponents: true`, `use cache` is opt-in per boundary with
   a declared `cacheLife`, and invalidation uses tags (`revalidateTag(tag, profile)` for SWR
   semantics, `updateTag(tag)` inside Actions for read-your-writes). Cache decisions are commented
@@ -231,8 +231,10 @@ which errors are thrown, since throw sites are not in the type signature.
 
 Detailed in [05](./05-runtime-and-api.md); the naming rules:
 
-- REST paths: plural nouns, kebab-case, no verbs — `/v1/organizations/{orgId}/invoices`.
-- Actions that are not CRUD: a sub-resource — `POST /v1/invoices/{id}/void`.
+- REST path conventions are retained for reference only; there is no REST surface
+  ([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)). Were one added: plural
+  nouns, kebab-case, no verbs — `/v1/organizations/{orgId}/invoices` — and non-CRUD actions as a
+  sub-resource, `POST /v1/invoices/{id}/void`.
 - Query params: `snake_case` (REST public surface), consistent with the JSON body casing choice
   below.
 - JSON bodies: `snake_case` on the public REST surface (conventional for public APIs, and stable
@@ -272,16 +274,16 @@ changed.
 
 ## 8. Tooling configuration summary
 
-| Tool          | Config                                      | Notes                                                                                                                                                  |
-| ------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Oxlint        | `.oxlintrc.json` extending `tooling/oxlint` | `typeAware: true` at root; correctness rules are errors; `no-deprecated` is on; per-layer overrides (e.g. `no-console` off in `apps/worker` bootstrap) |
-| Oxfmt         | `.oxfmtrc.json`                             | `printWidth: 100` (Oxfmt's default), double quotes, semicolons, trailing commas, `sortImports` on. Tailwind class sorting is built in but off          |
-| CSpell        | `cspell.config.yaml`                        | Project dictionary committed so new jargon is a reviewed diff                                                                                          |
-| Knip          | `knip.json`                                 | Fails CI on unused files, exports, and dependencies                                                                                                    |
-| React Doctor  | `doctor.config.json`                        | Fails CI on React security, a11y, and performance errors; PRs report only newly introduced findings                                                    |
-| Lefthook      | `lefthook.yml`                              | pre-commit: format + lint staged, gitleaks. pre-push: typecheck + affected unit tests                                                                  |
-| EditorConfig  | `.editorconfig`                             | LF, UTF-8, 2 spaces, final newline, trim trailing whitespace                                                                                           |
-| gitattributes | `.gitattributes`                            | `* text=auto eol=lf`, lockfile marked binary-ish for diffs, `linguist-generated` on generated files                                                    |
+| Tool          | Config                                      | Notes                                                                                                                                                        |
+| ------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Oxlint        | `.oxlintrc.json` extending `tooling/oxlint` | `typeAware: true` at root; correctness rules are errors; `no-deprecated` is on; per-layer overrides (e.g. `no-console` off in composition roots and scripts) |
+| Oxfmt         | `.oxfmtrc.json`                             | `printWidth: 100` (Oxfmt's default), double quotes, semicolons, trailing commas, `sortImports` on. Tailwind class sorting is built in but off                |
+| CSpell        | `cspell.config.yaml`                        | Project dictionary committed so new jargon is a reviewed diff                                                                                                |
+| Knip          | `knip.json`                                 | Fails CI on unused files, exports, and dependencies                                                                                                          |
+| React Doctor  | `doctor.config.json`                        | Fails CI on React security, a11y, and performance errors; PRs report only newly introduced findings                                                          |
+| Lefthook      | `lefthook.yml`                              | pre-commit: format + lint staged, gitleaks. pre-push: typecheck + affected unit tests                                                                        |
+| EditorConfig  | `.editorconfig`                             | LF, UTF-8, 2 spaces, final newline, trim trailing whitespace                                                                                                 |
+| gitattributes | `.gitattributes`                            | `* text=auto eol=lf`, lockfile marked binary-ish for diffs, `linguist-generated` on generated files                                                          |
 
 ### Git hooks: deliberately fast
 

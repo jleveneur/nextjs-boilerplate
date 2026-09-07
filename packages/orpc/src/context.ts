@@ -5,8 +5,8 @@
  * an {@link Actor} (or `null`) here before procedures run.
  */
 
-import type { Ctx, CtxPorts } from "@repo/core";
 import type { Database } from "@repo/db";
+import type { Ctx, CtxPorts } from "@repo/kernel";
 import type { Logger } from "@repo/logger";
 import type { Actor } from "@repo/types";
 

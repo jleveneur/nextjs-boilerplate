@@ -131,7 +131,7 @@ flowchart LR
         B1["React components<br/>TanStack Query, nuqs<br/>@repo/ui, @repo/contracts"]
     end
     subgraph node["Node.js 24 (server)"]
-        N1["RSC / Server Actions<br/>oRPC handlers<br/>Hono routes<br/>Workers<br/>@repo/core and all adapters"]
+        N1["RSC / Server Actions<br/>oRPC handlers<br/>Stripe webhook<br/>Outbox handlers<br/>kernel, slices, and all adapters"]
     end
     subgraph edge["Edge (deliberately near-empty)"]
         E1["Cloudflare rules<br/>static asset caching"]
@@ -157,14 +157,14 @@ flowchart LR
 An honest architecture names its own costs. These are the places we knowingly spend complexity,
 and what we get for it.
 
-| Accepted cost                   | What it buys                                                                 | Why it is worth it                                                                                        |
-| ------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| A monorepo with ~20 packages    | Enforced boundaries, independent testability, one core behind two transports | The alternative (one `src/lib`) has no enforceable boundaries at all                                      |
-| Ports/adapters for side effects | Core is testable without network, vendors are swappable                      | Only applied where vendors actually change: email, storage, payments, jobs, flags, clock                  |
-| Two API surfaces (oRPC + REST)  | Best-in-class internal DX _and_ a stable public contract                     | Cost is near zero because both are thin transports over the same services                                 |
-| One job system (BullMQ)         | Right tool for the current workload                                          | Durable workflows were considered and dropped; see [ADR-0009](../adr/0009-bullmq-only-background-work.md) |
-| Generated OpenAPI from Zod      | Docs and spec cannot drift from the code                                     | Hand-written specs are always wrong within a month                                                        |
-| Multi-tenancy from day one      | No brutal retrofit later                                                     | [ADR-0006](../adr/0006-organization-scoped-multi-tenancy.md)                                              |
+| Accepted cost                   | What it buys                                                                 | Why it is worth it                                                                                                                                      |
+| ------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A monorepo with ~20 packages    | Enforced boundaries, independent testability, one core behind two transports | The alternative (one `src/lib`) has no enforceable boundaries at all                                                                                    |
+| Ports/adapters for side effects | Core is testable without network, vendors are swappable                      | Only applied where vendors actually change: email, storage, payments, jobs, flags, clock                                                                |
+| Two API surfaces (oRPC + REST)  | Best-in-class internal DX _and_ a stable public contract                     | Cost is near zero because both are thin transports over the same services                                                                               |
+| No job system at all            | A boilerplate should not ship infrastructure most adopters delete            | The transactional outbox stays; delivery is in-process. See [ADR-0014](../adr/0014-single-transport-and-no-background-worker.md) for what this gives up |
+| Generated OpenAPI from Zod      | Docs and spec cannot drift from the code                                     | Hand-written specs are always wrong within a month                                                                                                      |
+| Multi-tenancy from day one      | No brutal retrofit later                                                     | [ADR-0006](../adr/0006-organization-scoped-multi-tenancy.md)                                                                                            |
 
 And the places we deliberately refuse complexity: no CQRS, no event sourcing, no message broker
 beyond Redis, no microservices, no GraphQL, no generic repository interface over the ORM, no

@@ -17,7 +17,6 @@ const MEMBER: readonly Action[] = [
   PERMISSIONS["invoice:update"],
   PERMISSIONS["invoice:export"],
   PERMISSIONS["billing:read"],
-  PERMISSIONS["apiKey:list"],
   PERMISSIONS["asset:create"],
   PERMISSIONS["asset:read"],
 ];
@@ -32,8 +31,6 @@ const ADMIN: readonly Action[] = [
   PERMISSIONS["invitation:cancel"],
   PERMISSIONS["invoice:void"],
   PERMISSIONS["billing:manage"],
-  PERMISSIONS["apiKey:create"],
-  PERMISSIONS["apiKey:revoke"],
 ];
 
 const OWNER: readonly Action[] = [...ADMIN, PERMISSIONS["organization:delete"]];

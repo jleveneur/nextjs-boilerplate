@@ -15,7 +15,7 @@ export type SendEmailResult = {
 };
 
 /**
- * Mailer port. Lives here until `@repo/core` re-exports it in Phase 6.
+ * Mailer port. `@repo/kernel` adapts this into its own `Mailer` port.
  */
 export type Mailer = {
   send(input: SendEmailInput): Promise<SendEmailResult>;

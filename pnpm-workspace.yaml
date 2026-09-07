@@ -21,12 +21,9 @@ allowBuilds:
   # drizzle-kit depends on esbuild to bundle its CLI. Without the install
   # script, the binary is missing and `drizzle-kit generate|migrate` fails.
   esbuild: true
-  # Optional native accelerator for msgpackr (BullMQ). Pure-JS fallback works;
-  # we do not need the compile step in this repo.
-  msgpackr-extract: false
   # Sharp needs its install script to fetch platform-specific libvips binaries.
-  # Required by `@repo/storage/image` in the worker. Next lists sharp as an
-  # optional dependency too; the same grant covers that copy.
+  # Required by `@repo/storage/image`; Next lists sharp as an optional
+  # dependency too and the same grant covers that copy.
   sharp: true
   # protobufjs ships prebuilt code; its postinstall is optional. OTLP HTTP
   # exporters work without the install script regenerating stubs.
@@ -95,7 +92,6 @@ catalog:
   posthog-node: 5.6.0
   pino: 10.3.1
   ioredis: 6.0.0
-  bullmq: 6.2.2
   "@aws-sdk/client-s3": 3.1116.0
   "@aws-sdk/s3-request-presigner": 3.1116.0
   sharp: 0.35.4
@@ -125,7 +121,6 @@ catalog:
   "@opentelemetry/resources": 2.10.0
   "@opentelemetry/semantic-conventions": 1.43.0
   better-auth: 1.6.25
-  "@better-auth/api-key": 1.6.25
   "@better-auth/passkey": 1.6.25
   # Private API transport (docs/architecture/13-dependency-review.md §4).
   # 2.x is still the `beta` dist-tag (`latest` remains 1.15); pin the exact
@@ -145,22 +140,6 @@ catalog:
   # Capture-only; see packages/observability/src/sentry-tracker.ts for why the
   # bundled OpenTelemetry SDK is switched off rather than used.
   "@sentry/node": 10.73.0
-
-  # --- Public API (Hono) -------------------------------------------------
-  hono: 4.12.34
-  "@hono/zod-openapi": 1.5.1
-  "@hono/node-server": 2.0.12
-  "@scalar/hono-api-reference": 0.11.16
-  "@scalar/nextjs-api-reference": 0.11.16
-
-  # --- Documentation site (Fumadocs) -------------------------------------
-  fumadocs-core: 16.13.0
-  fumadocs-ui: 16.13.0
-  fumadocs-mdx: 15.2.2
-  "@types/mdx": 2.0.14
-  lucide-react: 1.31.0
-  mermaid: 11.16.1
-  takumi-js: 2.5.4
 
   # --- Design system -----------------------------------------------------
   clsx: 2.1.1
@@ -185,7 +164,6 @@ catalog:
 # Entries still inside pnpm's default release-age cutoff. Delete each one as
 # soon as it ages past the window — this list is a waiver, not a setting.
 minimumReleaseAgeExclude:
-  - bullmq@6.2.2
   - "@orpc/client@2.0.0-beta.33"
   - "@orpc/contract@2.0.0-beta.33"
   - "@orpc/json-schema@2.0.0-beta.33"

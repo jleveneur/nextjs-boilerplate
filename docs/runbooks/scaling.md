@@ -25,27 +25,29 @@ Silent breach of this inequality is a common outage mode (`too many clients` —
 
 Measured 2026-08-03 against local `make prod-up` (Traefik `:8080`, default pool
 sizes from `compose.prod.yaml`: web/api pool 10, worker 5). Authenticated run used
-an org API key with `metadata.userId` (Better Auth key counter disabled; app
-limiter at 60 req/min).
+unauthenticated read-only traffic against the prod-like stack.
 
-| Signal                                | Observation                                                                              | Limiter                                   |
-| ------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Health                                | p95 ≈ 11 ms; 0% failed (5 VUs / 20s)                                                     | Not saturated                             |
-| Public `/v1` burst (40 rps, no key)   | Stable **401**; no 5xx                                                                   | Auth middleware + Traefik; not DB         |
-| Authenticated burst (40 rps + key)    | Checks pass on **2xx / 429**; app returns **429** after 60 req/min/key; p95 ≈ 8 ms       | **API rate limit** before pool            |
-| Read-heavy (+ authed invoice list)    | p95 ≈ 64 ms; 0% failed (10 VUs / 30s)                                                    | Not saturated on a laptop stack           |
-| Write-heavy (default key permissions) | **403** on invoice create (`invoice:read` only) — authz boundary; not a capacity limiter | Authz → then rate limit if writes allowed |
-| Upload stand-in (authed list)         | Concurrent reads under 3 VUs; p95 ≈ 31 ms; 429 counted as expected                       | Same API rate limit                       |
+| Signal                    | Observation                           | Limiter                         |
+| ------------------------- | ------------------------------------- | ------------------------------- |
+| Health                    | p95 ≈ 11 ms; 0% failed (5 VUs / 20s)  | Not saturated                   |
+| Read-heavy (public pages) | p95 ≈ 64 ms; 0% failed (10 VUs / 30s) | Not saturated on a laptop stack |
 
-**Primary limiter for the public API today:** per-key fixed-window rate limit
-(60 req/min in `apps/api/src/middleware/rate-limit.ts`). A coarser per-IP window
-(300 req/min) runs ahead of API-key auth so unauthenticated traffic cannot drive
-key lookups without a ceiling; it is an abuse bound, not a quota, and a
-legitimate tenant should never reach it. Both count through an atomic Redis
-counter, so the ceilings hold across replicas rather than per process. Raising
-the per-key limit without raising `DATABASE_POOL_SIZE` × replicas will shift
-saturation to the **database pool**. Queue depth becomes the limiter for async work (email/image) under
-upload/notify storms — see [queue-backlog.md](./queue-backlog.md).
+**Primary limiter today:** a per-IP fixed-window rate limit on `/api/rpc`
+(300 req/min in `apps/web/src/server/rate-limit.ts`), mounted ahead of session
+resolution so unauthenticated traffic cannot drive database round trips without
+a ceiling. It is an abuse bound, not a quota, and a legitimate tenant should
+never reach it. It counts through an atomic Redis counter, so the ceiling holds
+across replicas rather than per process.
+
+**The numbers above only cover read-only, unauthenticated traffic.** The
+mutating surface is oRPC (`POST /api/rpc`, batched) and is not load-tested — see
+the coverage gap in `perf/k6/README.md`. Raising the limit without raising
+`DATABASE_POOL_SIZE` × replicas will shift saturation to the **database pool**.
+
+**Async work has no separate limiter, and that is the risk to watch.** With no
+worker, outbox handlers (email, image derivation) run inside whichever request
+drains the outbox, so an upload or notify storm shows up as request latency
+rather than as queue depth. There is no queue dashboard to look at.
 
 Re-run and update this table after material changes to pools, rate limits, or
 hardware (`make load` with `API_KEY` / `ORGANIZATION_ID`).
@@ -58,9 +60,8 @@ hardware (`make load` with `API_KEY` / `ORGANIZATION_ID`).
 | ---------------------------- | ----------------------------------------------------------------------------------------------- |
 | API rate limit (intentional) | Raise limit carefully; add tenant-aware quotas; cache reads                                     |
 | DB pool / `max_connections`  | Fewer connections per replica, PgBouncer, or larger Postgres; never “just add replicas” blindly |
-| Node event loop (CPU)        | More web/api replicas; keep Sharp/image work on the worker                                      |
-| Queue depth                  | More worker replicas; split queues; fix poison messages                                         |
-| Redis                        | Separate Redis for cache vs BullMQ if memory pressure appears                                   |
+| Node event loop (CPU)        | More web replicas. Sharp now runs in the outbox drain, so image storms compete with requests    |
+| Redis                        | `noeviction` is required — it holds replay guards and side-effect claims, not just cache        |
 
 ---
 

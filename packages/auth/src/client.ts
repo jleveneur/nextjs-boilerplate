@@ -4,7 +4,6 @@
  * Must not import `server-only`, Drizzle, or Redis.
  */
 
-import { apiKeyClient } from "@better-auth/api-key/client";
 import { passkeyClient } from "@better-auth/passkey/client";
 import { createAuthClient } from "better-auth/client";
 import {
@@ -28,7 +27,6 @@ export function createAppAuthClient(options: CreateAuthClientOptions) {
         ac,
         roles: organizationRoles,
       }),
-      apiKeyClient(),
       twoFactorClient(),
       passkeyClient(),
       magicLinkClient(),

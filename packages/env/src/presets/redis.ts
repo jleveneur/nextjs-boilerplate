@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** Redis / Valkey connection for cache and BullMQ. */
+/** Redis / Valkey connection for the cache and auth rate limiting. */
 export const redis = z.object({
   REDIS_URL: z.url().refine(
     (value) => {

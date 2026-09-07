@@ -1,4 +1,4 @@
-# k6 load scenarios (Phase 16)
+# k6 load scenarios
 
 Not part of PR CI. Scripts are JavaScript, but they run on the **k6 Go runtime** — not
 Node/`pnpm`. Local and CI both use the official Docker image (`grafana/k6`), same shape as ZAP.
@@ -8,36 +8,23 @@ make prod-up          # Traefik on :8080
 make load             # docker run grafana/k6 against LOAD_BASE_URL
 ```
 
-| Script                | What it stresses                                            |
-| --------------------- | ----------------------------------------------------------- |
-| `health.js`           | Web `/api/health`, API `/health` + `/health/ready`          |
-| `public-api-burst.js` | `/v1` burst (401 without key; rate limits with `API_KEY`)   |
-| `read-heavy.js`       | Public pages + optional invoice list                        |
-| `write-heavy.js`      | Invoice creates when `API_KEY` + `ORGANIZATION_ID` set      |
-| `upload.js`           | Soft-skip / authenticated stand-in until REST upload exists |
+| Script          | What it stresses                          |
+| --------------- | ----------------------------------------- |
+| `health.js`     | Web `/api/health` and `/api/health/ready` |
+| `read-heavy.js` | Public pages                              |
 
 Environment:
 
-| Variable          | Default                            | Purpose                               |
-| ----------------- | ---------------------------------- | ------------------------------------- |
-| `LOAD_BASE_URL`   | `http://host.docker.internal:8080` | Origin as seen from the k6 container  |
-| `API_KEY`         | unset                              | Bearer for authenticated scenarios    |
-| `ORGANIZATION_ID` | unset                              | Tenant for `/v1/organizations/...`    |
-| `K6_IMAGE`        | `grafana/k6:1.3.0`                 | Override to pin/bump the runner image |
+| Variable        | Default                            | Purpose                               |
+| --------------- | ---------------------------------- | ------------------------------------- |
+| `LOAD_BASE_URL` | `http://host.docker.internal:8080` | Origin as seen from the k6 container  |
+| `K6_IMAGE`      | `grafana/k6:1.3.0`                 | Override to pin/bump the runner image |
 
-Authenticated keys must include `metadata.userId` (required by
-`resolveActorFromApiKey`). Create via session:
+## Coverage gap
 
-```bash
-# after sign-in cookie jar is set:
-curl -sS -b cookies.txt -c cookies.txt \
-  -H 'Content-Type: application/json' -H 'Origin: http://localhost:8080' \
-  -X POST http://localhost:8080/api/auth/api-key/create \
-  -d "{\"name\":\"k6\",\"organizationId\":\"$ORG\",\"metadata\":{\"userId\":\"$USER_ID\"}}"
-```
-
-Default key permissions are `invoice:read` only — `write-heavy` expects **403**
-unless you mint a server-side key with write permissions. App-level rate limit is
-**60 req/min/key** (`apps/api`); Better Auth’s built-in key counter is disabled.
+These scenarios only exercise unauthenticated `GET` traffic. The mutating surface is oRPC
+(`POST /api/rpc`, batched), which these scripts do not drive — an authenticated write path
+would need a session cookie jar and an oRPC-shaped request body. Scenarios for `/v1` REST
+burst, invoice creates, and uploads were removed along with the public REST API.
 
 Saturation findings live in [`docs/runbooks/scaling.md`](../../docs/runbooks/scaling.md).

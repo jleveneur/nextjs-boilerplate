@@ -1,6 +1,6 @@
 {
   "$schema": "https://react.doctor/schema/config.json",
-  "projects": ["apps/web", "apps/docs", "packages/ui"],
+  "projects": ["apps/web", "packages/ui"],
   "blocking": "error",
   "scope": "full",
   "share": false,
@@ -10,15 +10,6 @@
     "enabled": false
   },
   "ignore": {
-    "files": [
-      "**/.next/**",
-      "**/dist/**",
-      "**/*.generated.*",
-      "apps/docs/.source/**",
-      "apps/docs/content/docs/architecture/**",
-      "apps/docs/content/docs/adr/**",
-      "apps/docs/content/docs/runbooks/**",
-      "apps/docs/content/docs/security/**"
-    ]
+    "files": ["**/.next/**", "**/dist/**", "**/*.generated.*"]
   }
 }

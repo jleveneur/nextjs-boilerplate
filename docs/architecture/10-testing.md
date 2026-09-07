@@ -39,28 +39,29 @@ rather than a repo-wide number, which averages away exactly the information you 
 | Package                          | Line threshold                                   |
 | -------------------------------- | ------------------------------------------------ |
 | `@repo/authz`                    | 100 % — it is small, pure, and security-critical |
-| `@repo/core`                     | 90 %                                             |
+| `@repo/kernel`                   | 90 %                                             |
+| `@repo/billing`                  | 90 %                                             |
+| `@repo/subscription`             | 90 %                                             |
+| `@repo/assets`                   | 90 % — see the gap noted below                   |
 | `@repo/contracts`, `@repo/utils` | 90 %                                             |
 | Layer 1 adapters                 | 70 % — thin wrappers over vendor SDKs            |
 | `@repo/ui`                       | 60 % — behaviour and a11y, not visual            |
-| `apps/api`                       | 90 % — request-path middleware and webhooks      |
-| `apps/worker`                    | 70 % — job handlers and the outbox relay         |
 | `apps/web`                       | No threshold — covered by E2E                    |
 
 Uncovered branches are reviewed for _why_, never chased for the number.
 
-**Repositories and mappers are excluded from unit coverage** in `@repo/core`, by pattern
+**Repositories and mappers are excluded from unit coverage** in every slice, by pattern
 rather than by name. A repository is queries with no policy — its behaviour only exists
 against real Postgres, so it is covered by `*.integration.test.ts`; a mapper is row-to-DTO
 translation. Enumerating them one line per slice meant every new slice silently dropped the
 package below its floor until someone remembered to edit `vitest.config.ts`.
 
-**What an app's threshold measures.** `apps/api` and `apps/worker` scope coverage to the code
-that decides something on the request or job path. Composition roots, env modules, process
-entry points, and route registration are excluded in their `vitest.config.ts`: they are
-exercised by the integration suite against real Postgres and Redis, and by the container images
-booting in CI. Including them would drag the number down until the threshold stopped protecting
-the code it does cover — a threshold nobody can raise is one nobody reads.
+**One known gap, stated rather than hidden.** `@repo/assets` carries the same 90 % floor as the
+other slices, but `src/asset.service.ts` is excluded: nothing drives it under unit test, and its
+behaviour lives against real Postgres and S3. Splitting `@repo/core` into per-slice packages
+([ADR-0013](../adr/0013-kernel-and-slice-packages.md)) is what surfaced this — under one aggregate
+floor the slice was riding on its siblings' coverage. Closing it means an integration test, not a
+mock.
 
 `apps/web` keeps no threshold because most of it is Server Components whose behaviour is only
 observable through a running server; Playwright is the right instrument there. Its unit tests
@@ -95,7 +96,7 @@ that is slow, flaky, and gives poor failure localisation.
 
 - Core services are tested by building a `Ctx` from in-memory fakes: `InMemoryMailer`,
   `InMemoryFileStore`, `FakeClock`, `FixedIdGenerator`, `RecordingEventBus`. Fakes live in
-  `@repo/core/testing` (and sibling `./testing` subpaths on adapters) and are **real
+  `@repo/kernel/testing` (and sibling `./testing` subpaths on adapters) and are **real
   implementations of the ports**, not mocks — so tests assert on
   outcomes (`mailer.sent`) rather than on call counts. This is precisely what the narrow use of
   ports ([03](./03-package-graph-and-boundaries.md#4-ports-and-adapters--applied-narrowly)) buys.

@@ -29,7 +29,7 @@
 The dependency bar from [01](./01-principles-and-constraints.md#6-minimal-but-powerful-dependencies)
 applied honestly: this is roughly 80 lines of Zod. We need behaviour that a general-purpose library
 makes awkward anyway — per-app schema composition (each app validates only the variables it
-actually needs, so `apps/worker` does not require Stripe keys), a build-time skip for Docker image
+actually needs, so the migrate image needs only `DATABASE_URL`), a build-time skip for Docker image
 builds, and coercion rules of our own. And a config layer is exactly where you least want to be
 blocked by an upstream release.
 
@@ -46,7 +46,7 @@ packages/env/src/
 Each app composes the presets it needs:
 
 ```
-// illustrative — apps/worker
+// illustrative — a composition root that needs no Stripe keys
 export const env = createEnv({
   server: [base, db, redis, s3, resend, otel],
   runtimeEnv: {

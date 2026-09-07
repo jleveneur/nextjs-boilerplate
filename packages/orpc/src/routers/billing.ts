@@ -1,9 +1,11 @@
 /**
- * Billing transport — thin wrappers over `@repo/core` services.
+ * Billing transport — thin wrappers over `@repo/billing` and
+ * `@repo/subscription` services.
  */
 
 import { z } from "zod";
 
+import { createInvoice, getInvoice, listInvoicesForOrg, voidInvoice } from "@repo/billing";
 import {
   createInvoiceInputSchema,
   getInvoiceInputSchema,
@@ -13,16 +15,12 @@ import {
   voidInvoiceInputSchema,
 } from "@repo/contracts";
 import {
-  createInvoice,
-  getInvoice,
   getOrganizationSubscription,
   listBillingCatalog,
-  listInvoicesForOrg,
   openBillingPortal,
   startCheckout,
   syncBillingCatalog,
-  voidInvoice,
-} from "@repo/core";
+} from "@repo/subscription";
 
 import { orgProcedure } from "../procedures.ts";
 

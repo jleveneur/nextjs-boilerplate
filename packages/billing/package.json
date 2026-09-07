@@ -1,0 +1,41 @@
+{
+  "name": "@repo/billing",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Billing slice: invoices, void policy, and the invoice.voided domain event.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
+  },
+  "dependencies": {
+    "@repo/authz": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/errors": "workspace:*",
+    "@repo/kernel": "workspace:*",
+    "@repo/permissions": "workspace:*",
+    "@repo/types": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "server-only": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/logger": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "repo": {
+    "layer": 3,
+    "runtime": "node"
+  }
+}

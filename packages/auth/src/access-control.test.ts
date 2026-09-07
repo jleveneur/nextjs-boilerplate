@@ -81,7 +81,6 @@ describe("organization access control", () => {
     expect(ac.statements).toMatchObject({
       organization: expect.arrayContaining(["update", "delete"]),
       invoice: expect.arrayContaining([PERMISSIONS["invoice:create"].split(":")[1] ?? "", "void"]),
-      apiKey: expect.arrayContaining(["create", "revoke", "list"]),
     });
   });
 });

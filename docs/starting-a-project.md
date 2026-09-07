@@ -1,6 +1,6 @@
 # Starting a project from this repo
 
-[`getting-started`](../apps/docs/content/docs/getting-started.mdx) tells you how to run _this_
+[`getting-started`](./getting-started.md) tells you how to run _this_
 repo. This page tells you how to make it _yours_: what to rename, what to delete, and what the
 deletion actually costs.
 
@@ -13,11 +13,11 @@ example instead of beside it, and then discovering the two are indistinguishable
 
 Three different kinds of thing ship here, and they are removed in three different ways.
 
-| Kind             | Examples                                                         | How you remove it            |
-| ---------------- | ---------------------------------------------------------------- | ---------------------------- |
-| **Foundation**   | auth, tenancy, layering, errors, jobs, outbox, observability, CI | You don't. This is the repo. |
-| **Integrations** | Stripe, S3, PostHog, OTel, Resend                                | Leave the env unset          |
-| **Example**      | invoices, billing pages, the `/v1` invoice routes                | Delete it (see §4)           |
+| Kind             | Examples                                                   | How you remove it            |
+| ---------------- | ---------------------------------------------------------- | ---------------------------- |
+| **Foundation**   | auth, tenancy, layering, errors, outbox, observability, CI | You don't. This is the repo. |
+| **Integrations** | Stripe, S3, PostHog, OTel, Resend                          | Leave the env unset          |
+| **Example**      | invoices, billing pages, asset uploads                     | Delete it (see §4)           |
 
 The distinction matters because **most integrations are already optional**. Every one of them sits
 behind a port with a no-op implementation, so an unset credential is a supported state rather than
@@ -41,14 +41,12 @@ internal import stays stable.
 
 What is actually worth changing:
 
-| Where                                   | What                                             |
-| --------------------------------------- | ------------------------------------------------ |
-| `apps/api/src/app.ts`, `openapi-app.ts` | `"Repo Public API"` → your API title             |
-| `apps/api/openapi.json`                 | regenerate: `make openapi-check` shows the drift |
-| `apps/web/src/messages/{en,fr}.json`    | product name in UI copy                          |
-| `package.json` `description`            | one line                                         |
-| `docker/compose*.yaml` `name:`          | container prefix (`repo-test` → `acme-test`)     |
-| `.changeset/config.json`                | nothing — it works as-is                         |
+| Where                                | What                                         |
+| ------------------------------------ | -------------------------------------------- |
+| `apps/web/src/messages/{en,fr}.json` | product name in UI copy                      |
+| `package.json` `description`         | one line                                     |
+| `docker/compose*.yaml` `name:`       | container prefix (`repo-test` → `acme-test`) |
+| `.changeset/config.json`             | nothing — it works as-is                     |
 
 Then delete the history that is not yours: `docs/architecture/14-build-history.md`, the ADRs you
 did not decide (keep the ones whose decisions you are inheriting — they explain why the code looks
@@ -71,17 +69,22 @@ until you fix them, and files that merely mention it (a nav label, a seed row, a
 
 At the time of writing:
 
-| Subsystem   | Delete | Breaks | Notes                                                       |
-| ----------- | ------ | ------ | ----------------------------------------------------------- |
-| `publicApi` | 1      | **0**  | `apps/api` is layer 4 — nothing imports it. Delete the dir. |
-| `docsSite`  | 1      | **0**  | Same. `docs/` still renders on GitHub without it.           |
-| `analytics` | 1      | 4      | Or just leave `POSTHOG_API_KEY` unset.                      |
-| `assets`    | 6      | 11     | S3 uploads + image derivatives.                             |
-| `billing`   | 25     | 16     | The commerce example. The big one.                          |
+| Subsystem   | Delete | Breaks | Notes                                  |
+| ----------- | ------ | ------ | -------------------------------------- |
+| `analytics` | 1      | 2      | Or just leave `POSTHOG_API_KEY` unset. |
+| `assets`    | 3      | 9      | S3 uploads + image derivatives.        |
+| `billing`   | 17     | 13     | Invoices and Stripe. The big one.      |
 
-**Start with the two zero-cost ones.** If you are not shipping a public REST API, deleting
-`apps/api` removes an entire transport, its OpenAPI drift check, its container image, its Trivy
-scan, and the parity test — and nothing else in the repo notices. Same for `apps/docs`.
+**`assets` and `billing` are whole packages now**
+([ADR-0013](./adr/0013-kernel-and-slice-packages.md)), so deleting one is a package delete plus
+unregistering it — not directory surgery inside a shared barrel. `packages/subscription` goes with
+`billing`.
+
+The two zero-cost subsystems this table used to list — the public REST API and the docs site — are
+already gone. [ADR-0014](./adr/0014-single-transport-and-no-background-worker.md) removed them,
+along with the worker and the job queue, for exactly the reason this page exists: an adopter
+should not have to delete three apps before writing a feature. Read that ADR before assuming you
+have retries, a dead-letter queue, or anything on a schedule. You do not.
 
 ---
 
@@ -89,30 +92,33 @@ scan, and the parity test — and nothing else in the repo notices. Same for `ap
 
 This is the one that costs real time, so here is the honest shape of it.
 
-The 16 breaking files are almost entirely **registries and composition roots**: the id union, the
-error-code table, the permission registry, the job registry, the db schema barrel, the core
-barrel, and the three app containers. That is not accidental coupling — it is the closed-registry
-design working as intended. A feature is _supposed_ to have exactly one place it registers itself
-in each dimension. The cost of that is that removing a feature means visiting each one.
+The 13 breaking files are almost entirely **registries and composition roots**: the id union, the
+error-code table, the permission registry, the db schema barrel, and the web container. That is not
+accidental coupling — it is the closed-registry design working as intended. A feature is _supposed_
+to have exactly one place it registers itself in each dimension. The cost of that is that removing
+a feature means visiting each one.
 
 Order that keeps the tree compiling for the longest:
 
-1. **Delete the owned paths** (`make example-inventory FEATURE=billing` lists them).
-2. **Unregister, from the leaves inward.** Apps first (`apps/*/src/**/container.ts`, `app.ts`,
-   nav links in `layout.tsx`), then transport (`packages/orpc`), then domain (`packages/core`),
-   then the layer-0 registries.
+1. **Delete the owned paths** (`make example-inventory FEATURE=billing` lists them). For billing
+   that is `packages/billing`, `packages/subscription`, and `packages/payments` — whole packages.
+2. **Unregister, from the leaves inward.** The app first
+   (`apps/web/src/server/{container,ports,outbox-handlers}.ts`, the Stripe webhook route, nav
+   links), then transport (`packages/orpc`), then the layer-0 registries.
 3. **Registries last**, because everything else references them:
    - `packages/permissions/src/registry.ts` + `roles.ts` — drop `invoice:*` and `billing:*`
    - `packages/types/src/ids.ts` — drop `InvoiceId`
    - `packages/errors/src/codes.ts` — drop the invoice codes
-   - `packages/jobs/src/registry.ts` + `bullmq-worker.ts` — drop the jobs and their switch arms
-   - `packages/db/src/schema/index.ts`, `packages/contracts/src/index.ts`, `packages/core/src/index.ts`
+   - `packages/kernel/src/ports/id-generator.ts` + `testing/uuid-id-generator.ts` — drop `invoiceId`
+   - `packages/kernel/src/ctx.ts` — drop the `payments` port from `CtxPorts`
+   - `packages/db/src/schema/index.ts`, `packages/contracts/src/index.ts`
+   - `pnpm-workspace.yaml` and `knip.json` — remove the deleted workspace entries
 4. **Env**: drop `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
-   `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` from all four catalogs (`make env-catalog` verifies they
+   `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` from all three catalogs (`make env-catalog` verifies they
    agree).
 5. **Schema**: for a project that has never deployed, delete the migrations and regenerate one
    initial migration rather than shipping a migration that creates tables you just deleted.
-6. **Regenerate the derived artefacts**: `make authz-matrix`, then `make openapi-check`.
+6. **Regenerate the derived artefacts**: `make authz-matrix`.
 
 Verify with `make check`, which will find every dangling import, unused export (knip), and stale
 permission row for you. That is the point of the gate being strict.
@@ -131,10 +137,16 @@ Don't write the wiring by hand:
 make new-slice NAME=widget          # or NAME=person PLURAL=people
 ```
 
-That scaffolds seven files and registers the slice in ten more — the id union, the
-permission registry and its role grants, the schema barrel, the core barrel, both id
-generators, and the oRPC root. `make check` passes immediately afterwards, generated
-tests included, so you start from green rather than from a compile error.
+That scaffolds a **whole layer-3 package** — manifest, tsconfig, vitest config, server-only stub,
+barrel, service, repository, mapper, and a unit test — plus the contract and table, and registers
+it everywhere it has to be registered: the id union, the permission registry and its role grants,
+the schema barrel, both id generators, `packages/orpc`'s manifest and root, and `knip.json`.
+
+Run `pnpm install` afterwards so the new workspace package links, then `make check`. It passes
+immediately, generated tests included, so you start from green rather than from a compile error.
+
+The scaffolder pre-verifies every anchor before writing anything, so if the repo has drifted it
+fails loudly rather than half-applying.
 
 What you get is the boring half, written the way the rest of the repo is written:
 

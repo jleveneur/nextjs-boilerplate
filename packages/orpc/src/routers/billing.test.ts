@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { BILLING_ERROR_CODES } from "@repo/core";
+import { BILLING_ERROR_CODES } from "@repo/billing";
 
 import { billingRouter } from "./billing.ts";
 

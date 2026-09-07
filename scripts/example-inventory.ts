@@ -49,33 +49,25 @@ export const FEATURES: Readonly<Record<string, Feature>> = {
       "already boots without Stripe. Deleting removes dead surface; it does not fix a break.",
     owns: [
       "packages/payments",
-      "packages/core/src/billing",
-      "packages/core/src/subscription",
-      "packages/core/src/ports/payment-gateway.ts",
+      "packages/billing",
+      "packages/subscription",
+      "packages/kernel/src/ports/payment-gateway.ts",
       "packages/orpc/src/routers/billing.ts",
       "packages/contracts/src/invoice.ts",
       "packages/contracts/src/invoice.test.ts",
-      "packages/contracts/src/invoice-rest.ts",
-      "packages/contracts/src/invoice-rest.test.ts",
       "packages/db/src/schema/invoice.sql.ts",
       "packages/db/src/schema/subscription.sql.ts",
       "packages/db/src/schema/entitlement.sql.ts",
       "packages/db/src/schema/stripe-catalog.sql.ts",
       "packages/db/src/schema/stripe-customer.sql.ts",
-      "apps/api/src/routes",
-      "apps/api/src/webhooks",
       "apps/web/src/features/billing",
       "apps/web/src/app/[locale]/(app)/[orgSlug]/invoices",
       "apps/web/src/app/[locale]/(app)/[orgSlug]/billing",
       "apps/web/e2e/billing.spec.ts",
       "apps/web/e2e/billing-stripe.spec.ts",
-      "apps/worker/src/consumers/invoice-voided-notify.ts",
-      "apps/worker/src/consumers/invoice-voided-notify.test.ts",
-      "apps/worker/src/consumers/stripe-event-process.ts",
-      "apps/worker/src/consumers/stripe-event-process.test.ts",
     ],
     mentions: /invoice|stripe|entitlement/i,
-    packages: ["@repo/payments"],
+    packages: ["@repo/payments", "@repo/billing", "@repo/subscription"],
     envKeys: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"],
   },
 
@@ -85,15 +77,12 @@ export const FEATURES: Readonly<Record<string, Feature>> = {
       "The file-store port has an in-memory implementation, but the app wires the S3 adapter " +
       "directly, so removing this is a real edit rather than an unset variable.",
     owns: [
-      "packages/core/src/assets",
+      "packages/assets",
       "packages/db/src/schema/asset.sql.ts",
       "packages/db/src/repositories/asset.repository.ts",
-      "apps/worker/src/consumers/image-derive.ts",
-      "apps/worker/src/consumers/asset-reconcile.ts",
-      "apps/worker/src/consumers/asset-reconcile.test.ts",
     ],
     mentions: /\basset/i,
-    packages: ["@repo/storage"],
+    packages: ["@repo/storage", "@repo/assets"],
     envKeys: ["S3_ENDPOINT", "S3_REGION", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"],
   },
 
@@ -110,22 +99,6 @@ export const FEATURES: Readonly<Record<string, Feature>> = {
       "NEXT_PUBLIC_POSTHOG_KEY",
       "NEXT_PUBLIC_POSTHOG_HOST",
     ],
-  },
-
-  docsSite: {
-    summary:
-      "The Fumadocs documentation website. The markdown in docs/ renders on GitHub without it.",
-    owns: ["apps/docs"],
-    packages: ["@repo/docs"],
-    mentions: /@repo\/docs/,
-  },
-
-  publicApi: {
-    summary:
-      "The public REST/OpenAPI transport. Drop it if only your own web app calls the domain.",
-    owns: ["apps/api"],
-    packages: ["@repo/api"],
-    mentions: /@repo\/api\b/,
   },
 } as const;
 
