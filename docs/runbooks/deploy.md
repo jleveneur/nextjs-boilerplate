@@ -35,7 +35,7 @@ Local proof of the same shape: `make prod-up` (Traefik + migrate-then-roll on a 
    - `worker` (`GET /health` on `WORKER_PORT`)
 4. **Smoke**
    - Proxy / app origin returns success for a public route
-   - `GET /v1/...` health or a cheap authenticated read
+   - `GET /api/health/ready` — liveness plus a database round trip
    - Worker health endpoint responds
 5. **Watch** error rate and latency for a short window before calling the deploy done.
 

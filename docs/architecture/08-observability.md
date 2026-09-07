@@ -107,8 +107,6 @@ sampling, batching, and attribute scrubbing.
 ```mermaid
 flowchart LR
     W["apps/web"] --> COL["OTel Collector"]
-    A["apps/api"] --> COL
-    WK["apps/worker"] --> COL
     COL --> T["Traces → Tempo / Jaeger"]
     COL --> M["Metrics → Prometheus"]
 ```
@@ -156,12 +154,11 @@ query does well.
 
 Four boundaries report, and each was already logging:
 
-| Boundary                                   | Reports                                            |
-| ------------------------------------------ | -------------------------------------------------- |
-| `apps/api/src/middleware/error-handler.ts` | any `AppError` that is not `expected`              |
-| `apps/web` RPC route                       | any failure `describeRpcFailure` calls an incident |
-| `apps/web` in-process caller               | the same policy, for Server Components             |
-| `apps/worker` container                    | dead-lettered jobs, and DLQ failures               |
+| Boundary                                        | Reports                                            |
+| ----------------------------------------------- | -------------------------------------------------- |
+| `apps/web/src/app/api/rpc/[[...rest]]/route.ts` | any `AppError` that is not `expected`              |
+| `apps/web` RPC route                            | any failure `describeRpcFailure` calls an incident |
+| `apps/web` in-process caller                    | the same policy, for Server Components             |
 
 The in-process caller needs its own hook because a Server Component calls services
 directly: no HTTP layer observes it, so without `reportCallerFailure` its errors would
@@ -223,10 +220,10 @@ Naming: `<object>.<past-tense-verb>`, `snake_case` properties, no PII in propert
 
 ### Client or server capture?
 
-| Capture location                    | Use for                                                                             | Why                                                                                |
-| ----------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Server (`@repo/core` domain events) | Business-critical funnel events: signup, subscription, payment, invitation accepted | Ad blockers remove 15–30 % of client events; revenue data cannot have a hole in it |
-| Client                              | UI interaction: feature discovery, navigation, dead clicks, form abandonment        | The server cannot see these                                                        |
+| Capture location             | Use for                                                                             | Why                                                                                |
+| ---------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Server (slice domain events) | Business-critical funnel events: signup, subscription, payment, invitation accepted | Ad blockers remove 15–30 % of client events; revenue data cannot have a hole in it |
+| Client                       | UI interaction: feature discovery, navigation, dead clicks, form abandonment        | The server cannot see these                                                        |
 
 Server-side capture is wired to **domain events**, not sprinkled into services: the service emits
 `invoice.voided`, and an analytics subscriber translates it. Analytics therefore adds no lines to
@@ -330,14 +327,14 @@ gets fixed rather than worked around.
 
 ### Walkthrough (acceptance)
 
-| #   | Question                                 | Where to look locally                                                                                                          |
-| --- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`15443`), `ctx.actor` in oRPC context                                                         |
-| 2   | p95 latency doubled after deploy         | Grafana RED dashboard (`15448`), compare `service.version` tags                                                                |
-| 3   | Job retrying for an hour                 | Worker logs (`jobId`, `attempt`), Grafana Queue dashboard (`bullmq_queue_waiting`), Jaeger job span via envelope `traceparent` |
-| 4   | Emails not arriving                      | Domain event → outbox table → `email.send` job → Resend span in trace                                                          |
-| 5   | Signup conversion dropped                | PostHog funnel; segment by `release` property and flag variant from server bootstrap                                           |
-| 6   | Who still uses REST endpoint X?          | `apikey.request_count` / `last_request` via Better Auth `verifyApiKey` (see `@repo/auth`)                                      |
+| #   | Question                                 | Where to look locally                                                                                                                                                            |
+| --- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Error at 14:32 with request id `req_abc` | Pino logs (`requestId`), Jaeger (`15443`), `ctx.actor` in oRPC context                                                                                                           |
+| 2   | p95 latency doubled after deploy         | Grafana RED dashboard (`15448`), compare `service.version` tags                                                                                                                  |
+| 3   | Outbox row stuck failing                 | `outbox` table: `attempts`, `last_error`, `next_attempt_at`. There is no queue dashboard and no alert — see [ADR-0014](../adr/0014-single-transport-and-no-background-worker.md) |
+| 4   | Emails not arriving                      | Domain event → outbox table → `email.send` job → Resend span in trace                                                                                                            |
+| 5   | Signup conversion dropped                | PostHog funnel; segment by `release` property and flag variant from server bootstrap                                                                                             |
+| 6   | Who still uses REST endpoint X?          | `apikey.request_count` / `last_request` via Better Auth `verifyApiKey` (see `@repo/auth`)                                                                                        |
 
 **Local URLs** (after `make deps-up-observability`): Jaeger `http://127.0.0.1:15443`, Prometheus
 `http://127.0.0.1:15447`, Grafana `http://127.0.0.1:15448` (admin/admin). Enable

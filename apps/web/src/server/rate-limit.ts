@@ -1,9 +1,6 @@
-// oxlint-disable-next-line import/no-unassigned-import -- Redis-backed, server only
-import "server-only";
-
 import { createHash } from "node:crypto";
 
-import { getContainer } from "./container.ts";
+import type { Cache } from "@repo/cache";
 
 const WINDOW_SECONDS = 60;
 
@@ -68,11 +65,13 @@ function clientBucket(request: Request): string {
  */
 export async function checkRateLimit(options: {
   request: Request;
+  /** Injected rather than read from the container, so this is testable. */
+  cache: Cache;
   /** Cache namespace — separates the counters of independent limiters. */
   namespace: string;
   maxRequests: number;
 }): Promise<RateLimitDecision> {
-  const { cache } = getContainer();
+  const { cache } = options;
   const now = Date.now();
   const windowStartMs = now - (now % (WINDOW_SECONDS * 1000));
 

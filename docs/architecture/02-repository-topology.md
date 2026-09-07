@@ -55,11 +55,12 @@ presentation, and nothing else.
 
 ```
 apps/
-├── web/          Next.js 16 — the product. RSC UI, oRPC handler, auth handler, Server Actions.
-├── api/          Hono — public REST /v1, OpenAPI document, Scalar reference, inbound webhooks.
-├── worker/       Node service — BullMQ consumers, repeatable schedules.
-└── docs/         Fumadocs — public documentation site, embeds the API reference.
+└── web/          Next.js 16 — the product. RSC UI, oRPC handler, auth handler, Stripe webhook.
 ```
+
+One app, by decision rather than by accident — see
+[ADR-0014](../adr/0014-single-transport-and-no-background-worker.md) for what the public REST app,
+the worker, and the docs site cost an adopter, and what removing them gave up.
 
 ### `apps/web`
 
@@ -98,8 +99,8 @@ apps/web/
 ```
 
 `app/` mirrors URLs and nothing else. The moment a route file exceeds composition — fetch data,
-render, handle a form submission by delegating — the logic belongs in `features/` (client) or
-`@repo/core` (server).
+render, handle a form submission by delegating — the logic belongs in `features/` (client) or a
+domain slice package (server).
 
 > **Next 16 specifics that shape this layout:** `proxy.ts` replaces `middleware.ts` and runs on
 > the Node runtime (so no Edge-compatibility constraints, but also no excuse to do
@@ -108,55 +109,20 @@ render, handle a form submission by delegating — the logic belongs in `feature
 > top level; `revalidateTag(tag, profile)` / `updateTag(tag)` replace the old single-argument
 > form.
 
-### `apps/api`
+### What `apps/web` composes
 
-```
-apps/api/
-├── src/
-│   ├── index.ts                  # @hono/node-server bootstrap + SIGTERM
-│   ├── app.ts                    # Hono app: health, /v1, webhooks, Scalar, OpenAPI
-│   ├── env.ts
-│   ├── openapi-generate.ts       # Writes committed openapi.json (no DB)
-│   ├── server/
-│   │   ├── container.ts          # Composition root (db, auth, cache, ports)
-│   │   └── ports.ts
-│   ├── middleware/               # request-id, API-key auth, rate limit, idempotency, security headers, errors
-│   ├── routes/v1/                # @hono/zod-openapi invoice routes
-│   └── webhooks/                 # stripe.ts — signature verify + enqueue `stripe.event.process`
-├── openapi.json                  # Committed snapshot; `make openapi-check` / CI
-└── package.json
-```
+`src/server/container.ts` is the composition root: it builds the database handle, the logger, the
+error tracker, Better Auth, the cache, and the port bundle, once per process behind a `globalThis`
+singleton. `src/server/ports.ts` wires the concrete adapters into `CtxPorts`.
 
-Separate from `apps/web` for three reasons that each matter independently: it scales and fails
-independently of the UI; it has a different auth model (API keys, not cookies); and its
-versioned contract must be able to stay stable while the UI changes daily.
+Two pieces exist because there is no longer a separate API app or worker to hold them:
 
-### `apps/worker`
-
-```
-apps/worker/
-├── src/
-│   ├── index.ts             # Bootstrap: workers, schedulers, graceful shutdown, health port
-│   ├── container.ts
-│   ├── outbox-relay.ts      # Poll pending outbox → enqueue → mark published
-│   ├── consumers/           # email.send, image.derive, invoice.voided.notify, stripe.event.process, asset.reconcile-orphans
-│   └── schedules.ts         # Repeatable jobs (cron) with stable scheduler ids
-└── package.json
-```
-
-Consumers are transports too: parse the payload with the shared Zod contract, resolve a system
-actor, call a core service. Retry/backoff policy is declared per queue, and a dead-letter queue
-plus alert is mandatory for every queue.
-
-### `apps/docs`
-
-Fumadocs site at **https://docs.localhost** via Portless (`PORTLESS=0` → port 3003).
-`scripts/prepare-content.ts` syncs
-`docs/{architecture,adr,runbooks,security}` into gitignored MDX at build/dev time; hand-written
-guides (`getting-started`, `contributing`) live under `content/docs/`. Embeds the Scalar API
-reference from the committed `apps/api/openapi.json`. Documentation the team already writes
-becomes the published site, so there is only one copy. Image: `docker/docs.Dockerfile` →
-`repo-docs`.
+- `src/app/api/webhooks/stripe/route.ts` — verifies the signature, claims a replay guard in Redis,
+  and applies the event inline. With no queue, the HTTP response is Stripe's only signal, so a
+  failure must surface as a non-2xx.
+- `src/server/drain-outbox.ts` — drains pending outbox rows after a mutating request commits,
+  dispatching through the handler registry in `src/server/outbox-handlers.ts`. Read the caveats in
+  that file before relying on it: rows are only picked up when a _later_ request arrives.
 
 ---
 
@@ -181,20 +147,19 @@ response shapes are defined once.
 
 ### Layer 1 — platform adapters (server-only)
 
-| Package               | Responsibility                                                                                                                                        |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@repo/logger`        | Pino instance factory, redaction, request-scoped child loggers via `AsyncLocalStorage`, trace-id correlation.                                         |
-| `@repo/observability` | OTel SDK setup, span helpers, trace/log correlation.                                                                                                  |
-| `@repo/db`            | Drizzle schema (one file per module), client factory, pool config, migrations, seeds, transaction helper, tenant-scoped query helpers.                |
-| `@repo/cache`         | Redis client, namespaced keys, TTL policy, stampede protection, tag invalidation.                                                                     |
-| `@repo/storage`       | S3 API client, presigned upload/download, key conventions. Sharp derivatives live on `@repo/storage/image` so Next.js and the API never load libvips. |
-| `@repo/email`         | Resend adapter + React Email templates + a preview dev server; a `NoopMailer` for tests.                                                              |
-| `@repo/payments`      | Stripe adapter: catalog sync, checkout/portal sessions, webhook handlers, entitlement mapping.                                                        |
-| `@repo/jobs`          | Job **contracts** (name registry + Zod payload per job) and the `enqueue` facade. Owns no execution semantics.                                        |
-| `@repo/auth`          | Better Auth server config (Drizzle adapter, plugins), server-side session helpers, typed client.                                                      |
-| `@repo/authz`         | `can()` / `authorize()` and policy primitives, over the `@repo/permissions` registry. Pure and dependency-free by design.                             |
-| `@repo/analytics`     | Typed product-event registry and server/client capture adapters (PostHog).                                                                            |
-| `@repo/flags`         | Feature-flag interface, typed flag registry, env + PostHog providers.                                                                                 |
+| Package               | Responsibility                                                                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/logger`        | Pino instance factory, redaction, request-scoped child loggers via `AsyncLocalStorage`, trace-id correlation.                                        |
+| `@repo/observability` | OTel SDK setup, span helpers, trace/log correlation.                                                                                                 |
+| `@repo/db`            | Drizzle schema (one file per module), client factory, pool config, migrations, seeds, transaction helper, tenant-scoped query helpers.               |
+| `@repo/cache`         | Redis client, namespaced keys, TTL policy, stampede protection, tag invalidation.                                                                    |
+| `@repo/storage`       | S3 API client, presigned upload/download, key conventions. Sharp derivatives live on `@repo/storage/image` so the default graph never loads libvips. |
+| `@repo/email`         | Resend adapter + React Email templates + a preview dev server; a `NoopMailer` for tests.                                                             |
+| `@repo/payments`      | Stripe adapter: catalog sync, checkout/portal sessions, webhook handlers, entitlement mapping.                                                       |
+| `@repo/auth`          | Better Auth server config (Drizzle adapter, plugins), server-side session helpers, typed client.                                                     |
+| `@repo/authz`         | `can()` / `authorize()` and policy primitives, over the `@repo/permissions` registry. Pure and dependency-free by design.                            |
+| `@repo/analytics`     | Typed product-event registry and server/client capture adapters (PostHog).                                                                           |
+| `@repo/flags`         | Feature-flag interface, typed flag registry, env + PostHog providers.                                                                                |
 
 `@repo/authz` is deliberately pure (no DB, no session): it takes an actor and a resource and
 returns a decision, which makes the entire authorization model unit-testable in milliseconds
@@ -205,13 +170,24 @@ same declaration and the two may not import each other. Keeping it in layer 0 is
 RBAC and API-key RBAC be _derived_ from one `resource:action` list rather than hand-synchronised —
 see [07 — auth](./07-auth.md#permissions).
 
-### Layer 2 — domain
+### Layer 2 — kernel
 
-| Package      | Responsibility                                                                                                            |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `@repo/core` | **All business logic**, organised by feature (`billing`, `subscription`, `assets`, plus shared ports, outbox, and audit). |
+| Package        | Responsibility                                                                                                                                |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/kernel` | Request context (`Ctx`), the side-effect ports, the audit-log writer, the transactional outbox, and the in-memory port doubles used in tests. |
 
-### Layer 3 — transport
+### Layer 3 — domain slices
+
+Each slice is its own package, so two slices cannot import each other
+([ADR-0013](../adr/0013-kernel-and-slice-packages.md)).
+
+| Package              | Responsibility                                                                                |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| `@repo/billing`      | **Business logic** for invoices: create, list, get, void, and the void policy.                |
+| `@repo/subscription` | Stripe checkout and portal sessions, catalog sync, entitlements, subscription state.          |
+| `@repo/assets`       | Presigned uploads, confirmation, and image derivatives. The only consumer of `@repo/storage`. |
+
+### Layer 4 — transport
 
 | Package      | Responsibility                                                                                          |
 | ------------ | ------------------------------------------------------------------------------------------------------- |
@@ -240,7 +216,7 @@ Subpath exports keep icons and the toast host off the default barrel when a call
 
 There is no `@repo/testing` package. Shared Vitest config lives in `tooling/vitest`
 (`@repo/vitest-config`). Fakes, factories, and harnesses are **subpath exports** of the package
-they belong to (`@repo/core/testing`, `@repo/db/testing`, `@repo/cache/testing`, …) so a layer-0
+they belong to (`@repo/kernel/testing`, `@repo/db/testing`, `@repo/cache/testing`, …) so a layer-0
 or layer-1 test helper cannot drag the whole domain graph into a unit test. Playwright fixtures
 live next to `apps/web/e2e/`.
 
@@ -270,25 +246,29 @@ one grab-bag, so that changing the Tailwind theme cannot invalidate the TypeScri
 
 The repo has **two** kinds of feature module, and keeping them distinct is important.
 
-### Server feature module — `packages/core/src/<feature>/`
+### Server slice package — `packages/<slice>/src/`
 
 ```
-packages/core/src/billing/
-├── billing.service.ts       # Use cases. Re-exported from the package root.
-├── billing.policy.ts        # Authorization rules for this feature
+packages/billing/src/
+├── index.ts                 # The only barrel. The package's public surface.
+├── billing.service.ts       # Use cases
+├── billing.policy.ts        # Authorization rules for this slice
 ├── billing.repository.ts    # Drizzle queries. The only file that touches @repo/db.
-├── billing.errors.ts        # Feature-specific AppError subclasses
-├── billing.events.ts        # Domain events emitted (→ jobs, analytics)
+├── billing.errors.ts        # Slice-specific AppError subclasses
+├── billing.events.ts        # Domain events emitted (→ outbox, analytics)
 ├── billing.mapper.ts        # Row → DTO (@repo/contracts) conversion
 ├── billing.service.test.ts  # Unit tests with in-memory ports
 └── billing.repository.integration.test.ts
 ```
 
-The only barrel in `@repo/core` is `src/index.ts` ([04](./04-conventions.md)). Feature folders
-have no `index.ts`. Services never import another feature's repository — cross-feature access
-imports the other feature's **service file** by name, or goes through a domain event when the
-coupling should be asynchronous. A feature that needs three other features' internals is a sign
-the boundaries are drawn wrong.
+`src/index.ts` is the only barrel ([04](./04-conventions.md)). Cross-slice imports are not a matter
+of discipline here: slices are layer-3 peers, so the layer rule and pnpm's isolated
+`node_modules` both reject them. Reach another slice through a domain event, or move the shared
+rule down into `@repo/kernel`. A slice that needs three others' internals is a sign the boundaries
+are drawn wrong.
+
+Use `make new-slice NAME=<thing>` rather than copying this by hand — it scaffolds the package and
+registers it in every closed registry.
 
 ### Client feature module — `apps/web/src/features/<feature>/`
 

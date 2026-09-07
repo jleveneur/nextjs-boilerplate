@@ -4,8 +4,12 @@ Checklist for authorization, tenant isolation, secrets, headers, and automated s
 Executable tests remain the source of truth; this document links evidence.
 
 CSP and HSTS are **adopter / reverse-proxy** concerns at the TLS edge. This boilerplate sets
-baseline headers on web HTML ([`apps/web/src/proxy.ts`](../../apps/web/src/proxy.ts)) and on every
-API response ([`apps/api/src/middleware/security-headers.ts`](../../apps/api/src/middleware/security-headers.ts)).
+baseline headers from one source
+([`apps/web/src/lib/security-headers.ts`](../../apps/web/src/lib/security-headers.ts)), applied
+twice: `next.config.ts` `headers()` covers every route including `/api/*`, and
+[`apps/web/src/proxy.ts`](../../apps/web/src/proxy.ts) covers the responses it produces itself.
+Both are needed — the proxy matcher excludes `api`, and middleware-produced redirects do not pass
+through `headers()`.
 
 Related: [authorization matrix](./authorization-matrix.md), [accessibility audit](./accessibility-audit.md).
 
@@ -13,21 +17,21 @@ Related: [authorization matrix](./authorization-matrix.md), [accessibility audit
 
 ## Checklist
 
-| Area                                 | Status             | Evidence                                                                                                                        |
-| ------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| Authorization matrix (role × action) | Automated          | [authorization-matrix.md](./authorization-matrix.md), [`packages/authz/src/can.test.ts`](../../packages/authz/src/can.test.ts)  |
-| Transport parity (oRPC = REST authz) | Automated          | [`apps/api/src/authz-parity.integration.test.ts`](../../apps/api/src/authz-parity.integration.test.ts)                          |
-| Tenant isolation in repositories     | Automated          | Core/db integration tests (billing, assets)                                                                                     |
-| Secrets only via `@repo/env`         | Automated + policy | [09](../architecture/09-environment-and-secrets.md), Gitleaks in CI/hooks                                                       |
-| No secrets in client bundles         | Policy             | `server-only` on server env; knip/layer `runtime: browser` ban                                                                  |
-| Security headers (web)               | Implemented        | `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`                                            |
-| Security headers (api)               | Implemented        | Same set; unit test in `security-headers.test.ts`                                                                               |
-| CSP / HSTS                           | Adopter edge       | Not shipped as an app CSP; set at the TLS reverse proxy when an adopter is ready                                                |
-| Dependency / SAST / images           | CI                 | `pnpm audit`+Renovate, CodeQL, Trivy on images                                                                                  |
-| OWASP ZAP baseline                   | Nightly            | `make zap`, `.github/workflows/nightly-hardening.yml`                                                                           |
-| Load / saturation                    | Nightly + runbook  | `make load`, [scaling.md](../runbooks/scaling.md)                                                                               |
-| Rate limiting (public API)           | Automated          | Per-IP before auth + per-key after; [`apps/api/src/middleware/rate-limit.test.ts`](../../apps/api/src/middleware/rate-limit.ts) |
-| Post-auth redirect targets           | Automated          | [`apps/web/src/features/auth/auth-utils.ts`](../../apps/web/src/features/auth/auth-utils.ts) — off-origin `next` rejected       |
+| Area                                 | Status             | Evidence                                                                                                                                                                                       |
+| ------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authorization matrix (role × action) | Automated          | [authorization-matrix.md](./authorization-matrix.md), [`packages/authz/src/can.test.ts`](../../packages/authz/src/can.test.ts)                                                                 |
+| Transport parity                     | N/A                | One transport ([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)). Every entry point builds its `Actor` through `resolveActor`, which is what the parity test used to prove |
+| Tenant isolation in repositories     | Automated          | Slice + db integration tests (billing, assets)                                                                                                                                                 |
+| Secrets only via `@repo/env`         | Automated + policy | [09](../architecture/09-environment-and-secrets.md), Gitleaks in CI/hooks                                                                                                                      |
+| No secrets in client bundles         | Policy             | `server-only` on server env; knip/layer `runtime: browser` ban                                                                                                                                 |
+| Security headers (web)               | Implemented        | `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`                                                                                                           |
+| Security headers (`/api/*`)          | Implemented        | Same set, via `next.config.ts` `headers()`. Previously **absent** — the proxy matcher excludes `api`                                                                                           |
+| CSP / HSTS                           | Adopter edge       | Not shipped as an app CSP; set at the TLS reverse proxy when an adopter is ready                                                                                                               |
+| Dependency / SAST / images           | CI                 | `pnpm audit`+Renovate, CodeQL, Trivy on images                                                                                                                                                 |
+| OWASP ZAP baseline                   | Nightly            | `make zap`, `.github/workflows/nightly-hardening.yml`                                                                                                                                          |
+| Load / saturation                    | Nightly + runbook  | `make load`, [scaling.md](../runbooks/scaling.md). **Read-only paths only** — the oRPC mutating surface is not load-tested                                                                     |
+| Rate limiting (`/api/rpc`)           | Automated          | Per-IP, 300 req/min, ahead of session resolution; [`apps/web/src/server/rate-limit.test.ts`](../../apps/web/src/server/rate-limit.test.ts)                                                     |
+| Post-auth redirect targets           | Automated          | [`apps/web/src/features/auth/auth-utils.ts`](../../apps/web/src/features/auth/auth-utils.ts) — off-origin `next` rejected                                                                      |
 
 ---
 
@@ -40,6 +44,20 @@ Related: [authorization matrix](./authorization-matrix.md), [accessibility audit
 ---
 
 ## Findings / accepted risks
+
+The table below is a log, kept append-only. Several entries predate
+[ADR-0014](../adr/0014-single-transport-and-no-background-worker.md), which removed the public REST
+API and the API-key credential; their current status:
+
+- **P16-1, P16-2, P17-2** — moot. The API-key feature is gone, along with the Better Auth `apiKey`
+  plugin and `resolveActorFromApiKey`.
+- **P17-1** — the fix survives. `apps/web`'s per-IP limiter counts through the same atomic
+  `Cache.incr`, and the concurrency regression is re-asserted in
+  [`apps/web/src/server/rate-limit.test.ts`](../../apps/web/src/server/rate-limit.test.ts) after the
+  original `apps/api` test was deleted with the app.
+- **P17-3** — the webhook half of the fix survives and is re-implemented in
+  `apps/web/src/app/api/webhooks/stripe/route.ts`: the replay claim is released on any failure. The
+  `Idempotency-Key` half does **not** — there is no idempotency middleware anywhere now.
 
 | ID    | Severity | Finding                                                                                                                                                                             | Disposition                                                                                                                                                                    |
 | ----- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

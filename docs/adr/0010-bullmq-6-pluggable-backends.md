@@ -1,8 +1,10 @@
 # 0010 — BullMQ 6 and ioredis 6
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0014](./0014-single-transport-and-no-background-worker.md)
 - **Date:** 2026-08-26
 - **Deciders:** platform engineering
+- **Superseded by:** [0014 — One transport, one app, no background
+  worker](./0014-single-transport-and-no-background-worker.md) — BullMQ was removed entirely.
 - **Related:** [ADR-0009](./0009-bullmq-only-background-work.md), [13 — Dependency review](../architecture/13-dependency-review.md#bullmq-62), risk register R9
 
 ## Context

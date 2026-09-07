@@ -1,12 +1,16 @@
 # 0003 — One domain core behind two API transports
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0014](./0014-single-transport-and-no-background-worker.md)
 - **Date:** 2026-07-30
 - **Deciders:** platform engineering
 - **Related:** [05 — Runtime architecture & API strategy](../architecture/05-runtime-and-api.md)
 - **Amended by:** [0011 — oRPC for the private API](./0011-orpc-private-api.md) (private transport
   library only; the one-core-two-transports rule is unchanged), [0012 — oRPC 2 for the private
   API](./0012-orpc-2-private-api.md) (oRPC major line)
+- **Superseded by:** [0014 — One transport, one app, no background
+  worker](./0014-single-transport-and-no-background-worker.md) — the public REST transport was
+  removed. The reasoning below about implementing rules twice is unchanged and is the thing to read
+  before adding one back.
 
 ## Context
 

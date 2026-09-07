@@ -101,7 +101,7 @@ application.
 Vercel-alignment — is mitigated by our rule that nothing imports `@vercel/*`, so self-hosting stays
 a first-class path.
 **Exit** High. This is the most coupled dependency in the repo, which is exactly why business logic
-lives in `@repo/core` and Next is confined to `apps/web`. A migration would rewrite one app, not the
+lives in slice packages and Next is confined to `apps/web`. A migration would rewrite one app, not the
 system.
 
 ### React 19.2
@@ -313,35 +313,38 @@ for queries, caching, and non-form interactions. _TS-Rest_ — similar idea, sma
 story.
 **Health** 2.x is on the `beta` dist-tag (`2.0.0-beta.33`); `latest` remains 1.15. Smaller
 ecosystem than tRPC. Pin exact, upgrade server and client together, do not automerge.
-**Exit** Medium — resolvers are thin over `@repo/core`, so replacing the transport is a
+**Exit** Medium — resolvers are thin over the slice services, so replacing the transport is a
 transport-layer job. This is precisely what the one-core-two-transports design protects. Leaving
 beta for 2.0.0 `latest` is a catalog bump.
 
 ### tsdown 0.22
 
-**Why** Bundles `apps/api` and `apps/worker` into a single ESM artifact for Docker runners so
-source-only workspace packages resolve at build time and the runtime image does not ship
-`node_modules` for the whole monorepo. Rolldown-based, TypeScript-native, and small enough that the
-config lives next to each app.
+**Why** Bundles the one-shot migrate CLI (`packages/db/src/migrate.ts`) into a single ESM artifact
+for `docker/migrate.Dockerfile`, so source-only workspace packages resolve at build time and the
+runtime image ships `dist/migrate.mjs` plus the SQL rather than `node_modules` for the whole
+monorepo. Rolldown-based, TypeScript-native, and small enough that the config lives next to the
+package.
 **Instead of** _tsup_ — esbuild-based and effectively in maintenance; _esbuild_ directly — more
 boilerplate for the same job; _shipping source + node_modules_ — large images and workspace symlink
 pain; _pnpm deploy_ alone — workable but still ships far more than one JS file.
 **Health** Active under the Rolldown org; pin exactly.
-**Exit** Low — replace the `build` script and Docker `CMD`; application source is unchanged.
+**Exit** Low — replace the `build` script and Docker `CMD`; the migrate script itself is unchanged.
 
-### Hono 4.12 + `@hono/zod-openapi`
+### Hono + `@hono/zod-openapi` (removed)
 
-**Why** A small, fast, Web-standard (`Request`/`Response`) framework, and `@hono/zod-openapi` derives
-the OpenAPI 3.1 document **from the same Zod schemas that validate requests** — so the spec cannot
-drift from the implementation, because there is no second source of truth.
-**Instead of** _Express_ — huge ecosystem, callback-era design, no types, and version 5 arrived very
-late. _Fastify_ — fast and mature with good JSON-Schema validation, but we would then have two schema
-languages (JSON Schema and Zod) instead of one. _Elysia_ — excellent types, Bun-first. _NestJS_ —
-decorators, DI, and modules layered on Express/Fastify; a framework-shaped opinion that duplicates
-our own architecture. _Next route handlers for the public API_ — couples the public contract to the
-UI app's deploy and runtime.
-**Health** Very active, widely deployed, runtime-portable.
-**Exit** Low-Medium — routes are thin; the OpenAPI generation is the part that would need replacing.
+**Why it was here:** a small, fast, Web-standard framework for the public REST API, where
+`@hono/zod-openapi` derived the OpenAPI 3.1 document **from the same Zod schemas that validated
+requests** — so the spec could not drift from the implementation.
+
+**Decision:** removed with `apps/api`
+([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)). The reasoning above is why
+it would still be the right pick for a public REST surface, and it is worth re-reading before
+choosing something else.
+
+**Revisit if:** third parties need API access. Note that oRPC's OpenAPI support is not a
+substitute for the property that mattered here — it generates from a different router, so the
+"one source of truth for validation and spec" guarantee has to be re-established rather than
+inherited.
 
 ### Better Auth 1.6
 
@@ -395,40 +398,37 @@ register below.
 
 ### ioredis 6.0
 
-**Why** Mature Redis client with cluster support, pipelining, and Lua scripting. BullMQ targets it.
-**Instead of** _node-redis_ — comparable; ioredis is what BullMQ targets, so using both means one
-connection library. _Upstash HTTP client_ — vendor-specific.
+**Why** Mature Redis client with cluster support, pipelining, and Lua scripting. Used by
+`@repo/cache` and by Better Auth's secondary storage.
+**Instead of** _node-redis_ — comparable, and now a genuinely open choice: the reason to prefer
+ioredis was that BullMQ targeted it, and BullMQ is gone. Kept because it is already wired and
+behind a port. _Upstash HTTP client_ — vendor-specific.
 **Health** Stable and ubiquitous. v6 adds RESP3 and fixes a cluster `MOVED` prototype-pollution path.
 **Exit** Low — behind `@repo/cache`.
-**Version note:** coupled to BullMQ. Until BullMQ 6, ioredis was a hard `dependencies` pin inside
-BullMQ, so the two cannot be upgraded independently — Renovate groups them for that reason. See
-[ADR-0010](../adr/0010-bullmq-6-pluggable-backends.md).
+**Operational note:** Redis still needs `maxmemory-policy: noeviction`, now because it holds the
+Stripe webhook replay guard and outbox side-effect claims. Evicting either turns an at-most-once
+guarantee into a duplicate.
 
-### BullMQ 6.2
+### BullMQ and Trigger.dev (both removed)
 
-**Why** Redis-backed queues with retries, backoff, rate limiting, job schedulers, flows, and
-priorities. Redis is already present for caching, so the marginal infrastructure cost is zero.
-**Instead of** _pg-boss_ — Postgres-backed, one less service, lower throughput and fewer features;
-genuinely attractive if we ever want to drop Redis. _Graphile Worker_ — similar trade-off.
-_Kafka / RabbitMQ_ — a broker to operate for scale we do not have. _Inngest / QStash_ — hosted, and
-vendor-coupled.
-**Health** The default Node queue; the maintained successor to Bull.
-**Exit** Low-Medium — `@repo/core` only sees the `JobQueue` port.
-**Operational note:** requires Redis `maxmemory-policy: noeviction`. An evicting Redis silently drops
-jobs, which is the single most common BullMQ production failure.
-**Version note:** on v6 as of 2026-08-26, for the `IQueueBackend` abstraction and because v6 is what
-makes ioredis 6 adoptable. We stay on the Redis backend; the PostgreSQL backend is available but not
-adopted. See [ADR-0010](../adr/0010-bullmq-6-pluggable-backends.md).
+**Why BullMQ was here:** Redis-backed queues with retries, backoff, rate limiting, job schedulers,
+flows, and priorities, with zero marginal infrastructure cost because Redis was already present for
+caching. It is the default Node queue and was the right choice for the job.
 
-### Trigger.dev 4.5 (dropped)
+**Why Trigger.dev was considered and dropped earlier:** durable execution for multi-step workflows
+surviving restarts. No such workload emerged
+([ADR-0009](../adr/0009-bullmq-only-background-work.md)).
 
-**Why it was considered:** Durable execution for multi-step workflows that survive restarts and
-wait for hours or days without holding a process.
-**Decision:** Dropped — no durable-workflow workload has emerged, and `apps/tasks` was never
-scaffolded. BullMQ alone is sufficient for the foundation; see
-[ADR-0009](../adr/0009-bullmq-only-background-work.md).
-**Revisit if:** Durable workflows become central — evaluate Trigger.dev, Temporal, or Inngest and
-write a superseding ADR.
+**Decision:** the job concept is gone
+([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)) — not just the adapter. There
+is no `JobQueue` port and no `CtxPorts.jobs`. The transactional outbox stayed; delivery is
+in-process, drained after a mutating request commits. What that gives up: retries beyond a simple
+backoff, a dead-letter queue, alerting, and anything on a schedule.
+
+**Revisit if** a job must not be lost, or work must happen on a timer. Neither is expressible
+today. BullMQ remains the obvious first candidate, and re-adding it means re-introducing a port —
+`pg-boss` and Graphile Worker become more attractive if the goal is to drop Redis rather than to
+add a worker.
 
 ### `@aws-sdk/client-s3`
 
@@ -477,7 +477,7 @@ enterprise-oriented. _Polar_ — promising for developer products, younger. _Met
 — not in scope; SaaS subscriptions only.
 **Health** The industry standard.
 **Exit** High in practice — payment providers are the stickiest integration in any product. Mitigated
-by keeping Stripe behind the `PaymentGateway` port and never letting Stripe types into `@repo/core`.
+by keeping Stripe behind the `PaymentGateway` port and never letting Stripe types into a slice.
 
 ---
 
@@ -716,33 +716,31 @@ misconfigurations without a full penetration engagement. Shipped as the official
 
 ## 7. Documentation
 
-### Fumadocs 16.13
+### Fumadocs and Scalar (both removed)
 
-**Why** Next.js-native documentation: MDX with type-safe frontmatter, generated navigation, built-in
-search, and — decisively — it is a library inside _our_ Next app rather than a separate site
-generator, so it shares our components, theme, and deployment.
-**Instead of** _Nextra_ — similar, less flexible. _Docusaurus_ — mature and very capable, but a
-separate React app with its own conventions and build. _Mintlify_ — beautiful and hosted, so
-vendor-coupled. _VitePress_ — excellent, Vue-based, which we would not otherwise have.
-**Health** Actively developed, growing quickly, Next-App-Router-first.
-**Exit** Low-Medium — content is plain MDX, so it is portable; navigation and components would be
-rebuilt.
+**Why they were here:** Fumadocs gave Next.js-native documentation — MDX with type-safe
+frontmatter, generated navigation, built-in search — as a library inside _our_ app rather than a
+separate site generator. Scalar rendered the committed OpenAPI document as an interactive
+reference with a request client.
 
-### Scalar (`@scalar/nextjs-api-reference` 0.11)
+**Decision:** removed with `apps/docs` and `apps/api`
+([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)). The site published the same
+markdown that lives in `docs/**`, which GitHub already renders, and Scalar had no spec left to
+render.
 
-**Why** Renders an OpenAPI document as an interactive reference with a built-in request client. Modern
-and fast, and it consumes the spec we already generate.
-**Instead of** _Swagger UI_ — the incumbent, dated. _Redoc_ — good static reference, no request client;
-the paid tier holds the interesting features. _Hand-written API docs_ — always wrong within a month,
-which is why the spec is generated in the first place.
-**Health** Active open-source project with commercial backing.
-**Exit** Very low — it consumes a standard OpenAPI document, so swapping renderers is trivial. This
-is the payoff of treating the spec as the contract.
+**What was lost, concretely:** `make docs-build` was the only gate that compiled
+`docs/{architecture,adr,runbooks,security}` as MDX. MDX accepts less than Markdown does — an HTML
+comment fails the build — so malformed MDX and broken links in that tree are no longer caught by
+anything.
+
+**Revisit if** the docs need search, versioning, or a published URL. Content is plain Markdown, so
+Fumadocs, Nextra, Docusaurus, or VitePress are all still open; the decision that made Fumadocs win
+was wanting it inside the same Next app, which no longer applies with one product app.
 
 ### Mermaid
 
 **Why** Diagrams as text: reviewable in PRs, diffable, no binary assets, and rendered natively by
-GitHub and Fumadocs. An architecture diagram in a proprietary tool is stale within a quarter.
+GitHub. An architecture diagram in a proprietary tool is stale within a quarter.
 **Instead of** _Excalidraw / Figma_ — better for exploratory sketching, not for versioned truth.
 _PlantUML_ — needs Java. _D2_ — nicer output, needs a binary and lacks native GitHub rendering.
 **Health** Ubiquitous.
@@ -774,7 +772,7 @@ Things a repo like this often includes, and why this one does not.
 | **Axios**                                      | Native `fetch` is universal in Node 24 and the browser.                                                                                                                                                                  |
 | **Moment.js**                                  | Deprecated by its own maintainers.                                                                                                                                                                                       |
 | **A separate feature-flag vendor**             | PostHog provides flags, and our interface makes the provider swappable.                                                                                                                                                  |
-| **A separate cron service**                    | BullMQ job schedulers cover scheduled work.                                                                                                                                                                              |
+| **A separate cron service**                    | Nothing runs on a schedule today, and a cron service would be the _right_ answer if something needed to — see [ADR-0014](../adr/0014-single-transport-and-no-background-worker.md).                                      |
 | **`uuid`**                                     | Postgres 18 has native `uuidv7()`; the application-side generator is a few lines using `node:crypto`.                                                                                                                    |
 | **A logging SaaS SDK**                         | Pino writes JSON to stdout; shipping is the platform's job, which keeps the aggregator swappable.                                                                                                                        |
 
@@ -795,7 +793,7 @@ is not".
 | R5  | **Base UI** (`@base-ui/react` 1.7.0) was **renamed** from `@base-ui-components/react`.                                                                             | Low-Medium | It is now shadcn/ui's default with 6M+ weekly downloads, and an official Radix↔Base migration skill exists in both directions. shadcn components live in our repo, so we can patch them ourselves.                                                                                                                                                                     |
 | R7  | **Better Auth moves fast** (1.6.25, with 1.7 in RC).                                                                                                               | Medium     | Pin exactly, read changelogs, and treat minor upgrades as reviewed PRs with the auth E2E suite as the gate. Auth tables are ours, so a bad release is a hold, not an outage.                                                                                                                                                                                           |
 | R8  | **Next.js majors are disruptive** (the 15→16 `middleware`→`proxy` rename is the current example, and `middleware.ts` still compiles while silently doing nothing). | Medium     | Business logic is outside `apps/web`, so a Next migration is one app. Majors get a dedicated PR, the official codemods, and an explicit check that deprecated file conventions are actually gone.                                                                                                                                                                      |
-| R9  | **Durable workflows may need a platform later** (dunning, multi-day sequences). BullMQ cannot checkpoint waits.                                                    | Low        | No current workload; revisit per [ADR-0009](../adr/0009-bullmq-only-background-work.md) if durable execution becomes central.                                                                                                                                                                                                                                          |
+| R9  | **There is no background execution at all.** Async work rides the request that drains the outbox: no retries beyond a backoff, no DLQ, no schedule.                | Medium     | Accepted for a boilerplate; re-add a queue per [ADR-0014](../adr/0014-single-transport-and-no-background-worker.md) as soon as a real workload needs delivery guarantees.                                                                                                                                                                                              |
 | R10 | **Zod is used everywhere** — contracts, env, forms, API, jobs.                                                                                                     | Medium     | Accepted deliberately. A migration would be large but mechanical, and the alternative (a weaker validation abstraction) is worse in the place we depend on most.                                                                                                                                                                                                       |
 | R11 | **Vendor concentration**: Cloudflare provides DNS, CDN, WAF, and object storage.                                                                                   | Medium     | Each is individually replaceable (S3 API for storage, any DNS provider, any CDN), and none is imported in application code. Documented as a known concentration rather than pretended away.                                                                                                                                                                            |
 | R12 | **Sharp is a native module.**                                                                                                                                      | Low        | Worker base image and architecture are pinned; multi-arch images are built and tested.                                                                                                                                                                                                                                                                                 |

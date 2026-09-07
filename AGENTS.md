@@ -23,12 +23,11 @@ spelling, dead-code detection, React Doctor, script tests, unit tests, and the w
 budget. A green result is necessary, but does not predict that full CI will pass.
 CI runs overlapping checks in parallel (using affected typechecks and unit tests
 on PRs) and adds history- and service-dependent gates: secret and commit scans,
-changesets, OpenAPI drift, container builds and scans, integration tests,
-Playwright, Lighthouse, and CodeQL.
+changesets, container builds and scans, integration tests, Playwright,
+Lighthouse, and CodeQL.
 
 Use the relevant Make targets when reproducing those CI paths locally:
-`make openapi-check`, `make images`, `make test-integration`, `make e2e`, and
-`make lighthouse`. Some require Docker and `make deps-up-test`; there is
+`make images`, `make test-integration`, `make e2e`, and `make lighthouse`. Some require Docker and `make deps-up-test`; there is
 intentionally no single local command that reproduces all CI policy and hosted
 runner checks.
 
@@ -52,16 +51,17 @@ construction. Enforced by `make layers` (see
 | --------- | -------------------------------------------- | ------------------------- |
 | 0         | Pure utilities, types, config schemas        | Nothing internal          |
 | 1         | Infrastructure adapters (db, storage, email) | Layer 0                   |
-| 2         | Domain and application logic                 | Layers 0–1                |
-| 3         | Transport (oRPC procedures, REST handlers)   | Layers 0–2                |
-| 4         | Apps (deployable units)                      | Layers 0–3, `ui`          |
+| 2         | Kernel (`ctx`, ports, audit log, outbox)     | Layers 0–1                |
+| 3         | Domain slices (`billing`, `assets`, …)       | Layers 0–2                |
+| 4         | Transport (oRPC procedures)                  | Layers 0–3                |
+| 5         | Apps (deployable units)                      | Layers 0–4, `ui`          |
 | `ui`      | Design system                                | Layer 0 only              |
 | `tooling` | Build and lint configuration                 | Never imported at runtime |
 
 Every package declares its own layer in `package.json`:
 
 ```json
-{ "name": "@repo/core", "repo": { "layer": 2, "runtime": "node" } }
+{ "name": "@repo/kernel", "repo": { "layer": 2, "runtime": "node" } }
 ```
 
 `runtime` is `browser`, `node`, or `build`. A `browser` package may not depend on
@@ -72,6 +72,11 @@ dependency — **except inside layer 0**, where foundation packages may form a
 small DAG (`errors → types`, `contracts → types + utils`). From layer 1 up: move
 the shared piece down a layer, let a higher layer orchestrate both, or inject a
 function. If you cannot see which applies, stop and ask.
+
+This bites most often between **domain slices**, which are layer-3 peers and so
+cannot import each other at all. Emit a domain event, or move the shared rule
+down into `@repo/kernel`. Do not add a same-layer exception
+([ADR-0013](docs/adr/0013-kernel-and-slice-packages.md) explains why not).
 
 ---
 

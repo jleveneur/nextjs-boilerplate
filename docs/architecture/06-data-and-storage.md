@@ -187,9 +187,10 @@ yet. Any such path must add the capability and its transactional audit write tog
 - **Cache is never the source of truth.** Redis loss must be a latency event, not a correctness
   event. This is asserted by a test that runs a critical path with the cache disabled.
 
-Redis also backs rate limiting, idempotency records, BullMQ, and Better Auth's secondary storage.
-It is configured with `maxmemory-policy: noeviction`, which BullMQ requires — an evicting Redis
-silently drops jobs.
+Redis also backs rate limiting, the Stripe webhook replay guard, outbox side-effect claims, and
+Better Auth's secondary storage. It is configured with `maxmemory-policy: noeviction`. That is not
+a cache setting — it is there because evicting a replay guard or a side-effect claim silently turns
+an at-most-once guarantee into a duplicate email.
 
 ---
 
@@ -207,7 +208,7 @@ sequenceDiagram
     participant A as apps/web (oRPC)
     participant S as @repo/storage
     participant R as R2 / MinIO
-    participant W as apps/worker
+    participant X as outbox drain
 
     B->>A: requestUpload({ filename, contentType, size })
     A->>A: authorize + validate type/size against allowlist
@@ -217,11 +218,12 @@ sequenceDiagram
     B->>R: PUT file directly
     B->>A: confirmUpload(assetId)
     A->>S: HEAD object — verify existence, size, content type
-    A->>W: enqueue image.derive
-    W->>R: GET original
-    W->>W: Sharp → webp/avif derivatives, strip EXIF
-    W->>R: PUT derivatives
-    W->>A: mark asset ready
+    A->>A: write asset.confirmed to the outbox (same transaction)
+    A->>X: drain after commit
+    X->>R: GET original
+    X->>X: Sharp → webp/avif derivatives, strip EXIF
+    X->>R: PUT derivatives
+    X->>A: mark asset ready
 ```
 
 Rules:
@@ -236,48 +238,63 @@ Rules:
 4. **Buckets are private.** Reads go through presigned GETs or a signed CDN path, so access
    control stays in the application.
 5. **EXIF is stripped** from user images — it commonly carries GPS coordinates.
-6. **Sharp runs in the worker, never in the request path.** Image processing is CPU-bound and
-   will starve the event loop. Import `@repo/storage/image` and `@repo/core/assets/derive` only
-   from `apps/worker`.
+6. **Sharp is CPU-bound and now runs on the request path.** With no worker
+   ([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)), derivation happens in
+   the outbox drain of whichever request picks the row up, so it competes with that request's event
+   loop. `@repo/storage/image` and `@repo/assets/derive` are still kept off the default import
+   graph so libvips is not loaded unless derivation actually runs — but "never in the request path"
+   is no longer true, and this is the clearest candidate for reintroducing a worker.
 7. **Every asset has a database row** with status (`pending`/`ready`/`failed`), owner, and tenant.
-   The database is the source of truth; the bucket is storage. Orphan reconciliation runs
-   nightly, since presigned uploads that are never confirmed are inevitable.
+   The database is the source of truth; the bucket is storage.
+8. **Orphan reconciliation is not implemented.** Presigned uploads that are never confirmed are
+   inevitable, and reaping them was a nightly job. With nothing to run a schedule, the reaper was
+   removed rather than left as dead code — adopters who care must run it themselves.
 
 ---
 
-## 6. Jobs
+## 6. Async work
 
-**BullMQ on Redis** is the sole background-work system. Short, high-throughput, latency-sensitive
-jobs — send email, generate image derivatives, deliver webhooks, reindex, invalidate cache,
-repeatable schedules — run in `apps/worker`.
+**There is no queue and no worker process.** BullMQ, `@repo/jobs`, the `JobQueue` port, and
+`apps/worker` were removed in
+[ADR-0014](../adr/0014-single-transport-and-no-background-worker.md), which supersedes
+[ADR-0009](../adr/0009-bullmq-only-background-work.md) and
+[ADR-0010](../adr/0010-bullmq-6-pluggable-backends.md).
 
-ADR-0007 considered a split with Trigger.dev for durable multi-step workflows; that path was
-never scaffolded and is superseded by [ADR-0009](../adr/0009-bullmq-only-background-work.md).
-Revisit with a new ADR if durable workflows (multi-day sequences, checkpointed waits, resumable
-exports) become central.
+**The transactional outbox stayed**, because it is the part that carries the guarantee. Enqueueing
+inside a transaction that later rolls back schedules work that never happened; doing it after
+commit loses the work if the process dies in between. So a slice writes an outbox row in the _same
+transaction_ as the state change, and delivery is a separate concern.
 
-**`@repo/jobs` owns contracts, not execution.** A job name registry plus a Zod payload schema per
-job. Producers and consumers validate payloads on both ends; payload changes are type errors on the
-producer side. `@repo/core` only calls the injected `JobQueue` port, so the queue backend can
-change without touching business logic.
+What changed is delivery. `relayOutboxBatch` claims pending rows with `for update skip locked`,
+runs a handler, and marks the row published — all in one transaction. Handlers come from an
+`OutboxHandlers` registry that the composition root supplies, so the kernel names no slice
+(that inversion was a precondition for [ADR-0013](../adr/0013-kernel-and-slice-packages.md)). The
+drain runs in `apps/web` after a mutating request commits.
 
-### Reliability rules
+### What this costs
 
-1. **Idempotent handlers, always.** At-least-once delivery means every handler will run twice
-   eventually. Handlers take an idempotency key derived from the payload.
-2. **Transactional outbox for events that must not be lost.** Enqueueing inside a transaction that
-   later rolls back sends a job for work that never happened; enqueueing after commit loses the
-   job if the process dies in between. So: insert an outbox row in the same transaction, and a
-   relay publishes it. Applied to email, webhooks, and billing side effects — not to
-   fire-and-forget analytics.
-3. **Small payloads: identifiers, not documents.** The handler re-reads current state, otherwise a
+1. **A row is only picked up when a later request arrives.** An event written by the last request
+   of the day is delivered by the first request of the next one. If that is not acceptable, run
+   `relayOutboxBatch` from an external scheduler — the handler registry is the same.
+2. **No retry escalation and no dead-letter queue.** A failed handler backs off (30s by default)
+   and is retried by whichever request drains next. Nothing gives up, and nothing alerts.
+3. **Nothing runs on a schedule.** There is no cron.
+4. **Side effects share the request's event loop.** A slow SMTP server or a slow Sharp call is
+   user-visible latency.
+
+### Rules that still hold
+
+1. **Idempotent handlers, always.** The relay claims a row transactionally, so a row is normally
+   delivered once — but it is redelivered when a handler throws _after_ its side effect landed. The
+   handlers guard against that with a Redis claim keyed on the outbox id before doing the work.
+2. **Small payloads: identifiers, not documents.** The handler re-reads current state, otherwise a
    retry acts on a stale snapshot.
-4. **Every queue declares** concurrency, attempts, backoff, timeout, and a dead-letter queue with
-   an alert. A DLQ nobody is paged about is a silent failure.
-5. **Poison-message handling**: terminal errors (validation failure, deleted entity) skip retries
-   and go straight to the DLQ instead of burning the retry budget.
-6. **Scheduled jobs are locked**, so multiple replicas cannot run the same cron twice.
-7. **Graceful shutdown**: stop pulling, finish in-flight work within a bounded window, then exit.
+3. **Payloads are re-validated with Zod on read.** An outbox row is `jsonb` written by a possibly
+   older deploy of this code, which makes it external input by the time it is read back.
+4. **A handler with no registered event type is skipped and marked published**, not retried
+   forever. The row has been seen and nothing wants it.
+5. **Terminal conditions are logged and swallowed, not retried.** No owner to email, or a missing
+   source object, cannot be fixed by trying again.
 
 ---
 

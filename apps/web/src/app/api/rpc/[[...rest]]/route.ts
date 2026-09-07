@@ -47,6 +47,7 @@ async function handleRequest(request: Request) {
   // costs database round trips, so the ceiling has to sit in front of them.
   const limit = await checkRateLimit({
     request,
+    cache: getContainer().cache,
     namespace: "rpc-rate-limit-client",
     maxRequests: RPC_MAX_REQUESTS_PER_MINUTE,
   });

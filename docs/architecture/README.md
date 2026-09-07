@@ -42,25 +42,25 @@ Being explicit about non-goals is what keeps a boilerplate from rotting into a f
 
 ## 2. Reading order
 
-| #   | Document                                                                     | What it answers                                                        |
-| --- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 01  | [Principles & constraints](./01-principles-and-constraints.md)               | The rules every later decision is derived from                         |
-| 02  | [Repository topology](./02-repository-topology.md)                           | Folder structure, what each app and package is for                     |
-| 03  | [Package graph & boundaries](./03-package-graph-and-boundaries.md)           | Layering, allowed dependencies, how boundaries are enforced            |
-| 04  | [Conventions](./04-conventions.md)                                           | Naming, file layout, coding style, module conventions                  |
-| 05  | [Runtime architecture & API strategy](./05-runtime-and-api.md)               | Clean architecture in practice; oRPC vs REST; one core, two transports |
-| 06  | [Data, persistence & storage](./06-data-and-storage.md)                      | PostgreSQL, Drizzle, migrations, multi-tenancy, S3, caching            |
-| 07  | [Authentication & authorization](./07-auth.md)                               | Better Auth, sessions, API keys, RBAC + record-level policies          |
-| 08  | [Observability](./08-observability.md)                                       | Error handling, logging, tracing, analytics, feature flags             |
-| 09  | [Environment, config & secrets](./09-environment-and-secrets.md)             | Env validation, runtime catalog, secrets patterns for adopters         |
-| 10  | [Testing](./10-testing.md)                                                   | What we test, at which level, and what we refuse to test               |
-| 11  | [Docker, infrastructure & deployment](./11-infrastructure-and-deployment.md) | Images, local Traefik, BYO infra, migrate-then-roll                    |
-| 12  | [Git, CI/CD & release](./12-git-ci-release.md)                               | Branching, hooks, pipelines, Changesets, versioning                    |
-| 13  | [Dependency review](./13-dependency-review.md)                               | Every dependency justified, every alternative rejected, risks tracked  |
-| 14  | [Build history](./14-build-history.md)                                       | How the foundation was sequenced — complete, not a backlog             |
-| —   | [ADRs](../adr/README.md)                                                     | The decision log                                                       |
-| —   | [Security](../security/security-review.md)                                   | Authorization matrix, review checklist, accessibility audit            |
-| —   | [Runbooks](../runbooks/deploy.md)                                            | Deploy, incidents, backup, restore                                     |
+| #   | Document                                                                     | What it answers                                                       |
+| --- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 01  | [Principles & constraints](./01-principles-and-constraints.md)               | The rules every later decision is derived from                        |
+| 02  | [Repository topology](./02-repository-topology.md)                           | Folder structure, what each app and package is for                    |
+| 03  | [Package graph & boundaries](./03-package-graph-and-boundaries.md)           | Layering, allowed dependencies, how boundaries are enforced           |
+| 04  | [Conventions](./04-conventions.md)                                           | Naming, file layout, coding style, module conventions                 |
+| 05  | [Runtime architecture & API strategy](./05-runtime-and-api.md)               | Clean architecture in practice; oRPC as the single transport          |
+| 06  | [Data, persistence & storage](./06-data-and-storage.md)                      | PostgreSQL, Drizzle, migrations, multi-tenancy, S3, caching           |
+| 07  | [Authentication & authorization](./07-auth.md)                               | Better Auth, sessions, API keys, RBAC + record-level policies         |
+| 08  | [Observability](./08-observability.md)                                       | Error handling, logging, tracing, analytics, feature flags            |
+| 09  | [Environment, config & secrets](./09-environment-and-secrets.md)             | Env validation, runtime catalog, secrets patterns for adopters        |
+| 10  | [Testing](./10-testing.md)                                                   | What we test, at which level, and what we refuse to test              |
+| 11  | [Docker, infrastructure & deployment](./11-infrastructure-and-deployment.md) | Images, local Traefik, BYO infra, migrate-then-roll                   |
+| 12  | [Git, CI/CD & release](./12-git-ci-release.md)                               | Branching, hooks, pipelines, Changesets, versioning                   |
+| 13  | [Dependency review](./13-dependency-review.md)                               | Every dependency justified, every alternative rejected, risks tracked |
+| 14  | [Build history](./14-build-history.md)                                       | How the foundation was sequenced — complete, not a backlog            |
+| —   | [ADRs](../adr/README.md)                                                     | The decision log                                                      |
+| —   | [Security](../security/security-review.md)                                   | Authorization matrix, review checklist, accessibility audit           |
+| —   | [Runbooks](../runbooks/deploy.md)                                            | Deploy, incidents, backup, restore                                    |
 
 ---
 
@@ -68,16 +68,17 @@ Being explicit about non-goals is what keeps a boilerplate from rotting into a f
 
 Everything else is detail. These five are the load-bearing walls.
 
-### 3.1 One core, two transports
+### 3.1 A domain core behind a thin transport
 
-Business logic lives in **`packages/core`**, organised by feature, and knows nothing about
-HTTP, oRPC, React, or Next.js. `apps/web` (oRPC) and `apps/api` (public REST/OpenAPI) are
-_transports_ that validate input, resolve an actor, call a core service, and map errors to their
-wire format. Job consumers in `apps/worker` are a third transport over the same services.
+Business logic lives in the **domain slice packages** (`@repo/billing`, `@repo/subscription`,
+`@repo/assets`) over a shared **`@repo/kernel`**, and knows nothing about HTTP, oRPC, React, or
+Next.js. `@repo/orpc` is a _transport_ that validates input, resolves an actor, calls one service,
+and maps errors to its wire format.
 
-This is the single most valuable property of the repo. It is what makes "private API with oRPC"
-and "public API with REST + OpenAPI" a non-duplicated requirement instead of two codebases
-that drift. See [05](./05-runtime-and-api.md) and
+There is one transport today ([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)
+removed the public REST surface). The separation is still the load-bearing property: it is what
+makes adding a second transport a route file rather than a second codebase, and it is why the same
+`Actor` cannot get weaker rules on one surface than another. See [05](./05-runtime-and-api.md) and
 [ADR-0003](../adr/0003-one-domain-core-two-transports.md).
 
 ### 3.2 Layered packages, enforced by the package manager
@@ -168,7 +169,6 @@ develops. Radix remains available via `shadcn init -b radix` if a fork needs it.
 | ORM              | Drizzle ORM                | 0.45.2          |
 | Migrations       | drizzle-kit                | 0.31.10         |
 | Cache            | Redis (via ioredis)        | 6.0.0           |
-| Queues           | BullMQ                     | 6.2.2           |
 | Object storage   | S3 API (R2 / MinIO)        | —               |
 | Images           | Sharp                      | 0.35.4          |
 | Email delivery   | Resend                     | 6.18.1          |
@@ -177,8 +177,7 @@ develops. Radix remains available via `shadcn init -b radix` if a fork needs it.
 
 Wire contracts live in `@repo/contracts` as hand-written Zod schemas. Table-derived schemas are
 not the API surface — a column addition must not change a public DTO by default. See
-[ADR-0008](../adr/0008-drizzle-version-selection.md) for the Drizzle 0.45 vs 1.0 choice, and
-[ADR-0010](../adr/0010-bullmq-6-pluggable-backends.md) for BullMQ 6 / ioredis 6.
+[ADR-0008](../adr/0008-drizzle-version-selection.md) for the Drizzle 0.45 vs 1.0 choice.
 
 ### Observability
 
@@ -232,11 +231,8 @@ flowchart TB
 
     subgraph host["Host / Docker network"]
         TR["Reverse proxy<br/>routing + TLS"]
-        WEB["apps/web<br/>Next.js 16 — RSC, oRPC"]
-        API["apps/api<br/>Hono — REST /v1, OpenAPI, webhooks"]
-        WORKER["apps/worker<br/>BullMQ consumers + schedulers"]
-        DOCS["apps/docs<br/>Fumadocs"]
-        MIG["migrate job<br/>one-shot"]
+        WEB["apps/web<br/>Next.js 16 — RSC, oRPC, Stripe webhook"]
+        MIG["migrate job<br/>one-shot image"]
     end
 
     subgraph data["Stateful services"]
@@ -253,36 +249,24 @@ flowchart TB
 
     CF --> TR
     TR --> WEB
-    TR --> API
-    TR --> DOCS
     MIG --> PG
 
-    WEB -->|"@repo/core"| PG
-    API -->|"@repo/core"| PG
-    WORKER --> PG
-    WEB --> RD
-    API --> RD
-    WORKER --> RD
+    WEB -->|"slice services"| PG
+    WEB -->|"cache, rate limit, replay guard"| RD
     WEB --> S3
-    WORKER --> S3
 
-    WEB -.->|enqueue| RD
-    RD -.->|consume| WORKER
-
-    API --> STR
-    STR -.->|webhook| API
-    WORKER --> RES
+    WEB --> STR
+    STR -.->|webhook| WEB
+    WEB --> RES
     WEB --> PH
 
     OTEL["OTel Collector"]
     WEB --> OTEL
-    API --> OTEL
-    WORKER --> OTEL
 ```
 
-The important property of this diagram: **`apps/web`, `apps/api`, and `apps/worker` all reach
-the database through the same `@repo/core` services.** They are three deployment shapes over
-one domain, not three services with three copies of the rules.
+The important property of this diagram: **`apps/web` reaches the database only through slice
+services.** One deployment shape, one place the rules live. Migrations run from a separate
+one-shot image so a schema change is not coupled to an app roll.
 
 ---
 
@@ -307,7 +291,7 @@ the executive summary.
 | Database             | PostgreSQL 18, single schema, UUIDv7 keys                                          | Time-sortable keys, boring and portable schema                                                        |
 | Migrations           | drizzle-kit generate → reviewed SQL → applied by a CD job                          | Never on app boot, never `push` outside local                                                         |
 | Multi-tenancy        | Shared schema + `organization_id` + scoped query helpers, RLS as optional defence  | Simplest model that scales; RLS interacts badly with poolers                                          |
-| Jobs                 | BullMQ only, shared payload contracts via `@repo/jobs`                             | No durable-workflow workload; see [ADR-0009](../adr/0009-bullmq-only-background-work.md)              |
+| Async work           | Transactional outbox, drained in-process after a request commits; no queue         | See [ADR-0014](../adr/0014-single-transport-and-no-background-worker.md) for what this gives up       |
 | Storage              | S3 API only, presigned direct uploads                                              | R2 in prod and MinIO locally with identical code                                                      |
 | Config               | Hand-rolled Zod env module                                                         | ~80 lines beats a dependency; we need custom composition anyway                                       |
 | Secrets              | Injected at deploy; SOPS + age is one adopter pattern                              | Boilerplate stays host-agnostic; no encrypted secret tree required                                    |
@@ -330,10 +314,14 @@ kind of thing that gets forgotten at the wrong moment. The v1 upgrade is tracked
 defined trigger (v1 GA) in [ADR-0008](../adr/0008-drizzle-version-selection.md) and risk
 register R4.
 
-**BullMQ only; Trigger.dev was never scaffolded.** No durable-workflow workload has emerged.
-The `JobQueue` port and transactional outbox remain. Revisit if durable workflows become
-central — [ADR-0009](../adr/0009-bullmq-only-background-work.md), superseding
-[ADR-0007](../adr/0007-split-background-work-bullmq-triggerdev.md).
+**No job queue, and no worker process.** BullMQ, the `JobQueue` port, and `apps/worker` were all
+removed. The **transactional outbox stays** — an event is still recorded in the same transaction as
+the state change — but delivery is in-process, drained after a mutating request commits. That means
+no retry escalation, no dead-letter queue, and nothing runs on a schedule. Revisit the moment a job
+must not be lost or work must happen on a timer:
+[ADR-0014](../adr/0014-single-transport-and-no-background-worker.md), superseding
+[ADR-0009](../adr/0009-bullmq-only-background-work.md) and
+[ADR-0010](../adr/0010-bullmq-6-pluggable-backends.md).
 
 **Organization-scoped multi-tenancy from the first migration.** `organization_id` on every
 tenant-scoped table; isolation enforced primarily by the `TenantCtx` type so a missing tenant
@@ -367,8 +355,8 @@ unbuilt phases:
 - **Server Actions** are an allowed transport for progressively-enhanced forms
   ([05](./05-runtime-and-api.md)); none ship today. Auth screens use the Better Auth client;
   product mutations use oRPC.
-- **Outbound webhooks** (HMAC-signed, retried via BullMQ) are specified as the public-API
-  pattern and are not implemented. Inbound Stripe webhooks are.
+- **Outbound webhooks** are not implemented, and with no queue there is nothing to retry them
+  with. Inbound Stripe webhooks are implemented, applied inline in the request.
 - **CSP / HSTS** belong at the adopter's TLS edge, not in the app
   ([security review](../security/security-review.md)).
 

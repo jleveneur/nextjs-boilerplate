@@ -11,15 +11,16 @@ enforced by mechanisms nobody can casually bypass.
 Every package belongs to exactly one layer. **A package may depend only on packages in strictly
 lower layers, with one exception below.** No upward dependencies, ever.
 
-| Layer | Name              | Runtime        | Packages                                                                                                                |
-| ----- | ----------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 0     | Foundation        | Browser + Node | `types`, `utils`, `env`, `errors`, `contracts`, `i18n`, `permissions`                                                   |
-| 1     | Platform adapters | Node only      | `logger`, `observability`, `db`, `cache`, `storage`, `email`, `payments`, `jobs`, `auth`, `authz`, `analytics`, `flags` |
-| 2     | Domain            | Node only      | `core`                                                                                                                  |
-| 3     | Transport         | Node only      | `orpc`                                                                                                                  |
-| 4     | Applications      | —              | `apps/web`, `apps/api`, `apps/worker`, `apps/docs`                                                                      |
-| U     | UI                | Browser        | `ui` (may depend on layer 0 only)                                                                                       |
-| T     | Tooling           | Build-time     | `tooling/*` (`@repo/tsconfig`, `@repo/vitest-config`, `@repo/tailwind-config`, `@repo/oxlint-config`)                   |
+| Layer | Name              | Runtime        | Packages                                                                                                        |
+| ----- | ----------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
+| 0     | Foundation        | Browser + Node | `types`, `utils`, `env`, `errors`, `contracts`, `i18n`, `permissions`                                           |
+| 1     | Platform adapters | Node only      | `logger`, `observability`, `db`, `cache`, `storage`, `email`, `payments`, `auth`, `authz`, `analytics`, `flags` |
+| 2     | Kernel            | Node only      | `kernel` (request context, ports, audit log, outbox)                                                            |
+| 3     | Domain slices     | Node only      | `billing`, `subscription`, `assets`                                                                             |
+| 4     | Transport         | Node only      | `orpc`                                                                                                          |
+| 5     | Applications      | —              | `apps/web`                                                                                                      |
+| U     | UI                | Browser        | `ui` (may depend on layer 0 only)                                                                               |
+| T     | Tooling           | Build-time     | `tooling/*` (`@repo/tsconfig`, `@repo/vitest-config`, `@repo/tailwind-config`, `@repo/oxlint-config`)           |
 
 **Layer 0 may depend on other layer-0 packages**, forming a small DAG (`errors → types`,
 `contracts → types + utils`). Cycles are still rejected. This is the one same-layer exception:
@@ -54,26 +55,28 @@ flowchart BT
         storage["@repo/storage"]
         email["@repo/email"]
         payments["@repo/payments"]
-        jobs["@repo/jobs"]
         auth["@repo/auth"]
         authz["@repo/authz"]
         analytics["@repo/analytics"]
         flags["@repo/flags"]
     end
 
-    subgraph L2["Layer 2 — domain"]
-        core["@repo/core"]
+    subgraph L2["Layer 2 — kernel"]
+        kernel["@repo/kernel"]
     end
 
-    subgraph L3["Layer 3 — transport"]
+    subgraph L3["Layer 3 — domain slices"]
+        billing["@repo/billing"]
+        subscription["@repo/subscription"]
+        assets["@repo/assets"]
+    end
+
+    subgraph L4["Layer 4 — transport"]
         orpc["@repo/orpc"]
     end
 
-    subgraph L4["Layer 4 — apps"]
+    subgraph L5["Layer 5 — apps"]
         web["apps/web"]
-        api["apps/api"]
-        worker["apps/worker"]
-        docs["apps/docs"]
     end
 
     subgraph LU["UI track (browser)"]
@@ -81,37 +84,42 @@ flowchart BT
     end
 
     L1 --> L0
-    core --> L1
-    core --> L0
-    orpc --> core
+    kernel --> L1
+    kernel --> L0
+    L3 --> kernel
+    L3 --> L1
+    L3 --> L0
+    orpc --> L3
+    orpc --> kernel
     orpc --> L1
     orpc --> L0
     ui --> L0
     web --> orpc
     web --> ui
-    web --> core
-    api --> core
-    worker --> core
+    web --> L3
+    web --> kernel
 ```
 
 ### Selected concrete dependency lists
 
-| Package             | Depends on                                                                                                                                                                          |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@repo/utils`       | _(nothing internal)_                                                                                                                                                                |
-| `@repo/types`       | _(nothing internal)_                                                                                                                                                                |
-| `@repo/errors`      | `types`                                                                                                                                                                             |
-| `@repo/contracts`   | `types`, `utils`                                                                                                                                                                    |
-| `@repo/permissions` | `types` — the RBAC registry both layer-1 auth packages read                                                                                                                         |
-| `@repo/env`         | _(nothing internal)_ — Zod only                                                                                                                                                     |
-| `@repo/db`          | `env`, `types`, `utils`, `logger` ✗ — see note                                                                                                                                      |
-| `@repo/authz`       | `types`, `errors`, `permissions`                                                                                                                                                    |
-| `@repo/auth`        | `types`, `permissions` — db schema + email/Redis callbacks are injected (same-layer ban)                                                                                            |
-| `@repo/core`        | layer 0 + `db`, `authz`, `logger`, `jobs` (side-effect ports for mail/files/flags/analytics; adapters injected)                                                                     |
-| `@repo/orpc`        | `core`, `auth`, `errors`, `contracts`, `logger`, `db`, `types`                                                                                                                      |
-| `@repo/ui`          | _(nothing internal yet)_ — may use layer 0 only (`types`, `utils`, `i18n`); theme CSS from `@repo/tailwind-config` (dev/build)                                                      |
-| `apps/web`          | `ui`, `orpc`, `core`, `auth`, `db`, `email`, `env`, `i18n`, `jobs`, `logger`, `observability`, `analytics`, `flags`, `payments`, `storage`, `contracts`, `types`, `utils`, `errors` |
-| `apps/api`          | `core`, `auth`, `orpc` (parity tests), `contracts`, `errors`, `env`, `logger`, `cache`, `db`, `email`, `jobs`, `payments`, `types`, `utils`                                         |
+| Package             | Depends on                                                                                                                                                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/utils`       | _(nothing internal)_                                                                                                                                                                                                        |
+| `@repo/types`       | _(nothing internal)_                                                                                                                                                                                                        |
+| `@repo/errors`      | `types`                                                                                                                                                                                                                     |
+| `@repo/contracts`   | `types`, `utils`                                                                                                                                                                                                            |
+| `@repo/permissions` | `types` — the RBAC registry both layer-1 auth packages read                                                                                                                                                                 |
+| `@repo/env`         | _(nothing internal)_ — Zod only                                                                                                                                                                                             |
+| `@repo/db`          | `env`, `types`, `utils`, `logger` ✗ — see note                                                                                                                                                                              |
+| `@repo/authz`       | `types`, `errors`, `permissions`                                                                                                                                                                                            |
+| `@repo/auth`        | `types`, `permissions` — db schema + email/Redis callbacks are injected (same-layer ban)                                                                                                                                    |
+| `@repo/kernel`      | layer 0 + `db`, `logger` (side-effect ports for mail/files/flags/analytics/payments; adapters injected)                                                                                                                     |
+| `@repo/billing`     | `kernel` + layer 0 + `db`, `authz`                                                                                                                                                                                          |
+| `@repo/assets`      | `kernel` + layer 0 + `db`, `authz`, `storage` — the only package depending on `storage`                                                                                                                                     |
+| `@repo/orpc`        | `kernel`, `billing`, `subscription`, `assets`, `auth`, `errors`, `contracts`, `logger`, `db`, `types`                                                                                                                       |
+| `@repo/ui`          | _(nothing internal yet)_ — may use layer 0 only (`types`, `utils`, `i18n`); theme CSS from `@repo/tailwind-config` (dev/build)                                                                                              |
+| `apps/web`          | `ui`, `orpc`, `kernel`, `billing`, `subscription`, `assets`, `auth`, `cache`, `db`, `email`, `env`, `i18n`, `logger`, `observability`, `analytics`, `flags`, `payments`, `storage`, `contracts`, `types`, `utils`, `errors` |
+| `apps/api`          | `core`, `auth`, `orpc` (parity tests), `contracts`, `errors`, `env`, `logger`, `cache`, `db`, `email`, `jobs`, `payments`, `types`, `utils`                                                                                 |
 
 > **Note on `db` → `logger`:** both are layer 1, so `@repo/db` may not import `@repo/logger`.
 > This is not pedantry — it is what keeps `@repo/db` usable in migration scripts and tests
@@ -161,7 +169,7 @@ internals. Every package declares an explicit `exports` map with no wildcard int
 }
 ```
 
-No consumer can do `@repo/core/src/billing/billing.repository`. Deep-import restrictions are how
+No consumer can do `@repo/billing/src/billing.repository`. Deep-import restrictions are how
 a package keeps the freedom to refactor its internals.
 
 ### 3.3 `server-only` / `client-only` — runtime-class enforcement
@@ -169,7 +177,7 @@ a package keeps the freedom to refactor its internals.
 Server packages import `server-only` in their entry point. If any of them is transitively pulled
 into a client component, the Next build fails with a clear message. This is the guard that stops
 a credential leak, so it is applied to `db`, `auth` (server entry), `payments`, `email`,
-`storage`, `jobs`, `cache`, `logger`, `env/server`, and `core`.
+`storage`, `cache`, `logger`, `env/server`, `kernel`, and every slice package.
 
 Conversely `@repo/ui` interactive components carry `"use client"`, and `@repo/ui` has no
 `node:*` imports anywhere in its transitive graph — asserted by a test.
@@ -189,8 +197,8 @@ Each package declares its layer in its own manifest, so the assertion script nee
 registry to drift out of date:
 
 ```jsonc
-// packages/core/package.json
-{ "name": "@repo/core", "repo": { "layer": 2, "runtime": "node" } }
+// packages/kernel/package.json
+{ "name": "@repo/kernel", "repo": { "layer": 2, "runtime": "node" } }
 ```
 
 ---
@@ -201,7 +209,7 @@ Dependency inversion is applied **only where the implementation is genuinely lik
 genuinely painful in tests.** Inverting everything produces an unreadable codebase whose
 indirection buys nothing.
 
-### Inverted (ports defined in `@repo/core/src/ports/`, implemented in layer 1)
+### Inverted (ports defined in `@repo/kernel/src/ports/`, implemented in layer 1)
 
 | Port             | Why inverted                                                             |
 | ---------------- | ------------------------------------------------------------------------ |
@@ -248,42 +256,48 @@ runtime errors, in exchange for nothing.
 
 ---
 
-## 5. Cross-feature communication inside `@repo/core`
+## 5. Cross-slice communication
 
-Features need each other. Three sanctioned mechanisms, in order of preference:
+Each domain slice is its own layer-3 package ([ADR-0013](../adr/0013-kernel-and-slice-packages.md)),
+so slices sit at the same layer and **cannot import each other at all**. That is not a convention:
+they are peers under the same-layer ban, and pnpm's isolated `node_modules` makes an undeclared
+import unresolvable.
 
-1. **Call the other feature's public service** via its `index.ts`. Synchronous, typed, obvious.
-   Correct when the caller needs the result.
-2. **Emit a domain event.** Correct when the caller should not care who reacts — e.g.
-   `organization.member.invited` triggering an email. Keeps features independently deletable.
-3. **Share a downward-moved module.** If two features need the same rule, it moves into
-   `core/src/shared/` (or down to layer 0 if it is pure).
+Two mechanisms remain, in order of preference:
 
-Forbidden: importing another feature's `*.repository.ts`, `*.policy.ts`, or any non-`index`
-file. This is enforced by `@repo/core`'s internal lint config restricting deep relative imports
-across feature folders.
+1. **Emit a domain event.** Correct when the emitter should not care who reacts — e.g.
+   `invoice.voided` triggering an email. Keeps slices independently deletable.
+2. **Move the shared rule down.** If two slices need the same rule, it belongs in `@repo/kernel`
+   (or in layer 0 if it is pure).
+
+There is deliberately no third option. Calling another slice's service was the preferred mechanism
+when slices were folders inside one package; it is now illegal, and that is the main cost recorded
+in ADR-0013. If two slices need each other synchronously and often, the split is in the wrong place
+— reconsider the boundary rather than reaching for an exception.
 
 ### Domain events
 
 Events are Zod-schema'd, named `<aggregate>.<past-tense-verb>`, published through the injected
-`EventBus`, and consumed by in-process handlers (analytics, cache invalidation) or by enqueuing
-a job (email, webhooks, search indexing). Events are **not** an event-sourcing store: they are
-notifications, the database remains the source of truth.
+`EventBus`, and consumed by in-process handlers (analytics, cache invalidation). Events are **not**
+an event-sourcing store: they are notifications, the database remains the source of truth.
 
 Ordering and delivery guarantees are stated explicitly per handler because pretending they are
-exactly-once causes duplicate emails: in-process handlers are best-effort within the request,
-and anything that must not be lost is enqueued in the **same transaction** as the state change
-via a transactional outbox (see [06](./06-data-and-storage.md)).
+exactly-once causes duplicate emails. In-process handlers are best-effort within the request;
+anything that must not be lost is written to the **transactional outbox in the same transaction**
+as the state change (see [06](./06-data-and-storage.md)). With no worker
+([ADR-0014](../adr/0014-single-transport-and-no-background-worker.md)), the outbox is drained
+in-process after a mutating request commits, and the relay dispatches to a handler registry
+supplied by the composition root — so the kernel names no slice.
 
 ---
 
 ## 6. Why not the alternatives
 
-| Alternative                                                  | Why rejected                                                                                                                                                                                                                                          |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Single Next.js app with `src/lib`                            | No enforceable boundary. Business logic and React drift together, the public API becomes a copy of internal logic, and workers cannot be deployed separately.                                                                                         |
-| Full hexagonal architecture with an interface per dependency | Indirection cost paid on every file for portability we will never exercise on the ORM. We take the 20 % of hexagonal that provides ~90 % of the testability.                                                                                          |
-| Nx with generators and enforced module boundaries via ESLint | Nx's boundary enforcement is a lint rule (bypassable, and ESLint is now blocked on TypeScript 7); pnpm's isolated installs are physical. Turborepo + pnpm gives stronger enforcement with less tooling.                                               |
-| One package per feature (`@repo/feature-billing`)            | ~30 packages of ceremony: a `package.json`, tsconfig, and version per feature, plus cross-feature dependencies that recreate the cycle problem the layer rule solves. Folders inside `@repo/core` give the same modularity with none of the overhead. |
-| Publishing internal packages to a registry                   | Nothing outside this repo consumes them. Versioning internal packages you always deploy together is pure cost. Changesets is used for changelogs and coordinated releases, not to gate internal consumption.                                          |
-| Per-package build step (`tsc -b`) emitting `dist/`           | ~20 build steps, stale-artifact bugs, and a slower loop, to satisfy nothing. Next transpiles workspace packages natively; backend apps are bundled once at image build. Source-only internal packages are the modern default for a reason.            |
+| Alternative                                                  | Why rejected                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Single Next.js app with `src/lib`                            | No enforceable boundary. Business logic and React drift together, the public API becomes a copy of internal logic, and workers cannot be deployed separately.                                                                                                                                                                                                                          |
+| Full hexagonal architecture with an interface per dependency | Indirection cost paid on every file for portability we will never exercise on the ORM. We take the 20 % of hexagonal that provides ~90 % of the testability.                                                                                                                                                                                                                           |
+| Nx with generators and enforced module boundaries via ESLint | Nx's boundary enforcement is a lint rule (bypassable, and ESLint is now blocked on TypeScript 7); pnpm's isolated installs are physical. Turborepo + pnpm gives stronger enforcement with less tooling.                                                                                                                                                                                |
+| Folders inside one `@repo/core` package                      | What this repo did until [ADR-0013](../adr/0013-kernel-and-slice-packages.md). Cheaper — one manifest, one coverage floor — but the cross-slice boundary was a convention, and the lint rule these docs claimed enforced it was never written. Package boundaries are enforced by the module graph instead. The cost is per-slice boilerplate and losing slice-to-slice service calls. |
+| Publishing internal packages to a registry                   | Nothing outside this repo consumes them. Versioning internal packages you always deploy together is pure cost. Changesets is used for changelogs and coordinated releases, not to gate internal consumption.                                                                                                                                                                           |
+| Per-package build step (`tsc -b`) emitting `dist/`           | ~20 build steps, stale-artifact bugs, and a slower loop, to satisfy nothing. Next transpiles workspace packages natively; backend apps are bundled once at image build. Source-only internal packages are the modern default for a reason.                                                                                                                                             |

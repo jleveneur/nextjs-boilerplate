@@ -1,8 +1,10 @@
 # 0009 — BullMQ-only background work
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0014](./0014-single-transport-and-no-background-worker.md)
 - **Date:** 2026-08-03
 - **Deciders:** platform engineering
+- **Superseded by:** [0014 — One transport, one app, no background
+  worker](./0014-single-transport-and-no-background-worker.md) — the background worker was removed entirely.
 - **Supersedes:** [0007 — Split background work between BullMQ and Trigger.dev](./0007-split-background-work-bullmq-triggerdev.md)
 - **Related:** [06 §6 — Jobs](../architecture/06-data-and-storage.md#6-jobs)
 
