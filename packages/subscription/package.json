@@ -1,12 +1,11 @@
 {
-  "name": "@repo/orpc",
-  "version": "0.4.0",
+  "name": "@repo/subscription",
+  "version": "0.0.0",
   "private": true,
-  "description": "oRPC init, layered procedures, and feature routers.",
+  "description": "Subscription slice: Stripe checkout, entitlements, and subscription state.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./router": "./src/root.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -14,19 +13,14 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@orpc/server": "catalog:",
-    "@repo/assets": "workspace:*",
-    "@repo/billing": "workspace:*",
-    "@repo/contracts": "workspace:*",
+    "@repo/authz": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/errors": "workspace:*",
     "@repo/kernel": "workspace:*",
-    "@repo/logger": "workspace:*",
     "@repo/permissions": "workspace:*",
-    "@repo/subscription": "workspace:*",
     "@repo/types": "workspace:*",
-    "server-only": "catalog:",
-    "zod": "catalog:"
+    "drizzle-orm": "catalog:",
+    "server-only": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
@@ -37,7 +31,7 @@
     "vitest": "catalog:"
   },
   "repo": {
-    "layer": 4,
+    "layer": 3,
     "runtime": "node"
   }
 }

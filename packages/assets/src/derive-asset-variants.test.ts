@@ -3,14 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { findAssetById, updateAssetStatus, type AssetRow } from "@repo/db";
 import type * as DbModule from "@repo/db";
 import { ForbiddenError } from "@repo/errors";
+import type { Ctx } from "@repo/kernel";
+import { createTestPorts } from "@repo/kernel/testing";
 import { permissionsForRole } from "@repo/permissions";
 import { derivativeObjectKey } from "@repo/storage";
 import { deriveImageVariants } from "@repo/storage/image";
 import type * as StorageImageModule from "@repo/storage/image";
 import type { Actor, AssetId, OrganizationId, UserId } from "@repo/types";
 
-import type { Ctx } from "../ctx.ts";
-import { createTestPorts } from "../testing/create-test-ports.ts";
 import { AssetDerivationInputMissingError } from "./asset.errors.ts";
 import { deriveAssetVariants } from "./derive-asset-variants.ts";
 
@@ -195,6 +195,24 @@ describe("deriveAssetVariants", () => {
       ASSET_ID,
       "failed",
     );
+  });
+
+  it("still surfaces the derivation error when marking the asset failed also fails", async () => {
+    // The cleanup is best-effort on purpose: losing the original cause would
+    // leave the caller retrying with nothing to diagnose.
+    const ctx = makeCtx();
+    const row = makeAsset();
+    const derivationError = new Error("image decoder unavailable");
+    vi.mocked(findAssetById).mockResolvedValue(row);
+    vi.mocked(deriveImageVariants).mockRejectedValue(derivationError);
+    vi.mocked(updateAssetStatus).mockRejectedValue(new Error("database unreachable"));
+    await ctx.ports.files.putObject({
+      key: row.storageKey,
+      body: Uint8Array.from([0]),
+      contentType: row.contentType,
+    });
+
+    await expect(deriveAssetVariants(ctx, { assetId: ASSET_ID })).rejects.toBe(derivationError);
   });
 
   it("authorizes before loading the asset", async () => {

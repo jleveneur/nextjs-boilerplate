@@ -49,9 +49,9 @@ export const FEATURES: Readonly<Record<string, Feature>> = {
       "already boots without Stripe. Deleting removes dead surface; it does not fix a break.",
     owns: [
       "packages/payments",
-      "packages/core/src/billing",
-      "packages/core/src/subscription",
-      "packages/core/src/ports/payment-gateway.ts",
+      "packages/billing",
+      "packages/subscription",
+      "packages/kernel/src/ports/payment-gateway.ts",
       "packages/orpc/src/routers/billing.ts",
       "packages/contracts/src/invoice.ts",
       "packages/contracts/src/invoice.test.ts",
@@ -67,7 +67,7 @@ export const FEATURES: Readonly<Record<string, Feature>> = {
       "apps/web/e2e/billing-stripe.spec.ts",
     ],
     mentions: /invoice|stripe|entitlement/i,
-    packages: ["@repo/payments"],
+    packages: ["@repo/payments", "@repo/billing", "@repo/subscription"],
     envKeys: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"],
   },
 
@@ -77,12 +77,12 @@ export const FEATURES: Readonly<Record<string, Feature>> = {
       "The file-store port has an in-memory implementation, but the app wires the S3 adapter " +
       "directly, so removing this is a real edit rather than an unset variable.",
     owns: [
-      "packages/core/src/assets",
+      "packages/assets",
       "packages/db/src/schema/asset.sql.ts",
       "packages/db/src/repositories/asset.repository.ts",
     ],
     mentions: /\basset/i,
-    packages: ["@repo/storage"],
+    packages: ["@repo/storage", "@repo/assets"],
     envKeys: ["S3_ENDPOINT", "S3_REGION", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"],
   },
 

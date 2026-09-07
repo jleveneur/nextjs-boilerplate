@@ -1,34 +1,32 @@
 {
-  "name": "@repo/orpc",
-  "version": "0.4.0",
+  "name": "@repo/billing",
+  "version": "0.0.0",
   "private": true,
-  "description": "oRPC init, layered procedures, and feature routers.",
+  "description": "Billing slice: invoices, void policy, and the invoice.voided domain event.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./router": "./src/root.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@orpc/server": "catalog:",
-    "@repo/assets": "workspace:*",
-    "@repo/billing": "workspace:*",
+    "@repo/authz": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/errors": "workspace:*",
     "@repo/kernel": "workspace:*",
-    "@repo/logger": "workspace:*",
     "@repo/permissions": "workspace:*",
-    "@repo/subscription": "workspace:*",
     "@repo/types": "workspace:*",
-    "server-only": "catalog:",
-    "zod": "catalog:"
+    "@repo/utils": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "server-only": "catalog:"
   },
   "devDependencies": {
+    "@repo/logger": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",
@@ -37,7 +35,7 @@
     "vitest": "catalog:"
   },
   "repo": {
-    "layer": 4,
+    "layer": 3,
     "runtime": "node"
   }
 }

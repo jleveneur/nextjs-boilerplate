@@ -5,14 +5,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as DbModule from "@repo/db";
 import { findOrganizationOwnerEmail } from "@repo/db";
 import { ForbiddenError, NotFoundError } from "@repo/errors";
+import * as kernel from "@repo/kernel";
+import type { Ctx } from "@repo/kernel";
+import { createTestPorts, type TestPorts } from "@repo/kernel/testing";
 import { createLogger } from "@repo/logger";
 import { permissionsForRole } from "@repo/permissions";
 import type { Actor, InvoiceId, OrganizationId, UserId } from "@repo/types";
 import { encodeCursor } from "@repo/utils";
 
-import type { Ctx } from "../ctx.ts";
-import { createTestPorts, type TestPorts } from "../testing/create-test-ports.ts";
-import * as audit from "../write-audit-log.ts";
 import { InvoiceAlreadyPaidError, InvoiceAlreadyVoidError } from "./billing.errors.ts";
 import { INVOICE_VOIDED } from "./billing.events.ts";
 import * as repository from "./billing.repository.ts";
@@ -35,18 +35,21 @@ vi.mock("./billing.repository.ts", async (importOriginal) => {
   };
 });
 
-vi.mock("../outbox/write-outbox-event.ts", () => ({
-  writeOutboxEvent: vi.fn((input: { id: string }) =>
-    Promise.resolve({
-      id: input.id,
-      eventType: "invoice.voided",
-    }),
-  ),
-}));
-
-vi.mock("../write-audit-log.ts", () => ({
-  writeAuditLog: vi.fn(() => Promise.resolve()),
-}));
+// Partial: the outbox writer and audit writer are stubbed, but the rest of the
+// kernel surface (ports, system actor) must stay real for the ctx builder.
+vi.mock("@repo/kernel", async (importOriginal) => {
+  const actual = await importOriginal<typeof kernel>();
+  return {
+    ...actual,
+    writeOutboxEvent: vi.fn((input: { id: string }) =>
+      Promise.resolve({
+        id: input.id,
+        eventType: "invoice.voided",
+      }),
+    ),
+    writeAuditLog: vi.fn(() => Promise.resolve()),
+  };
+});
 
 vi.mock("@repo/db", async (importOriginal) => {
   const actual = await importOriginal<typeof DbModule>();
@@ -238,7 +241,7 @@ describe("voidInvoice", () => {
   beforeEach(() => {
     vi.mocked(repository.findInvoiceById).mockReset();
     vi.mocked(repository.updateInvoiceStatus).mockReset();
-    vi.mocked(audit.writeAuditLog).mockReset();
+    vi.mocked(kernel.writeAuditLog).mockReset();
   });
 
   it("voids and audits an open invoice, then emits invoice.voided", async () => {
@@ -252,7 +255,7 @@ describe("voidInvoice", () => {
     expect(result.status).toBe("void");
     expect(ctx.ports.events.emitted).toHaveLength(1);
     expect(ctx.ports.events.emitted[0]?.type).toBe(INVOICE_VOIDED);
-    expect(audit.writeAuditLog).toHaveBeenCalledWith(
+    expect(kernel.writeAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({ actor: ctx.actor, tx: expect.anything() }),
       {
         action: "invoice.voided",
@@ -264,7 +267,7 @@ describe("voidInvoice", () => {
         },
       },
     );
-    expect(vi.mocked(audit.writeAuditLog).mock.calls[0]?.[0].tx).toBe(
+    expect(vi.mocked(kernel.writeAuditLog).mock.calls[0]?.[0].tx).toBe(
       vi.mocked(repository.updateInvoiceStatus).mock.calls[0]?.[0].db,
     );
   });

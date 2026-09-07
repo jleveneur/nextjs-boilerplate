@@ -24,21 +24,24 @@
     "@orpc/server": "catalog:",
     "@orpc/tanstack-query": "catalog:",
     "@repo/analytics": "workspace:*",
+    "@repo/assets": "workspace:*",
     "@repo/auth": "workspace:*",
+    "@repo/billing": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/contracts": "workspace:*",
-    "@repo/core": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/email": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/flags": "workspace:*",
     "@repo/i18n": "workspace:*",
+    "@repo/kernel": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/observability": "workspace:*",
     "@repo/orpc": "workspace:*",
     "@repo/payments": "workspace:*",
     "@repo/permissions": "workspace:*",
     "@repo/storage": "workspace:*",
+    "@repo/subscription": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",
     "@repo/utils": "workspace:*",
@@ -72,7 +75,7 @@
     "vitest": "catalog:"
   },
   "repo": {
-    "layer": 4,
+    "layer": 5,
     "runtime": "node"
   }
 }

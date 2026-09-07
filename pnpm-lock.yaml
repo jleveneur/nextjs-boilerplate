@@ -388,18 +388,21 @@ importers:
       '@repo/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
+      '@repo/assets':
+        specifier: workspace:*
+        version: link:../../packages/assets
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@repo/billing':
+        specifier: workspace:*
+        version: link:../../packages/billing
       '@repo/cache':
         specifier: workspace:*
         version: link:../../packages/cache
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@repo/core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -415,6 +418,9 @@ importers:
       '@repo/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@repo/kernel':
+        specifier: workspace:*
+        version: link:../../packages/kernel
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -433,6 +439,9 @@ importers:
       '@repo/storage':
         specifier: workspace:*
         version: link:../../packages/storage
+      '@repo/subscription':
+        specifier: workspace:*
+        version: link:../../packages/subscription
       '@repo/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -559,6 +568,55 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0))
 
+  packages/assets:
+    dependencies:
+      '@repo/authz':
+        specifier: workspace:*
+        version: link:../authz
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@repo/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@repo/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../permissions
+      '@repo/storage':
+        specifier: workspace:*
+        version: link:../storage
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
+      server-only:
+        specifier: 'catalog:'
+        version: 0.0.1
+    devDependencies:
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.12)(yaml@2.9.0))
+
   packages/auth:
     dependencies:
       '@better-auth/passkey':
@@ -642,6 +700,61 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.12)(yaml@2.9.0))
 
+  packages/billing:
+    dependencies:
+      '@repo/authz':
+        specifier: workspace:*
+        version: link:../authz
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@repo/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@repo/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../permissions
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../utils
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9)
+      server-only:
+        specifier: 'catalog:'
+        version: 0.0.1
+    devDependencies:
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../logger
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.12)(yaml@2.9.0))
+
   packages/cache:
     dependencies:
       ioredis:
@@ -688,61 +801,6 @@ importers:
       '@repo/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 4.1.11(vitest@4.1.11)
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0))
-
-  packages/core:
-    dependencies:
-      '@repo/authz':
-        specifier: workspace:*
-        version: link:../authz
-      '@repo/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      '@repo/db':
-        specifier: workspace:*
-        version: link:../db
-      '@repo/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@repo/logger':
-        specifier: workspace:*
-        version: link:../logger
-      '@repo/permissions':
-        specifier: workspace:*
-        version: link:../permissions
-      '@repo/storage':
-        specifier: workspace:*
-        version: link:../storage
-      '@repo/types':
-        specifier: workspace:*
-        version: link:../types
-      '@repo/utils':
-        specifier: workspace:*
-        version: link:../utils
-      drizzle-orm:
-        specifier: 'catalog:'
-        version: 0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9)
-      server-only:
-        specifier: 'catalog:'
-        version: 0.0.1
-    devDependencies:
-      '@repo/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/typescript
-      '@repo/vitest-config':
-        specifier: workspace:*
-        version: link:../../tooling/vitest
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.13.3
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.11(vitest@4.1.11)
@@ -959,6 +1017,52 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0))
 
+  packages/kernel:
+    dependencies:
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../logger
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
+      '@repo/utils':
+        specifier: workspace:*
+        version: link:../utils
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9)
+      server-only:
+        specifier: 'catalog:'
+        version: 0.0.1
+    devDependencies:
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../permissions
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.12)(yaml@2.9.0))
+
   packages/logger:
     dependencies:
       pino:
@@ -1053,24 +1157,33 @@ importers:
       '@orpc/server':
         specifier: 'catalog:'
         version: 2.0.0-beta.33(@opentelemetry/api@1.9.1)
+      '@repo/assets':
+        specifier: workspace:*
+        version: link:../assets
+      '@repo/billing':
+        specifier: workspace:*
+        version: link:../billing
       '@repo/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@repo/core':
-        specifier: workspace:*
-        version: link:../core
       '@repo/db':
         specifier: workspace:*
         version: link:../db
       '@repo/errors':
         specifier: workspace:*
         version: link:../errors
+      '@repo/kernel':
+        specifier: workspace:*
+        version: link:../kernel
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
       '@repo/permissions':
         specifier: workspace:*
         version: link:../permissions
+      '@repo/subscription':
+        specifier: workspace:*
+        version: link:../subscription
       '@repo/types':
         specifier: workspace:*
         version: link:../types
@@ -1186,6 +1299,52 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0))
+
+  packages/subscription:
+    dependencies:
+      '@repo/authz':
+        specifier: workspace:*
+        version: link:../authz
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@repo/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@repo/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@repo/permissions':
+        specifier: workspace:*
+        version: link:../permissions
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9)
+      server-only:
+        specifier: 'catalog:'
+        version: 0.0.1
+    devDependencies:
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.12)(yaml@2.9.0))
 
   packages/types:
     devDependencies:

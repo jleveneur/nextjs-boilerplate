@@ -1,4 +1,4 @@
-import type { DomainEvent } from "../ports/event-bus.ts";
+import type { DomainEvent } from "@repo/kernel";
 
 export const INVOICE_VOIDED = "invoice.voided" as const;
 

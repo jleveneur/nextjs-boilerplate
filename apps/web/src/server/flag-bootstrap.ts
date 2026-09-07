@@ -1,13 +1,13 @@
 // oxlint-disable-next-line import/no-unassigned-import -- credential firewall
 import "server-only";
 
-import type { FlagProvider } from "@repo/core";
 import {
   createEnvFlagProvider,
   createPostHogFlagProvider,
   hasFlagName,
   resolveFlag,
 } from "@repo/flags";
+import type { FlagProvider } from "@repo/kernel";
 
 export function createFlagPort(options: {
   flagValues?: Readonly<Record<string, boolean>>;

@@ -1,12 +1,12 @@
 {
-  "name": "@repo/orpc",
-  "version": "0.4.0",
+  "name": "@repo/assets",
+  "version": "0.0.0",
   "private": true,
-  "description": "oRPC init, layered procedures, and feature routers.",
+  "description": "Assets slice: presigned uploads, confirmation, and image derivatives.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./router": "./src/root.ts"
+    "./derive": "./src/derive-asset-variants.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -14,19 +14,15 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@orpc/server": "catalog:",
-    "@repo/assets": "workspace:*",
-    "@repo/billing": "workspace:*",
+    "@repo/authz": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/errors": "workspace:*",
     "@repo/kernel": "workspace:*",
-    "@repo/logger": "workspace:*",
     "@repo/permissions": "workspace:*",
-    "@repo/subscription": "workspace:*",
+    "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
-    "server-only": "catalog:",
-    "zod": "catalog:"
+    "server-only": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
@@ -37,7 +33,7 @@
     "vitest": "catalog:"
   },
   "repo": {
-    "layer": 4,
+    "layer": 3,
     "runtime": "node"
   }
 }

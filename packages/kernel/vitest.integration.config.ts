@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   test: {
-    name: "@repo/core-integration",
+    name: "@repo/kernel-integration",
     environment: "node",
     include: ["src/**/*.integration.test.ts"],
     globals: false,

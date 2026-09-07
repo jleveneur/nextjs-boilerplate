@@ -3,17 +3,11 @@ import "server-only";
 
 import { z } from "zod";
 
+import { ASSET_CONFIRMED, AssetDerivationInputMissingError } from "@repo/assets";
+import { deriveAssetVariants } from "@repo/assets/derive";
+import { INVOICE_VOIDED, resolveInvoiceVoidedRecipientEmail } from "@repo/billing";
 import { asAssetId, asOrganizationId } from "@repo/contracts";
-import {
-  ASSET_CONFIRMED,
-  AssetDerivationInputMissingError,
-  INVOICE_VOIDED,
-  resolveInvoiceVoidedRecipientEmail,
-  systemActorForOrganization,
-  type Ctx,
-  type OutboxHandlers,
-} from "@repo/core";
-import { deriveAssetVariants } from "@repo/core/assets/derive";
+import { systemActorForOrganization, type Ctx, type OutboxHandlers } from "@repo/kernel";
 import type { OutboxId } from "@repo/types";
 
 import { getContainer } from "./container.ts";

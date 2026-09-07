@@ -1,4 +1,4 @@
-import type { DomainEvent } from "../ports/event-bus.ts";
+import type { DomainEvent } from "@repo/kernel";
 
 export const ASSET_CONFIRMED = "asset.confirmed" as const;
 

@@ -31,7 +31,16 @@
       // Referenced only via Vitest `resolve.alias` for `server-only`.
       "entry": ["vitest.server-only-stub.ts"]
     },
-    "packages/core": {
+    "packages/kernel": {
+      "entry": ["vitest.server-only-stub.ts"]
+    },
+    "packages/billing": {
+      "entry": ["vitest.server-only-stub.ts"]
+    },
+    "packages/subscription": {
+      "entry": ["vitest.server-only-stub.ts"]
+    },
+    "packages/assets": {
       "entry": ["vitest.server-only-stub.ts"]
     },
     "packages/orpc": {

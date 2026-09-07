@@ -20,12 +20,11 @@ import {
   type TenantCtx,
 } from "@repo/db";
 import { NotFoundError, ValidationError } from "@repo/errors";
+import { writeOutboxEvent, type Ctx } from "@repo/kernel";
 import { PERMISSIONS } from "@repo/permissions";
 import { buildObjectKey } from "@repo/storage";
 import type { AssetId } from "@repo/types";
 
-import type { Ctx } from "../ctx.ts";
-import { writeOutboxEvent } from "../outbox/write-outbox-event.ts";
 import { assetConfirmedEvent, ASSET_CONFIRMED } from "./asset.events.ts";
 import { toAssetDto } from "./asset.mapper.ts";
 

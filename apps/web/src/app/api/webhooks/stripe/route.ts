@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { applyStripeSubscriptionEvent, systemActorForOrganization } from "@repo/core";
+import { systemActorForOrganization } from "@repo/kernel";
+import { applyStripeSubscriptionEvent } from "@repo/subscription";
 import type { OrganizationId } from "@repo/types";
 
 import { env } from "@/env/server.ts";

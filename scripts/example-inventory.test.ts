@@ -56,7 +56,9 @@ describe("reference analysis", () => {
 
     // These wire @repo/payments into a container; nothing can compile without it.
     assert.ok(broken.includes("apps/web/src/server/ports.ts"));
-    assert.ok(broken.includes("packages/core/src/index.ts"));
+    // CtxPorts is a closed record naming every port, so the kernel does not
+    // compile either — the cost of the split not making it slice-agnostic.
+    assert.ok(broken.includes("packages/kernel/src/ctx.ts"));
   });
 
   it("separates real breakage from a passing mention", () => {

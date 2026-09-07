@@ -41,12 +41,19 @@ describe("templates", () => {
   it("writes one file per layer it claims to cover", () => {
     assert.deepEqual(Object.keys(files).toSorted(), [
       "packages/contracts/src/widget.ts",
-      "packages/core/src/widget/widget.mapper.ts",
-      "packages/core/src/widget/widget.repository.ts",
-      "packages/core/src/widget/widget.service.test.ts",
-      "packages/core/src/widget/widget.service.ts",
       "packages/db/src/schema/widget.sql.ts",
       "packages/orpc/src/routers/widget.ts",
+      // A slice is its own layer-3 package, so the scaffold emits the package
+      // boundary as well as the source (ADR-0013).
+      "packages/widget/package.json",
+      "packages/widget/src/index.ts",
+      "packages/widget/src/widget.mapper.ts",
+      "packages/widget/src/widget.repository.ts",
+      "packages/widget/src/widget.service.test.ts",
+      "packages/widget/src/widget.service.ts",
+      "packages/widget/tsconfig.json",
+      "packages/widget/vitest.config.ts",
+      "packages/widget/vitest.server-only-stub.ts",
     ]);
   });
 
@@ -59,7 +66,7 @@ describe("templates", () => {
   it("scopes every repository query by tenant", () => {
     // The generated repository is the one file most likely to be copied without
     // reading. If it ever ships an unscoped query, every slice built from it leaks.
-    const repository = files["packages/core/src/widget/widget.repository.ts"] ?? "";
+    const repository = files["packages/widget/src/widget.repository.ts"] ?? "";
 
     assert.match(repository, /scopedWhere/u);
     assert.doesNotMatch(repository, /db: Database/u, "must take TenantCtx, not a bare handle");
@@ -69,7 +76,7 @@ describe("templates", () => {
   });
 
   it("authorizes before it reads, in every service function", () => {
-    const service = files["packages/core/src/widget/widget.service.ts"] ?? "";
+    const service = files["packages/widget/src/widget.service.ts"] ?? "";
     const bodies = service.split("export async function ").slice(1);
 
     assert.equal(bodies.length, 3);
@@ -88,7 +95,8 @@ describe("templates", () => {
     const router = files["packages/orpc/src/routers/widget.ts"] ?? "";
 
     assert.doesNotMatch(router, /@repo\/db/u);
-    assert.match(router, /@repo\/core/u);
+    // The transport imports the slice's own package, not a shared core barrel.
+    assert.match(router, /@repo\/widget/u);
   });
 });
 
@@ -142,8 +150,10 @@ describe("registry anchors", () => {
       "packages/permissions/src/registry.ts",
       "packages/permissions/src/roles.ts",
       "packages/db/src/schema/index.ts",
-      "packages/core/src/index.ts",
       "packages/orpc/src/root.ts",
+      // The slice's own barrel is generated, not patched, so it is asserted in
+      // the templates suite instead.
+      "packages/kernel/src/ports/id-generator.ts",
     ]) {
       assert.ok(touched.has(required), `${required} is never patched`);
     }

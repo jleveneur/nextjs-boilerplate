@@ -153,8 +153,8 @@ describe("layer rule", () => {
 
 describe("app and UI tracks", () => {
   it("rejects one app depending on another", async () => {
-    await writePackage("apps", "web", pkg("web", 4, "node", { "@repo/admin": "workspace:*" }));
-    await writePackage("apps", "admin", pkg("admin", 4));
+    await writePackage("apps", "web", pkg("web", 5, "node", { "@repo/admin": "workspace:*" }));
+    await writePackage("apps", "admin", pkg("admin", 5));
 
     const { problems } = await checkLayers(root);
 
@@ -162,7 +162,7 @@ describe("app and UI tracks", () => {
   });
 
   it("lets an app consume the UI track", async () => {
-    await writePackage("apps", "web", pkg("web", 4, "node", { "@repo/ui": "workspace:*" }));
+    await writePackage("apps", "web", pkg("web", 5, "node", { "@repo/ui": "workspace:*" }));
     await writePackage("packages", "ui", pkg("ui", "ui", "browser"));
 
     const { problems } = await checkLayers(root);

@@ -3,31 +3,48 @@ import { Writable } from "node:stream";
 import type { ORPCError } from "@orpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import * as assets from "@repo/assets";
+import * as billing from "@repo/billing";
+import { InvoiceAlreadyPaidError, InvoiceAlreadyVoidError } from "@repo/billing";
 import type { Asset, Invoice, RequestUploadOutput } from "@repo/contracts";
-import * as core from "@repo/core";
-import { InvoiceAlreadyPaidError, InvoiceAlreadyVoidError } from "@repo/core";
-import { createTestPorts } from "@repo/core/testing";
 import { ForbiddenError, NotFoundError } from "@repo/errors";
+import { createTestPorts } from "@repo/kernel/testing";
 import { createLogger } from "@repo/logger";
 import { permissionsForRole } from "@repo/permissions";
+import * as subscription from "@repo/subscription";
 import type { Actor, AssetId, InvoiceId, OrganizationId, UserId } from "@repo/types";
 
 import type { OrpcContext } from "./context.ts";
 import { appRouter, createCallerFactory } from "./root.ts";
 
-vi.mock("@repo/core", async (importOriginal) => {
-  const actual = await importOriginal<typeof core>();
+// One mock per slice package now that the transport composes three of them.
+vi.mock("@repo/billing", async (importOriginal) => {
+  const actual = await importOriginal<typeof billing>();
   return {
     ...actual,
     createInvoice: vi.fn(),
     getInvoice: vi.fn(),
     listInvoicesForOrg: vi.fn(),
     voidInvoice: vi.fn(),
+  };
+});
+
+vi.mock("@repo/subscription", async (importOriginal) => {
+  const actual = await importOriginal<typeof subscription>();
+  return {
+    ...actual,
     listBillingCatalog: vi.fn(),
     syncBillingCatalog: vi.fn(),
     getOrganizationSubscription: vi.fn(),
     startCheckout: vi.fn(),
     openBillingPortal: vi.fn(),
+  };
+});
+
+vi.mock("@repo/assets", async (importOriginal) => {
+  const actual = await importOriginal<typeof assets>();
+  return {
+    ...actual,
     requestUpload: vi.fn(),
     confirmUpload: vi.fn(),
   };
@@ -99,15 +116,15 @@ const sampleInvoice: Invoice = {
 
 describe("billing router via createCaller", () => {
   beforeEach(() => {
-    vi.mocked(core.createInvoice).mockReset();
-    vi.mocked(core.getInvoice).mockReset();
-    vi.mocked(core.listInvoicesForOrg).mockReset();
-    vi.mocked(core.voidInvoice).mockReset();
-    vi.mocked(core.listBillingCatalog).mockReset();
-    vi.mocked(core.syncBillingCatalog).mockReset();
-    vi.mocked(core.getOrganizationSubscription).mockReset();
-    vi.mocked(core.startCheckout).mockReset();
-    vi.mocked(core.openBillingPortal).mockReset();
+    vi.mocked(billing.createInvoice).mockReset();
+    vi.mocked(billing.getInvoice).mockReset();
+    vi.mocked(billing.listInvoicesForOrg).mockReset();
+    vi.mocked(billing.voidInvoice).mockReset();
+    vi.mocked(subscription.listBillingCatalog).mockReset();
+    vi.mocked(subscription.syncBillingCatalog).mockReset();
+    vi.mocked(subscription.getOrganizationSubscription).mockReset();
+    vi.mocked(subscription.startCheckout).mockReset();
+    vi.mocked(subscription.openBillingPortal).mockReset();
   });
 
   it("requires authentication for org procedures", async () => {
@@ -118,7 +135,7 @@ describe("billing router via createCaller", () => {
   });
 
   it("creates an invoice on the happy path", async () => {
-    vi.mocked(core.createInvoice).mockResolvedValue({ ...sampleInvoice, status: "draft" });
+    vi.mocked(billing.createInvoice).mockResolvedValue({ ...sampleInvoice, status: "draft" });
     const caller = createCaller(makeCtx(makeActor("owner")));
 
     const result = await caller.billing.create({
@@ -129,11 +146,11 @@ describe("billing router via createCaller", () => {
     });
 
     expect(result.status).toBe("draft");
-    expect(core.createInvoice).toHaveBeenCalledOnce();
+    expect(billing.createInvoice).toHaveBeenCalledOnce();
   });
 
   it("voids an invoice for an authorized actor", async () => {
-    vi.mocked(core.voidInvoice).mockResolvedValue({ ...sampleInvoice, status: "void" });
+    vi.mocked(billing.voidInvoice).mockResolvedValue({ ...sampleInvoice, status: "void" });
     const caller = createCaller(makeCtx(makeActor("owner")));
 
     const result = await caller.billing.void({ invoiceId });
@@ -142,7 +159,7 @@ describe("billing router via createCaller", () => {
 
   it("maps ForbiddenError from void to FORBIDDEN with appCode", async () => {
     const forbidden = new ForbiddenError({ message: "Missing permission: invoice:void" });
-    vi.mocked(core.voidInvoice).mockRejectedValue(forbidden);
+    vi.mocked(billing.voidInvoice).mockRejectedValue(forbidden);
     const caller = createCaller(makeCtx(makeActor("member")));
 
     await expect(caller.billing.void({ invoiceId })).rejects.toMatchObject({
@@ -153,7 +170,7 @@ describe("billing router via createCaller", () => {
   });
 
   it("maps NotFoundError to NOT_FOUND", async () => {
-    vi.mocked(core.getInvoice).mockRejectedValue(
+    vi.mocked(billing.getInvoice).mockRejectedValue(
       new NotFoundError({ resource: "invoice", id: invoiceId }),
     );
     const caller = createCaller(makeCtx(makeActor("owner")));
@@ -164,7 +181,7 @@ describe("billing router via createCaller", () => {
   });
 
   it("lists invoices", async () => {
-    vi.mocked(core.listInvoicesForOrg).mockResolvedValue({
+    vi.mocked(billing.listInvoicesForOrg).mockResolvedValue({
       data: [sampleInvoice],
       nextCursor: null,
     });
@@ -175,8 +192,8 @@ describe("billing router via createCaller", () => {
   });
 
   it("reads catalog and subscription", async () => {
-    vi.mocked(core.listBillingCatalog).mockResolvedValue([]);
-    vi.mocked(core.getOrganizationSubscription).mockResolvedValue(null);
+    vi.mocked(subscription.listBillingCatalog).mockResolvedValue([]);
+    vi.mocked(subscription.getOrganizationSubscription).mockResolvedValue(null);
     const caller = createCaller(makeCtx(makeActor("member")));
 
     await expect(caller.billing.catalog()).resolves.toEqual([]);
@@ -184,9 +201,9 @@ describe("billing router via createCaller", () => {
   });
 
   it("syncs catalog, starts checkout, and opens the portal", async () => {
-    vi.mocked(core.syncBillingCatalog).mockResolvedValue({ count: 2 });
-    vi.mocked(core.startCheckout).mockResolvedValue({ url: "https://checkout.test" });
-    vi.mocked(core.openBillingPortal).mockResolvedValue({ url: "https://portal.test" });
+    vi.mocked(subscription.syncBillingCatalog).mockResolvedValue({ count: 2 });
+    vi.mocked(subscription.startCheckout).mockResolvedValue({ url: "https://checkout.test" });
+    vi.mocked(subscription.openBillingPortal).mockResolvedValue({ url: "https://portal.test" });
     const caller = createCaller(makeCtx(makeActor("owner")));
 
     await expect(caller.billing.syncCatalog()).resolves.toEqual({ count: 2 });
@@ -219,8 +236,8 @@ describe("assets router via createCaller", () => {
   };
 
   beforeEach(() => {
-    vi.mocked(core.requestUpload).mockReset();
-    vi.mocked(core.confirmUpload).mockReset();
+    vi.mocked(assets.requestUpload).mockReset();
+    vi.mocked(assets.confirmUpload).mockReset();
   });
 
   it("requests an upload", async () => {
@@ -232,7 +249,7 @@ describe("assets router via createCaller", () => {
         expiresInSeconds: 300,
       },
     };
-    vi.mocked(core.requestUpload).mockResolvedValue(output);
+    vi.mocked(assets.requestUpload).mockResolvedValue(output);
     const caller = createCaller(makeCtx(makeActor("member")));
 
     const result = await caller.assets.requestUpload({
@@ -242,11 +259,11 @@ describe("assets router via createCaller", () => {
     });
 
     expect(result.asset.id).toBe(assetId);
-    expect(core.requestUpload).toHaveBeenCalledOnce();
+    expect(assets.requestUpload).toHaveBeenCalledOnce();
   });
 
   it("confirms an upload", async () => {
-    vi.mocked(core.confirmUpload).mockResolvedValue(sampleAsset);
+    vi.mocked(assets.confirmUpload).mockResolvedValue(sampleAsset);
     const caller = createCaller(makeCtx(makeActor("member")));
 
     const result = await caller.assets.confirmUpload({ assetId });
@@ -302,7 +319,7 @@ describe("billing.void typed errors", () => {
     ["INVOICE_ALREADY_PAID", new InvoiceAlreadyPaidError("inv_1")],
     ["INVOICE_ALREADY_VOID", new InvoiceAlreadyVoidError("inv_1")],
   ] as const)("surfaces %s as CONFLICT with the declared appCode", async (appCode, thrown) => {
-    vi.mocked(core.voidInvoice).mockRejectedValue(thrown);
+    vi.mocked(billing.voidInvoice).mockRejectedValue(thrown);
     const caller = createCaller(makeCtx(makeActor("owner")));
 
     await expect(caller.billing.void({ invoiceId })).rejects.toMatchObject({

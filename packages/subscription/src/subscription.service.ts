@@ -6,10 +6,10 @@ import { authorize } from "@repo/authz";
 import { withTransaction, type TenantCtx } from "@repo/db";
 import type { SubscriptionStatus } from "@repo/db/schema";
 import { NotFoundError, ValidationError } from "@repo/errors";
+import type { Ctx } from "@repo/kernel";
 import { PERMISSIONS } from "@repo/permissions";
 import type { OrganizationId } from "@repo/types";
 
-import type { Ctx } from "../ctx.ts";
 import {
   findActiveSubscription,
   findStripeCustomerId,

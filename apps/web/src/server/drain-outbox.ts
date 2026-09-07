@@ -1,7 +1,7 @@
 // oxlint-disable-next-line import/no-unassigned-import -- composition root, server only
 import "server-only";
 
-import { relayOutboxBatch } from "@repo/core";
+import { relayOutboxBatch } from "@repo/kernel";
 
 import { getContainer } from "./container.ts";
 import { outboxHandlers } from "./outbox-handlers.ts";

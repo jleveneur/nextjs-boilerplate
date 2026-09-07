@@ -7,12 +7,12 @@
 
 import { authorize } from "@repo/authz";
 import { findAssetById } from "@repo/db";
+import type { Ctx } from "@repo/kernel";
 import { PERMISSIONS } from "@repo/permissions";
 import { derivativeObjectKey } from "@repo/storage";
 import { deriveImageVariants } from "@repo/storage/image";
 import type { AssetId } from "@repo/types";
 
-import type { Ctx } from "../ctx.ts";
 import { AssetDerivationInputMissingError } from "./asset.errors.ts";
 import { markAssetFailed, markAssetReady, tenantCtx } from "./asset.service.ts";
 

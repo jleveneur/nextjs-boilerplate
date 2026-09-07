@@ -1,12 +1,11 @@
 {
-  "name": "@repo/core",
-  "version": "1.1.2",
+  "name": "@repo/kernel",
+  "version": "0.0.0",
   "private": true,
-  "description": "Domain and application services, ports, policies, and the billing vertical slice.",
+  "description": "Application kernel: request context, side-effect ports, audit log, and the transactional outbox.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./assets/derive": "./src/assets/derive-asset-variants.ts",
     "./testing": "./src/testing/index.ts"
   },
   "scripts": {
@@ -16,19 +15,16 @@
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@repo/authz": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
-    "@repo/errors": "workspace:*",
     "@repo/logger": "workspace:*",
-    "@repo/permissions": "workspace:*",
-    "@repo/storage": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/utils": "workspace:*",
     "drizzle-orm": "catalog:",
     "server-only": "catalog:"
   },
   "devDependencies": {
+    "@repo/permissions": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",

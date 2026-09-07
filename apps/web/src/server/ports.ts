@@ -1,12 +1,12 @@
 import { createAnalyticsSink, subscribeToAnalytics } from "@repo/analytics";
+import type { Mailer as EmailMailer } from "@repo/email";
 import {
   adaptEmailMailer,
   createInProcessEventBus,
   createSystemClock,
   createUuidIdGenerator,
   type CtxPorts,
-} from "@repo/core";
-import type { Mailer as EmailMailer } from "@repo/email";
+} from "@repo/kernel";
 import { createPaymentGateway } from "@repo/payments";
 import { createFileStore } from "@repo/storage";
 

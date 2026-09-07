@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as DbModule from "@repo/db";
 import { ForbiddenError, NotFoundError, ValidationError } from "@repo/errors";
+import type { Ctx } from "@repo/kernel";
+import { createTestPorts, type TestPorts } from "@repo/kernel/testing";
 import { permissionsForRole } from "@repo/permissions";
 import type { Actor, OrganizationId, UserId } from "@repo/types";
 
-import type { Ctx } from "../ctx.ts";
-import { createTestPorts, type TestPorts } from "../testing/create-test-ports.ts";
 import * as repository from "./subscription.repository.ts";
 import {
   applyStripeSubscriptionEvent,

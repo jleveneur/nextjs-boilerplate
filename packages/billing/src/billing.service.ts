@@ -17,13 +17,11 @@ import {
 } from "@repo/contracts";
 import { findOrganizationOwnerEmail, withTransaction, type TenantCtx } from "@repo/db";
 import { NotFoundError, ValidationError } from "@repo/errors";
+import { writeAuditLog, writeOutboxEvent, type Ctx } from "@repo/kernel";
 import { PERMISSIONS } from "@repo/permissions";
 import type { OrganizationId } from "@repo/types";
 import { encodeCursor } from "@repo/utils";
 
-import type { Ctx } from "../ctx.ts";
-import { writeOutboxEvent } from "../outbox/write-outbox-event.ts";
-import { writeAuditLog } from "../write-audit-log.ts";
 import { invoiceVoidedEvent, INVOICE_VOIDED } from "./billing.events.ts";
 import { toInvoiceDto } from "./billing.mapper.ts";
 import { assertCanVoidInvoice } from "./billing.policy.ts";

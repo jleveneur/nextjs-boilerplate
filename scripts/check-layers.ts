@@ -24,7 +24,7 @@ export const UI_LAYER = "ui";
 export const TOOLING_LAYER = "tooling";
 
 /** Apps are the top layer: they compose everything and are composed by nothing. */
-const APP_LAYER = 4;
+const APP_LAYER = 5;
 
 export type Layer = number | typeof UI_LAYER | typeof TOOLING_LAYER;
 export type Runtime = "browser" | "node" | "build";

@@ -4,10 +4,10 @@ import "server-only";
 import { capture } from "@repo/analytics";
 import { createAuth, type Auth } from "@repo/auth";
 import { createCache, type Cache } from "@repo/cache";
-import { recordAuditLog, type CtxPorts } from "@repo/core";
 import { createDb, type Database } from "@repo/db";
 import * as dbSchema from "@repo/db/schema";
 import { createResendMailer, createSmtpMailer, type Mailer as EmailMailer } from "@repo/email";
+import { recordAuditLog, type CtxPorts } from "@repo/kernel";
 import { createLogger, type Logger } from "@repo/logger";
 import { createSentryErrorTracker, getTraceContext, type ErrorTracker } from "@repo/observability";
 
