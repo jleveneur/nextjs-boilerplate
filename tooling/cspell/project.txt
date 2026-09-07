@@ -142,6 +142,7 @@ bunx
 
 # --- ReUI (skill docs and registry) ----------------------------------------
 cascader
+Keenthemes
 llms
 remixicon
 retint

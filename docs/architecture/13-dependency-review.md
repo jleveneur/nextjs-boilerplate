@@ -149,6 +149,38 @@ pattern for React design systems.
 **Exit** Low for shadcn/ui (the code is ours). Medium for Base UI, and the existence of an official
 Radix↔Base migration skill bounds it further.
 
+### ReUI registry (`@reui`)
+
+**Why** A shadcn-compatible registry, so `shadcn add @reui/<name>` copies source in exactly as the
+default registry does. It ships a `base-nova` (Base UI) variant alongside `radix-nova`, so it needs
+no primitive swap here. Registered in both `components.json` files; nothing is installed by default.
+
+**What it is good for, measured.** Simple components land clean: `@reui/badge` produced **0 type
+errors and 0 lint errors**. The flagship complex components do not: `@reui/data-grid` vendors
+~10,200 lines and produced **33 type errors and 121 lint errors** against this repo's settings —
+mostly `exactOptionalPropertyTypes`, `noUnusedLocals`, 18 non-null assertions, and 23 unsafe type
+assertions. The last two are AGENTS.md §4 non-negotiables. Fixing them by hand means a
+diff no one can meaningfully review, which upstream re-breaks on every update, and exempting `reui/**` from the gates
+would put third-party code permanently outside the checks. **So: pull the simple components, and
+hand-write or find another answer for data-grid and kanban.**
+
+**Install recipe.** `shadcn add` needs two corrections afterwards, both of which `make check`
+catches:
+
+1. It writes caret ranges into `packages/ui/package.json`. Move each new dependency into the
+   `pnpm-workspace.yaml` catalog at an exact version and set the manifest entry to `catalog:` (§6).
+2. It emits `import { cn } from "cn"` and adds an npm `cn` package. This repo already has `cn` in
+   `packages/ui/src/lib/cn.ts` — rewrite the import to `@repo/ui/lib/utils` and drop the package.
+
+Overwrite prompts for existing components are safe to accept: our 18 components are upstream
+`base-nova` verbatim apart from formatting and that `cn` import.
+
+**Instead of** _Writing every complex component by hand_ — slower, but it is what we do for the two
+that do not fit. _Switching the whole design system to ReUI_ — it is a registry, not a framework;
+there is nothing to switch to.
+**Health** Active registry (Keenthemes); free tier covers components and examples.
+**Exit** None to speak of — nothing is installed by default, and anything pulled becomes our source.
+
 ### `@hugeicons/react`
 
 **Why** Large, consistent, multi-style icon set with a tree-shakeable React package.
