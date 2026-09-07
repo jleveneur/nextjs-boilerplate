@@ -55,7 +55,7 @@ export function initOtel(serviceName: string, options: OtelInitOptions): OtelHan
       new HttpInstrumentation(),
       // Global fetch / undici (outbound calls from api + worker).
       new UndiciInstrumentation(),
-      // Redis via ioredis (@repo/cache, BullMQ).
+      // Redis via ioredis (@repo/cache, @repo/auth).
       new IORedisInstrumentation(),
       // Event-loop / runtime metrics for Grafana RED panels.
       new RuntimeNodeInstrumentation(),

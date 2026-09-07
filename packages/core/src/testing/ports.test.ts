@@ -8,7 +8,6 @@ import { createTestPorts } from "./create-test-ports.ts";
 import { createFakeClock } from "./fake-clock.ts";
 import { createInMemoryEventBus } from "./in-memory-event-bus.ts";
 import { createInMemoryFileStore } from "./in-memory-file-store.ts";
-import { createInMemoryJobQueue } from "./in-memory-job-queue.ts";
 import { createInMemoryMailer } from "./in-memory-mailer.ts";
 import { createSequenceIdGenerator } from "./uuid-id-generator.ts";
 
@@ -76,32 +75,6 @@ describe("core test ports", () => {
       payload: {},
       occurredAt: new Date(),
     });
-  });
-
-  it("enqueues and clears jobs in memory", async () => {
-    const jobs = createInMemoryJobQueue();
-    await jobs.enqueue("invoice.voided.notify", {
-      invoiceId: "01900000-0000-7000-8000-000000000001",
-      organizationId: "01900000-0000-7000-8000-000000000002",
-      amountMinor: 100,
-      idempotencyKey: "k1",
-    });
-    await jobs.enqueue(
-      "email.send",
-      {
-        to: "a@example.com",
-        subject: "Hi",
-        organizationId: "01900000-0000-7000-8000-000000000002",
-        idempotencyKey: "k2",
-      },
-      { jobId: "fixed-id" },
-    );
-
-    expect(jobs.jobs).toHaveLength(2);
-    expect(jobs.jobs[1]?.opts?.jobId).toBe("fixed-id");
-    jobs.clear();
-    expect(jobs.jobs).toHaveLength(0);
-    await jobs.close();
   });
 
   it("records and clears mailer sends", async () => {

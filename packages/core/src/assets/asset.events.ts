@@ -5,7 +5,7 @@ export const ASSET_CONFIRMED = "asset.confirmed" as const;
 export type AssetConfirmedPayload = {
   assetId: string;
   organizationId: string;
-  /** Outbox row id — used as the job idempotency key / BullMQ jobId. */
+  /** Outbox row id — the relay's side-effect claim key. */
   outboxId: string;
 };
 

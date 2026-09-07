@@ -1,7 +1,13 @@
 /**
- * Transactional outbox relay: claim pending rows → enqueue jobs → mark published.
+ * Transactional outbox relay: claim pending rows → run handlers → mark published.
  *
- * Runs inside the worker process on a short poll interval.
+ * Handlers are supplied by the composition root, not resolved here. That keeps
+ * the relay from importing any feature: a mapping table living in this file
+ * would have to name `../billing` and `../assets`, which is an upward
+ * dependency from shared code into the slices that depend on it.
+ *
+ * An event type with no registered handler is skipped and marked published
+ * rather than retried forever — the row has been seen and nothing wants it.
  */
 
 import {
@@ -13,8 +19,14 @@ import {
 } from "@repo/db";
 import type { OutboxId } from "@repo/types";
 
-import type { JobQueue } from "../ports/job-queue.ts";
-import { mapOutboxEventToJob } from "./map-event-to-job.ts";
+export type OutboxEventHandler = (input: {
+  payload: unknown;
+  /** Stable per-row id. Use as the idempotency key for anything downstream. */
+  outboxId: OutboxId;
+}) => Promise<void>;
+
+/** Keyed by domain event type, e.g. `invoice.voided`. */
+export type OutboxHandlers = Readonly<Record<string, OutboxEventHandler>>;
 
 export type RelayOutboxBatchResult = {
   claimed: number;
@@ -25,10 +37,10 @@ export type RelayOutboxBatchResult = {
 
 export type RelayOutboxBatchOptions = {
   db: Database;
-  jobs: JobQueue;
+  handlers: OutboxHandlers;
   limit?: number;
   now?: Date;
-  /** Backoff after a failed publish attempt. Defaults to 30s. */
+  /** Backoff after a failed handler run. Defaults to 30s. */
   retryDelayMs?: number;
 };
 
@@ -53,14 +65,14 @@ export async function relayOutboxBatch(
     for (const row of rows) {
       const id = brandOutboxId(row.id);
       try {
-        const mapped = mapOutboxEventToJob(row.eventType, row.payload);
-        if (mapped === null) {
+        const handler = options.handlers[row.eventType];
+        if (handler === undefined) {
           skipped += 1;
           await markOutboxPublished(tx, id, now);
           continue;
         }
 
-        await options.jobs.enqueue(mapped.name, mapped.payload, { jobId: mapped.jobId });
+        await handler({ payload: row.payload, outboxId: id });
         await markOutboxPublished(tx, id, now);
         published += 1;
       } catch (error) {

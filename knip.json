@@ -41,26 +41,14 @@
       // Referenced only via Vitest `resolve.alias` for `server-only`.
       "entry": ["vitest.server-only-stub.ts"]
     },
+    "packages/db": {
+      // Referenced only via tsdown `alias` for the migrate image bundle.
+      "entry": ["server-only-stub.ts"]
+    },
     "apps/web": {
       // LHCI config is passed as a CLI flag (`--config=lighthouserc.cjs`), which
       // Knip does not treat as a script reference.
       "entry": ["lighthouserc.cjs", "e2e/**/*.ts"]
-    },
-    "apps/api": {
-      "entry": [
-        "vitest.server-only-stub.ts",
-        // Referenced only via tsdown `alias` for Docker bundles.
-        "server-only-stub.ts",
-        "src/**/*.integration.test.ts"
-      ]
-    },
-    "apps/worker": {
-      "entry": [
-        "vitest.server-only-stub.ts",
-        // Referenced only via tsdown `alias` for Docker bundles.
-        "server-only-stub.ts",
-        "src/**/*.integration.test.ts"
-      ]
     }
   },
 

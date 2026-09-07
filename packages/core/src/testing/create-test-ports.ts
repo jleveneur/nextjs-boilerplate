@@ -2,7 +2,6 @@ import type { CtxPorts } from "../ctx.ts";
 import { createFakeClock } from "./fake-clock.ts";
 import { createInMemoryEventBus } from "./in-memory-event-bus.ts";
 import { createInMemoryFileStore } from "./in-memory-file-store.ts";
-import { createInMemoryJobQueue } from "./in-memory-job-queue.ts";
 import { createInMemoryMailer } from "./in-memory-mailer.ts";
 import {
   createNoopAnalyticsSink,
@@ -14,7 +13,6 @@ import { createSequenceIdGenerator } from "./uuid-id-generator.ts";
 export type TestPorts = CtxPorts & {
   clock: ReturnType<typeof createFakeClock>;
   events: ReturnType<typeof createInMemoryEventBus>;
-  jobs: ReturnType<typeof createInMemoryJobQueue>;
   mailer: ReturnType<typeof createInMemoryMailer>;
 };
 
@@ -25,7 +23,6 @@ export function createTestPorts(): TestPorts {
     clock: createFakeClock(),
     ids: createSequenceIdGenerator(),
     events: createInMemoryEventBus(),
-    jobs: createInMemoryJobQueue(),
     mailer: createInMemoryMailer(),
     files: createInMemoryFileStore(),
     flags: createNoopFlagProvider(),

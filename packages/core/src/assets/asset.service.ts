@@ -15,7 +15,6 @@ import {
 import {
   findAssetById,
   insertAsset,
-  listStalePendingAssets,
   updateAssetStatus,
   withTransaction,
   type TenantCtx,
@@ -23,22 +22,12 @@ import {
 import { NotFoundError, ValidationError } from "@repo/errors";
 import { PERMISSIONS } from "@repo/permissions";
 import { buildObjectKey } from "@repo/storage";
-import type { AssetId, OrganizationId } from "@repo/types";
+import type { AssetId } from "@repo/types";
 
 import type { Ctx } from "../ctx.ts";
 import { writeOutboxEvent } from "../outbox/write-outbox-event.ts";
 import { assetConfirmedEvent, ASSET_CONFIRMED } from "./asset.events.ts";
 import { toAssetDto } from "./asset.mapper.ts";
-
-function brandOrganizationId(id: string): OrganizationId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- DB/boundary brand
-  return id as OrganizationId;
-}
-
-function brandAssetId(id: string): AssetId {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- DB/boundary brand
-  return id as AssetId;
-}
 
 export function tenantCtx(ctx: Ctx): TenantCtx {
   return {
@@ -180,44 +169,4 @@ export async function markAssetFailed(ctx: Ctx, assetId: AssetId): Promise<Confi
   }
 
   return toAssetDto(updated);
-}
-
-/** Nightly schedule target: fail pending uploads that were never confirmed. */
-export async function reconcileOrphanAssets(
-  ctx: Ctx,
-  olderThan: Date,
-  limit = 100,
-): Promise<{ failed: number }> {
-  if (!ctx.actor.isSystem) {
-    authorize(ctx.actor, PERMISSIONS["asset:create"], {
-      organizationId: ctx.actor.organizationId,
-    });
-  }
-
-  const stale = await listStalePendingAssets(ctx.tx ?? ctx.db, olderThan, limit);
-  let failed = 0;
-
-  for (const row of stale) {
-    const orgScoped: Ctx = {
-      ...ctx,
-      actor: {
-        ...ctx.actor,
-        organizationId: brandOrganizationId(row.organizationId),
-        isSystem: true,
-      },
-    };
-    const updated = await updateAssetStatus(
-      {
-        organizationId: brandOrganizationId(row.organizationId),
-        db: orgScoped.tx ?? orgScoped.db,
-      },
-      brandAssetId(row.id),
-      "failed",
-    );
-    if (updated !== null) {
-      failed += 1;
-    }
-  }
-
-  return { failed };
 }

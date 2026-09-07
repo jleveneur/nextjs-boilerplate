@@ -8,5 +8,5 @@
   "updateInternalDependencies": "patch",
   "fixed": [],
   "linked": [],
-  "ignore": ["@repo/web", "@repo/api", "@repo/worker"]
+  "ignore": ["@repo/web"]
 }

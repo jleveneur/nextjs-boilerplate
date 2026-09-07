@@ -10,7 +10,6 @@ import { createTestPorts, type TestPorts } from "../testing/create-test-ports.ts
 import * as repository from "./subscription.repository.ts";
 import {
   applyStripeSubscriptionEvent,
-  enqueueStripeWebhookEvent,
   getOrganizationSubscription,
   listBillingCatalog,
   openBillingPortal,
@@ -311,27 +310,6 @@ describe("organizationHasEntitlement", () => {
   it("delegates to the repository", async () => {
     vi.mocked(repository.hasEntitlementRow).mockResolvedValue(true);
     await expect(organizationHasEntitlement(makeCtx(), "exports:enabled")).resolves.toBe(true);
-  });
-});
-
-describe("enqueueStripeWebhookEvent", () => {
-  it("enqueues stripe.event.process with a stable job id", async () => {
-    const ctx = makeCtx(makeActor("owner", true));
-    const enqueue = vi.spyOn(ctx.ports.jobs, "enqueue");
-    await enqueueStripeWebhookEvent(ctx, {
-      eventId: "evt_1",
-      eventType: "customer.subscription.updated",
-      payloadJson: "{}",
-    });
-    expect(enqueue).toHaveBeenCalledWith(
-      "stripe.event.process",
-      {
-        eventId: "evt_1",
-        eventType: "customer.subscription.updated",
-        payloadJson: "{}",
-      },
-      { jobId: "stripe-event-evt_1" },
-    );
   });
 });
 

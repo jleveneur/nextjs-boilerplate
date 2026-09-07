@@ -6,8 +6,7 @@
  * smaller and must not be used to set the bar.
  *
  * Usage: `node --experimental-strip-types scripts/check-image-size.ts`
- * Expects local tags: repo-web:local, repo-api:local, repo-worker:local,
- * repo-docs:local
+ * Expects local tags: repo-web:local, repo-migrate:local
  */
 
 import { execFileSync } from "node:child_process";
@@ -16,16 +15,14 @@ const MiB = 1024 * 1024;
 
 /**
  * Headroom over slimmed linux/amd64 CI measurements (~10%).
- * API raised after Phase 14 OTel (maps stay out of the image; JS still grew).
  * Web raised after pnpm 12 + OpenSSL 3.5.8 (265 MB measured on linux/amd64).
- * Docs shares the web-class budget (Next standalone + Alpine); calibrate after
- * the first amd64 CI measure if needed.
+ * Migrate carries only the bundled Drizzle CLI plus SQL on bare Alpine, so it
+ * sits well under the app-class budgets; calibrate after the first amd64 CI
+ * measure if needed.
  */
 const budgets: ReadonlyArray<{ tag: string; maxBytes: number }> = [
   { tag: "repo-web:local", maxBytes: 275 * MiB },
-  { tag: "repo-api:local", maxBytes: 165 * MiB },
-  { tag: "repo-worker:local", maxBytes: 190 * MiB },
-  { tag: "repo-docs:local", maxBytes: 260 * MiB },
+  { tag: "repo-migrate:local", maxBytes: 120 * MiB },
 ];
 
 function imageBytes(tag: string): number {

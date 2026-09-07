@@ -5,6 +5,7 @@ import { isLocale } from "@repo/i18n";
 
 import { routing } from "./i18n/routing.ts";
 import { isPostHogIngestPath } from "./lib/ingest-path.ts";
+import { SECURITY_HEADERS } from "./lib/security-headers.ts";
 import { SESSION_COOKIE_NAMES } from "./lib/session-cookie.ts";
 
 const handleI18nRouting = createMiddleware(routing);
@@ -41,10 +42,9 @@ function requiresSessionCookie(pathname: string): boolean {
 }
 
 function withSecurityHeaders(response: NextResponse): NextResponse {
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  response.headers.set("X-Frame-Options", "DENY");
-  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  for (const { key, value } of SECURITY_HEADERS) {
+    response.headers.set(key, value);
+  }
   return response;
 }
 

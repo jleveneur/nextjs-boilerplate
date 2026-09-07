@@ -3,16 +3,16 @@ name: Publish images
 # Post-merge release artifacts for every push to main (and workflow_dispatch):
 #   - multi-arch app images → GHCR as :sha
 #
-# Tags: ghcr.io/<owner>/{web,api,worker,docs}:<git-sha>
+# Tags: ghcr.io/<owner>/{web,migrate}:<git-sha>
 #
 # Each platform builds natively (amd64 / ubuntu-24.04-arm) — no QEMU.
-# Emulated arm64 previously hung worker on `pnpm install` with:
+# Emulated arm64 previously hung on `pnpm install` with:
 #   qemu: uncaught target signal 4 (Illegal instruction)
 # SBOM + provenance attestations are enabled here (local `make images` keeps
 # them off so size budgets stay meaningful).
 #
-# Deploy is bring-your-own host: pull these SHA tags, run migrate via the api
-# image (`node dist/migrate.mjs`), then roll apps. See docs/runbooks/deploy.md.
+# Deploy is bring-your-own host: pull these SHA tags, run the migrate image,
+# then roll web. See docs/runbooks/deploy.md.
 
 on:
   push:
@@ -45,12 +45,8 @@ jobs:
         app:
           - name: web
             file: docker/web.Dockerfile
-          - name: api
-            file: docker/api.Dockerfile
-          - name: worker
-            file: docker/worker.Dockerfile
-          - name: docs
-            file: docker/docs.Dockerfile
+          - name: migrate
+            file: docker/migrate.Dockerfile
         platform:
           - name: amd64
             target: linux/amd64
@@ -143,7 +139,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, api, worker, docs]
+        app: [web, migrate]
 
     steps:
       - name: Image name (lowercase)

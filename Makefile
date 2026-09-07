@@ -14,12 +14,12 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix example-inventory new-slice bundle-budget openapi-check \
+        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix example-inventory new-slice bundle-budget \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
         changeset clean clean-all \
-        deps-up deps-up-observability deps-up-test deps-up-test-worker deps-down \
+        deps-up deps-up-observability deps-up-test deps-down \
         prod-up prod-down \
         db-up db-up-test db-down db-wait db-generate db-migrate db-seed db-reset db-push db-studio \
         email dev proxy
@@ -142,10 +142,6 @@ bundle-budget: ## Build apps/web and assert First Load JS budgets
 	pnpm --filter @repo/web build
 	pnpm --filter @repo/web bundle-budget
 
-openapi-check: ## Regenerate apps/api OpenAPI and fail on drift
-	pnpm --filter @repo/api openapi:generate
-	@git diff --exit-code -- apps/api/openapi.json || \
-		(echo "apps/api/openapi.json is out of date; commit the regenerated file." && exit 1)
 
 ## ----------------------------------------------------------------------------
 ## Tests
@@ -238,11 +234,9 @@ lighthouse: ## Lighthouse CI against a production next start (deps-up-test)
 # shipping in the runnable image config we care about for budgets.
 DOCKER_BUILD := docker build --provenance=false --sbom=false
 
-images: ## Build web/api/worker/docs images tagged *:local
+images: ## Build the web and migrate images tagged *:local
 	$(DOCKER_BUILD) -f docker/web.Dockerfile -t repo-web:local .
-	$(DOCKER_BUILD) -f docker/api.Dockerfile -t repo-api:local .
-	$(DOCKER_BUILD) -f docker/worker.Dockerfile -t repo-worker:local .
-	$(DOCKER_BUILD) -f docker/docs.Dockerfile -t repo-docs:local .
+	$(DOCKER_BUILD) -f docker/migrate.Dockerfile -t repo-migrate:local .
 	$(MAKE) image-size
 
 
@@ -268,16 +262,6 @@ deps-up-test: ## Start ephemeral dependency stack for integration tests
 	@$(COMPOSE_TEST) up -d postgres redis minio minio-init mailpit || ( \
 		$(COMPOSE_TEST) down --remove-orphans; \
 		$(COMPOSE_TEST) up -d postgres redis minio minio-init mailpit; \
-	)
-	@until $(COMPOSE_TEST) exec -T postgres pg_isready -U postgres -d app_test >/dev/null 2>&1; do \
-		sleep 0.5; \
-	done
-	@until $(COMPOSE_TEST) exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; do sleep 0.5; done
-
-deps-up-test-worker: ## Postgres + Redis + MinIO for worker proofs (no mailpit)
-	@$(COMPOSE_TEST) up -d postgres redis minio minio-init || ( \
-		$(COMPOSE_TEST) down --remove-orphans; \
-		$(COMPOSE_TEST) up -d postgres redis minio minio-init; \
 	)
 	@until $(COMPOSE_TEST) exec -T postgres pg_isready -U postgres -d app_test >/dev/null 2>&1; do \
 		sleep 0.5; \
@@ -325,10 +309,7 @@ endef
 
 load: ## Run k6 scenarios via Docker (grafana/k6) against LOAD_BASE_URL
 	$(call K6_RUN,health.js)
-	$(call K6_RUN,public-api-burst.js)
 	$(call K6_RUN,read-heavy.js)
-	$(call K6_RUN,write-heavy.js)
-	$(call K6_RUN,upload.js)
 
 
 zap: ## OWASP ZAP baseline against ZAP_DOCKER_TARGET (Traefik on host :8080)

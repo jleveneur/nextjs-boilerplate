@@ -15,7 +15,6 @@ import type { EventBus } from "./ports/event-bus.ts";
 import type { FileStore } from "./ports/file-store.ts";
 import type { FlagProvider } from "./ports/flags.ts";
 import type { IdGenerator } from "./ports/id-generator.ts";
-import type { JobQueue } from "./ports/job-queue.ts";
 import type { Mailer } from "./ports/mailer.ts";
 import type { PaymentGateway } from "./ports/payment-gateway.ts";
 
@@ -25,7 +24,6 @@ export type CtxPorts = {
   clock: Clock;
   ids: IdGenerator;
   events: EventBus;
-  jobs: JobQueue;
   mailer: Mailer;
   files: FileStore;
   flags: FlagProvider;

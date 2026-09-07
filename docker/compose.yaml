@@ -39,7 +39,9 @@ services:
     restart: unless-stopped
     ports:
       - "15434:6379"
-    # BullMQ requires noeviction — an evicting Redis silently drops jobs.
+    # noeviction: this Redis holds the webhook replay guard, outbox
+    # side-effect claims, and auth rate-limit counters. Evicting any of those
+    # silently turns an at-most-once guarantee into a duplicate.
     command: ["redis-server", "--maxmemory-policy", "noeviction"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]

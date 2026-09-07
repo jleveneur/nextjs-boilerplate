@@ -6,6 +6,7 @@
  * `@repo/logger` — both are layer 1 (ADR-0002).
  */
 
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
@@ -85,4 +86,15 @@ export function createDb(options: CreateDbOptions) {
         });
 
   return { db, client };
+}
+
+/**
+ * Cheapest possible round trip to prove the pool can serve a query.
+ *
+ * Exists so readiness probes do not need `drizzle-orm` as a direct dependency —
+ * a transport or app importing the ORM to write `sql\`select 1\`` would pull a
+ * layer-1 concern up into layer 4.
+ */
+export async function pingDatabase(db: Database): Promise<void> {
+  await db.execute(sql`select 1`);
 }

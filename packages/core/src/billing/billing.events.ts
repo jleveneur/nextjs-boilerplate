@@ -7,7 +7,7 @@ export type InvoiceVoidedPayload = {
   organizationId: string;
   amountMinor: number;
   currency: string;
-  /** Outbox row id — used as the job idempotency key. */
+  /** Outbox row id — the relay's side-effect claim key. */
   outboxId: string;
 };
 

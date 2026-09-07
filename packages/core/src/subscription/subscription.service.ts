@@ -6,7 +6,6 @@ import { authorize } from "@repo/authz";
 import { withTransaction, type TenantCtx } from "@repo/db";
 import type { SubscriptionStatus } from "@repo/db/schema";
 import { NotFoundError, ValidationError } from "@repo/errors";
-import { JOB_NAMES } from "@repo/jobs";
 import { PERMISSIONS } from "@repo/permissions";
 import type { OrganizationId } from "@repo/types";
 
@@ -197,24 +196,11 @@ export async function organizationHasEntitlement(ctx: Ctx, featureKey: string): 
   return hasEntitlementRow(tenantCtx(ctx), featureKey);
 }
 
-/** Enqueue durable processing for a verified Stripe webhook event. */
-export async function enqueueStripeWebhookEvent(
-  ctx: Ctx,
-  input: { eventId: string; eventType: string; payloadJson: string },
-): Promise<void> {
-  await ctx.ports.jobs.enqueue(
-    JOB_NAMES.stripeEventProcess,
-    {
-      eventId: input.eventId,
-      eventType: input.eventType,
-      payloadJson: input.payloadJson,
-    },
-    { jobId: `stripe-event-${input.eventId}` },
-  );
-}
-
 /**
- * Apply a Stripe subscription event (worker). Uses system actor for the org.
+ * Apply a verified Stripe subscription event. Uses a system actor for the org.
+ *
+ * Called inline from the webhook route: with no queue, the HTTP response is
+ * what tells Stripe the event was handled, so a throw here becomes a retry.
  */
 export async function applyStripeSubscriptionEvent(ctx: Ctx, payloadJson: string): Promise<void> {
   const parsed = ctx.ports.payments.parseSubscriptionEvent(payloadJson);

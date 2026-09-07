@@ -14,6 +14,7 @@ import type { Ctx } from "../ctx.ts";
 import { createTestPorts, type TestPorts } from "../testing/create-test-ports.ts";
 import * as audit from "../write-audit-log.ts";
 import { InvoiceAlreadyPaidError, InvoiceAlreadyVoidError } from "./billing.errors.ts";
+import { INVOICE_VOIDED } from "./billing.events.ts";
 import * as repository from "./billing.repository.ts";
 import {
   createInvoice,
@@ -22,7 +23,6 @@ import {
   resolveInvoiceVoidedRecipientEmail,
   voidInvoice,
 } from "./billing.service.ts";
-import { subscribeInvoiceVoidedNotify } from "./subscribe-invoice-voided.ts";
 
 vi.mock("./billing.repository.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof repository>();
@@ -86,7 +86,6 @@ type TestCtx = Omit<Ctx, "ports"> & { ports: TestPorts };
 
 function makeCtx(actor: Actor): TestCtx {
   const ports = createTestPorts();
-  subscribeInvoiceVoidedNotify(ports.events, ports.jobs);
   return {
     actor,
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- unused under withTransaction mock
@@ -242,7 +241,7 @@ describe("voidInvoice", () => {
     vi.mocked(audit.writeAuditLog).mockReset();
   });
 
-  it("voids and audits an open invoice, then emits and enqueues notify", async () => {
+  it("voids and audits an open invoice, then emits invoice.voided", async () => {
     const row = openRow();
     vi.mocked(repository.findInvoiceById).mockResolvedValue(row);
     vi.mocked(repository.updateInvoiceStatus).mockResolvedValue({ ...row, status: "void" });
@@ -252,8 +251,7 @@ describe("voidInvoice", () => {
 
     expect(result.status).toBe("void");
     expect(ctx.ports.events.emitted).toHaveLength(1);
-    expect(ctx.ports.jobs.jobs).toHaveLength(1);
-    expect(ctx.ports.jobs.jobs[0]?.name).toBe("invoice.voided.notify");
+    expect(ctx.ports.events.emitted[0]?.type).toBe(INVOICE_VOIDED);
     expect(audit.writeAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({ actor: ctx.actor, tx: expect.anything() }),
       {

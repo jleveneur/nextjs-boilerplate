@@ -12,7 +12,6 @@ export {
   confirmUpload,
   markAssetFailed,
   markAssetReady,
-  reconcileOrphanAssets,
   requestUpload,
 } from "./assets/asset.service.ts";
 export {
@@ -38,11 +37,9 @@ export {
   resolveInvoiceVoidedRecipientEmail,
   voidInvoice,
 } from "./billing/billing.service.ts";
-export { subscribeInvoiceVoidedNotify } from "./billing/subscribe-invoice-voided.ts";
 export type { Ctx, CtxPorts } from "./ctx.ts";
 export {
   applyStripeSubscriptionEvent,
-  enqueueStripeWebhookEvent,
   getOrganizationSubscription,
   listBillingCatalog,
   openBillingPortal,
@@ -50,10 +47,10 @@ export {
   startCheckout,
   syncBillingCatalog,
 } from "./subscription/subscription.service.ts";
-export { mapOutboxEventToJob, type MappedJob } from "./outbox/map-event-to-job.ts";
-
 export {
   relayOutboxBatch,
+  type OutboxEventHandler,
+  type OutboxHandlers,
   type RelayOutboxBatchOptions,
   type RelayOutboxBatchResult,
 } from "./outbox/relay.ts";
@@ -75,7 +72,6 @@ export {
 export type { FileStore, ObjectHead, PresignedGet, PresignedPut } from "./ports/file-store.ts";
 export type { FlagContext, FlagProvider } from "./ports/flags.ts";
 export { createUuidIdGenerator, type IdGenerator } from "./ports/id-generator.ts";
-export type { EnqueueOptions, EnqueueResult, JobQueue } from "./ports/job-queue.ts";
 export {
   adaptEmailMailer,
   type Mailer,

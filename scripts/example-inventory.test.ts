@@ -55,7 +55,7 @@ describe("reference analysis", () => {
     const broken = brokenImporters(billing);
 
     // These wire @repo/payments into a container; nothing can compile without it.
-    assert.ok(broken.includes("apps/worker/src/container.ts"));
+    assert.ok(broken.includes("apps/web/src/server/ports.ts"));
     assert.ok(broken.includes("packages/core/src/index.ts"));
   });
 

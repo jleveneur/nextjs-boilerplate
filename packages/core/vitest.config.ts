@@ -28,8 +28,11 @@ export default mergeConfig(
           "src/ctx.ts",
           "src/testing/index.ts",
           "src/ports/**",
-          // Covered by integration tests (Postgres / worker).
+          // Postgres-backed: writeOutboxEvent is proven by
+          // write-outbox-event.integration.test.ts, the relay's dispatch by
+          // relay.test.ts. Neither runs under the unit-test threshold.
           "src/outbox/**",
+          // Covered by integration tests (Postgres / S3).
           "src/assets/**",
           "src/system-actor.ts",
           // Stated as the rule rather than one line per slice. A repository is

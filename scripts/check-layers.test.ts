@@ -153,8 +153,8 @@ describe("layer rule", () => {
 
 describe("app and UI tracks", () => {
   it("rejects one app depending on another", async () => {
-    await writePackage("apps", "web", pkg("web", 4, "node", { "@repo/api": "workspace:*" }));
-    await writePackage("apps", "api", pkg("api", 4));
+    await writePackage("apps", "web", pkg("web", 4, "node", { "@repo/admin": "workspace:*" }));
+    await writePackage("apps", "admin", pkg("admin", 4));
 
     const { problems } = await checkLayers(root);
 
