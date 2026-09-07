@@ -54,8 +54,9 @@ for a smaller end state, accepting that async work moves onto the request path.
 - **The transactional outbox stays.** `writeOutboxEvent` records an event in the same transaction as
   the state change, which is the durability guarantee worth keeping; `docs/starting-a-project.md`
   §4 already warned that rebuilding it later is far more expensive than carrying it. What changed is
-  delivery: `relayOutboxBatch` now dispatches to an `OutboxHandlers` registry supplied by the
-  composition root, and `apps/web` drains it after a mutating request commits.
+  delivery: `relayOutboxBatch` leases rows in a short transaction, runs handlers from an
+  `OutboxHandlers` registry supplied by the composition root **outside** any transaction, then
+  settles each row separately. `apps/web` drains after a mutating request commits.
 - Capabilities that earned their place moved into `apps/web`: the Stripe webhook (now applying
   events inline), `@repo/cache`, per-IP rate limiting on `/api/rpc`, `/api/health/ready`, and
   security headers on `/api/*`.

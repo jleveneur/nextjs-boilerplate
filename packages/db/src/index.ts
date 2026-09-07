@@ -28,6 +28,7 @@ export {
 } from "./repositories/asset.repository.ts";
 export {
   claimPendingOutboxEvents,
+  leaseDueOutboxEvents,
   markOutboxFailed,
   markOutboxPublished,
   type OutboxClaimRow,

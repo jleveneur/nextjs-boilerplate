@@ -265,11 +265,23 @@ inside a transaction that later rolls back schedules work that never happened; d
 commit loses the work if the process dies in between. So a slice writes an outbox row in the _same
 transaction_ as the state change, and delivery is a separate concern.
 
-What changed is delivery. `relayOutboxBatch` claims pending rows with `for update skip locked`,
-runs a handler, and marks the row published — all in one transaction. Handlers come from an
-`OutboxHandlers` registry that the composition root supplies, so the kernel names no slice
-(that inversion was a precondition for [ADR-0013](../adr/0013-kernel-and-slice-packages.md)). The
-drain runs in `apps/web` after a mutating request commits.
+What changed is delivery. `relayOutboxBatch` runs in three phases, and the split matters:
+
+1. **Lease** in one short transaction. `available_at` moves past a lease window (5 min by
+   default), so the claim _survives the commit_ and other drainers skip the row. `attempts`
+   increments here, not on failure, so a handler that hangs still counts against the row.
+2. **Run the handler outside any transaction.** This is the reason for leasing rather than holding
+   `for update skip locked`: handlers send mail, read and write S3, and run Sharp. Holding a row
+   lock and a pooled connection across that would exhaust the pool under load, and Postgres would
+   kill the transaction on `idle_in_transaction_session_timeout` part-way through.
+3. **Settle** each row in its own short transaction, so one row's failure cannot roll back
+   another's success.
+
+A drainer that dies mid-handler needs no cleanup: its rows become due again when the lease
+expires. Handlers come from an `OutboxHandlers` registry that the composition root supplies, so the
+kernel names no slice (that inversion was a precondition for
+[ADR-0013](../adr/0013-kernel-and-slice-packages.md)). The drain runs in `apps/web` after a
+mutating request commits.
 
 ### What this costs
 
