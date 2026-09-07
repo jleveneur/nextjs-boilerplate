@@ -1,6 +1,6 @@
 /**
- * Auth-layer audit events. Composition roots map these into `@repo/core`
- * `recordAuditLog` — this package must not import core or db.
+ * Auth-layer audit events. Composition roots map these into `@repo/kernel`
+ * `recordAuditLog` — this package is layer 1 and must not import the kernel or db.
  */
 
 export type AuthAuditEvent = {

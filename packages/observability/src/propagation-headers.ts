@@ -3,7 +3,7 @@
  *
  * Browser → web oRPC stays in-process on Next.js; HTTP auto-instrumentation
  * creates the server span on arrival. Use these headers for server-side calls
- * to other services (e.g. REST to `apps/api`).
+ * to other services, if an adopter adds one.
  */
 
 import { context, propagation } from "@opentelemetry/api";

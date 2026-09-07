@@ -24,8 +24,6 @@
       "Bash(make example-inventory:*)",
       "Bash(make new-slice:*)",
       "Bash(make bundle-budget:*)",
-      "Bash(make docs-build:*)",
-      "Bash(make openapi-check:*)",
       "Bash(make db-generate:*)",
       "Bash(make db-migrate:*)",
       "Bash(make db-studio:*)",

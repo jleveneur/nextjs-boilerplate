@@ -1,7 +1,7 @@
 /**
  * Record an audit row when the writer is not already in a {@link Ctx}.
  *
- * Auth composition roots use this: `@repo/auth` cannot import `@repo/core`,
+ * Auth composition roots use this: `@repo/auth` is layer 1 and cannot import the kernel,
  * so the edge maps `AuthAuditEvent` through here after validating ids.
  */
 

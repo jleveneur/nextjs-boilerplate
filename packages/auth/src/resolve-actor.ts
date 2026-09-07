@@ -1,7 +1,7 @@
 /**
  * Resolve a shared {@link Actor} from the session.
  *
- * Every transport builds an `Actor` through here so `@repo/core` never sees a
+ * Every transport builds an `Actor` through here so a slice service never sees a
  * transport-shaped caller (docs/architecture/07-auth.md §3).
  */
 

@@ -10,7 +10,7 @@
  * Each package declares its own layer, so there is no central registry to drift
  * out of date:
  *
- *   { "name": "@repo/core", "repo": { "layer": 2, "runtime": "node" } }
+ *   { "name": "@repo/kernel", "repo": { "layer": 2, "runtime": "node" } }
  *
  * Run: node scripts/check-layers.ts
  * Test: node --test scripts/check-layers.test.ts

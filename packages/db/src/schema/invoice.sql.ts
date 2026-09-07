@@ -2,7 +2,7 @@
  * Tenant-scoped invoices (billing vertical slice).
  *
  * Amounts are integers in minor units. Status transitions are enforced in
- * `@repo/core` policy — the column is storage, not a state machine.
+ * `@repo/billing` policy — the column is storage, not a state machine.
  */
 
 import { index, integer, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";

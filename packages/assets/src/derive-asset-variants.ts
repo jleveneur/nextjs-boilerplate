@@ -1,8 +1,9 @@
 /**
  * Image-derivative application service.
  *
- * Lives on `@repo/core/assets/derive` so Sharp stays out of the default
- * `@repo/core` graph (API and Next.js request paths).
+ * Lives on `@repo/assets/derive` so Sharp — and libvips with it — stays out of
+ * the default import graph. Only the outbox handler that derives variants pulls
+ * it in.
  */
 
 import { authorize } from "@repo/authz";

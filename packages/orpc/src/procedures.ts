@@ -39,7 +39,7 @@ export const protectedProcedure = publicProcedure.use(({ context, next }) => {
 
 /**
  * Requires an authenticated actor with an active organization (tenant).
- * Exposes `serviceCtx` ready for `@repo/core` services.
+ * Exposes `serviceCtx` ready for slice services.
  */
 export const orgProcedure = protectedProcedure.use(({ context, next }) => {
   if (context.actor === null) {

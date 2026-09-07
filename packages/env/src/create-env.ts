@@ -115,7 +115,7 @@ export type EnvOf<T extends CreateEnvOptions> = InferPresets<T["server"]> &
  * Validates and returns a typed environment object.
  *
  * ```ts
- * // apps/worker
+ * // a composition root that needs no Stripe keys
  * export const env = createEnv({
  *   server: [base, db, redis, s3, resend, otel],
  * });

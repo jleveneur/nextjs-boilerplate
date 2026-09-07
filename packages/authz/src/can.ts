@@ -2,7 +2,7 @@
  * Pure authorization check.
  *
  * Deny by default. Record-level tenant matching applies when `resource` carries
- * an `organizationId`. Feature policies in `@repo/core` compose on top of this.
+ * an `organizationId`. Slice policies compose on top of this.
  */
 
 import { ERROR_CODES } from "@repo/errors";
