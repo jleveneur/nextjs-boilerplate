@@ -29,7 +29,9 @@ already optional (Stripe, S3, PostHog all no-op without credentials), and what d
 worked example actually costs. `make example-inventory` computes the list for you.
 
 The web app is served through Portless at https://web.localhost. `PORTLESS=0` uses
-localhost:3000. `make prod-up` runs the prod-like stack behind Traefik on `:8080`.
+localhost:3000. `make prod-up` runs the prod-like stack behind Traefik at
+http://web.localhost:8080 — that origin, not plain `localhost`, because the stack sets
+`APP_ENV=staging` and `@repo/env` rejects a URL whose host _is_ `localhost` under a live env.
 
 ---
 

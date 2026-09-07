@@ -275,7 +275,9 @@ deps-down: ## Stop local dependency containers
 
 prod-up: ## Build, migrate, then start the local production-like stack (Traefik on :8080)
 	$(COMPOSE_PROD) up -d --build
-	@echo "Stack ready: http://localhost:8080 (Traefik dashboard :8081)"
+	@echo "Stack ready: http://web.localhost:8080 (Traefik dashboard :8081)"
+	@echo "Use web.localhost, not localhost: APP_URL and BETTER_AUTH_URL point there, so"
+	@echo "auth redirects and magic links only resolve on that origin."
 
 prod-down: ## Stop the local production-like stack
 	-$(COMPOSE_PROD) down

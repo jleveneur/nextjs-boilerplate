@@ -3,6 +3,15 @@
 # This file proves migrate-then-roll and the reverse-proxy shape on a laptop with
 # locally built tags. Host TLS, DNS, and provider IaC are out of scope — see
 # docs/runbooks/deploy.md for the portable deploy sequence.
+#
+# Reach it at http://web.localhost:8080, not http://localhost:8080. `APP_ENV:
+# staging` turns on @repo/env's strict checks (packages/env/src/production.ts),
+# which reject a URL whose host *is* `localhost` and any secret prefixed `dev-`.
+# A `*.localhost` subdomain still resolves to loopback and passes — the same
+# convention Portless uses for `make dev` — so the stack exercises the live-env
+# validator instead of opting out of it. Traefik still answers on `localhost`
+# and `127.0.0.1` so health probes and k6 keep working, but auth redirects
+# follow BETTER_AUTH_URL and only resolve on web.localhost.
 
 name: repo-prod
 
@@ -103,7 +112,7 @@ services:
     environment:
       NODE_ENV: production
       APP_ENV: staging
-      APP_URL: http://localhost:8080
+      APP_URL: http://web.localhost:8080
       LOG_LEVEL: info
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
       DATABASE_POOL_SIZE: "1"
@@ -118,14 +127,14 @@ services:
       context: ..
       dockerfile: docker/web.Dockerfile
       args:
-        NEXT_PUBLIC_APP_URL: http://localhost:8080
+        NEXT_PUBLIC_APP_URL: http://web.localhost:8080
         NEXT_PUBLIC_APP_ENV: staging
     restart: unless-stopped
     environment:
       NODE_ENV: production
       APP_ENV: staging
-      APP_URL: http://localhost:8080
-      NEXT_PUBLIC_APP_URL: http://localhost:8080
+      APP_URL: http://web.localhost:8080
+      NEXT_PUBLIC_APP_URL: http://web.localhost:8080
       NEXT_PUBLIC_APP_ENV: staging
       LOG_LEVEL: info
       PORT: "3000"
@@ -133,8 +142,8 @@ services:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
       DATABASE_POOL_SIZE: "10"
       REDIS_URL: redis://redis:6379
-      BETTER_AUTH_SECRET: dev-local-better-auth-secret-min-32-chars
-      BETTER_AUTH_URL: http://localhost:8080
+      BETTER_AUTH_SECRET: local-prod-stack-better-auth-secret-min-32-chars
+      BETTER_AUTH_URL: http://web.localhost:8080
       EMAIL_FROM: noreply@example.com
       RESEND_API_KEY: re_test_replace_me
       SMTP_URL: smtp://mailpit:1025
@@ -151,7 +160,7 @@ services:
     labels:
       - traefik.enable=true
       # host.docker.internal: k6/ZAP containers reaching Traefik on the host.
-      - traefik.http.routers.web.rule=Host(`localhost`) || Host(`127.0.0.1`) || Host(`host.docker.internal`)
+      - traefik.http.routers.web.rule=Host(`web.localhost`) || Host(`localhost`) || Host(`127.0.0.1`) || Host(`host.docker.internal`)
 
       - traefik.http.routers.web.entrypoints=web
       - traefik.http.services.web.loadbalancer.server.port=3000

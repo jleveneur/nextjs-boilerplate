@@ -65,7 +65,10 @@ async function handleRequest(request: Request) {
   });
 
   if (!matched) {
-    return new Response("Not found", { status: 404 });
+    // The limiter already counted this request, so report the budget with it —
+    // a path that matches no procedure is exactly what a probe or a
+    // misconfigured client sends, and those most need to see the ceiling.
+    return new Response("Not found", { status: 404, headers: { ...limit.headers } });
   }
 
   for (const [key, value] of Object.entries(limit.headers)) {

@@ -128,7 +128,8 @@ labels, so routing configuration lives beside the service definition and cannot 
 actually running. Adopters may use nginx, Caddy, an ingress controller, or a cloud load balancer
 instead — apps only need to expose HTTP and healthchecks.
 
-In `compose.prod.yaml`, Traefik terminates HTTP on the laptop (`:8080`) with no ACME. For a real
+In `compose.prod.yaml`, Traefik terminates HTTP on the laptop (`:8080`, reachable at
+`web.localhost`) with no ACME. For a real
 host, TLS, DNS, CDN, and WAF are adopter choices. One common pattern:
 
 ```mermaid
