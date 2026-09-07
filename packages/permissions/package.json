@@ -1,6 +1,6 @@
 {
   "name": "@repo/permissions",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "The RBAC registry: every permission and role grant, declared once. Layer 0 so both @repo/auth and @repo/authz can read it.",
   "type": "module",

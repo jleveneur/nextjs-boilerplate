@@ -1,4 +1,4 @@
-# @repo/contracts
+# @repo/kernel
 
 ## 1.0.0
 
@@ -20,8 +20,8 @@
   `@repo/permissions`; `@repo/contracts` drops the `invoice-rest` schemas that only the deleted REST
   transport used; and `@repo/db` gains `pingDatabase`.
 
-## 0.1.0
+### Patch Changes
 
-### Minor Changes
-
-- ac4c688: Add validated constructors for branded UUIDv7 identifiers.
+- Updated dependencies [853dfef]
+  - @repo/contracts@1.0.0
+  - @repo/db@0.3.0

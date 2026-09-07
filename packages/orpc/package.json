@@ -1,6 +1,6 @@
 {
   "name": "@repo/orpc",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "private": true,
   "description": "oRPC init, layered procedures, and feature routers.",
   "type": "module",
