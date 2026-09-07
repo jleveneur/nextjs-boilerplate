@@ -197,28 +197,6 @@ services:
       - traefik.http.routers.api-health.service=api
       - traefik.http.services.api.loadbalancer.server.port=3001
 
-  docs:
-    image: repo-docs:local
-    build:
-      context: ..
-      dockerfile: docker/docs.Dockerfile
-      args:
-        NEXT_PUBLIC_APP_URL: http://docs.localhost:8080
-        NEXT_PUBLIC_APP_ENV: staging
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      APP_ENV: staging
-      NEXT_PUBLIC_APP_URL: http://docs.localhost:8080
-      NEXT_PUBLIC_APP_ENV: staging
-      PORT: "3003"
-      HOSTNAME: 0.0.0.0
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.docs.rule=Host(`docs.localhost`)
-      - traefik.http.routers.docs.entrypoints=web
-      - traefik.http.services.docs.loadbalancer.server.port=3003
-
   worker:
     image: repo-worker:local
     build:

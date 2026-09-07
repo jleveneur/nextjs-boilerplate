@@ -14,7 +14,7 @@ SHELL := bash
 
 # Nothing here builds a file named after the target.
 .PHONY: help install hooks setup check verify format format-check lint lint-fix \
-        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix example-inventory new-slice bundle-budget docs-build openapi-check \
+        typecheck typecheck-affected spell knip audit react-doctor layers env-catalog authz-matrix example-inventory new-slice bundle-budget openapi-check \
         test test-affected test-scripts test-integration \
         e2e e2e-host lighthouse images image-size \
         load zap restore-drill \
@@ -62,7 +62,6 @@ setup: ## Idempotent clean-machine bootstrap (tools, deps, .env, services, migra
 	pnpm install
 	@if [ ! -f .env ]; then cp .env.example .env; echo "Created .env from .env.example"; fi
 	@if [ ! -f apps/web/.env ]; then cp .env apps/web/.env; echo "Created apps/web/.env from .env"; fi
-	@if [ ! -f apps/docs/.env ]; then cp apps/docs/.env.example apps/docs/.env; echo "Created apps/docs/.env from apps/docs/.env.example"; fi
 	$(MAKE) deps-up
 
 	$(MAKE) db-migrate
@@ -86,7 +85,6 @@ proxy: ## Start the Portless reverse proxy (HTTPS :443; auto-starts on make dev)
 check: ## Run the fast local quality gate (not full CI)
 	pnpm check
 	$(MAKE) bundle-budget
-	$(MAKE) docs-build
 
 verify: check ## Alias for `check`
 
@@ -143,13 +141,6 @@ env-catalog: ## Assert .env*.example files share one key catalog
 bundle-budget: ## Build apps/web and assert First Load JS budgets
 	pnpm --filter @repo/web build
 	pnpm --filter @repo/web bundle-budget
-
-docs-build: ## Build apps/docs — the only check that compiles docs/ as MDX
-	# `docs/{architecture,adr,runbooks,security}` is synced into Fumadocs and
-	# compiled as MDX, which accepts less than Markdown does: an HTML comment
-	# fails the build. Nothing else in the gate parses those files, so this ran
-	# only in CI until a container-image job went red for a `<!-- -->`.
-	pnpm --filter @repo/docs build
 
 openapi-check: ## Regenerate apps/api OpenAPI and fail on drift
 	pnpm --filter @repo/api openapi:generate

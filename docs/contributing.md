@@ -1,7 +1,4 @@
----
-title: Contributing
-description: How to change this monorepo without eroding the architecture.
----
+# Contributing
 
 ## Quality gate
 
@@ -14,7 +11,7 @@ make check
 That runs format, type-aware lint, typecheck, layer boundaries, flag expiry, env
 catalog, spelling, knip, React Doctor, script tests, unit tests, and the web
 bundle budget — the fast local gate. CI adds history- and service-dependent
-work (see [12](/docs/architecture/12-git-ci-release)).
+work (see [12](architecture/12-git-ci-release.md)).
 
 Faster loops: `make lint`, `make typecheck`, `make test`, `make layers`.
 
@@ -34,7 +31,7 @@ App-only, docs, and tooling changes do not need a changeset.
 
 Packages may depend **only on strictly lower layers**. Same-layer and upward
 dependencies are banned (`make layers`). See
-[Package graph](/docs/architecture/03-package-graph-and-boundaries).
+[Package graph](architecture/03-package-graph-and-boundaries.md).
 
 ## Architecture decisions
 
@@ -45,8 +42,8 @@ in the **same** change.
 
 ## Agents
 
-AI coding agents should read [`AGENTS.md`](https://github.com/jleveneur/nextjs-boilerplate/blob/main/AGENTS.md)
-before editing. Humans should prefer the architecture docs over that file.
+AI coding agents should read [`AGENTS.md`](../AGENTS.md) before editing. Humans
+should prefer the architecture docs over that file.
 
 ## Non-negotiables (short list)
 

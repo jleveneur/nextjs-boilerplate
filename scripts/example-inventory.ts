@@ -112,14 +112,6 @@ export const FEATURES: Readonly<Record<string, Feature>> = {
     ],
   },
 
-  docsSite: {
-    summary:
-      "The Fumadocs documentation website. The markdown in docs/ renders on GitHub without it.",
-    owns: ["apps/docs"],
-    packages: ["@repo/docs"],
-    mentions: /@repo\/docs/,
-  },
-
   publicApi: {
     summary:
       "The public REST/OpenAPI transport. Drop it if only your own web app calls the domain.",

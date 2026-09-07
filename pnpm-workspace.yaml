@@ -151,16 +151,6 @@ catalog:
   "@hono/zod-openapi": 1.5.1
   "@hono/node-server": 2.0.12
   "@scalar/hono-api-reference": 0.11.16
-  "@scalar/nextjs-api-reference": 0.11.16
-
-  # --- Documentation site (Fumadocs) -------------------------------------
-  fumadocs-core: 16.13.0
-  fumadocs-ui: 16.13.0
-  fumadocs-mdx: 15.2.2
-  "@types/mdx": 2.0.14
-  lucide-react: 1.31.0
-  mermaid: 11.16.1
-  takumi-js: 2.5.4
 
   # --- Design system -----------------------------------------------------
   clsx: 2.1.1
