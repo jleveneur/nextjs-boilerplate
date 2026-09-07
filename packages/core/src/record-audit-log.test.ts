@@ -60,8 +60,8 @@ describe("recordAuditLog", () => {
     const db = {} as Parameters<typeof recordAuditLog>[0];
 
     await recordAuditLog(db, {
-      action: "api_key.created",
-      resourceType: "api_key",
+      action: "invitation.created",
+      resourceType: "invitation",
       resourceId: "01900000-0000-7000-8000-000000000010",
       organizationId,
       actorUserId: null,

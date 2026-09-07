@@ -625,7 +625,7 @@ export function patches(n: Names): readonly Patch[] {
     },
     {
       file: "packages/permissions/src/roles.ts",
-      anchor: '  PERMISSIONS["apiKey:revoke"],',
+      anchor: '  PERMISSIONS["billing:manage"],',
       insert: `  PERMISSIONS["${camel}:delete"],`,
     },
     {

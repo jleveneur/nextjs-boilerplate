@@ -22,7 +22,6 @@ export function SettingsNav({ orgSlug, role }: Props) {
       ? [
           { href: base, label: t("navOrganization"), exact: true },
           { href: `${base}/members`, label: t("navMembers"), exact: false },
-          { href: `${base}/api-keys`, label: t("navApiKeys"), exact: false },
         ]
       : []),
     { href: `${base}/account`, label: t("navAccount"), exact: false },

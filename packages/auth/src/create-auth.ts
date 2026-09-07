@@ -6,7 +6,6 @@
  * (same-layer ban).
  */
 
-import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -15,8 +14,7 @@ import { admin, magicLink, organization, twoFactor } from "better-auth/plugins";
 import { generateUuidV7 } from "@repo/utils";
 
 import { ac, organizationRoles } from "./access-control.ts";
-import { apiKeyPrefixForEnv } from "./api-key-prefix.ts";
-import { createApiKeyAuditMiddleware, emitAuthAudit } from "./audit-event.ts";
+import { emitAuthAudit } from "./audit-event.ts";
 import { createRedisSecondaryStorage } from "./secondary-storage.ts";
 import type { CreateAuthOptions } from "./types.ts";
 
@@ -240,23 +238,6 @@ export function createAuth(options: CreateAuthOptions) {
           },
         },
       }),
-      apiKey({
-        references: "organization",
-        defaultPrefix: apiKeyPrefixForEnv(options.appEnv),
-        enableMetadata: true,
-        // Better Auth defaults to 10 req/day and returns 401 when exceeded.
-        // Per-key throttling for `/v1` lives in apps/api (60 req/min).
-        rateLimit: {
-          enabled: false,
-        },
-        permissions: {
-          defaultPermissions: {
-            invoice: ["read"],
-            apiKey: ["list"],
-          },
-        },
-      }),
-
       twoFactor({
         issuer: options.appName ?? "app",
         allowPasswordless: true,
@@ -277,9 +258,6 @@ export function createAuth(options: CreateAuthOptions) {
         impersonationSessionDuration: 60 * 60,
       }),
     ],
-    hooks: {
-      after: createApiKeyAuditMiddleware(options.onAuditEvent),
-    },
     databaseHooks: {
       user: {
         create: {

@@ -121,7 +121,6 @@ catalog:
   "@opentelemetry/resources": 2.10.0
   "@opentelemetry/semantic-conventions": 1.43.0
   better-auth: 1.6.25
-  "@better-auth/api-key": 1.6.25
   "@better-auth/passkey": 1.6.25
   # Private API transport (docs/architecture/13-dependency-review.md §4).
   # 2.x is still the `beta` dist-tag (`latest` remains 1.15); pin the exact

@@ -15,7 +15,7 @@ async function signUpAndEnterApp(page: Page, email: string, password: string): P
 }
 
 test.describe("settings", () => {
-  test("updates the profile name and creates an API key", async ({ page }) => {
+  test("navigates the settings sections and updates the profile name", async ({ page }) => {
     const stamp = Date.now();
     const email = `e2e.settings.${stamp}@example.com`;
     const password = "Password123!";
@@ -44,13 +44,6 @@ test.describe("settings", () => {
     await page.getByRole("link", { name: "Members" }).click();
     await expect(page).toHaveURL(/\/settings\/members/);
     await expect(page.getByRole("button", { name: "Send invitation" })).toBeVisible();
-
-    await page.getByRole("link", { name: "API keys" }).click();
-    await expect(page).toHaveURL(/\/settings\/api-keys/);
-    await page.getByLabel("Key name").fill("e2e-key");
-    await page.getByRole("button", { name: "Create key" }).click();
-    await expect(page.getByRole("status").locator("code")).toHaveText(/^sk_test_/);
-    await expect(page.getByRole("cell", { name: "e2e-key" })).toBeVisible();
     await expectNoAxeViolations(page);
   });
 });

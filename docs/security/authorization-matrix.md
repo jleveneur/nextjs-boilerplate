@@ -26,9 +26,6 @@ impersonating ([07 — auth](../architecture/07-auth.md)).
 | `invoice:export`      | yes    | yes   | yes   |
 | `billing:read`        | yes    | yes   | yes   |
 | `billing:manage`      |        | yes   | yes   |
-| `apiKey:create`       |        | yes   | yes   |
-| `apiKey:revoke`       |        | yes   | yes   |
-| `apiKey:list`         | yes    | yes   | yes   |
 | `asset:create`        | yes    | yes   | yes   |
 | `asset:read`          | yes    | yes   | yes   |
 

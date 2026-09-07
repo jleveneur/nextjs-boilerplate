@@ -25,7 +25,6 @@ const authSchema = {
   invitation: dbSchema.invitation,
   twoFactor: dbSchema.twoFactor,
   passkey: dbSchema.passkey,
-  apikey: dbSchema.apikey,
 };
 
 export type AppContainer = {

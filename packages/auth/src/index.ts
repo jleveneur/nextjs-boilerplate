@@ -2,14 +2,8 @@
 import "server-only";
 
 export { ac, admin, member, organizationRoles, owner } from "./access-control.ts";
-export { apiKeyPrefixForEnv } from "./api-key-prefix.ts";
 export { createAuth, type Auth } from "./create-auth.ts";
-export {
-  resolveActor,
-  resolveActorFromApiKey,
-  type ResolveActorFromApiKeyInput,
-  type ResolveActorFromSessionInput,
-} from "./resolve-actor.ts";
+export { resolveActor, type ResolveActorFromSessionInput } from "./resolve-actor.ts";
 export type {
   AuthAuditEvent,
   AuthDatabase,

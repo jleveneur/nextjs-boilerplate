@@ -50,9 +50,6 @@ export const PERMISSIONS = {
   "invoice:export": "invoice:export",
   "billing:read": "billing:read",
   "billing:manage": "billing:manage",
-  "apiKey:create": "apiKey:create",
-  "apiKey:revoke": "apiKey:revoke",
-  "apiKey:list": "apiKey:list",
   "asset:create": "asset:create",
   "asset:read": "asset:read",
 } as const;
@@ -70,8 +67,6 @@ export const ALL_ACTIONS: readonly Action[] = Object.values(PERMISSIONS);
  */
 export const DESTRUCTIVE_WHILE_IMPERSONATING: ReadonlySet<Action> = new Set([
   PERMISSIONS["organization:delete"],
-  PERMISSIONS["apiKey:revoke"],
-  PERMISSIONS["apiKey:create"],
   PERMISSIONS["member:delete"],
 ]);
 
