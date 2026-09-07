@@ -240,9 +240,10 @@ Points that matter:
 4. **The transaction wraps state change and outbox insert together**, so an event cannot be lost
    after a commit or emitted after a rollback.
 5. **The outbox is drained after the response is built, not inside the transaction.** With no
-   worker there is nothing polling it, so a mutating request drains it. The relay claims rows with
-   `for update skip locked`, so concurrent requests do not double-handle a row. The catch: a row is
-   only picked up when some _later_ request arrives — see
+   worker there is nothing polling it, so a mutating request drains it. The relay _leases_ rows by
+   pushing `available_at` forward and commits that immediately, then runs handlers outside any
+   transaction — handlers do network I/O, and holding a row lock across it would exhaust the pool.
+   The catch: a row is only picked up when some _later_ request arrives — see
    `apps/web/src/server/drain-outbox.ts` for the full caveats.
 6. **Every response carries a request id**, also attached to logs and spans.
 

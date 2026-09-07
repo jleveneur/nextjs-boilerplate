@@ -10,9 +10,18 @@ import { outboxHandlers } from "./outbox-handlers.ts";
  * Drain pending outbox rows in-process.
  *
  * With no worker there is nothing polling the outbox, so a mutating request
- * drains it after its own transaction has committed. The relay claims rows
- * with `for update skip locked`, so concurrent requests do not double-handle a
- * row and this is safe to call from every replica.
+ * drains it after its own transaction has committed. The relay leases rows —
+ * pushing `available_at` past a lease window and committing that immediately —
+ * so concurrent requests and replicas do not double-handle a row, and handlers
+ * run outside any transaction.
+ *
+ * **The invariant: every entry point that can write an outbox row must call
+ * this after its transaction commits.** Today that is only the oRPC handler —
+ * `voidInvoice` and `confirmUpload` are the only writers, and both are reached
+ * through it. The Stripe webhook deliberately does not drain: it writes no
+ * outbox rows, and Stripe times the request out, so paying the drain there
+ * would be latency for nothing. If a slice starts writing an outbox row from a
+ * path that does not drain, the row sits until an unrelated request happens by.
  *
  * Two consequences an adopter should know about:
  *
