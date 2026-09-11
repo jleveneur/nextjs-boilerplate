@@ -1,133 +1,138 @@
-# Application foundation
+# Next.js monorepo starter
 
-A production-grade monorepo foundation: typed end to end, self-hostable, and
-cloud-agnostic. Built to be the starting point for real products rather than a
-demo.
+A minimal, production-ready foundation. It has the pieces every project needs
+and nothing that only some projects need.
 
-The foundation is **implemented** — Next.js product app, auth, authorization,
-a billing slice, and Stripe SaaS billing. Architecture
-lives in [`docs/architecture/`](docs/architecture/README.md). How it was
-sequenced is archived in
-[build history](docs/architecture/14-build-history.md).
+- **[Next.js](https://nextjs.org)** (App Router) and **TypeScript**
+- **[Turborepo](https://turborepo.com)** + **pnpm** workspaces
+- **[Oxlint + Oxfmt](https://oxc.rs)** for linting and formatting
+- **[Tailwind CSS](https://tailwindcss.com)** + **[shadcn/ui](https://ui.shadcn.com)**
+- **[Drizzle ORM](https://orm.drizzle.team)** + PostgreSQL
+- **[oRPC](https://orpc.unnoq.com)** for the typed API
+- **[Better Auth](https://better-auth.com)** for email and password sign-in
+- **[t3-env](https://env.t3.gg)** + **[Zod](https://zod.dev)** for validated configuration
+- **[Vitest](https://vitest.dev)** and a single GitHub Actions workflow
+- **[Lefthook](https://lefthook.dev)** + **[commitlint](https://commitlint.js.org)** git hooks,
+  **[Knip](https://knip.dev)** for dead code, **[React Doctor](https://react.doctor)** for React
+  diagnostics, and **[Renovate](https://docs.renovatebot.com)** for dependency updates
 
----
-
-## Quick start
-
-Requires [Node.js](https://nodejs.org) 24+, [pnpm](https://pnpm.io) 12+, and
-[Docker](https://docs.docker.com/get-docker/). `make help` lists everything.
+## Getting started
 
 ```bash
-make setup            # install, `.env` for root/web, deps, migrate, seed
-make check            # the fast local quality gate (not full CI)
-make dev              # deps + web → https://web.localhost
+pnpm install
+cp .env.example .env      # then edit DATABASE_URL and BETTER_AUTH_SECRET
+pnpm db:migrate           # apply migrations to your database
+pnpm dev                  # http://localhost:3000
 ```
 
-Starting a real project from this? Read
-[**docs/starting-a-project.md**](docs/starting-a-project.md) first — what to rename, what is
-already optional (Stripe, S3, PostHog all no-op without credentials), and what deleting the
-worked example actually costs. `make example-inventory` computes the list for you.
-
-The web app is served through Portless at https://web.localhost. `PORTLESS=0` uses
-localhost:3000. `make prod-up` runs the prod-like stack behind Traefik at
-http://web.localhost:8080 — that origin, not plain `localhost`, because the stack sets
-`APP_ENV=staging` and `@repo/env` rejects a URL whose host _is_ `localhost` under a live env.
-
----
-
-## What this is
-
-An opinionated foundation where the opinions are written down. Every significant
-choice has a rationale, a list of rejected alternatives, and a note on what
-replacing it would cost — because the expensive part of a long-lived codebase is
-not making decisions, it is rediscovering why they were made.
-
-The load-bearing ideas:
-
-- **Boundaries are enforced, not encouraged.** Packages sit in layers and may only
-  depend downward. pnpm's isolated `node_modules` makes an undeclared import
-  physically unresolvable, and `make layers` rejects a declared dependency that
-  breaks the layering. An architecture rule that only exists in a document is a
-  rule that erodes.
-- **A domain core behind a thin transport.** Business logic lives in slice
-  packages that know nothing about HTTP; oRPC translates. There is one transport
-  today, and the separation is what makes adding a second a route file rather
-  than a second codebase.
-- **Multi-tenant from the first migration.** Tenancy is not something a schema
-  grows later without a rewrite.
-- **Self-hostable by default.** OCI images, Compose, and a portable migrate-then-roll
-  deploy sequence — no managed service on the critical path that lacks a documented
-  exit. Provider IaC stays optional for adopters.
-
----
-
-## Documentation
-
-| Read this                                                                        | For                                                  |
-| -------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| [**Starting a project**](docs/starting-a-project.md)                             | **Read first if you cloned this to build something** |
-| [Getting started](docs/getting-started.md)                                       | Install, local stack, first request                  |
-| [Contributing](docs/contributing.md)                                             | Checks, commits, changesets, ADRs                    |
-| [Architecture overview](docs/architecture/README.md)                             | The whole design, in reading order                   |
-| [Principles and constraints](docs/architecture/01-principles-and-constraints.md) | What is optimised for, and what is deliberately not  |
-| [Repository topology](docs/architecture/02-repository-topology.md)               | What lives where                                     |
-| [Package graph](docs/architecture/03-package-graph-and-boundaries.md)            | The layer rule and how it is enforced                |
-| [Conventions](docs/architecture/04-conventions.md)                               | Naming, TypeScript settings, patterns                |
-| [Dependency review](docs/architecture/13-dependency-review.md)                   | Why each dependency is here, and what replaces it    |
-| [ADRs](docs/adr/README.md)                                                       | Decisions, with their alternatives and consequences  |
-| [Security review](docs/security/security-review.md)                              | Authorization matrix, headers, scanning              |
-| [AGENTS.md](AGENTS.md)                                                           | Rules for AI coding agents                           |
-
-All documentation lives in [`docs/`](docs/) and renders on GitHub.
-
----
+You need a PostgreSQL 13 or newer database reachable at `DATABASE_URL`. How you
+run it — a local install, a container, a hosted instance — is deliberately not
+this repository's business.
 
 ## Layout
 
 ```
-apps/        Deployable units (web, api, worker, docs)
-packages/    Shared libraries, arranged in layers
-tooling/     Build, lint, and type configuration
-docker/      Images and Compose stacks (incl. local prod-like)
-docs/        Architecture, ADRs, runbooks, security
-perf/        k6 load scenarios + ZAP baseline (nightly, not PR CI)
-scripts/     Repository automation, with its own tests
+apps/
+  web/            Next.js application
+packages/
+  api/            oRPC procedures and router          @repo/api
+  auth/           Better Auth server and client       @repo/auth
+  db/             Drizzle schema, migrations, client  @repo/db
+  env/            Zod-validated environment           @repo/env
+  ui/             shadcn/ui components                @repo/ui
+tooling/
+  oxlint/         Shared lint rules
+  tailwind/       Shared design tokens
+  typescript/     Shared tsconfig bases
 ```
 
----
+Internal packages ship TypeScript source and are never built. Next compiles
+them through `transpilePackages`; Vitest and `tsc` read them directly.
 
-## Working here
+## Conventions
+
+- **Files and directories are `kebab-case`.** Types and components are
+  `PascalCase`; functions and variables are `camelCase`.
+- **Tests sit beside the code** as `*.test.ts`.
+- **Import internal packages by name** (`@repo/db`), never by relative path
+  across a package boundary. Inside `apps/web`, use the `@/` alias.
+- **Type-only imports use `import type`.** `verbatimModuleSyntax` is on, so
+  what you write is what is emitted.
+- **Database columns are `snake_case`**, TypeScript is `camelCase`, and the
+  mapping is explicit in `packages/db/src/schema.ts`.
+- **Validate external input with Zod** at the boundary — that means every oRPC
+  procedure `.input()` and the environment.
+- **Business logic does not live in a transport.** An oRPC procedure or a Route
+  Handler translates; when a handler grows past a query and a rule, move the
+  body into a function it calls.
+- **Server Components by default.** Add `"use client"` only where interactivity
+  requires it.
+
+## Commands
+
+| Command                     | What it does                                      |
+| --------------------------- | ------------------------------------------------- |
+| `pnpm dev`                  | Next dev server                                   |
+| `pnpm build`                | Production build                                  |
+| `pnpm check`                | The full local gate — everything below plus tests |
+| `pnpm lint` / `pnpm format` | Oxlint (type-aware) / Oxfmt                       |
+| `pnpm typecheck`            | `tsc --noEmit` in every package                   |
+| `pnpm knip`                 | Unused files, exports, and dependencies           |
+| `pnpm react-doctor`         | React and accessibility diagnostics               |
+| `pnpm test`                 | Vitest                                            |
+| `pnpm db:generate`          | Generate a migration from `schema.ts`             |
+| `pnpm db:migrate`           | Apply pending migrations                          |
+| `pnpm db:studio`            | Drizzle Studio                                    |
+
+## Git hooks
+
+Lefthook installs three hooks on `pnpm install`, kept fast enough that nobody
+reaches for `--no-verify`:
+
+- **pre-commit** — Oxfmt on staged files (fixes are re-staged) and syntax-only
+  Oxlint.
+- **commit-msg** — commitlint, so the history stays
+  [Conventional](https://www.conventionalcommits.org).
+- **pre-push** — typecheck and tests, for affected packages only.
+
+Type-aware lint, Knip, and React Doctor need the whole program, so they live in
+`pnpm check` and CI rather than in a per-file hook.
+
+## Environment
+
+One `.env` at the repository root, for the whole workspace. `next.config.ts`
+and `drizzle.config.ts` load it with Node's built-in `process.loadEnvFile`; in
+production you set real environment variables and no file is read.
+
+Variables are declared once, in `packages/env/src/schema.ts`, and validated by
+[t3-env](https://env.t3.gg) when the process starts — so a missing secret is a
+boot failure listing every problem at once, not a 500 on the first request that
+needs it.
+
+To add one, put it in the `server` object and import `env` from `@repo/env`.
+Browser variables go in the `client` object, must start with `NEXT_PUBLIC_`,
+and have to be destructured in `experimental__runtimeEnv` — Next only inlines
+`process.env.NEXT_PUBLIC_FOO` where it is written out literally. t3-env throws
+if server configuration is ever read from browser code, so a secret cannot
+reach the client through an import nobody noticed.
+
+## Adding UI components
+
+Components live in `@repo/ui` and come from the shadcn registry:
 
 ```bash
-make new-slice NAME=widget   # scaffold a domain slice across every layer
-make check       # everything below, in one command
-make lint        # oxlint, including type-aware rules
-make typecheck   # tsc --noEmit across the workspace
-make test        # unit tests
-make layers      # assert the layer boundaries hold
-make format      # apply Oxfmt
-make images      # build web/api/worker/docs images and assert size budgets
-make load        # k6 via Docker (make prod-up first; needs Docker)
-make zap         # OWASP ZAP baseline (Docker)
-make restore-drill  # Postgres dump → scratch → migrate → smoke
+cd packages/ui && pnpm dlx shadcn@latest add dialog
 ```
 
-Git hooks run a fast subset before each commit and push. They are a convenience —
-CI is the gate — so `make check` before pushing is the habit that matters.
+The starter ships only `Button`, `Card`, `Input`, and `Label` — add the rest as
+you need them.
 
-Commits follow [Conventional Commits](https://www.conventionalcommits.org).
-Changes to a `packages/*` public API need a changeset (`pnpm changeset`).
+## What is deliberately missing
 
----
+No Redis, object storage, email, payments, queues, analytics, error tracking,
+feature flags, internationalisation, containers, or end-to-end test harness.
+Each of those is a real decision with real trade-offs, and a starter that makes
+them for you is a starter you spend your first day deleting.
 
-## Toolchain notes
-
-Two choices will surprise people, so they are called out here:
-
-- **TypeScript 7** is the native (Go) compiler. It ships a platform binary and no
-  `tsserver.js`, so editors need the TypeScript 7 language server to match what
-  CI checks. `.vscode/` is configured for this; see
-  [ADR-0004](docs/adr/0004-native-typescript-toolchain.md).
-- **Oxlint and Oxfmt** replace ESLint and Prettier, primarily because the ESLint
-  type-aware ecosystem does not support TypeScript 7's API. The trade-offs and the
-  exit path are in the same ADR.
+The one thing that _is_ here for illustration is the `post` table and its
+router. Delete both when you add a real domain.

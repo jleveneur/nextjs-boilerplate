@@ -1,329 +1,59 @@
 name: CI
 
-# CI composes repository commands and focused `make` targets. It is broader than
-# the fast local `make check` gate; see docs/architecture/12-git-ci-release.md.
-# Jobs run in parallel so a developer sees every problem from one push, not just
-# the first one alphabetically.
-
 on:
   pull_request:
   push:
     branches: [main]
-  # Required for a merge queue: the queue tests the merged result, not the branch.
-  merge_group:
 
 # A new push makes the previous run's answer irrelevant. `main` is exempt so the
 # post-merge record stays complete.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-# Read-only by default. id-token is for optional Vercel Turborepo remote cache
-# OIDC (see .github/actions/setup). Jobs needing more ask explicitly.
 permissions:
   contents: read
-  id-token: write
 
 env:
-  # Turborepo prints hashes rather than a progress spinner in CI logs.
   TURBO_TELEMETRY_DISABLED: 1
   DO_NOT_TRACK: 1
 
 jobs:
-  changes:
-    name: Path filter
-    runs-on: ubuntu-latest
-    # Heavy image/e2e/lighthouse jobs skip when the diff cannot affect them.
-    # `main` always runs the full set so post-merge evidence stays complete.
-    outputs:
-      apps: ${{ steps.filter.outputs.apps }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
-        id: filter
-        with:
-          filters: |
-            apps:
-              - 'apps/**'
-              - 'packages/**'
-              - 'docker/**'
-              - 'docs/**'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
-              - 'turbo.json'
-              - 'tooling/**'
-              - '.npmrc'
-              - 'Makefile'
-
-  format:
-    name: Format
+  check:
+    name: Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - run: make format-check
+      - uses: actions/checkout@v5
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - run: make lint
+      - uses: pnpm/action-setup@v4
 
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@v5
         with:
-          # --affected needs the merge base against the default branch.
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - name: Typecheck
-        run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            make typecheck
-          else
-            make typecheck-affected
-          fi
+          node-version-file: .nvmrc
+          cache: pnpm
 
-  test:
-    name: Unit tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - run: make test-scripts
-      - name: Unit tests
-        run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            make test
-          else
-            make test-affected
-          fi
+      # --frozen-lockfile makes an out-of-date lockfile a CI failure rather than
+      # something CI silently fixes.
+      - run: pnpm install --frozen-lockfile
 
-  boundaries:
-    name: Architecture boundaries
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - run: make layers
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm knip
+      - run: pnpm react-doctor
+      - run: pnpm test
 
-  hygiene:
-    name: Spelling, dead code, advisories
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - run: make spell
-      - run: make knip
-      # The security review claimed `pnpm audit` ran here; it did not, which is how
-      # three high-severity advisories sat in the tree unnoticed.
-      - run: make audit
+      # The PR title becomes the squashed commit message, so it is the thing
+      # that has to satisfy commitlint. The commit-msg hook covers local commits.
+      - name: Lint PR title
+        if: github.event_name == 'pull_request'
+        run: echo "${{ github.event.pull_request.title }}" | pnpm exec commitlint
 
-  react-doctor:
-    name: React Doctor
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # `--scope changed` on PRs needs the merge base.
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - name: Scan React apps
-        run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            make react-doctor
-          else
-            make react-doctor REACT_DOCTOR_FLAGS="--scope changed --base ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
-          fi
-
-  secrets:
-    name: Secret scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # Secret scanning needs history: a secret added and then removed in the
-          # same branch is still a leaked secret.
-          fetch-depth: 0
-
-      # The binary is installed from a pinned release and checksum-verified
-      # rather than run through a third-party action. A secret scanner is the
-      # last place to add an unaudited dependency, and this keeps the repo free
-      # of the licence conditions attached to the official action.
-      - name: Install gitleaks
+      # `next build` evaluates route modules, which validate the environment.
+      # No secret is baked into the output — nothing is NEXT_PUBLIC_ — so
+      # placeholders are enough to prove the app compiles.
+      - run: pnpm build
         env:
-          GITLEAKS_VERSION: 8.30.1
-        run: |
-          cd "$(mktemp -d)"
-          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
-          curl --fail --silent --show-error --location --remote-name "${base}/${archive}"
-          curl --fail --silent --show-error --location --remote-name \
-            "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
-          grep " ${archive}\$" "gitleaks_${GITLEAKS_VERSION}_checksums.txt" | sha256sum --check --strict
-          tar -xzf "${archive}" gitleaks
-          install -m 0755 gitleaks /usr/local/bin/gitleaks
-          gitleaks version
-
-      - name: Scan history for secrets
-        run: gitleaks git . --redact --no-banner --verbose
-
-  commits:
-    name: Commit messages
-    runs-on: ubuntu-latest
-    # Only pull requests have a range to validate; a push to `main` is already
-    # merged, so failing it would block nothing and just produce a red badge.
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - name: Validate against Conventional Commits
-        run: |
-          pnpm exec commitlint \
-            --from "${{ github.event.pull_request.base.sha }}" \
-            --to "${{ github.event.pull_request.head.sha }}" \
-            --verbose
-
-  changeset:
-    name: Changeset
-    runs-on: ubuntu-latest
-    # Apps are ignored in .changeset/config.json; this fails when a packages/*
-    # surface changes without a changeset file. Skip the Version Packages PR —
-    # that branch consumes changesets and bumps versions by design.
-    if: >
-      github.event_name == 'pull_request' &&
-      github.head_ref != 'changeset-release/main'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - name: Require changeset for package surface changes
-        # No --depth here: a shallow fetch re-grafts origin/main to its tip and
-        # discards the ancestry fetch-depth: 0 just retrieved, so changeset
-        # status cannot find the merge base whenever this branch is behind main.
-        run: |
-          git fetch origin main
-          pnpm changeset:status
-
-  images:
-    name: Container images
-    runs-on: ubuntu-latest
-    needs: changes
-    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - run: make images
-      - name: Scan web image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: repo-web:local
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          ignore-unfixed: true
-          format: table
-      - name: Scan migrate image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: repo-migrate:local
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          ignore-unfixed: true
-          format: table
-
-  e2e:
-    name: Playwright E2E
-    runs-on: ubuntu-latest
-    needs: changes
-    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      # Boots the built web image via docker/compose.e2e.yaml (not next start).
-      - run: make e2e
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: failure()
-        with:
-          name: playwright-report
-          path: apps/web/playwright-report/
-          retention-days: 7
-
-  lighthouse:
-    name: Lighthouse
-    runs-on: ubuntu-latest
-    needs: changes
-    if: github.ref == 'refs/heads/main' || needs.changes.outputs.apps == 'true'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo_team: ${{ vars.TURBO_TEAM }}
-      - name: Install Playwright Chromium (LHCI browser)
-        run: pnpm --filter @repo/web exec playwright install --with-deps chromium
-      - run: make lighthouse
-
-  # A single required status check. Branch protection points at this one job, so
-  # adding or renaming a job above never means editing repository settings — and
-  # a skipped or cancelled dependency cannot be mistaken for a pass.
-  # Skipped jobs (path filter, PR-only) are success for this gate; failures and
-  # cancellations are not.
-  ci:
-    name: CI
-    runs-on: ubuntu-latest
-    if: always()
-    needs:
-      - changes
-      - format
-      - lint
-      - typecheck
-      - test
-      - boundaries
-      - hygiene
-      - react-doctor
-      - secrets
-      - commits
-      - changeset
-      - images
-      - e2e
-      - lighthouse
-    steps:
-      - name: Verify every job succeeded
-        run: |
-          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] \
-            || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
-            echo "::error::One or more CI jobs did not succeed."
-            exit 1
-          fi
-          echo "All CI jobs succeeded."
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/app
+          BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-characters
+          BETTER_AUTH_URL: http://localhost:3000

@@ -26,7 +26,7 @@
     // syntax-only linter can see it.
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
-    // `@deprecated` is only a strikethrough in the editor unless we fail CI on it.
+    // `@deprecated` is only a strikethrough in the editor unless CI fails on it.
     "typescript/no-deprecated": "error",
     "typescript/await-thenable": "error",
     "typescript/require-await": "error",
@@ -42,21 +42,26 @@
     "import/no-duplicates": "error",
     "import/no-self-import": "error",
     "import/no-cycle": "error",
+    // A stylesheet has nothing to bind, so importing it for its side effect is
+    // the only way to import it.
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
 
-    // --- Observability -----------------------------------------------------
-    // All logging goes through @repo/logger, which owns levels, structure, and
-    // redaction. `console` bypasses all three.
-    "no-console": "error",
+    // --- Noise -------------------------------------------------------------
+    // `console.log` is debugging left behind. `warn` and `error` are how a
+    // server process reports a problem when there is no logger to inject.
+    "no-console": ["error", { "allow": ["warn", "error"] }],
     "no-debugger": "error",
     "no-alert": "error",
+
+    // --- Conventions -------------------------------------------------------
+    // Files and directories are kebab-case; types and components are
+    // PascalCase inside them.
+    "unicorn/filename-case": ["error", { "case": "kebabCase" }],
 
     // --- Deliberately off --------------------------------------------------
     // `null` is a real value in JSON payloads and SQL columns; pretending
     // otherwise means translating at every boundary.
-    "unicorn/no-null": "off",
-    // File naming is asserted by scripts/check-layers.ts against the documented
-    // convention, which is stricter and repo-specific.
-    "unicorn/filename-case": "off"
+    "unicorn/no-null": "off"
   },
   "settings": {},
   "ignorePatterns": [
@@ -64,7 +69,6 @@
     "**/.next/**",
     "**/coverage/**",
     "**/node_modules/**",
-    "**/*.generated.*",
     "**/next-env.d.ts"
   ]
 }

@@ -1,42 +1,29 @@
 {
   "name": "@repo/auth",
-  "version": "0.3.0",
+  "version": "0.0.0",
   "private": true,
-  "description": "Better Auth server config, client, and Actor resolver.",
+  "description": "Better Auth server instance and browser client.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./client": "./src/client.ts",
-    "./testing": "./src/testing/index.ts"
+    "./client": "./src/client.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "test:unit": "vitest run",
-    "test:watch": "vitest",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/passkey": "catalog:",
-    "@repo/permissions": "workspace:*",
-    "@repo/types": "workspace:*",
-    "@repo/utils": "workspace:*",
-    "better-auth": "catalog:",
-    "ioredis": "catalog:",
-    "server-only": "catalog:"
+    "@repo/db": "workspace:*",
+    "@repo/env": "workspace:*",
+    "better-auth": "catalog:"
   },
   "devDependencies": {
-    "@repo/authz": "workspace:*",
-    "@repo/db": "workspace:*",
     "@repo/tsconfig": "workspace:*",
-    "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
-    "drizzle-orm": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
   },
-  "repo": {
-    "layer": 1,
-    "runtime": "node"
+  "peerDependencies": {
+    "react": "catalog:"
   }
 }

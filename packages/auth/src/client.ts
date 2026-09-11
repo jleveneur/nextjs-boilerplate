@@ -1,36 +1,12 @@
+import { createAuthClient } from "better-auth/react";
+
 /**
- * Browser-safe Better Auth client factory.
+ * Browser auth client.
  *
- * Must not import `server-only`, Drizzle, or Redis.
+ * No `baseURL`: it defaults to the current origin, which is right on every
+ * preview URL and custom domain. A build-time origin is wrong the moment the
+ * app is served from somewhere else.
  */
+export const authClient = createAuthClient();
 
-import { passkeyClient } from "@better-auth/passkey/client";
-import { createAuthClient } from "better-auth/client";
-import {
-  adminClient,
-  magicLinkClient,
-  organizationClient,
-  twoFactorClient,
-} from "better-auth/client/plugins";
-
-import { ac, organizationRoles } from "./access-control.ts";
-
-export type CreateAuthClientOptions = {
-  baseURL: string;
-};
-
-export function createAppAuthClient(options: CreateAuthClientOptions) {
-  return createAuthClient({
-    baseURL: options.baseURL,
-    plugins: [
-      organizationClient({
-        ac,
-        roles: organizationRoles,
-      }),
-      twoFactorClient(),
-      passkeyClient(),
-      magicLinkClient(),
-      adminClient(),
-    ],
-  });
-}
+export const { signIn, signOut, signUp, useSession } = authClient;

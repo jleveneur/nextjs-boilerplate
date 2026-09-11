@@ -1,5 +1,4 @@
-// Dependency update policy. Implements the table in
-// docs/architecture/12-git-ci-release.md#6-dependency-updates--renovate.
+// Dependency update policy.
 //
 // JSONC so the reasoning lives next to the rule. Default posture: everything
 // auto-merges once CI is green. Only the cases where a green CI run is *not*
@@ -12,7 +11,8 @@
     // One tracking issue listing everything pending, and the gate that majors
     // wait behind.
     ":dependencyDashboard",
-    // Commit messages must satisfy commitlint, which CI enforces on every PR.
+    // Commit messages must satisfy commitlint, which the commit-msg hook and
+    // the PR title both enforce.
     ":semanticCommits",
     // A workflow runs with repository permissions, so a mutable ref is a
     // supply-chain hole.
@@ -79,40 +79,33 @@
       "groupName": "type definitions"
     },
     {
-      // ADR-0004: tsgolint is built against a specific TypeScript release, so
-      // the two move together, and a TypeScript minor routinely surfaces new
-      // type errors in existing code.
+      // tsgolint is built against a specific TypeScript release, so the two
+      // move together, and a TypeScript minor routinely surfaces new type
+      // errors in existing code.
       "matchPackageNames": ["typescript", "oxlint-tsgolint", "oxlint", "oxfmt"],
       "groupName": "typescript toolchain",
       "automerge": false
     },
     {
-      // ADR-0010: BullMQ pinned ioredis as a hard dependency until v6, so a PR
-      // that moves one without the other is unmergeable by construction. Kept
-      // grouped so the bot cannot propose the split again.
-      "matchPackageNames": ["ioredis"],
-      "groupName": "ioredis",
-      "automerge": false
-    },
-    {
-      // ADR-0008: a Drizzle bump can change generated SQL, so it is always a
-      // deliberate move.
-      "matchPackageNames": ["drizzle-orm", "drizzle-kit", "drizzle-zod"],
+      // A Drizzle bump can change generated SQL, so it is always a deliberate
+      // move.
+      "matchPackageNames": ["drizzle-orm", "drizzle-kit"],
       "groupName": "drizzle",
       "automerge": false
     },
     {
-      // ADR-0012: oRPC 2 is still beta. A bump can change the wire format or
-      // handler API, and server + client must move together.
+      // oRPC 2 is still beta. A bump can change the wire format or the handler
+      // API, and server + client must move together.
       "matchPackageNames": ["@orpc/**"],
       "groupName": "orpc",
       "automerge": false
     },
     {
-      // Digests only, gated by Trivy in the images job.
-      "matchManagers": ["dockerfile", "docker-compose"],
-      "groupName": "docker images",
-      "pinDigests": true
+      // Auth changes are security changes, and a session or cookie regression
+      // is not something a green build catches.
+      "matchPackageNames": ["better-auth"],
+      "groupName": "better-auth",
+      "automerge": false
     },
     {
       // Reviewed on their own terms, and released from the dashboard rather

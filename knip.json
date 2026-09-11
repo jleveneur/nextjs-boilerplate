@@ -1,65 +1,11 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
 
-  // Knip infers workspaces from pnpm-workspace.yaml and resolves binaries
-  // referenced in package scripts, so almost nothing needs declaring. Entries
-  // are added here only when a default proves wrong for a specific workspace —
-  // config that describes packages which do not exist yet is config nobody
-  // validates. `knip --no-config-hints` disables the reminders if they mislead.
-  "workspaces": {
-    ".": {
-      "entry": ["scripts/*.ts", "*.config.ts"],
-      "project": ["scripts/**/*.ts"]
-    },
-    // Knip infers test entry points from Vitest's `include`, which covers only
-    // runtime tests. Type assertions live in `*.test-d.ts` and are collected by
-    // `typecheck.include` instead, so each package that has them names them here.
-    // A glob with no matches is itself a Knip hint, so this is per-package.
-    "packages/types": {
-      "entry": ["src/**/*.test-d.ts"]
-    },
-    "packages/errors": {
-      "entry": ["src/**/*.test-d.ts"]
-    },
-    "packages/contracts": {
-      "entry": ["src/**/*.test-d.ts"]
-    },
-    "packages/i18n": {
-      "entry": ["src/**/*.test-d.ts"]
-    },
-    "packages/auth": {
-      // Referenced only via Vitest `resolve.alias` for `server-only`.
-      "entry": ["vitest.server-only-stub.ts"]
-    },
-    "packages/kernel": {
-      "entry": ["vitest.server-only-stub.ts"]
-    },
-    "packages/billing": {
-      "entry": ["vitest.server-only-stub.ts"]
-    },
-    "packages/subscription": {
-      "entry": ["vitest.server-only-stub.ts"]
-    },
-    "packages/assets": {
-      "entry": ["vitest.server-only-stub.ts"]
-    },
-    "packages/orpc": {
-      "entry": ["vitest.server-only-stub.ts"]
-    },
-    "packages/storage": {
-      // Referenced only via Vitest `resolve.alias` for `server-only`.
-      "entry": ["vitest.server-only-stub.ts"]
-    },
-    "packages/db": {
-      // Referenced only via tsdown `alias` for the migrate image bundle.
-      "entry": ["server-only-stub.ts"]
-    },
-    "apps/web": {
-      // LHCI config is passed as a CLI flag (`--config=lighthouserc.cjs`), which
-      // Knip does not treat as a script reference.
-      "entry": ["lighthouserc.cjs", "e2e/**/*.ts"]
-    }
-  },
+  // Knip infers workspaces from pnpm-workspace.yaml and resolves both entry
+  // points and binaries from package scripts, so nothing here needs declaring
+  // today. Add a `workspaces` entry only when a default proves wrong for a
+  // specific package — config describing things that do not exist is config
+  // nobody validates, and Knip reports redundant patterns as hints.
 
   // An export used only inside its own file is not dead code in a package that
   // exists to be imported; it is usually a helper under test.

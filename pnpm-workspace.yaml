@@ -3,178 +3,87 @@ packages:
   - packages/*
   - tooling/*
 
-# Install scripts execute arbitrary code, so pnpm blocks them by default and
-# every decision has to be explicit and reviewable. Each entry is a deliberate
-# answer, `false` included — an unanswered package makes `pnpm install` warn,
-# which is the behaviour we want.
-#
-# Prefer `false`. Only grant `true` when a package genuinely cannot work without
-# running code at install time (native compilation, browser downloads).
+# Install scripts execute arbitrary code, so pnpm blocks them by default. Each
+# entry is a deliberate answer — an unanswered package makes `pnpm install`
+# warn, which is the behaviour we want.
 allowBuilds:
   # lefthook's postinstall runs `lefthook install -f`. The root `prepare` script
   # does the same job without an install-time code-execution grant, and skips
   # `-f` so a local hook is not clobbered. Binary linking is unaffected: pnpm
   # links node_modules/.bin/lefthook from the package's `bin` field, not from
-  # this script. Verified: hooks install and `lefthook version` resolves with
-  # the script declined.
+  # this script.
   lefthook: false
-  # drizzle-kit depends on esbuild to bundle its CLI. Without the install
-  # script, the binary is missing and `drizzle-kit generate|migrate` fails.
+  # drizzle-kit bundles its CLI with esbuild. Without the install script the
+  # binary is missing and `drizzle-kit generate|migrate` fails.
   esbuild: true
-  # Sharp needs its install script to fetch platform-specific libvips binaries.
-  # Required by `@repo/storage/image`; Next lists sharp as an optional
-  # dependency too and the same grant covers that copy.
-  sharp: true
-  # protobufjs ships prebuilt code; its postinstall is optional. OTLP HTTP
-  # exporters work without the install script regenerating stubs.
-  protobufjs: false
-  # Next / tooling pull these in. Both ship platform optionalDependencies with
-  # prebuilt binaries, so the install script is unnecessary in CI and locally.
+  # Next pulls these in. Both ship platform optionalDependencies with prebuilt
+  # binaries, so the install script is unnecessary.
   "@parcel/watcher": false
   "@swc/core": false
-  # posthog-js lists core-js; the install script only patches global polyfills
-  # and is not required for our explicit-capture usage.
-  core-js: false
+  # Next's optional image-optimisation dependency. Prebuilt binaries ship for
+  # every supported platform; the script only rebuilds libvips from source.
+  sharp: false
 
 # ---------------------------------------------------------------------------
 # Dependency catalog
 #
 # Shared versions are declared once here and referenced as "catalog:" from
-# package manifests. This is what prevents two packages from silently
-# resolving different copies of React or Zod — the classic monorepo failure.
-# Renovate updates this file, so a bump is one reviewed diff.
-#
-# Versions verified against the npm registry on 2026-07-30.
+# package manifests. This is what prevents two packages from silently resolving
+# different copies of React or Zod — the classic monorepo failure.
 # ---------------------------------------------------------------------------
-# An entry is added when the first package consumes it, never in anticipation:
-# Knip reports unused catalog entries, and a catalog full of aspirations trains
-# people to ignore that report.
 catalog:
-  # --- Language & runtime types -------------------------------------------
+  # --- Language & runtime types --------------------------------------------
   typescript: 7.0.2
   "@types/node": 24.13.3
 
-  # --- Validation ----------------------------------------------------------
-  # Sole runtime dependency of @repo/env. Also used by contracts, forms, and
-  # every external-input boundary. Catalogued once so the whole monorepo shares
-  # one Zod major.
+  # --- Validation -----------------------------------------------------------
+  # Used by @repo/env and by every oRPC input schema.
   zod: 4.4.3
+  # Environment validation. Talks to Zod through Standard Schema, so it does not
+  # pin a Zod major of its own.
+  "@t3-oss/env-nextjs": 0.13.11
 
-  # --- Data ----------------------------------------------------------------
-  # Pinned to ADR-0008 (drizzle-orm 0.45.x + drizzle-kit 0.31.x) until v1 GA.
+  # --- Data -----------------------------------------------------------------
   drizzle-orm: 0.45.2
   drizzle-kit: 0.31.10
-  # postgres.js — portable TCP driver; no vendor serverless driver in app code.
+  # postgres.js — portable TCP driver, no vendor-specific serverless client.
   postgres: 3.4.9
-  # Script runner for migrate/seed entrypoints (Node strips types, but tsx
-  # resolves TypeScript path/extension quirks in workspace packages).
-  tsx: 4.23.1
-  # Named *.localhost URLs for local `dev` (Vercel Labs). Dev-only; not in images.
-  portless: 0.15.6
-  # App bundler for api/worker Docker images (Rolldown-based). See
-  # docs/architecture/13-dependency-review.md.
-  tsdown: 0.22.14
 
-  # --- Testing -------------------------------------------------------------
-  # Pinned exactly, not caret-ranged: Vitest's type-testing mode is explicitly
-  # experimental and documented as not following SemVer, and it is what verifies
-  # the branded types in @repo/types.
-  vitest: 4.1.11
-  # Declared by every package that sets a coverage threshold: Vitest resolves the
-  # provider from the project, not from its own installation.
-  "@vitest/coverage-v8": 4.1.11
-
-  # --- Platform adapters -------------------------------------------------
-  # Entries are added when the first package consumes them (Knip flags unused
-  # catalog pins). See docs/architecture/13-dependency-review.md for rationale.
-  # Product analytics + feature flags (docs/architecture/08-observability.md).
-  posthog-js: 1.408.0
-  posthog-node: 5.6.0
-  pino: 10.3.1
-  ioredis: 6.0.0
-  "@aws-sdk/client-s3": 3.1116.0
-  "@aws-sdk/s3-request-presigner": 3.1116.0
-  sharp: 0.35.4
-  resend: 6.18.1
-  stripe: 22.3.0
-  "@react-email/render": 2.1.0
-  # Components ship from the `react-email` package itself since the
-  # `@react-email/components` scope was deprecated; keep it and the preview
-  # app (`@react-email/ui`) on the same release line.
-  react-email: 6.9.2
-  nodemailer: 9.0.5
-  "@types/nodemailer": 8.0.1
-  react: 19.2.8
-  "react-dom": 19.2.8
-  "@types/react": 19.2.18
-  # React server-boundary guard shared by server-only entrypoints.
-  server-only: 0.0.1
-  "@opentelemetry/api": 1.9.1
-  "@opentelemetry/sdk-node": 0.221.0
-  "@opentelemetry/sdk-metrics": 2.10.0
-  "@opentelemetry/exporter-trace-otlp-http": 0.221.0
-  "@opentelemetry/exporter-metrics-otlp-http": 0.221.0
-  "@opentelemetry/instrumentation-http": 0.221.0
-  "@opentelemetry/instrumentation-ioredis": 0.69.0
-  "@opentelemetry/instrumentation-runtime-node": 0.34.0
-  "@opentelemetry/instrumentation-undici": 0.31.0
-  "@opentelemetry/resources": 2.10.0
-  "@opentelemetry/semantic-conventions": 1.43.0
+  # --- Auth -----------------------------------------------------------------
   better-auth: 1.6.25
-  "@better-auth/passkey": 1.6.25
-  # Private API transport (docs/architecture/13-dependency-review.md §4).
-  # 2.x is still the `beta` dist-tag (`latest` remains 1.15); pin the exact
-  # beta and upgrade server + client together (ADR-0012).
+
+  # --- API transport --------------------------------------------------------
+  # 2.x is still the `beta` dist-tag; pin the exact beta and upgrade server and
+  # client together.
   "@orpc/server": 2.0.0-beta.33
   "@orpc/client": 2.0.0-beta.33
   "@orpc/tanstack-query": 2.0.0-beta.33
   "@tanstack/react-query": 5.102.0
-  nuqs: 2.9.3
-  "react-hook-form": 7.83.0
-  "@hookform/resolvers": 5.2.2
-  "@playwright/test": 1.62.0
-  "@axe-core/playwright": 4.13.0
-  "@lhci/cli": 0.15.1
 
-  # --- Error tracking ----------------------------------------------------
-  # Capture-only; see packages/observability/src/sentry-tracker.ts for why the
-  # bundled OpenTelemetry SDK is switched off rather than used.
-  "@sentry/node": 10.73.0
-
-  # --- Design system -----------------------------------------------------
-  clsx: 2.1.1
-  tailwind-merge: 3.6.0
-  jsdom: 30.0.1
-  "@base-ui/react": 1.7.0
-  class-variance-authority: 0.7.1
-  "@hugeicons/react": 1.1.10
-  "@hugeicons/core-free-icons": 4.2.3
-  "@types/react-dom": 19.2.7
-  "@testing-library/react": 16.3.2
-  "@testing-library/dom": 10.4.1
-  "@testing-library/jest-dom": 7.0.1
-  "@testing-library/user-event": 14.6.6
-  axe-core: 4.12.1
+  # --- React & Next ---------------------------------------------------------
   next: 16.3.4
-  "next-themes": 0.4.6
-  "next-intl": 4.13.7
+  react: 19.2.8
+  "react-dom": 19.2.8
+  "@types/react": 19.2.18
+  "@types/react-dom": 19.2.7
+
+  # --- Design system --------------------------------------------------------
   tailwindcss: 4.3.3
   "@tailwindcss/postcss": 4.3.3
+  # Primitive layer behind the shadcn/ui components in @repo/ui.
+  "@base-ui/react": 1.7.0
+  class-variance-authority: 0.7.1
+  clsx: 2.1.1
+  tailwind-merge: 3.6.0
+
+  # --- Testing --------------------------------------------------------------
+  vitest: 4.1.11
 
 # Entries still inside pnpm's default release-age cutoff. Delete each one as
 # soon as it ages past the window — this list is a waiver, not a setting.
 minimumReleaseAgeExclude:
   - "@orpc/client@2.0.0-beta.33"
   - "@orpc/contract@2.0.0-beta.33"
-  - "@orpc/json-schema@2.0.0-beta.33"
-  - "@orpc/openapi@2.0.0-beta.33"
   - "@orpc/server@2.0.0-beta.33"
   - "@orpc/shared@2.0.0-beta.33"
   - "@orpc/tanstack-query@2.0.0-beta.33"
-
-# react-doctor depends on playwright-core ^1.62.1. With resolution-mode=highest
-# that pulls 1.62.1 for @axe-core/playwright as well, while @playwright/test
-# stays on 1.62.0 — and the two Page types fail typecheck. Pin to the catalog
-# Playwright version until we bump @playwright/test.
-overrides:
-  playwright-core: 1.62.1

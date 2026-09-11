@@ -1,17 +1,25 @@
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { defineConfig } from "drizzle-kit";
 
-/**
- * Drizzle Kit reads DATABASE_URL from the environment. Migrations are generated
- * and reviewed as SQL in `migrations/`; this file is only for the CLI.
- */
+// The workspace keeps one `.env` at the repository root. Node reads it natively;
+// in CI and production the variables are already set, so the file is optional.
+const rootEnv = fileURLToPath(new URL("../../.env", import.meta.url));
+if (existsSync(rootEnv)) {
+  process.loadEnvFile(rootEnv);
+}
+
+const databaseUrl = process.env["DATABASE_URL"];
+if (databaseUrl === undefined || databaseUrl === "") {
+  throw new Error("DATABASE_URL is required. Copy .env.example to .env at the repository root.");
+}
+
 export default defineConfig({
-  schema: "./src/schema/*.sql.ts",
+  schema: "./src/schema.ts",
   out: "./migrations",
   dialect: "postgresql",
   strict: true,
   verbose: true,
-  dbCredentials: {
-    // Validated by seed/migrate scripts; the kit only needs a string here.
-    url: process.env["DATABASE_URL"] ?? "postgres://postgres:postgres@127.0.0.1:15432/app",
-  },
+  dbCredentials: { url: databaseUrl },
 });

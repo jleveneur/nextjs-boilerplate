@@ -1,44 +1,27 @@
-// Side-effect import: throws under the client export condition.
-// oxlint-disable-next-line import/no-unassigned-import
-import "server-only";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
-export {
-  createDb,
-  DEFAULT_IDLE_IN_TRANSACTION_TIMEOUT_MS,
-  DEFAULT_POOL_SIZE,
-  DEFAULT_STATEMENT_TIMEOUT_MS,
-  pingDatabase,
-  type CreateDbOptions,
-  type Database,
-  type QueryLogEvent,
-  type SqlClient,
-} from "./client.ts";
-export {
-  insertAuditLog,
-  type AuditLogRow,
-  type InsertAuditLogInput,
-} from "./repositories/audit-log.repository.ts";
-export {
-  findAssetById,
-  insertAsset,
-  listStalePendingAssets,
-  updateAssetStatus,
-  type AssetRow,
-  type InsertAssetInput,
-} from "./repositories/asset.repository.ts";
-export {
-  claimPendingOutboxEvents,
-  leaseDueOutboxEvents,
-  markOutboxFailed,
-  markOutboxPublished,
-  type OutboxClaimRow,
-} from "./repositories/outbox.repository.ts";
-export { findOrganizationOwnerEmail } from "./repositories/organization.repository.ts";
-export { scopedWhere, tenantFilter, type TenantCtx, type TenantScopedTable } from "./tenant.ts";
-export {
-  getTransaction,
-  resolveDb,
-  withTransaction,
-  type DbExecutor,
-  type DbTransaction,
-} from "./with-transaction.ts";
+import { env } from "@repo/env";
+
+import * as schema from "./schema.ts";
+
+/**
+ * The database handle.
+ *
+ * One pool per process, opened lazily — postgres.js does not connect until the
+ * first query, so importing this module is free. `idle_timeout` bounds what the
+ * dev server accumulates across hot reloads, which would otherwise exhaust
+ * Postgres's connection limit over a long session.
+ */
+const client = postgres(env.DATABASE_URL, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
+
+export const db = drizzle(client, { schema });
+
+export type Database = typeof db;
+
+export { schema };
+export * from "./schema.ts";

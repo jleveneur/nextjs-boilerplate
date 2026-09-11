@@ -1,50 +1,29 @@
 {
   "name": "@repo/db",
-  "version": "0.2.3",
+  "version": "0.0.0",
   "private": true,
-  "description": "Drizzle schema, client factory, migrations, seeds, and tenant-scoped query helpers.",
+  "description": "Drizzle schema, migrations, and the Postgres client.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./migrate": "./src/run-migrations.ts",
-    "./schema": "./src/schema/index.ts",
-    "./testing": "./src/testing/index.ts"
+    "./schema": "./src/schema.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:unit": "vitest run",
-    "test:watch": "vitest",
-    "test:integration": "vitest run --config vitest.integration.config.ts",
-    "build": "tsdown",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/migrate.ts",
+    "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "seed:reference": "tsx src/seeds/run.ts reference",
-    "seed:dev": "tsx src/seeds/run.ts dev",
-    "seed:test": "tsx src/seeds/run.ts test"
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@repo/env": "workspace:*",
-    "@repo/types": "workspace:*",
-    "@repo/utils": "workspace:*",
     "drizzle-orm": "catalog:",
-    "postgres": "catalog:",
-    "server-only": "catalog:"
+    "postgres": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
-    "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
     "drizzle-kit": "catalog:",
-    "tsdown": "catalog:",
-    "tsx": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
-  },
-  "repo": {
-    "layer": 1,
-    "runtime": "node"
+    "typescript": "catalog:"
   }
 }

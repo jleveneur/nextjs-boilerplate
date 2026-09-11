@@ -5,13 +5,8 @@
   "description": "Shared TypeScript configurations. Consumed by the build, never imported by shipped code.",
   "files": [
     "base.json",
-    "library.json",
     "react-library.json",
     "next.json",
     "node.json"
-  ],
-  "repo": {
-    "layer": "tooling",
-    "runtime": "build"
-  }
+  ]
 }

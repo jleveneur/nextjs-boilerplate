@@ -1,32 +1,14 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
-import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
-import { AnalyticsProvider } from "./analytics-provider.tsx";
-import { ThemeProvider } from "./theme-provider.tsx";
-
-export function AppProviders({ children }: { children: ReactNode }) {
+export function Providers({ children }: { children: ReactNode }) {
+  // One client per browser session, created in state so React does not build a
+  // new one on every render — which would throw the cache away each time.
   const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 30_000,
-          },
-        },
-      }),
+    () => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000 } } }),
   );
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <NuqsAdapter>
-        <AnalyticsProvider>
-          <ThemeProvider>{children}</ThemeProvider>
-        </AnalyticsProvider>
-      </NuqsAdapter>
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

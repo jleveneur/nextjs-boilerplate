@@ -1,197 +1,128 @@
 # AGENTS.md
 
-Instructions for AI coding agents working in this repository. Humans should read
-[`docs/architecture/`](docs/architecture/README.md) instead — this file is a
-condensed set of rules, not an explanation of why they exist.
-
-Read this before writing code. When something here conflicts with a pattern you
-see in the codebase, the codebase is probably mid-migration: follow this file and
-say so.
+Instructions for AI coding agents. Humans should read [`README.md`](README.md);
+this is a condensed set of rules, not an explanation of why they exist.
 
 ---
 
 ## 1. Before you finish
 
-Run the fast local gate before reporting work complete:
-
 ```bash
-make check
+pnpm check
 ```
 
-It runs formatting, type-aware lint, typechecking, layer, flag-expiry, and env-catalog checks,
-spelling, dead-code detection, React Doctor, script tests, unit tests, and the web bundle
-budget. A green result is necessary, but does not predict that full CI will pass.
-CI runs overlapping checks in parallel (using affected typechecks and unit tests
-on PRs) and adds history- and service-dependent gates: secret and commit scans,
-changesets, container builds and scans, integration tests, Playwright,
-Lighthouse, and CodeQL.
+Format check, type-aware lint, typecheck, Knip (dead code), React Doctor, and
+unit tests. CI runs the same six plus `pnpm build`. If a failure looks
+pre-existing, confirm that on a clean tree instead of assuming.
 
-Use the relevant Make targets when reproducing those CI paths locally:
-`make images`, `make test-integration`, `make e2e`, and `make lighthouse`. Some require Docker and `make deps-up-test`; there is
-intentionally no single local command that reproduces all CI policy and hosted
-runner checks.
+Faster individual loops: `pnpm format`, `pnpm lint`, `pnpm typecheck`,
+`pnpm knip`, `pnpm react-doctor`, `pnpm test`.
 
-If a failure looks pre-existing, confirm that on a clean tree instead of
-assuming.
-
-Individual gates, for a faster loop: `make format`, `make lint`, `make typecheck`,
-`make test`, `make layers`, `make env-catalog`, `make spell`, `make knip`,
-`make react-doctor`.
+Lefthook also runs formatting and syntax-only lint on commit, commitlint on the
+message, and affected typecheck and tests on push. They are a convenience, not
+the gate — do not treat a green hook as a substitute for `pnpm check`.
 
 ---
 
-## 2. The rule that matters most: layer boundaries
+## 2. Repository shape
 
-Packages may depend **only on strictly lower layers**. Same-layer and upward
-dependencies are both banned, which is what keeps the graph acyclic by
-construction. Enforced by `make layers` (see
-[ADR-0002](docs/adr/0002-layered-monorepo-with-pnpm-enforcement.md)).
-
-| Layer     | Contains                                     | May import                |
-| --------- | -------------------------------------------- | ------------------------- |
-| 0         | Pure utilities, types, config schemas        | Nothing internal          |
-| 1         | Infrastructure adapters (db, storage, email) | Layer 0                   |
-| 2         | Kernel (`ctx`, ports, audit log, outbox)     | Layers 0–1                |
-| 3         | Domain slices (`billing`, `assets`, …)       | Layers 0–2                |
-| 4         | Transport (oRPC procedures)                  | Layers 0–3                |
-| 5         | Apps (deployable units)                      | Layers 0–4, `ui`          |
-| `ui`      | Design system                                | Layer 0 only              |
-| `tooling` | Build and lint configuration                 | Never imported at runtime |
-
-Every package declares its own layer in `package.json`:
-
-```json
-{ "name": "@repo/kernel", "repo": { "layer": 2, "runtime": "node" } }
+```
+apps/web           Next.js application
+packages/api       oRPC procedures and router
+packages/auth      Better Auth server and client
+packages/db        Drizzle schema, migrations, client
+packages/env       Zod-validated environment
+packages/ui        shadcn/ui components
+tooling/*          Lint, Tailwind, and tsconfig configuration
+scripts/           Repository setup scripts, run from package.json
 ```
 
-`runtime` is `browser`, `node`, or `build`. A `browser` package may not depend on
-a `node` package — that is the path by which a secret reaches a client bundle.
+The dependency direction is `env → db → auth → api → web`, with `ui` depending
+on nothing internal. Keep it that way: a cycle between packages is a design
+error, not something to work around with a re-export.
 
-**When two packages in the same layer seem to need each other**, do not add the
-dependency — **except inside layer 0**, where foundation packages may form a
-small DAG (`errors → types`, `contracts → types + utils`). From layer 1 up: move
-the shared piece down a layer, let a higher layer orchestrate both, or inject a
-function. If you cannot see which applies, stop and ask.
-
-This bites most often between **domain slices**, which are layer-3 peers and so
-cannot import each other at all. Emit a domain event, or move the shared rule
-down into `@repo/kernel`. Do not add a same-layer exception
-([ADR-0013](docs/adr/0013-kernel-and-slice-packages.md) explains why not).
+Internal packages ship TypeScript source with no build step. A package that
+starts emitting declarations breaks the parallel `typecheck` in `turbo.json`.
 
 ---
 
 ## 3. Where logic goes
 
-Business logic lives in the domain/application layer and nowhere else. Transports
-translate; they do not decide.
-
-- **No database queries in an oRPC procedure, route handler, or Server Action.**
-  Call an application service.
+- **No database queries in a Route Handler or a Server Action.** They belong in
+  an oRPC procedure, or in a function the procedure calls.
 - **No business rules in a React component.** Components render state and raise
   events.
-- **Repositories** contain queries, not policy.
-
-Every application service:
-
-1. Takes an explicit **actor** (who is doing this) — never reads ambient session
-   state.
-2. **Authorizes first**, before any read or write.
-3. **Scopes every query by `organization_id`.** A query without tenant scoping is
-   a data leak, not a bug.
-4. Returns typed results, and throws typed `AppError` subclasses for failures.
+- **Every mutation scopes its query by the caller.** `eq(post.userId,
+context.user.id)` is authorization; leaving it out is a data leak, not a bug.
+- **`protectedProcedure` is how you require a session.** Do not re-derive it.
 
 ---
 
 ## 4. Non-negotiables
 
-These fail CI, so there is no version of "just for now":
+These fail `pnpm check`, so there is no version of "just for now":
 
 - **No `any`.** Use `unknown` and narrow. No non-null assertions (`!`).
-- **No `console`.** Use `@repo/logger`. Scripts and composition roots are the
-  documented exceptions.
 - **No unawaited promises.** A floating promise in a request handler is silent
   data loss.
-- **No secrets in code, tests, fixtures, or commit messages.** Gitleaks blocks
-  commits and CI scans history.
-- **No ad hoc `process.env` reads in libraries.** Composition-root env modules
-  select runtime values and pass them to `createEnv`; process-edge entry points
-  and tests/tooling may read only their own boundary metadata or controls.
-- **Validate every external input with Zod** at the boundary — request bodies,
-  webhook payloads, environment, third-party responses.
-- **Money is an integer in minor units.** Never a float.
-- **IDs are UUIDv7** and branded types, so an `OrganizationId` cannot be passed
-  where a `UserId` belongs.
+- **No `console.log`.** `console.warn` and `console.error` are allowed.
+- **No secrets in code, tests, or fixtures.**
+- **No ad hoc `process.env` reads.** Add the variable to
+  `packages/env/src/schema.ts` and import `env` from `@repo/env`, which t3-env
+  validates at startup. The one exception is a process edge that runs before
+  that module can load: `drizzle.config.ts` reads `DATABASE_URL` directly
+  because it has to load the `.env` file first.
+- **Validate every external input with Zod** at the boundary — oRPC inputs,
+  webhook payloads, third-party responses.
 
 ---
 
 ## 5. Conventions
 
 - Files and directories: `kebab-case`. Types and components: `PascalCase`.
-  Functions and variables: `camelCase`. Constants: `SCREAMING_SNAKE_CASE`.
+  Functions and variables: `camelCase`.
 - Tests sit beside the code as `*.test.ts`.
-- Import internal packages by name (`@repo/db`), never by relative path across a
-  package boundary.
+- Import internal packages by name (`@repo/db`), never by relative path across
+  a package boundary. Inside `apps/web`, use the `@/` alias.
 - Type-only imports use `import type`.
-- Database columns are `snake_case`; public JSON is `snake_case`; TypeScript is
-  `camelCase`. The mapping is explicit, at the edge.
+- Database columns are `snake_case`; TypeScript is `camelCase`. The mapping is
+  explicit in the schema.
 - React Server Components by default; `"use client"` only where interactivity
   requires it.
-
-Full detail: [`docs/architecture/04-conventions.md`](docs/architecture/04-conventions.md).
 
 ---
 
 ## 6. Adding a dependency
 
-The bar is high and deliberate. Before adding one:
+The bar is high and deliberate.
 
 1. Check it is not already solved by something in the workspace.
-2. Add it to the package that uses it — never to the root, and never to a package
-   that merely re-exports it.
-3. Use `catalog:` for anything shared by more than one package, and add the
-   version to `pnpm-workspace.yaml`.
-4. Pin exact versions. No ranges.
+2. Add it to the package that uses it — never to the root.
+3. Use `catalog:` and add the version to `pnpm-workspace.yaml`.
+4. Pin exact versions. No ranges — Renovate proposes the bumps.
+5. Run `pnpm knip`. An unused dependency is a failing check, not a warning.
 
-If the dependency is load-bearing — a framework, an ORM, an auth library — it
-needs an entry in
-[`docs/architecture/13-dependency-review.md`](docs/architecture/13-dependency-review.md)
-covering why it wins over the alternatives and what leaving it would cost. If you
-cannot write that paragraph, do not add it.
+**This repository is a starter, and its scope is a feature.** Redis, object
+storage, email, payments, queues, analytics, error tracking, feature flags,
+internationalisation, and containers were all removed on purpose. Do not add
+one back because a task seems to want it — say so and ask.
 
 ---
 
-## 7. When a decision is architectural
-
-Write an ADR in `docs/adr/` using the existing numbering and format if the change
-affects: the package graph, a transport, the data model's shape, auth or
-authorization, deployment topology, or a load-bearing dependency.
-
-Update the architecture docs **in the same change** as the code. A convention
-documented in one place and implemented differently in another is worse than no
-documentation, because it makes the docs untrustworthy.
-
----
-
-## 8. Commits and pull requests
-
-- [Conventional Commits](https://www.conventionalcommits.org), enforced by
-  commitlint: `feat(scope): summary`, `fix(db): ...`, `chore(deps): ...`.
-- The PR title becomes the squashed commit message.
-- Run `pnpm changeset` when a `packages/*` public API changes. Not for app-only
-  changes, docs, or tooling.
-
----
-
-## 9. Working style
+## 7. Working style
 
 - **Prefer editing over adding.** A new file that overlaps an existing one is a
   future inconsistency.
-- **Do not create documentation files** unless asked. This repo has a documented
-  structure; a stray `NOTES.md` does not fit it.
+- **Do not create documentation files** unless asked.
 - **Do not weaken a check to make it pass.** Disabling a lint rule, loosening a
-  type, adding an ignore entry, or skipping a test is a change that needs its own
-  justification and review. Fix the cause.
-- **Verify claims about behaviour by running something.** Reading code is a
-  hypothesis; the test result is evidence.
-- **Say what you are unsure about.** An unflagged guess about a boundary costs
-  more to find later than a question costs now.
+  type, or skipping a test needs its own justification. Fix the cause.
+- **Verify behaviour by running something.** Reading code is a hypothesis; the
+  test result is evidence.
+- **Say what you are unsure about.**
+
+---
+
+## 8. Commits
+
+[Conventional Commits](https://www.conventionalcommits.org):
+`feat(scope): summary`, `fix(db): ...`, `chore(deps): ...`.

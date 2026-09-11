@@ -1,9 +1,10 @@
 import type { UserConfig } from "@commitlint/types";
 
 /**
- * Conventional Commits. Because we squash-merge, the PR title becomes the commit
- * message, so this is what keeps `main`'s history readable and makes `git bisect`
- * meaningful. See docs/architecture/04-conventions.md#7-commits-branches-prs.
+ * Conventional Commits.
+ *
+ * Because we squash-merge, the PR title becomes the commit message, so this is
+ * what keeps `main`'s history readable and makes `git bisect` meaningful.
  */
 const config: UserConfig = {
   extends: ["@commitlint/config-conventional"],

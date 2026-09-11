@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1785452076068,
+      "when": 1789168122004,
       "tag": "0000_init",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1785454052251,
-      "tag": "0001_auth_plugins",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1785455200634,
-      "tag": "0002_freezing_giant_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1785720117072,
-      "tag": "0003_stripe_billing",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1788767776214,
-      "tag": "0004_drop_api_keys",
       "breakpoints": true
     }
   ]

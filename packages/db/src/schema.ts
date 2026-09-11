@@ -1,0 +1,115 @@
+import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
+/**
+ * Database schema.
+ *
+ * Columns are `snake_case`; the TypeScript properties are `camelCase`. Drizzle
+ * makes that mapping explicit at the column, which is the only place it should
+ * ever appear.
+ *
+ * Migrations are generated from this file (`pnpm db:generate`) and reviewed as
+ * SQL before they are applied. Nothing generates them at runtime.
+ */
+
+const createdAt = () =>
+  timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow();
+
+const updatedAt = () =>
+  timestamp("updated_at", { withTimezone: true, mode: "date" })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date());
+
+// --- Better Auth ------------------------------------------------------------
+// The four core tables Better Auth's Drizzle adapter expects. Text ids, because
+// that is what Better Auth generates by default.
+// https://www.better-auth.com/docs/concepts/database
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    token: text("token").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [index("idx_session__user_id").on(table.userId)],
+);
+
+export const account = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    scope: text("scope"),
+    idToken: text("id_token"),
+    password: text("password"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [index("idx_account__user_id").on(table.userId)],
+);
+
+export const verification = pgTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [index("idx_verification__identifier").on(table.identifier)],
+);
+
+// --- Application ------------------------------------------------------------
+// One example table so the starter has something end to end to show. Delete it
+// and its router when you add a real domain.
+
+export const post = pgTable(
+  "post",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [index("idx_post__user_id").on(table.userId)],
+);
+
+export type Post = typeof post.$inferSelect;
+export type User = typeof user.$inferSelect;

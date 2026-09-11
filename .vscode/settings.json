@@ -57,7 +57,7 @@
 
   // Turned off explicitly. If someone has these installed globally they will
   // fight Oxfmt over every file, and the resulting diff churn is hard to
-  // attribute. See ADR-0004.
+  // attribute.
   "prettier.enable": false,
   "eslint.enable": false,
   "biome.enabled": false,
@@ -72,8 +72,7 @@
     "*.css": "tailwindcss",
     ".oxlintrc.json": "jsonc",
     ".oxfmtrc.json": "jsonc",
-    "turbo.json": "jsonc",
-    "knip.json": "jsonc"
+    "turbo.json": "jsonc"
   },
 
   // Excluded from watching, not from view. A monorepo has enough build output to
@@ -84,9 +83,7 @@
     "**/.turbo/**": true,
     "**/.next/**": true,
     "**/dist/**": true,
-    "**/coverage/**": true,
-    "**/playwright-report/**": true,
-    "**/test-results/**": true
+    "**/coverage/**": true
   },
 
   // Noise removed from search results, while the files stay openable.
@@ -96,9 +93,7 @@
     "**/.next": true,
     "**/dist": true,
     "**/coverage": true,
-    "**/pnpm-lock.yaml": true,
-    "**/playwright-report": true,
-    "**/test-results": true
+    "**/pnpm-lock.yaml": true
   },
 
   // ---------------------------------------------------------------------------
@@ -107,33 +102,15 @@
   "editor.rulers": [100],
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
-  "editor.bracketPairColorization.enabled": true,
-  "editor.guides.bracketPairs": "active",
   "editor.linkedEditing": true,
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
-    "*.ts": "$(capture).test.ts, $(capture).spec.ts",
-    "*.tsx": "$(capture).test.tsx, $(capture).spec.tsx"
+    "*.ts": "$(capture).test.ts",
+    "*.tsx": "$(capture).test.tsx"
   },
 
-  // ---------------------------------------------------------------------------
-  // Schemas
-  //
   // Validation and completion for files with no $schema key of their own.
-  // ---------------------------------------------------------------------------
   "yaml.schemas": {
-    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml",
-    "https://json.schemastore.org/github-action.json": ".github/actions/*/action.yml",
-    "https://json.schemastore.org/github-issue-forms.json": ".github/ISSUE_TEMPLATE/*.yml",
-    "https://raw.githubusercontent.com/evilmartians/lefthook/master/schema.json": "lefthook.yml"
-  },
-
-  // ---------------------------------------------------------------------------
-  // Spelling
-  //
-  // The dictionary lives in tooling/cspell/project.txt via cspell.config.yaml,
-  // so new jargon arrives as a reviewed diff rather than in someone's user
-  // settings where nobody else benefits.
-  // ---------------------------------------------------------------------------
-  "cSpell.enabled": true
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+  }
 }

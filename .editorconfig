@@ -17,13 +17,3 @@ trim_trailing_whitespace = false
 
 [*.{yml,yaml}]
 indent_size = 2
-
-[Makefile]
-; Make requires real tabs.
-indent_style = tab
-
-[*.{tf,tfvars}]
-indent_size = 2
-
-[{package.json,pnpm-workspace.yaml,pnpm-lock.yaml}]
-indent_size = 2

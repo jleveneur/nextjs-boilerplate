@@ -1,40 +1,27 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 
+import { authClient } from "@repo/auth/client";
 import { Button } from "@repo/ui";
 
-import { useRouter } from "@/i18n/navigation.ts";
-import { authClient } from "@/lib/auth-client.ts";
-
 export function SignOutButton() {
-  const t = useTranslations("Shell");
   const router = useRouter();
-  const [pending, setPending] = useState(false);
 
-  async function onSignOut() {
-    setPending(true);
-    try {
-      await authClient.signOut();
-      router.push("/sign-in");
-      router.refresh();
-    } finally {
-      setPending(false);
-    }
+  async function signOut() {
+    await authClient.signOut();
+    router.push("/");
+    router.refresh();
   }
 
   return (
     <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      disabled={pending}
+      variant="outline"
       onClick={() => {
-        void onSignOut();
+        void signOut();
       }}
     >
-      {t("signOut")}
+      Sign out
     </Button>
   );
 }

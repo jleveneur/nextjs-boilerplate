@@ -1,34 +1,25 @@
 {
   "name": "@repo/env",
-  "version": "0.3.0",
+  "version": "0.0.0",
   "private": true,
-  "description": "Zod-validated environment schemas with server/client split and composable presets.",
+  "description": "Environment variables, validated once at startup with t3-env.",
   "type": "module",
   "exports": {
-    "./shared": "./src/shared.ts",
-    "./client": "./src/client.ts",
-    "./server": "./src/server.ts",
-    "./presets": "./src/presets/index.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:unit": "vitest run",
+    "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "server-only": "catalog:",
+    "@t3-oss/env-nextjs": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
-    "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "repo": {
-    "layer": 0,
-    "runtime": "browser"
   }
 }

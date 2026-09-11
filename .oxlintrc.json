@@ -2,13 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "extends": ["./tooling/oxlint/base.json"],
   "options": {
-    // Type-aware linting via oxlint-tsgolint, which is built on typescript-go
-    // (TypeScript 7). This is root-only configuration. See ADR-0004.
+    // Type-aware linting via oxlint-tsgolint, which is built on typescript-go.
+    // This is root-only configuration.
     "typeAware": true
   },
   // Extends does not always merge ignorePatterns into the root config.
-  // k6 scripts use the k6 runtime (`k6/*`, `__ENV`) — not typechecked by the repo tsc graph.
-  "ignorePatterns": ["**/next-env.d.ts", "perf/k6/**"],
+  "ignorePatterns": ["**/next-env.d.ts"],
 
   "overrides": [
     {
@@ -22,7 +21,7 @@
             "patterns": [
               {
                 "group": ["../*", "../**"],
-                "message": "Use the @/ path alias for imports across folders (docs/architecture/04-conventions.md)."
+                "message": "Use the @/ path alias for imports across folders."
               }
             ]
           }
@@ -30,48 +29,20 @@
       }
     },
     {
-      // Composition roots and process bootstraps legitimately write to stdout
-      // before a logger exists, and scripts are not shipped code.
-      "files": [
-        "scripts/**",
-        "**/scripts/**",
-        "**/*.config.*",
-        "**/src/index.ts",
-        "**/instrumentation*.ts",
-        // Package CLIs (migrate/seed) run before a logger exists.
-        "**/src/migrate.ts",
-        "**/src/seeds/run.ts"
-      ],
-
+      // Config files and setup scripts run before anything else exists, and
+      // are not shipped code — stdout is how a CLI reports what it did.
+      "files": ["**/*.config.*", "scripts/**"],
       "rules": {
         "no-console": "off"
       }
     },
     {
       // Tests may assert on promise rejections and construct partial fixtures.
-      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.test-d.ts", "**/e2e/**", "**/*.spec.ts"],
+      "files": ["**/*.test.ts", "**/*.test.tsx"],
       "rules": {
         "typescript/no-non-null-assertion": "off",
         "typescript/no-unsafe-assignment": "off",
-        // Building a fixture means writing a literal and narrowing it — `"u_01JQ"
-        // as UserId` is the branded-type escape hatch used as intended. In shipped
-        // code the same assertion is a bug waiting to happen, so the rule stays on
-        // everywhere else: production code narrows through a validator.
-        "typescript/no-unsafe-type-assertion": "off",
-        // Type tests assert that a construction is rejected with @ts-expect-error;
-        // the `new` is never reached and assigning it would be fiction.
-        "no-new": "off",
-        "typescript/no-floating-promises": [
-          "error",
-          {
-            // node:test's `describe`/`it` return a promise the runner already
-            // tracks and awaits; the caller is not meant to. Narrowed to those
-            // names so a genuinely unawaited promise inside a test still fails.
-            "allowForKnownSafeCalls": [
-              { "from": "package", "package": "node:test", "name": ["describe", "it"] }
-            ]
-          }
-        ]
+        "typescript/no-unsafe-type-assertion": "off"
       }
     }
   ]

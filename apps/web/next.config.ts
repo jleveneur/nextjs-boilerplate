@@ -1,53 +1,25 @@
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
 
-import { SECURITY_HEADERS } from "./src/lib/security-headers.ts";
+// The workspace keeps one `.env` at the repository root, and Next only looks
+// inside the app directory. Node reads the file natively; in CI and production
+// the variables are already set, so it is absent and this is a no-op.
+const rootEnv = fileURLToPath(new URL("../../.env", import.meta.url));
+if (existsSync(rootEnv)) {
+  process.loadEnvFile(rootEnv);
+}
 
-/**
- * Product Next 16 app.
- *
- * `cacheComponents` is on so caching stays explicit when routes grow.
- * TypeScript 7 has no JS compiler API yet; next build must use local `tsc`.
- */
 const nextConfig: NextConfig = {
-  // Standalone output is what the web Docker image copies — a minimal Node
-  // server plus traced deps, not the full monorepo node_modules.
-  output: "standalone",
-  cacheComponents: true,
-  transpilePackages: ["@repo/ui", "@repo/i18n", "@repo/env", "@repo/analytics", "@repo/flags"],
-  // Portless (and other reverse proxies) serve Next from a *.localhost Host
-  // while the process binds 127.0.0.1. Allow those origins for `/_next/*`.
-  allowedDevOrigins: ["*.localhost"],
+  // Internal packages ship TypeScript source with no build step, so Next has to
+  // compile them the same way it compiles `src/`.
+  transpilePackages: ["@repo/api", "@repo/auth", "@repo/db", "@repo/ui"],
   experimental: {
+    // TypeScript 7 has no JavaScript compiler API yet, so `next build` shells
+    // out to the local `tsc` instead of loading it in-process.
     useTypeScriptCli: true,
-  },
-  // `proxy.ts` cannot set these on `/api/*` — its matcher excludes `api`.
-  headers() {
-    return Promise.resolve([{ source: "/:path*", headers: [...SECURITY_HEADERS] }]);
-  },
-  rewrites() {
-    const posthogHost = process.env["NEXT_PUBLIC_POSTHOG_HOST"] ?? "https://us.i.posthog.com";
-    return [
-      {
-        source: "/ingest/static/:path*",
-        destination: `${posthogHost}/static/:path*`,
-      },
-      {
-        source: "/ingest/:path*",
-        destination: `${posthogHost}/:path*`,
-      },
-      {
-        source: "/:locale/ingest/static/:path*",
-        destination: `${posthogHost}/static/:path*`,
-      },
-      {
-        source: "/:locale/ingest/:path*",
-        destination: `${posthogHost}/:path*`,
-      },
-    ];
   },
 };
 
-const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
-
-export default withNextIntl(nextConfig);
+export default nextConfig;

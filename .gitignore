@@ -1,88 +1,45 @@
 # Dependencies
 node_modules/
-.pnpm-store/
 
 # Build output
 dist/
 build/
-out/
 .next/
-# Fumadocs generated collections + synced architecture/ADR/runbook/security MDX
-playwright-report/
-test-results/
-.lighthouseci/
-apps/web/.env
 .turbo/
-
 *.tsbuildinfo
 
 # Test output
 coverage/
-playwright-report/
-test-results/
-blob-report/
-.playwright/
 
-# Environment — every .env EXCEPT committed placeholder catalogs.
-# Inject secrets at deploy time; never commit real values.
+# Environment — inject secrets at deploy time; never commit real values.
 .env
 .env.*
 !.env.example
-!.env.staging.example
-!.env.production.example
-
-# Decrypted secrets must never be committed. If you see one of these in a diff,
-# stop and rotate the values.
-*.dec.yaml
-*.dec.yml
-*.decrypted
-
-# ZAP / hardening scratch output
-.tmp/
 
 # Local tooling caches
 .cache/
-.eslintcache
 .oxlintcache
 
 # Editors
 .idea/
 *.swp
-*.swo
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
-!.vscode/launch.json
 
 # OS
 .DS_Store
 Thumbs.db
-desktop.ini
 
 # Logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
 
-# Docker volumes mounted into the repo
-docker/data/
-
-# OpenTofu / Terraform local state. Remote state lives in R2; local state is
-# never authoritative.
-.terraform/
-*.tfstate
-*.tfstate.*
-*.tfvars
-!*.tfvars.example
-.terraform.lock.hcl
-
-# Ansible
-*.retry
-
-# Claude Code per-developer overrides. The shared project settings are committed.
+# Claude Code per-developer overrides.
 .claude/settings.local.json
 
-# Next.js 16 writes these on `next dev`. Repo instructions live in /AGENTS.md.
+# Next.js writes these on `next dev`. Repo instructions live in /AGENTS.md.
 apps/web/AGENTS.md
 apps/web/CLAUDE.md
 next-env.d.ts

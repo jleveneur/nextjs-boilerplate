@@ -5,20 +5,22 @@
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     ".npmrc",
-    "tooling/typescript/*.json",
-    "tooling/oxlint/*.json"
+    ".oxlintrc.json",
+    "tooling/oxlint/*.json",
+    "tooling/tailwind/*.css",
+    "tooling/typescript/*.json"
   ],
-  "globalEnv": ["NODE_ENV", "APP_ENV", "CI"],
+  "globalEnv": ["NODE_ENV", "CI"],
   "globalPassThroughEnv": ["FORCE_COLOR", "TERM"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*", "!**/*.spec.*", "!**/e2e/**"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      // Public bake-time vars and Docker's SKIP_ENV_VALIDATION must participate in
-      // the hash — otherwise remote cache can serve an artifact built for another
-      // environment (docs/architecture/12-git-ci-release.md §3).
-      "env": ["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_APP_ENV", "SKIP_ENV_VALIDATION"]
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      // `next build` evaluates route modules, which validate the environment.
+      // The values do not end up in the output — no NEXT_PUBLIC_* variable
+      // exists — but they must be present for the build to run at all.
+      "env": ["DATABASE_URL", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL"]
     },
 
     "dev": {
@@ -26,60 +28,25 @@
       "persistent": true
     },
 
-    // typecheck, lint, and test:unit declare no dependencies so they fan out
-    // across every package in parallel. This is only correct because internal
-    // packages ship TypeScript source with no build step (ADR-0002); the moment
-    // a package emits declarations, typecheck would need "dependsOn": ["^build"].
+    "start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true
+    },
+
+    // typecheck and test declare no dependencies so they fan out across every
+    // package in parallel. That is only correct because internal packages ship
+    // TypeScript source with no build step; the moment a package emits
+    // declarations, typecheck would need "dependsOn": ["^build"].
     "typecheck": {
       "dependsOn": [],
       "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"],
       "outputs": ["*.tsbuildinfo"]
     },
 
-    "lint": {
+    "test": {
       "dependsOn": [],
-      "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"],
       "outputs": []
-    },
-
-    "test:unit": {
-      "dependsOn": [],
-      // No declared outputs. A coverage report is a diagnostic someone opens after
-      // a failure, not an artifact a later task consumes, and thresholds are
-      // enforced during the run — so a cache hit already means they held.
-      // Declaring "coverage/**" instead makes Turbo warn about every package with
-      // no runtime code to cover.
-      "outputs": []
-    },
-
-    // Integration and E2E need live services, so they are never part of the
-    // default local loop and always depend on a real build.
-    "test:integration": {
-      "dependsOn": ["^build"],
-      "cache": false,
-      "env": [
-        "DATABASE_URL",
-        "REDIS_URL",
-        "S3_ENDPOINT",
-        "S3_REGION",
-        "S3_BUCKET",
-        "S3_ACCESS_KEY_ID",
-        "S3_SECRET_ACCESS_KEY",
-        "SMTP_URL",
-        "MAILPIT_API_URL",
-        "BETTER_AUTH_SECRET",
-        "BETTER_AUTH_URL"
-      ]
-    },
-
-    "test:e2e": {
-      "dependsOn": ["^build"],
-      "cache": false,
-      "env": ["APP_URL", "DATABASE_URL"]
-    },
-
-    "clean": {
-      "cache": false
     }
   }
 }
