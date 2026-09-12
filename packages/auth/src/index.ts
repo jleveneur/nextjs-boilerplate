@@ -62,8 +62,9 @@ export const auth = betterAuth({
       ac,
       roles,
       creatorRole: "owner",
-      // Invitations are created and can be accepted from their link, but
-      // nothing sends that link — add `sendInvitationEmail` with a transport.
+      // The invitation endpoints exist, but nothing in this app uses them:
+      // there is no transport to send the link and no route to accept it.
+      // Adding members is API-only until you build both.
     }),
   ],
 

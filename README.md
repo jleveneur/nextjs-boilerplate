@@ -123,9 +123,12 @@ cookie cache keeps serving the previous organization for minutes. A
 session-update hook mirrors the choice onto the user row, so it also survives
 signing out.
 
-Inviting members works through Better Auth's API; nothing emails the invitation
-link, because there is no mail transport here. Add `sendInvitationEmail` when
-you add one.
+**Inviting members is not wired up.** The plugin's invitation endpoints exist
+and the `invitation` table is migrated, but this app has no mail transport to
+send the link and no route to accept it — so a second person cannot currently
+join an organization through the UI. Making that work means adding a transport,
+`sendInvitationEmail`, and an accept page. Until then, organizations are
+single-member in practice.
 
 ## Testing
 
