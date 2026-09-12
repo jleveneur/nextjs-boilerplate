@@ -276,8 +276,52 @@ components import. There is no local `lib/utils` helper to keep in sync.
 `src/lib` or `src/hooks`, add the matching export to its `package.json` —
 otherwise the import will not resolve.
 
-The starter ships only `Button`, `Card`, `Input`, and `Label` — add the rest as
-you need them.
+The starter ships only `Button`, `Card`, `Input`, `Label`, `Field`, and
+`Separator` — add the rest as you need them. `Field` is the form markup layer
+described under [Forms](#forms); `Separator` is there only because `Field`
+imports it.
+
+Regenerating a component overwrites it. `CardTitle` renders an `h3` rather than
+the registry's `div`, because on a page whose content is one card the card title
+is the page title — `shadcn add card` will put the `div` back, and the e2e specs
+are what catch it.
+
+## Forms
+
+[TanStack Form](https://tanstack.com/form) for state and validation, with Zod
+schemas, and shadcn's `field` primitive for the markup. `field` is agnostic
+about the form library — the same `Field`, `FieldLabel`, and `FieldError`
+components appear in shadcn's React Hook Form, TanStack Form, and Formisch
+examples — so the markup survives a change of state layer.
+
+The one non-obvious part is where the server call goes:
+
+```tsx
+const form = useForm({
+  defaultValues: { email: "", password: "" },
+  validators: {
+    onSubmit: schema,
+    onSubmitAsync: ({ value }) => submitToServer(() => authClient.signIn.email(value)),
+  },
+  onSubmit: () => router.push("/dashboard"),
+});
+```
+
+It belongs in `onSubmitAsync` rather than the `onSubmit` handler. Better Auth
+reports failure by returning `{ error }` instead of throwing, and a validator is
+the thing that can turn that into a form-level message and stop the success
+handler from running. [`submitToServer`](apps/web/src/lib/submit-to-server.ts)
+does that conversion and also catches a dead network, which is the one failure
+Better Auth cannot report in its result.
+
+Its return value carries an empty `fields` object on purpose: TanStack Form
+decides a validator result is form-level by checking for that key, so `{ form }`
+on its own is stored whole and arrives in the UI as an object rather than the
+message.
+
+Every form sets `noValidate`. An `<input type="email">` otherwise lets the
+browser cancel submission on its own, before any handler runs — the schema never
+reports, no request goes out, and the page shows nothing at all.
 
 The style is `base-nova`, so [ReUI](https://reui.io) components install through
 the same CLI:

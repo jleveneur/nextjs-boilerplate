@@ -1,83 +1,111 @@
 "use client";
 
+import { useForm } from "@tanstack/react-form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type SubmitEvent } from "react";
+import * as z from "zod";
 
 import { authClient } from "@repo/auth/client";
 import { Button } from "@repo/ui/components/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field";
 import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
 
-import { useSubmit } from "@/lib/use-submit.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+
+const schema = z.object({
+  email: z.email("Enter a valid email address."),
+  password: z.string().min(1, "Enter your password."),
+});
 
 export function SignInForm({ next }: { next: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { pending, error, run } = useSubmit();
 
-  function submit(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    void run(
-      () => authClient.signIn.email({ email, password }),
-      () => {
-        router.push(next);
-        // The destination is a Server Component that reads the session, so the
-        // router cache has to be dropped for it to see the new cookie.
-        router.refresh();
-      },
-    );
-  }
+  const form = useForm({
+    defaultValues: { email: "", password: "" },
+    validators: {
+      onSubmit: schema,
+      onSubmitAsync: ({ value }) => submitToServer(() => authClient.signIn.email(value)),
+    },
+    onSubmit: () => {
+      router.push(next);
+      // The destination is a Server Component that reads the session, so the
+      // router cache has to be dropped for it to see the new cookie.
+      router.refresh();
+    },
+  });
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={submit}>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(event) => {
-            setEmail(event.target.value);
-          }}
-        />
-      </div>
+    <form
+      noValidate
+      className="flex flex-col gap-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <FieldGroup>
+        <form.Field name="email">
+          {(field) => (
+            <Field data-invalid={!field.state.meta.isValid}>
+              <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+              <Input
+                id={field.name}
+                name={field.name}
+                type="email"
+                autoComplete="email"
+                aria-invalid={!field.state.meta.isValid}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => {
+                  field.handleChange(event.target.value);
+                }}
+              />
+              <FieldError errors={field.state.meta.errors} />
+            </Field>
+          )}
+        </form.Field>
 
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            href="/forgot-password"
-            className="text-muted-foreground text-sm underline underline-offset-4"
-          >
-            Forgot?
-          </Link>
-        </div>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-          }}
-        />
-      </div>
+        <form.Field name="password">
+          {(field) => (
+            <Field data-invalid={!field.state.meta.isValid}>
+              <div className="flex items-center justify-between gap-2">
+                <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                <Link
+                  href="/forgot-password"
+                  className="text-muted-foreground text-sm underline underline-offset-4"
+                >
+                  Forgot?
+                </Link>
+              </div>
+              <Input
+                id={field.name}
+                name={field.name}
+                type="password"
+                autoComplete="current-password"
+                aria-invalid={!field.state.meta.isValid}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => {
+                  field.handleChange(event.target.value);
+                }}
+              />
+              <FieldError errors={field.state.meta.errors} />
+            </Field>
+          )}
+        </form.Field>
+      </FieldGroup>
 
-      {error === null ? null : (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      )}
+      <form.Subscribe selector={(state) => state.errorMap.onSubmit}>
+        {(error) => <FieldError>{serverError(error)}</FieldError>}
+      </form.Subscribe>
 
-      <Button type="submit" disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
-      </Button>
+      <form.Subscribe selector={(state) => state.isSubmitting}>
+        {(isSubmitting) => (
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Signing in…" : "Sign in"}
+          </Button>
+        )}
+      </form.Subscribe>
     </form>
   );
 }

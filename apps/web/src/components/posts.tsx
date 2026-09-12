@@ -1,15 +1,22 @@
 "use client";
 
+import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type SubmitEvent } from "react";
+import * as z from "zod";
 
 // Type-only import: `Post` is `typeof post.$inferSelect`, so nothing from
 // `@repo/db` reaches the browser bundle.
 import type { Post } from "@repo/db";
 import { Button } from "@repo/ui/components/button";
+import { Field, FieldError } from "@repo/ui/components/field";
 import { Input } from "@repo/ui/components/input";
 
 import { orpc } from "@/lib/orpc.ts";
+import { serverError } from "@/lib/submit-to-server.ts";
+
+const schema = z.object({
+  title: z.string().min(1, "Write something first.").max(200, "Keep it under 200 characters."),
+});
 
 /**
  * The example slice, end to end: an oRPC query scoped to the active
@@ -20,51 +27,77 @@ import { orpc } from "@/lib/orpc.ts";
  * authorization — the server checks the same permission on every call.
  */
 export function Posts({ initialPosts, canDelete }: { initialPosts: Post[]; canDelete: boolean }) {
-  const [title, setTitle] = useState("");
   const queryClient = useQueryClient();
 
   const posts = useQuery(orpc.post.list.queryOptions({ initialData: initialPosts }));
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: orpc.post.list.key() });
 
-  const create = useMutation(
-    orpc.post.create.mutationOptions({
-      onSuccess: async () => {
-        setTitle("");
-        await invalidate();
-      },
-    }),
-  );
-
+  const create = useMutation(orpc.post.create.mutationOptions({ onSuccess: invalidate }));
   const remove = useMutation(orpc.post.delete.mutationOptions({ onSuccess: invalidate }));
 
-  function submit(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    create.mutate({ title });
-  }
+  const form = useForm({
+    defaultValues: { title: "" },
+    validators: {
+      onSubmit: schema,
+      // oRPC rejects rather than returning `{ error }`, which is the other half
+      // of what `submitToServer` normalises — so this one is written out.
+      onSubmitAsync: async ({ value }) => {
+        try {
+          await create.mutateAsync({ title: value.title });
+          return null;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Something went wrong.";
+          return { form: message, fields: {} };
+        }
+      },
+    },
+    onSubmit: () => {
+      form.reset();
+    },
+  });
 
   return (
     <section className="flex flex-col gap-4">
-      <form className="flex gap-2" onSubmit={submit}>
-        <Input
-          placeholder="Write something…"
-          required
-          maxLength={200}
-          value={title}
-          onChange={(event) => {
-            setTitle(event.target.value);
-          }}
-        />
-        <Button type="submit" disabled={create.isPending}>
-          Add
-        </Button>
+      <form
+        noValidate
+        className="flex items-start gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void form.handleSubmit();
+        }}
+      >
+        <form.Field name="title">
+          {(field) => (
+            <Field data-invalid={!field.state.meta.isValid} className="flex-1">
+              <Input
+                aria-label="Post"
+                placeholder="Write something…"
+                maxLength={200}
+                aria-invalid={!field.state.meta.isValid}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => {
+                  field.handleChange(event.target.value);
+                }}
+              />
+              <FieldError errors={field.state.meta.errors} />
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(isSubmitting) => (
+            <Button type="submit" disabled={isSubmitting}>
+              Add
+            </Button>
+          )}
+        </form.Subscribe>
       </form>
 
-      {create.error === null ? null : (
-        <p className="text-destructive text-sm" role="alert">
-          {create.error.message}
-        </p>
-      )}
+      <form.Subscribe selector={(state) => state.errorMap.onSubmit}>
+        {(error) => <FieldError>{serverError(error)}</FieldError>}
+      </form.Subscribe>
 
       {posts.data.length === 0 ? (
         <p className="text-muted-foreground text-sm">Nothing here yet.</p>

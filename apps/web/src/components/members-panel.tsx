@@ -1,16 +1,18 @@
 "use client";
 
+import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
 import { useRouter } from "next/navigation";
-import { useState, type SubmitEvent } from "react";
+import { useState } from "react";
+import * as z from "zod";
 
 import { authClient } from "@repo/auth/client";
 import { roleNames, type Role } from "@repo/authz";
 import { Button } from "@repo/ui/components/button";
+import { Field, FieldError, FieldLabel } from "@repo/ui/components/field";
 import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
 
-import { useSubmit } from "@/lib/use-submit.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
 
 export type MemberRow = {
   id: string;
@@ -24,6 +26,11 @@ export type InvitationRow = {
   email: string;
   role: string;
 };
+
+const schema = z.object({
+  email: z.email("Enter a valid email address."),
+  role: z.enum(roleNames),
+});
 
 /**
  * Members of the active organization, and the invite form.
@@ -46,24 +53,26 @@ export function MembersPanel({
   canInvite: boolean;
 }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<Role>("member");
   const [sentTo, setSentTo] = useState<string | null>(null);
-  const { pending, error, run } = useSubmit();
 
-  function submit(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSentTo(null);
-
-    void run(
-      () => authClient.organization.inviteMember({ email, role }),
-      () => {
-        setSentTo(email);
-        setEmail("");
-        router.refresh();
-      },
-    );
-  }
+  const form = useForm({
+    defaultValues: { email: "", role: "member" },
+    validators: {
+      onSubmit: schema,
+      // The schema has already rejected anything else; `toRole` is what tells
+      // the compiler so, since the field's value is typed as a plain string.
+      onSubmitAsync: ({ value }) =>
+        submitToServer(() =>
+          authClient.organization.inviteMember({ email: value.email, role: toRole(value.role) }),
+        ),
+    },
+    onSubmit: ({ value }) => {
+      setSentTo(value.email);
+      // Keeps the chosen role, so inviting a second person to it is one field.
+      form.reset({ email: "", role: value.role });
+      router.refresh();
+    },
+  });
 
   return (
     <section className="flex flex-col gap-4">
@@ -89,47 +98,70 @@ export function MembersPanel({
       </ul>
 
       {canInvite ? (
-        <form className="flex items-end gap-2" onSubmit={submit}>
-          <div className="flex flex-1 flex-col gap-2">
-            <Label htmlFor="invite-email">Invite by email</Label>
-            <Input
-              id="invite-email"
-              type="email"
-              placeholder="teammate@example.com"
-              required
-              value={email}
-              onChange={(event) => {
-                setEmail(event.target.value);
-              }}
-            />
-          </div>
+        <form
+          noValidate
+          className="flex items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSentTo(null);
+            void form.handleSubmit();
+          }}
+        >
+          <form.Field name="email">
+            {(field) => (
+              <Field data-invalid={!field.state.meta.isValid} className="flex-1">
+                <FieldLabel htmlFor={field.name}>Invite by email</FieldLabel>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type="email"
+                  placeholder="teammate@example.com"
+                  aria-invalid={!field.state.meta.isValid}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    field.handleChange(event.target.value);
+                  }}
+                />
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
+            )}
+          </form.Field>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="invite-role" className="sr-only">
-              Role
-            </Label>
-            <select
-              id="invite-role"
-              value={role}
-              onChange={(event) => {
-                setRole(toRole(event.target.value));
-              }}
-              className={cn(
-                "border-input bg-background h-8 rounded-lg border px-2 text-sm",
-                "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none",
-              )}
-            >
-              {roleNames.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <form.Field name="role">
+            {(field) => (
+              <Field>
+                <select
+                  aria-label="Role"
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    field.handleChange(toRole(event.target.value));
+                  }}
+                  className={cn(
+                    "border-input bg-background h-8 rounded-lg border px-2 text-sm",
+                    "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none",
+                  )}
+                >
+                  {roleNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+          </form.Field>
 
-          <Button type="submit" disabled={pending}>
-            {pending ? "Inviting…" : "Invite"}
-          </Button>
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Inviting…" : "Invite"}
+              </Button>
+            )}
+          </form.Subscribe>
         </form>
       ) : null}
 
@@ -139,11 +171,9 @@ export function MembersPanel({
         </p>
       )}
 
-      {error === null ? null : (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      )}
+      <form.Subscribe selector={(state) => state.errorMap.onSubmit}>
+        {(error) => <FieldError>{serverError(error)}</FieldError>}
+      </form.Subscribe>
     </section>
   );
 }

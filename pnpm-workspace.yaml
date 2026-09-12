@@ -76,6 +76,10 @@ catalog:
   # --- Design system --------------------------------------------------------
   tailwindcss: 4.3.3
   "@tailwindcss/postcss": 4.3.3
+  # Form state, validation timing, and submission. Field markup comes from the
+  # shadcn `field` primitive, which is form-library agnostic.
+  "@tanstack/react-form": 1.33.5
+
   # Primitive layer behind the shadcn/ui components in @repo/ui.
   "@base-ui/react": 1.7.0
   class-variance-authority: 0.7.1

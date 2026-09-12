@@ -9,20 +9,48 @@ alwaysApply: false
 Server Components by default. `"use client"` only where interactivity requires
 it. Import across folders with the `@/` alias, never `../..`.
 
-## Forms use `useSubmit`
+## Forms use TanStack Form and the `field` primitive
 
 ```tsx
-const { pending, error, run } = useSubmit();
-
-function submit(event: SubmitEvent<HTMLFormElement>) {
-  event.preventDefault();
-  void run(() => authClient.signIn.email({ email, password }), () => router.push("/dashboard"));
-}
+const form = useForm({
+  defaultValues: { email: "", password: "" },
+  validators: {
+    onSubmit: schema,
+    onSubmitAsync: ({ value }) => submitToServer(() => authClient.signIn.email(value)),
+  },
+  onSubmit: () => router.push("/dashboard"),
+});
 ```
 
-It owns `pending` and `error` and guards the state write with a request id, so a
-slow response arriving after a resubmit cannot re-enable a form whose newer
-request is still in flight. Do not hand-roll `try/catch/finally` around a submit.
+The server call goes in `onSubmitAsync`, not in `onSubmit`. Better Auth reports
+failure by returning `{ error }` rather than throwing, so a validator is what
+turns that into a message and stops the success handler from running.
+`submitToServer` does that conversion, including the network-failure case.
+
+Its result must carry `fields`, even empty — TanStack Form only treats a result
+as form-level when that key is present, and `{ form }` alone reaches the UI as
+an object instead of the message. Read the message back with `serverError`,
+which drops the Zod record that shares the slot and is already rendered per
+field.
+
+Every `<form>` carries `noValidate`. `type="email"` otherwise lets the browser
+cancel submission before any handler runs, so the schema never gets a say and
+the page shows nothing — a button that silently does nothing.
+`e2e/validation.spec.ts` is what holds that in place.
+
+Markup comes from `@repo/ui/components/field`: `Field`, `FieldLabel`,
+`FieldError`. `FieldError` renders `role="alert"`, which the e2e specs assert
+on. It is form-library agnostic, so it stays put if the state layer changes.
+
+Read `isSubmitting` through `form.Subscribe`. Field state is subscribed per
+field, so reading `form.state` in the body will not re-render.
+
+## A form with no fields is still a form
+
+Accepting an invitation and resending a verification email have no inputs but do
+have a pending state and a server error. They use `useForm` with
+`defaultValues: {}` rather than a bespoke hook, so there is one submission
+pattern in the app.
 
 ## A client-side permission check is cosmetic
 
