@@ -25,14 +25,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Installs pnpm (from `packageManager`), Node (from `devEngines.runtime`),
-      # and the dependencies in one step. `require-lockfile` is stricter than
-      # `--frozen-lockfile` alone: it also fails when no lockfile exists, which
-      # a plain install would quietly resolve from the registry and accept.
+      # Installs pnpm (from `packageManager`) and Node (from
+      # `devEngines.runtime`) in one step, and caches the store.
+      #
+      # `install: false` because the action's own install does not pass
+      # `--frozen-lockfile`, and an out-of-date lockfile has to fail CI rather
+      # than be silently resolved. Its `require-lockfile` input would cover
+      # this, but that is unreleased — collapse these two steps once it ships.
       - uses: pnpm/setup@v2
         with:
           cache: true
-          require-lockfile: true
+          install: false
+
+      - run: pnpm install --frozen-lockfile
 
       - run: pnpm format:check
       - run: pnpm lint
@@ -86,7 +91,8 @@ jobs:
       - uses: pnpm/setup@v2
         with:
           cache: true
-          require-lockfile: true
+          install: false
 
+      - run: pnpm install --frozen-lockfile
       - run: pnpm db:migrate
       - run: pnpm test:integration
