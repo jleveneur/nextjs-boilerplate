@@ -10,6 +10,7 @@
     "start": "turbo run start",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
     "lint": "pnpm --filter @repo/web typegen && oxlint --type-aware",
     "lint:fix": "pnpm --filter @repo/web typegen && oxlint --type-aware --fix",
     "format": "oxfmt",

@@ -31,6 +31,14 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  /**
+   * The organization this user was last working in, so the choice survives
+   * signing out. Deliberately not a foreign key: membership is checked before
+   * the value is used, which already covers a deleted or departed
+   * organization, and a column Better Auth does not know about must stay
+   * harmless to it.
+   */
+  lastActiveOrganizationId: text("last_active_organization_id"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });

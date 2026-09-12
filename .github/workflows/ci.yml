@@ -57,3 +57,41 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/app
           BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-characters
           BETTER_AUTH_URL: http://localhost:3000
+
+  integration:
+    name: Integration
+    runs-on: ubuntu-latest
+
+    # The one suite that needs a real database: Better Auth writing through the
+    # Drizzle adapter, and permissions read back from the rows it wrote.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/app
+      BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-characters
+      BETTER_AUTH_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - run: pnpm test:integration

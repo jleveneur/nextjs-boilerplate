@@ -18,6 +18,11 @@ pre-existing, confirm that on a clean tree instead of assuming.
 Faster individual loops: `pnpm format`, `pnpm lint`, `pnpm typecheck`,
 `pnpm knip`, `pnpm react-doctor`, `pnpm test`.
 
+`pnpm check` deliberately excludes `pnpm test:integration`, which needs a
+database. Run it — `pnpm db:migrate && pnpm test:integration` — whenever you
+touch the schema, Better Auth's configuration, or a procedure's guards. It is
+the only thing that exercises the adapter and the permission rows together.
+
 Lefthook also runs formatting and syntax-only lint on commit, commitlint on the
 message, and affected typecheck and tests on push. They are a convenience, not
 the gate — do not treat a green hook as a substitute for `pnpm check`.
@@ -92,7 +97,8 @@ These fail `pnpm check`, so there is no version of "just for now":
 
 - Files and directories: `kebab-case`. Types and components: `PascalCase`.
   Functions and variables: `camelCase`.
-- Tests sit beside the code as `*.test.ts`.
+- Tests sit beside the code as `*.test.ts`. Anything needing a live service is
+  `*.integration.test.ts` and runs under its own config.
 - Import internal packages by name (`@repo/db`), never by relative path across
   a package boundary. Inside `apps/web`, use the `@/` alias.
 - Type-only imports use `import type`.

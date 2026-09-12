@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { db, member, organization, post } from "@repo/db";
 
-import { orgProcedure, publicProcedure } from "./procedures.ts";
+import { orgProcedure, protectedProcedure, publicProcedure } from "./procedures.ts";
 import { requirePermission } from "./require-permission.ts";
 
 /**
@@ -18,7 +18,30 @@ export const appRouter = {
   health: publicProcedure.handler(() => ({ status: "ok" as const })),
 
   organization: {
-    /** The active organization and the caller's role in it. */
+    /** Every organization the caller belongs to, oldest membership first. */
+    list: protectedProcedure.handler(({ context }) =>
+      db
+        .select({
+          id: organization.id,
+          name: organization.name,
+          slug: organization.slug,
+          role: member.role,
+        })
+        .from(member)
+        .innerJoin(organization, eq(organization.id, member.organizationId))
+        .where(eq(member.userId, context.user.id))
+        .orderBy(member.createdAt),
+    ),
+
+    /**
+     * The active organization and the caller's role in it.
+     *
+     * Creating and switching are deliberately *not* here: both have to issue a
+     * refreshed session cookie, and only Better Auth's own route can put that
+     * on the response the browser sees. The client calls
+     * `authClient.organization.*` for those, and a session-update hook mirrors
+     * the choice onto the user row.
+     */
     current: orgProcedure.handler(async ({ context }) => {
       const [row] = await db
         .select({

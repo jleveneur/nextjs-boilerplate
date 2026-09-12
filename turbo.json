@@ -47,6 +47,15 @@
     "test": {
       "dependsOn": [],
       "outputs": []
+    },
+
+    // Needs a live database, so it is never part of the default local loop and
+    // is never cached — a pass proves the schema and the code agreed at the
+    // moment it ran, which is not a property of the inputs alone.
+    "test:integration": {
+      "dependsOn": [],
+      "cache": false,
+      "env": ["DATABASE_URL", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL"]
     }
   }
 }

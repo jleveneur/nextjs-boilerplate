@@ -115,9 +115,36 @@ control the user cannot use — but that is cosmetic. The server checks again on
 every call, and a mutation is scoped by `organizationId` as well, so an admin
 of one tenant cannot reach another tenant's row by guessing an id.
 
+Users can create organizations and switch between them from the dashboard.
+Those two actions call `authClient.organization.*` rather than the oRPC router,
+because both change the session and only Better Auth's own route can hand the
+browser the refreshed session cookie — proxied through another endpoint, the
+cookie cache keeps serving the previous organization for minutes. A
+session-update hook mirrors the choice onto the user row, so it also survives
+signing out.
+
 Inviting members works through Better Auth's API; nothing emails the invitation
 link, because there is no mail transport here. Add `sendInvitationEmail` when
 you add one.
+
+## Testing
+
+Two suites, split by what they need.
+
+`pnpm test` is pure logic — environment rules, role grants, procedure guards.
+It runs in under a second and needs nothing.
+
+`pnpm test:integration` is the seam the first suite cannot reach: Better Auth
+writing through the Drizzle adapter, the session hook resolving an
+organization, and a permission check reading the member row it just wrote.
+That wiring is what an upstream version bump breaks silently, and no amount of
+typechecking sees it. It needs a database with migrations applied:
+
+```bash
+pnpm db:migrate && pnpm test:integration
+```
+
+CI runs it against a Postgres service container.
 
 ## Git hooks
 
@@ -164,9 +191,14 @@ you need them.
 
 ## What is deliberately missing
 
-No Redis, object storage, email, payments, queues, analytics, error tracking,
-feature flags, internationalisation, containers, or end-to-end test harness.
-No organization-management UI either — the API is wired, the screens are yours.
+No Redis, object storage, payments, queues, analytics, error tracking, feature
+flags, internationalisation, containers, or browser test harness.
+
+**No email transport**, which is the one worth calling out: it means no address
+verification, no password reset, and no invitation emails. Every real product
+needs those on day one. They are absent because the choice of provider is
+yours, not because they are optional — wire a transport, then turn on
+`requireEmailVerification` and `sendInvitationEmail`.
 Each of those is a real decision with real trade-offs, and a starter that makes
 them for you is a starter you spend your first day deleting.
 
