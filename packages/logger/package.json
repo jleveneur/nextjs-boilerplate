@@ -1,8 +1,8 @@
 {
-  "name": "@repo/email",
+  "name": "@repo/logger",
   "version": "0.0.0",
   "private": true,
-  "description": "Transactional email: Resend in production, a local outbox without a key.",
+  "description": "Structured JSON logging with redaction, on Pino.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -14,8 +14,7 @@
   },
   "dependencies": {
     "@repo/env": "workspace:*",
-    "@repo/logger": "workspace:*",
-    "resend": "catalog:"
+    "pino": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",

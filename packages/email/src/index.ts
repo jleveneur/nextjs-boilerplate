@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
 import { env } from "@repo/env";
+import { logger } from "@repo/logger";
 
 import { writeToOutbox } from "./outbox.ts";
 
@@ -28,9 +29,10 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
   if (resend === null) {
     writeToOutbox(outboxDirectory(), { ...input, sentAt: new Date().toISOString() });
     // A warning, not information: nothing was actually delivered. The link is
-    // printed because one nobody can see is the same as an email nobody sent.
-    console.warn(
-      `[email] not sent (no RESEND_API_KEY): "${input.subject}" to ${input.to}\n[email] ${firstLink(input.html)}`,
+    // logged because one nobody can see is the same as an email nobody sent.
+    logger.warn(
+      { to: input.to, subject: input.subject, link: firstLink(input.html) },
+      "email not sent: no RESEND_API_KEY, written to the local outbox",
     );
     return;
   }
@@ -52,8 +54,16 @@ export function outboxDirectory(): string {
   return env.MAIL_OUTBOX_DIR ?? ".mail";
 }
 
+/**
+ * The action link, as a developer can paste it.
+ *
+ * The templates escape URLs for HTML, so `&` arrives as `&amp;` — pasted from
+ * a terminal that produces a broken query string, which makes the whole line
+ * useless for the one job it has.
+ */
 function firstLink(html: string): string {
-  return /href="([^"]+)"/.exec(html)?.[1] ?? "(no link in this message)";
+  const escaped = /href="([^"]+)"/.exec(html)?.[1];
+  return escaped === undefined ? "(no link in this message)" : escaped.replaceAll("&amp;", "&");
 }
 
 export { invitationEmail, resetPasswordEmail, verificationEmail, type Email } from "./templates.ts";

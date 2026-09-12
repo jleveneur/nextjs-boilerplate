@@ -55,6 +55,9 @@ catalog:
   # --- Email ----------------------------------------------------------------
   resend: 6.28.0
 
+  # --- Logging --------------------------------------------------------------
+  pino: 10.3.1
+
   # --- API transport --------------------------------------------------------
   # 2.x is still the `beta` dist-tag; pin the exact beta and upgrade server and
   # client together.

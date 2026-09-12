@@ -12,6 +12,7 @@ and nothing that only some projects need.
 - **[Better Auth](https://better-auth.com)** for email/password sign-in, organizations, and
   role-based permissions
 - **[Resend](https://resend.com)** for verification, password reset, and invitation email
+- **[Pino](https://getpino.io)** for structured logging with credential redaction
 - **[t3-env](https://env.t3.gg)** + **[Zod](https://zod.dev)** for validated configuration
 - **[Vitest](https://vitest.dev)** and **[Playwright](https://playwright.dev)**, on one GitHub
   Actions workflow
@@ -50,6 +51,7 @@ packages/
   db/             Drizzle schema, migrations, client  @repo/db
   env/            Zod-validated environment           @repo/env
   email/          Transactional email                 @repo/email
+  logger/         Structured logging with redaction   @repo/logger
   ui/             shadcn/ui components                @repo/ui
 tooling/
   oxlint/         Shared lint rules
@@ -155,6 +157,31 @@ Bodies are plain functions in
 [packages/email/src/templates.ts](packages/email/src/templates.ts) returning
 `{ subject, html }`. Three emails do not justify a renderer and a preview
 server; swap in React Email when the design outgrows them.
+
+## Logging
+
+`@repo/logger` is [Pino](https://getpino.io) writing JSON to stdout — the shape
+every log aggregator wants, and the one Vercel, Fly, and a container runtime all
+capture without configuration. `LOG_LEVEL` controls verbosity.
+
+Credentials are redacted centrally rather than at call sites, because the
+dangerous case is never the one someone wrote deliberately: it is a request or
+an error object that happens to carry a cookie, dragged into a line by
+`{ err }`. Passwords, tokens, secrets, and `authorization` and `cookie` headers
+are scrubbed one level deep, and
+[a test asserts it](packages/logger/src/redact.test.ts).
+
+There is no pretty-printing transport: Pino's runs in a worker thread, which
+Next's bundler does not reliably carry through a build. For a readable local
+stream, pipe it:
+
+```bash
+pnpm dev | pnpm dlx pino-pretty
+```
+
+Failed procedures are logged by the RPC route — rejections a caller earned at
+`warn`, anything unplanned at `error` with its stack. Error tracking (Sentry
+and the like) is still yours to add; this gets you the trace to attach to it.
 
 ## Testing
 

@@ -27,7 +27,8 @@
         "RESEND_API_KEY",
         "EMAIL_FROM",
         "MAIL_OUTBOX_DIR",
-        "AUTH_RATE_LIMIT"
+        "AUTH_RATE_LIMIT",
+        "LOG_LEVEL"
       ]
     },
 
@@ -73,7 +74,8 @@
         "RESEND_API_KEY",
         "EMAIL_FROM",
         "MAIL_OUTBOX_DIR",
-        "AUTH_RATE_LIMIT"
+        "AUTH_RATE_LIMIT",
+        "LOG_LEVEL"
       ]
     },
 
@@ -90,6 +92,7 @@
         "EMAIL_FROM",
         "MAIL_OUTBOX_DIR",
         "AUTH_RATE_LIMIT",
+        "LOG_LEVEL",
         "PLAYWRIGHT_*"
       ]
     }

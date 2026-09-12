@@ -48,6 +48,12 @@ export const server = {
   MAIL_OUTBOX_DIR: z.string().min(1).optional(),
 
   /**
+   * Log verbosity. `debug` and `trace` are for chasing something specific —
+   * leaving them on in production is how a log bill becomes a surprise.
+   */
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+
+  /**
    * Better Auth's per-IP rate limiting.
    *
    * On by default, and it should stay on anywhere real people sign in — it is

@@ -54,6 +54,16 @@ describe("escapeHtml", () => {
   });
 });
 
+describe("escaping round-trip", () => {
+  // The logged link and the link a browser follows must be the same URL.
+  it("unescapes back to the original when a link is read out of the HTML", () => {
+    const { html } = verificationEmail({ name: "Ada", url: URL_UNDER_TEST });
+    const extracted = /href="([^"]+)"/.exec(html)?.[1]?.replaceAll("&amp;", "&");
+
+    expect(extracted).toBe(URL_UNDER_TEST);
+  });
+});
+
 describe("parseOutbox", () => {
   it("reads one entry per line and ignores blanks", () => {
     const entries = parseOutbox(

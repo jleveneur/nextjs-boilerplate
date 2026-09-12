@@ -42,6 +42,7 @@ packages/auth      Better Auth server and client
 packages/authz     Organization roles and the permissions they grant
 packages/db        Drizzle schema, migrations, client
 packages/email     Transactional email, and the local outbox without a key
+packages/logger    Structured logging with credential redaction
 packages/env       Zod-validated environment
 packages/ui        shadcn/ui components
 tooling/*          Lint, Tailwind, and tsconfig configuration
@@ -86,7 +87,10 @@ These fail `pnpm check`, so there is no version of "just for now":
 - **No `any`.** Use `unknown` and narrow. No non-null assertions (`!`).
 - **No unawaited promises.** A floating promise in a request handler is silent
   data loss.
-- **No `console.log`.** `console.warn` and `console.error` are allowed.
+- **No `console`.** Use `logger` from `@repo/logger`; it redacts credentials and
+  emits the structured shape an aggregator can query. `console.warn` and
+  `console.error` remain available for scripts and config, which run before a
+  logger exists.
 - **No secrets in code, tests, or fixtures.**
 - **No ad hoc `process.env` reads.** Add the variable to
   `packages/env/src/schema.ts` and import `env` from `@repo/env`, which t3-env

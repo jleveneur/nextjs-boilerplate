@@ -23,6 +23,7 @@
     "@repo/auth": "workspace:*",
     "@repo/authz": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/logger": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "better-auth": "catalog:",
