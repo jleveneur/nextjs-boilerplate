@@ -1,6 +1,5 @@
+import { cn } from "cn";
 import * as React from "react";
-
-import { cn } from "../lib/utils.ts";
 
 function Card({
   className,
@@ -38,7 +37,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
  *
  * On a page whose content is one card, the card title is the page title — and
  * a `div` that merely looks like a heading is invisible to anyone navigating
- * by headings.
+ * by headings. `shadcn add card` will revert this; keep it.
  */
 function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (

@@ -254,11 +254,27 @@ reach the client through an import nobody noticed.
 
 ## Adding UI components
 
-Components live in `@repo/ui` and come from the shadcn registry:
+Components live in `@repo/ui` and come from the shadcn registry. Run the CLI
+against the **app**, not the package — it reads
+[apps/web/components.json](apps/web/components.json), works out that the
+component belongs in the shared package, writes it to `packages/ui`, and fixes
+the imports across the workspace boundary:
 
 ```bash
-cd packages/ui && pnpm dlx shadcn@latest add dialog
+pnpm dlx shadcn@latest add dialog -c apps/web
 ```
+
+Both workspaces need a `components.json` with matching `style`, `baseColor`,
+and `iconLibrary` — that is a shadcn requirement, not a preference, and the CLI
+offers to create one from scratch if it is missing.
+
+Class merging comes from [`cn`](https://github.com/shadcn-ui/cn), shadcn's own
+compiled replacement for `clsx` + `tailwind-merge`, which is what its registry
+components import. There is no local `lib/utils` helper to keep in sync.
+
+`@repo/ui` exports `./components/*` only. If the CLI ever writes a file to
+`src/lib` or `src/hooks`, add the matching export to its `package.json` —
+otherwise the import will not resolve.
 
 The starter ships only `Button`, `Card`, `Input`, and `Label` — add the rest as
 you need them.

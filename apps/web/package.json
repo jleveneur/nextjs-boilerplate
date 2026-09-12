@@ -27,6 +27,7 @@
     "@repo/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "better-auth": "catalog:",
+    "cn": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

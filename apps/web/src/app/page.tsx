@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button } from "@repo/ui";
+import { Button } from "@repo/ui/components/button";
 
 const stack = [
   "Next.js (App Router)",

@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
 
 import { authClient } from "@repo/auth/client";
-import { Button, Input, Label } from "@repo/ui";
+import { Button } from "@repo/ui/components/button";
+import { Input } from "@repo/ui/components/input";
+import { Label } from "@repo/ui/components/label";
 
 import { useSubmit } from "@/lib/use-submit.ts";
 

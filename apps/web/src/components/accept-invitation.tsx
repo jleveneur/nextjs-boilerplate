@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui";
+import { Button } from "@repo/ui/components/button";
 
 import { useSubmit } from "@/lib/use-submit.ts";
 

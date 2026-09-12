@@ -6,7 +6,8 @@ import { useState, type SubmitEvent } from "react";
 // Type-only import: `Post` is `typeof post.$inferSelect`, so nothing from
 // `@repo/db` reaches the browser bundle.
 import type { Post } from "@repo/db";
-import { Button, Input } from "@repo/ui";
+import { Button } from "@repo/ui/components/button";
+import { Input } from "@repo/ui/components/input";
 
 import { orpc } from "@/lib/orpc.ts";
 
