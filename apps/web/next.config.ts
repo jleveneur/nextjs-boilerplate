@@ -14,7 +14,7 @@ if (existsSync(rootEnv)) {
 const nextConfig: NextConfig = {
   // Internal packages ship TypeScript source with no build step, so Next has to
   // compile them the same way it compiles `src/`.
-  transpilePackages: ["@repo/api", "@repo/auth", "@repo/db", "@repo/ui"],
+  transpilePackages: ["@repo/api", "@repo/auth", "@repo/authz", "@repo/db", "@repo/ui"],
   experimental: {
     // TypeScript 7 has no JavaScript compiler API yet, so `next build` shells
     // out to the local `tsc` instead of loading it in-process.

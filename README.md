@@ -9,7 +9,8 @@ and nothing that only some projects need.
 - **[Tailwind CSS](https://tailwindcss.com)** + **[shadcn/ui](https://ui.shadcn.com)**
 - **[Drizzle ORM](https://orm.drizzle.team)** + PostgreSQL
 - **[oRPC](https://orpc.unnoq.com)** for the typed API
-- **[Better Auth](https://better-auth.com)** for email and password sign-in
+- **[Better Auth](https://better-auth.com)** for email/password sign-in, organizations, and
+  role-based permissions
 - **[t3-env](https://env.t3.gg)** + **[Zod](https://zod.dev)** for validated configuration
 - **[Vitest](https://vitest.dev)** and a single GitHub Actions workflow
 - **[Lefthook](https://lefthook.dev)** + **[commitlint](https://commitlint.js.org)** git hooks,
@@ -37,6 +38,7 @@ apps/
 packages/
   api/            oRPC procedures and router          @repo/api
   auth/           Better Auth server and client       @repo/auth
+  authz/          Organization roles and permissions  @repo/authz
   db/             Drizzle schema, migrations, client  @repo/db
   env/            Zod-validated environment           @repo/env
   ui/             shadcn/ui components                @repo/ui
@@ -83,6 +85,39 @@ them through `transpilePackages`; Vitest and `tsc` read them directly.
 | `pnpm db:generate`          | Generate a migration from `schema.ts`             |
 | `pnpm db:migrate`           | Apply pending migrations                          |
 | `pnpm db:studio`            | Drizzle Studio                                    |
+
+## Organizations and permissions
+
+Every user gets a personal organization the first time they sign in, and every
+session starts inside one. That is the tenant boundary: `post` carries an
+`organization_id`, and every query filters on it.
+
+Roles and what they grant live in one file, `packages/authz/src/index.ts`:
+
+```ts
+export const statement = {
+  ...defaultStatements, // organization, member, invitation
+  post: ["create", "delete"], // your resources go here
+} as const;
+```
+
+Procedures compose the guarantee rather than restating it:
+
+| Builder                                   | Guarantees                         |
+| ----------------------------------------- | ---------------------------------- |
+| `publicProcedure`                         | nothing                            |
+| `protectedProcedure`                      | a signed-in `context.user`         |
+| `orgProcedure`                            | an active `context.organizationId` |
+| `requirePermission({ post: ["delete"] })` | the caller's role grants it        |
+
+The browser gets the same role definitions, so `checkRolePermission` can hide a
+control the user cannot use — but that is cosmetic. The server checks again on
+every call, and a mutation is scoped by `organizationId` as well, so an admin
+of one tenant cannot reach another tenant's row by guessing an id.
+
+Inviting members works through Better Auth's API; nothing emails the invitation
+link, because there is no mail transport here. Add `sendInvitationEmail` when
+you add one.
 
 ## Git hooks
 
@@ -131,6 +166,7 @@ you need them.
 
 No Redis, object storage, email, payments, queues, analytics, error tracking,
 feature flags, internationalisation, containers, or end-to-end test harness.
+No organization-management UI either — the API is wired, the screens are yours.
 Each of those is a real decision with real trade-offs, and a starter that makes
 them for you is a starter you spend your first day deleting.
 

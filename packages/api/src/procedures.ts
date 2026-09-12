@@ -16,3 +16,19 @@ export const protectedProcedure = publicProcedure.use(({ context, next }) => {
 
   return next({ context: { user: context.session.user } });
 });
+
+/**
+ * Requires an active organization, and exposes it as `context.organizationId`.
+ *
+ * This is the tenant boundary. Every query a handler below it runs must filter
+ * on this id — an unfiltered query is a data leak, not a bug.
+ */
+export const orgProcedure = protectedProcedure.use(({ context, next }) => {
+  const organizationId = context.session?.session.activeOrganizationId;
+
+  if (organizationId === null || organizationId === undefined) {
+    throw new ORPCError("FORBIDDEN", { message: "No active organization" });
+  }
+
+  return next({ context: { organizationId } });
+});

@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /**
  * Database schema.
@@ -46,6 +46,10 @@ export const session = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
+    // Organization plugin: which tenant this session is currently acting in.
+    // No foreign key — Better Auth writes it through the adapter and expects to
+    // be able to clear it, and a deleted organization must not delete sessions.
+    activeOrganizationId: text("active_organization_id"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -93,6 +97,61 @@ export const verification = pgTable(
   (table) => [index("idx_verification__identifier").on(table.identifier)],
 );
 
+// --- Better Auth: organization plugin ----------------------------------------
+// Field names and nullability follow the plugin's own schema exactly. Diverging
+// here produces adapter errors at runtime, not at build time.
+// https://www.better-auth.com/docs/plugins/organization
+
+export const organization = pgTable("organization", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  logo: text("logo"),
+  metadata: text("metadata"),
+  createdAt: createdAt(),
+});
+
+export const member = pgTable(
+  "member",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("member"),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    uniqueIndex("uq_member__organization_id_user_id").on(table.organizationId, table.userId),
+    index("idx_member__user_id").on(table.userId),
+  ],
+);
+
+export const invitation = pgTable(
+  "invitation",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: text("role"),
+    status: text("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }).notNull(),
+    inviterId: text("inviter_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    index("idx_invitation__organization_id").on(table.organizationId),
+    index("idx_invitation__email").on(table.email),
+  ],
+);
+
 // --- Application ------------------------------------------------------------
 // One example table so the starter has something end to end to show. Delete it
 // and its router when you add a real domain.
@@ -101,6 +160,11 @@ export const post = pgTable(
   "post",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    // Every tenant-scoped table leads with organization_id, and every query
+    // filters on it. A query without that filter is a data leak, not a bug.
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -108,8 +172,9 @@ export const post = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (table) => [index("idx_post__user_id").on(table.userId)],
+  (table) => [index("idx_post__organization_id").on(table.organizationId)],
 );
 
 export type Post = typeof post.$inferSelect;
 export type User = typeof user.$inferSelect;
+export type Organization = typeof organization.$inferSelect;

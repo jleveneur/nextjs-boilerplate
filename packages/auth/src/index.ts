@@ -1,17 +1,23 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { organization } from "better-auth/plugins";
 
-import { account, db, session, user, verification } from "@repo/db";
+import { ac, roles } from "@repo/authz";
+import * as schema from "@repo/db";
+import { db } from "@repo/db";
 import { env } from "@repo/env";
+
+import { ensurePersonalOrganization } from "./personal-organization.ts";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
 /**
  * The Better Auth instance.
  *
- * Email and password only: every other method — OAuth providers, magic links,
- * passkeys, organizations — needs configuration or infrastructure that belongs
- * to a product, not to a starter. Adding one is a plugin and a migration.
+ * Email and password, plus the organization plugin for multi-tenancy. Every
+ * other method — OAuth providers, magic links, passkeys — needs configuration
+ * or infrastructure that belongs to a product, not to a starter. Adding one is
+ * a plugin and a migration.
  * https://www.better-auth.com/docs/authentication/email-password
  */
 export const auth = betterAuth({
@@ -20,7 +26,15 @@ export const auth = betterAuth({
 
   database: drizzleAdapter(db, {
     provider: "pg",
-    schema: { user, session, account, verification },
+    schema: {
+      user: schema.user,
+      session: schema.session,
+      account: schema.account,
+      verification: schema.verification,
+      organization: schema.organization,
+      member: schema.member,
+      invitation: schema.invitation,
+    },
   }),
 
   emailAndPassword: {
@@ -41,6 +55,36 @@ export const auth = betterAuth({
     // `NODE_ENV=production` defaults to Secure cookies, which browsers drop on
     // plain HTTP. Follow the public URL instead so `next start` works locally.
     useSecureCookies: new URL(env.BETTER_AUTH_URL).protocol === "https:",
+  },
+
+  plugins: [
+    organization({
+      ac,
+      roles,
+      creatorRole: "owner",
+      // Invitations are created and can be accepted from their link, but
+      // nothing sends that link — add `sendInvitationEmail` with a transport.
+    }),
+  ],
+
+  databaseHooks: {
+    session: {
+      create: {
+        /**
+         * Start every session in an organization.
+         *
+         * `activeOrganizationId` is what the plugin's permission checks read,
+         * so a session without one can do nothing until the user picks a
+         * tenant — and nothing in this starter asks them to.
+         */
+        before: async (created) => ({
+          data: {
+            ...created,
+            activeOrganizationId: await ensurePersonalOrganization(created.userId),
+          },
+        }),
+      },
+    },
   },
 });
 

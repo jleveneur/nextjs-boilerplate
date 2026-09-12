@@ -30,6 +30,7 @@ the gate — do not treat a green hook as a substitute for `pnpm check`.
 apps/web           Next.js application
 packages/api       oRPC procedures and router
 packages/auth      Better Auth server and client
+packages/authz     Organization roles and the permissions they grant
 packages/db        Drizzle schema, migrations, client
 packages/env       Zod-validated environment
 packages/ui        shadcn/ui components
@@ -37,9 +38,13 @@ tooling/*          Lint, Tailwind, and tsconfig configuration
 scripts/           Repository setup scripts, run from package.json
 ```
 
-The dependency direction is `env → db → auth → api → web`, with `ui` depending
-on nothing internal. Keep it that way: a cycle between packages is a design
-error, not something to work around with a re-export.
+The dependency direction is `env → db → auth → api → web`, with `authz`
+feeding `auth` and `ui` depending on nothing internal. Keep it that way: a
+cycle between packages is a design error, not something to work around with a
+re-export.
+
+`authz` is deliberately free of server dependencies — the browser imports the
+same role definitions to hide controls, so it must not pull in the database.
 
 Internal packages ship TypeScript source with no build step. A package that
 starts emitting declarations breaks the parallel `typecheck` in `turbo.json`.
@@ -52,9 +57,15 @@ starts emitting declarations breaks the parallel `typecheck` in `turbo.json`.
   an oRPC procedure, or in a function the procedure calls.
 - **No business rules in a React component.** Components render state and raise
   events.
-- **Every mutation scopes its query by the caller.** `eq(post.userId,
-context.user.id)` is authorization; leaving it out is a data leak, not a bug.
-- **`protectedProcedure` is how you require a session.** Do not re-derive it.
+- **Every query is scoped by `organizationId`.** `eq(post.organizationId,
+context.organizationId)` is the tenant boundary; leaving it out is a data
+  leak, not a bug. That includes deletes and updates — a permission check
+  without a scoped `where` still lets one tenant reach another's rows.
+- **Compose the guard, do not re-derive it.** `protectedProcedure` for a
+  session, `orgProcedure` for a tenant, `requirePermission({ … })` for a role
+  check. New permissions go in `packages/authz`, never inline in a handler.
+- **A client-side permission check is cosmetic.** It hides controls. The server
+  checks again.
 
 ---
 

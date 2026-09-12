@@ -11,11 +11,14 @@ import { Button, Input } from "@repo/ui";
 import { orpc } from "@/lib/orpc.ts";
 
 /**
- * The example slice, end to end: an oRPC query, two oRPC mutations, and the
- * cache invalidation that ties them together. Delete this with the `post`
- * router.
+ * The example slice, end to end: an oRPC query scoped to the active
+ * organization, two permission-gated mutations, and the cache invalidation
+ * that ties them together. Delete this with the `post` router.
+ *
+ * `canDelete` hides a control the caller's role does not grant. It is not the
+ * authorization — the server checks the same permission on every call.
  */
-export function Posts({ initialPosts }: { initialPosts: Post[] }) {
+export function Posts({ initialPosts, canDelete }: { initialPosts: Post[]; canDelete: boolean }) {
   const [title, setTitle] = useState("");
   const queryClient = useQueryClient();
 
@@ -69,16 +72,18 @@ export function Posts({ initialPosts }: { initialPosts: Post[] }) {
           {posts.data.map((item) => (
             <li key={item.id} className="flex items-center justify-between gap-4 px-4 py-3">
               <span className="text-sm">{item.title}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={remove.isPending}
-                onClick={() => {
-                  remove.mutate({ id: item.id });
-                }}
-              >
-                Delete
-              </Button>
+              {canDelete ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={remove.isPending}
+                  onClick={() => {
+                    remove.mutate({ id: item.id });
+                  }}
+                >
+                  Delete
+                </Button>
+              ) : null}
             </li>
           ))}
         </ul>
