@@ -263,6 +263,15 @@ cd packages/ui && pnpm dlx shadcn@latest add dialog
 The starter ships only `Button`, `Card`, `Input`, and `Label` — add the rest as
 you need them.
 
+The style is `base-nova`, so [ReUI](https://reui.io) components install through
+the same CLI:
+
+```bash
+cd packages/ui && pnpm dlx shadcn@latest add @reui/data-grid
+```
+
+Its free components need nothing; premium blocks need a `REUI_LICENSE_KEY`.
+
 ## What is deliberately missing
 
 No Redis, object storage, payments, queues, analytics, error tracking, feature

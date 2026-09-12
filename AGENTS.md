@@ -49,6 +49,10 @@ tooling/*          Lint, Tailwind, and tsconfig configuration
 scripts/           Repository setup scripts, run from package.json
 ```
 
+Editor agents get more here: `.cursor/rules/` carries per-area conventions that
+attach to the files they govern, and `.cursor/skills/verify` documents how to
+run the two suites that need a database.
+
 The dependency direction is `env → db → auth → api → web`, with `authz` and
 `email` feeding `auth`, and `ui` depending on nothing internal. Keep it that
 way: a cycle between packages is a design error, not something to work around

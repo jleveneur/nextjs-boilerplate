@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "next-devtools": {
+      "command": "pnpm",
+      "args": ["dlx", "next-devtools-mcp@latest"]
+    },
+    "playwright": {
+      "command": "pnpm",
+      "args": ["dlx", "@playwright/mcp@latest", "--browser", "chromium"]
+    },
+    "reui": {
+      "url": "https://mcp.reui.io/api/mcp"
+    },
+    "shadcn": {
+      "command": "pnpm",
+      "args": ["dlx", "shadcn@latest", "mcp"]
+    }
+  }
+}

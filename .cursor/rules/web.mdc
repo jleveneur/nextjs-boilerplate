@@ -1,0 +1,46 @@
+---
+description: Next.js app conventions — server components, forms, and permission display
+globs: apps/web/src/**/*.tsx,apps/web/src/**/*.ts
+alwaysApply: false
+---
+
+# Web app
+
+Server Components by default. `"use client"` only where interactivity requires
+it. Import across folders with the `@/` alias, never `../..`.
+
+## Forms use `useSubmit`
+
+```tsx
+const { pending, error, run } = useSubmit();
+
+function submit(event: SubmitEvent<HTMLFormElement>) {
+  event.preventDefault();
+  void run(() => authClient.signIn.email({ email, password }), () => router.push("/dashboard"));
+}
+```
+
+It owns `pending` and `error` and guards the state write with a request id, so a
+slow response arriving after a resubmit cannot re-enable a form whose newer
+request is still in flight. Do not hand-roll `try/catch/finally` around a submit.
+
+## A client-side permission check is cosmetic
+
+```tsx
+const canDelete = role?.authorize({ post: ["delete"] }).success ?? false;
+```
+
+That decides whether a control renders. The server checks the same permission on
+every call, and the mutation is scoped by organization as well. Never treat the
+client check as the boundary.
+
+## After a navigation that depends on the session, refresh
+
+`router.push()` alone leaves the router cache holding a page rendered for the
+previous session. Follow it with `router.refresh()` whenever the destination is
+a Server Component that reads the session.
+
+## Redirect targets from the URL must be narrowed
+
+`?next=` is attacker-controlled. Pass it through `safeRedirect` — `//evil.example`
+is a protocol-relative URL a browser will follow off-site.

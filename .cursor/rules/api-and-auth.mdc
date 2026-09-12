@@ -1,0 +1,49 @@
+---
+description: oRPC procedures, tenant scoping, and when to use authClient instead
+globs: packages/api/**/*.ts,packages/auth/**/*.ts,packages/authz/**/*.ts,apps/web/src/app/api/**
+alwaysApply: false
+---
+
+# API and auth
+
+## Compose the guarantee, do not restate it
+
+| Builder | Guarantees |
+| --- | --- |
+| `publicProcedure` | nothing |
+| `protectedProcedure` | a signed-in `context.user` |
+| `orgProcedure` | an active `context.organizationId` |
+| `requirePermission({ post: ["delete"] })` | the caller's role grants it |
+
+New permissions go in `packages/authz`, never inline in a handler. Authorization
+is asked of Better Auth (`auth.api.hasPermission`) rather than re-derived from
+the session — the role lives on the member row, and a second reader is a second
+source of truth.
+
+## Every query is scoped by organization
+
+```ts
+// ✅ the permission check and the scope are both required
+await db.delete(post).where(and(eq(post.id, input.id), eq(post.organizationId, context.organizationId)));
+
+// ❌ an admin of one tenant can delete another tenant's row by guessing an id
+await db.delete(post).where(eq(post.id, input.id));
+```
+
+## Anything that changes the session goes through `authClient`, not oRPC
+
+Creating an organization, switching organizations, signing in or out, inviting,
+accepting an invitation. Better Auth's own route is the only caller that can put
+the refreshed session cookie on the response. Proxied through an oRPC procedure
+the write succeeds, the cookie does not change, and the signed cookie cache
+keeps serving the previous value for minutes — a bug that looks correct in
+review and is wrong in the browser.
+
+oRPC is for the product's own domain.
+
+## Database hooks run at surprising times
+
+Better Auth queues `create.after` hooks until the surrounding transaction
+finishes. At sign-up a user hook has not run by the time the session row is
+written, which is why the active organization is resolved from the
+session-creation hook instead.

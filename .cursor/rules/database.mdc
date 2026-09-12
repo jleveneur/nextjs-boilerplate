@@ -1,0 +1,39 @@
+---
+description: Drizzle schema and migration conventions
+globs: packages/db/**/*.ts,packages/db/migrations/**
+alwaysApply: false
+---
+
+# Database
+
+Columns are `snake_case`, TypeScript is `camelCase`, and the mapping is
+explicit at the column. Tenant-scoped tables lead with `organization_id`.
+
+## Migrations are generated, never hand-written
+
+```bash
+pnpm db:generate   # after editing schema.ts
+pnpm db:migrate    # apply
+```
+
+Do not edit a file in `migrations/` that has already been committed, and never
+edit `migrations/meta/`. Drizzle tracks state in those snapshots, and a chain
+that disagrees with the SQL beside it fails in ways that are hard to read. To
+undo something, change `schema.ts` and generate a new migration.
+
+Check what was generated before committing it. `ADD COLUMN ... NOT NULL` on a
+table that already has rows will fail on any database that is not empty; that
+needs a nullable column, a backfill, and a follow-up migration.
+
+## Better Auth owns four tables plus three more
+
+`user`, `session`, `account`, `verification`, and — from the organization
+plugin — `organization`, `member`, `invitation`. Their field names and
+nullability come from the plugin's own schema. Diverging produces adapter
+errors at runtime, not at build time, so copy from the plugin rather than
+guessing.
+
+## The pool assumes a long-running server
+
+`max: 10` per process. On serverless, every warm instance holds its own pool —
+put a pooler in front rather than raising the number.

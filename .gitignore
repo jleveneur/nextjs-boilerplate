@@ -43,10 +43,9 @@ Thumbs.db
 npm-debug.log*
 pnpm-debug.log*
 
-# Claude Code per-developer overrides.
-.claude/settings.local.json
+# Per-developer Cursor overrides. The shared config is committed.
+.cursor/mcp.local.json
 
-# Next.js writes these on `next dev`. Repo instructions live in /AGENTS.md.
+# Next.js writes this on `next dev`. Repo instructions live in /AGENTS.md.
 apps/web/AGENTS.md
-apps/web/CLAUDE.md
 next-env.d.ts
