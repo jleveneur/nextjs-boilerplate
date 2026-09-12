@@ -114,7 +114,6 @@ export function OrganizationSwitcher({
 
         <Button
           variant="outline"
-          size="sm"
           onClick={() => {
             setCreating((open) => !open)
           }}
