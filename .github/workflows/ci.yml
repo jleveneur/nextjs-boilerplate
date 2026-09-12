@@ -142,3 +142,23 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 7
+
+  # The ruleset on `main` requires a check named `CI`. GitHub matches the job
+  # `name`, not the workflow file name, so Check / Integration / Browser being
+  # green is not enough — without this job the required check never reports,
+  # and platform automerge waits forever.
+  #
+  # `always()` is load-bearing: if a needed job fails, a dependent job is
+  # skipped by default, and a skipped required check is the same stuck state
+  # as a missing one. Run anyway, then fail unless every sibling succeeded.
+  ci:
+    name: CI
+    if: always()
+    needs: [check, integration, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every job
+        run: |
+          test "${{ needs.check.result }}" = success
+          test "${{ needs.integration.result }}" = success
+          test "${{ needs.e2e.result }}" = success
