@@ -202,5 +202,36 @@ yours, not because they are optional — wire a transport, then turn on
 Each of those is a real decision with real trade-offs, and a starter that makes
 them for you is a starter you spend your first day deleting.
 
-The one thing that _is_ here for illustration is the `post` table and its
-router. Delete both when you add a real domain.
+## Removing the example
+
+`post` is the one thing here purely for illustration — a table, a router, a
+permission, and a component, wired together so the stack has something to
+prove. It lives in seven files:
+
+```
+packages/db/src/schema.ts                     the table and its Post type
+packages/api/src/router.ts                    the post router
+packages/api/src/router.integration.test.ts   its tests
+packages/authz/src/index.ts                   the post permission and grants
+packages/authz/src/index.test.ts              its tests
+apps/web/src/components/posts.tsx             the UI
+apps/web/src/app/dashboard/page.tsx           renders it
+```
+
+Delete those, then let Drizzle work out the SQL. Which command depends on
+whether anything has been deployed yet:
+
+```bash
+# Nothing deployed — start your own history.
+rm -rf packages/db/migrations && pnpm db:generate
+
+# Already deployed — add a migration that drops the table.
+pnpm db:generate
+```
+
+The first gives you a single `0000` containing your schema and none of this
+repo's history. The second writes `DROP TABLE "post" CASCADE;`.
+
+Do not try to edit the example out of the committed migrations by hand. Drizzle
+tracks state in `migrations/meta/`, and a snapshot chain that disagrees with
+the SQL beside it fails in ways that are hard to read.
