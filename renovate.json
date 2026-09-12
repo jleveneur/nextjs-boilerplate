@@ -51,8 +51,8 @@
   "packageRules": [
     {
       // engines is a floor, not a selection. The global "pin" strategy would
-      // rewrite ">=24.0.0" to the newest published Node, contradicting .nvmrc
-      // and packageManager and failing every job with
+      // rewrite ">=24.0.0" to the newest published Node, contradicting
+      // devEngines.runtime and packageManager and failing every job with
       // ERR_PNPM_UNSUPPORTED_ENGINE.
       "matchDepTypes": ["engines"],
       "rangeStrategy": "replace"

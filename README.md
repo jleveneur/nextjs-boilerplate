@@ -30,6 +30,12 @@ You need a PostgreSQL 13 or newer database reachable at `DATABASE_URL`. How you
 run it — a local install, a container, a hosted instance — is deliberately not
 this repository's business.
 
+You do **not** need nvm or a matching Node installed. `devEngines.runtime` in
+`package.json` pins the version, and `pnpm install` downloads it, records its
+checksum in the lockfile, and runs every script against it. That is why there
+is no `.nvmrc`: a file that only some tools read is a version pin that drifts
+without telling you.
+
 ## Layout
 
 ```
