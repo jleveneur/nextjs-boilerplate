@@ -1,20 +1,20 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 
-import { auth } from "@repo/auth";
-import { isRole, roles } from "@repo/authz";
+import { auth } from "@repo/auth"
+import { isRole, roles } from "@repo/authz"
 
-import { MembersPanel } from "@/components/members-panel.tsx";
-import { OrganizationSwitcher } from "@/components/organization-switcher.tsx";
-import { Posts } from "@/components/posts.tsx";
-import { SignOutButton } from "@/components/sign-out-button.tsx";
-import { api } from "@/lib/api.ts";
-import { getSession } from "@/lib/session.ts";
+import { MembersPanel } from "@/components/members-panel.tsx"
+import { OrganizationSwitcher } from "@/components/organization-switcher.tsx"
+import { Posts } from "@/components/posts.tsx"
+import { SignOutButton } from "@/components/sign-out-button.tsx"
+import { api } from "@/lib/api.ts"
+import { getSession } from "@/lib/session.ts"
 
 export default async function DashboardPage() {
-  const session = await getSession();
+  const session = await getSession()
   if (session === null) {
-    redirect("/sign-in");
+    redirect("/sign-in")
   }
 
   // In-process oRPC calls: the same procedures the browser hits, minus the
@@ -25,14 +25,14 @@ export default async function DashboardPage() {
     api.organization.list(),
     api.post.list(),
     auth.api.getFullOrganization({ headers: await headers() }),
-  ]);
+  ])
 
   // Cosmetic only — these decide whether to render controls the user cannot
   // use. The server checks the same permissions again on every call, which is
   // where the decision actually counts.
-  const role = isRole(current.role) ? roles[current.role] : null;
-  const canDelete = role?.authorize({ post: ["delete"] }).success ?? false;
-  const canInvite = role?.authorize({ invitation: ["create"] }).success ?? false;
+  const role = isRole(current.role) ? roles[current.role] : null
+  const canDelete = role?.authorize({ post: ["delete"] }).success ?? false
+  const canInvite = role?.authorize({ invitation: ["create"] }).success ?? false
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16">
@@ -66,5 +66,5 @@ export default async function DashboardPage() {
         canInvite={canInvite}
       />
     </main>
-  );
+  )
 }

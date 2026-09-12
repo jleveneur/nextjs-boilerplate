@@ -8,9 +8,9 @@
  */
 
 export type Email = {
-  subject: string;
-  html: string;
-};
+  subject: string
+  html: string
+}
 
 /**
  * Escapes text before it goes into the HTML body.
@@ -24,7 +24,7 @@ export function escapeHtml(value: string): string {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replaceAll("'", "&#39;")
 }
 
 function layout(heading: string, body: string, action: { url: string; label: string }): string {
@@ -35,7 +35,7 @@ function layout(heading: string, body: string, action: { url: string; label: str
     `<p style="margin:0 0 24px"><a href="${escapeHtml(action.url)}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px">${action.label}</a></p>`,
     `<p style="font-size:12px;line-height:1.6;color:#666;margin:0">If the button does not work, paste this into your browser:<br>${escapeHtml(action.url)}</p>`,
     `</div>`,
-  ].join("");
+  ].join("")
 }
 
 export function verificationEmail(input: { name: string; url: string }): Email {
@@ -46,7 +46,7 @@ export function verificationEmail(input: { name: string; url: string }): Email {
       `Hi ${escapeHtml(input.name)}, confirm this address to finish setting up your account.`,
       { url: input.url, label: "Confirm email" },
     ),
-  };
+  }
 }
 
 export function resetPasswordEmail(input: { name: string; url: string }): Email {
@@ -57,13 +57,13 @@ export function resetPasswordEmail(input: { name: string; url: string }): Email 
       `Hi ${escapeHtml(input.name)}, use the link below to choose a new password. If you did not ask for this, you can ignore this email.`,
       { url: input.url, label: "Reset password" },
     ),
-  };
+  }
 }
 
 export function invitationEmail(input: {
-  organizationName: string;
-  inviterName: string;
-  url: string;
+  organizationName: string
+  inviterName: string
+  url: string
 }): Email {
   return {
     subject: `Join ${input.organizationName}`,
@@ -72,5 +72,5 @@ export function invitationEmail(input: {
       `${escapeHtml(input.inviterName)} invited you to join ${escapeHtml(input.organizationName)}.`,
       { url: input.url, label: "Accept invitation" },
     ),
-  };
+  }
 }

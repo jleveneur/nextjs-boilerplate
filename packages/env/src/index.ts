@@ -1,6 +1,6 @@
-import { createEnv } from "@t3-oss/env-nextjs";
+import { createEnv } from "@t3-oss/env-nextjs"
 
-import { client, server } from "./schema.ts";
+import { client, server } from "./schema.ts"
 
 /**
  * The validated environment, parsed once when this module is first imported.
@@ -23,4 +23,4 @@ export const env = createEnv({
   // leaving the variable unset, which would satisfy `.optional()` and skip
   // `.default()`. Treat it as missing.
   emptyStringAsUndefined: true,
-});
+})

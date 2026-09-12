@@ -1,13 +1,7 @@
-"use client";
+"use client"
 
-import { Button } from "@repo/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+import { Button } from "@repo/ui/components/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card"
 
 /**
  * Catches a render or data error anywhere below the root layout.
@@ -20,8 +14,8 @@ export default function ErrorBoundary({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }) {
   return (
     <main className="mx-auto flex max-w-sm flex-col justify-center px-6 py-24">
@@ -41,5 +35,5 @@ export default function ErrorBoundary({
         </CardContent>
       </Card>
     </main>
-  );
+  )
 }

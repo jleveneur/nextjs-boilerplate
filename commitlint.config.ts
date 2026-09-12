@@ -1,4 +1,4 @@
-import type { UserConfig } from "@commitlint/types";
+import type { UserConfig } from "@commitlint/types"
 
 /**
  * Conventional Commits.
@@ -36,6 +36,6 @@ const config: UserConfig = {
     "body-max-line-length": [2, "always", 100],
     "footer-leading-blank": [2, "always"],
   },
-};
+}
 
-export default config;
+export default config

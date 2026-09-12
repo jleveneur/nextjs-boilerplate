@@ -1,7 +1,7 @@
-import { organizationClient } from "better-auth/client/plugins";
-import { createAuthClient } from "better-auth/react";
+import { organizationClient } from "better-auth/client/plugins"
+import { createAuthClient } from "better-auth/react"
 
-import { ac, roles } from "@repo/authz";
+import { ac, roles } from "@repo/authz"
 
 /**
  * Browser auth client.
@@ -17,6 +17,6 @@ import { ac, roles } from "@repo/authz";
  */
 export const authClient = createAuthClient({
   plugins: [organizationClient({ ac, roles })],
-});
+})
 
-export const { signIn, signOut, signUp, useSession } = authClient;
+export const { signIn, signOut, signUp, useSession } = authClient

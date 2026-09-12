@@ -1,16 +1,16 @@
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization } from "better-auth/plugins";
+import { betterAuth } from "better-auth"
+import { drizzleAdapter } from "better-auth/adapters/drizzle"
+import { organization } from "better-auth/plugins"
 
-import { ac, roles } from "@repo/authz";
-import * as schema from "@repo/db";
-import { db } from "@repo/db";
-import { invitationEmail, resetPasswordEmail, sendEmail, verificationEmail } from "@repo/email";
-import { env } from "@repo/env";
+import { ac, roles } from "@repo/authz"
+import * as schema from "@repo/db"
+import { db } from "@repo/db"
+import { invitationEmail, resetPasswordEmail, sendEmail, verificationEmail } from "@repo/email"
+import { env } from "@repo/env"
 
-import { rememberActiveOrganization, resolveActiveOrganization } from "./active-organization.ts";
+import { rememberActiveOrganization, resolveActiveOrganization } from "./active-organization.ts"
 
-const DAY_IN_SECONDS = 60 * 60 * 24;
+const DAY_IN_SECONDS = 60 * 60 * 24
 
 /**
  * The Better Auth instance.
@@ -44,7 +44,7 @@ export const auth = betterAuth({
     // therefore does not produce a session; the link in the email does.
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      await sendEmail({ to: user.email, ...resetPasswordEmail({ name: user.name, url }) });
+      await sendEmail({ to: user.email, ...resetPasswordEmail({ name: user.name, url }) })
     },
   },
 
@@ -54,7 +54,7 @@ export const auth = betterAuth({
     // Without this the user verifies and is then asked to sign in again.
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({ to: user.email, ...verificationEmail({ name: user.name, url }) });
+      await sendEmail({ to: user.email, ...verificationEmail({ name: user.name, url }) })
     },
   },
 
@@ -90,7 +90,7 @@ export const auth = betterAuth({
             // it and checks the address on the invitation against the caller.
             url: `${env.BETTER_AUTH_URL}/accept-invitation/${id}`,
           }),
-        });
+        })
       },
     }),
   ],
@@ -129,16 +129,16 @@ export const auth = betterAuth({
          * leave the cookie cache pointing at the previous organization.
          */
         after: async (updated) => {
-          const active = updated["activeOrganizationId"];
+          const active = updated["activeOrganizationId"]
           if (typeof active === "string") {
-            await rememberActiveOrganization(updated.userId, active);
+            await rememberActiveOrganization(updated.userId, active)
           }
         },
       },
     },
   },
-});
+})
 
-export type Session = typeof auth.$Infer.Session;
+export type Session = typeof auth.$Infer.Session
 
-export { createPersonalOrganization, resolveActiveOrganization } from "./active-organization.ts";
+export { createPersonalOrganization, resolveActiveOrganization } from "./active-organization.ts"

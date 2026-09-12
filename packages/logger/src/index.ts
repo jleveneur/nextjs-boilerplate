@@ -1,6 +1,6 @@
-import { pino } from "pino";
+import { pino } from "pino"
 
-import { env } from "@repo/env";
+import { env } from "@repo/env"
 
 /**
  * Paths scrubbed from every log line.
@@ -22,7 +22,7 @@ const REDACTED = [
   "*.cookie",
   "headers.authorization",
   "headers.cookie",
-];
+]
 
 /**
  * The application logger.
@@ -42,6 +42,6 @@ export const logger = pino({
     level: (label) => ({ level: label }),
   },
   redact: { paths: REDACTED, censor: "[redacted]" },
-});
+})
 
-export type Logger = typeof logger;
+export type Logger = typeof logger

@@ -1,11 +1,11 @@
-import { ORPCError } from "@orpc/server";
-import { and, desc, eq } from "drizzle-orm";
-import { z } from "zod";
+import { ORPCError } from "@orpc/server"
+import { and, desc, eq } from "drizzle-orm"
+import { z } from "zod"
 
-import { db, member, organization, post } from "@repo/db";
+import { db, member, organization, post } from "@repo/db"
 
-import { orgProcedure, protectedProcedure, publicProcedure } from "./procedures.ts";
-import { requirePermission } from "./require-permission.ts";
+import { orgProcedure, protectedProcedure, publicProcedure } from "./procedures.ts"
+import { requirePermission } from "./require-permission.ts"
 
 /**
  * The API surface.
@@ -58,13 +58,13 @@ export const appRouter = {
             eq(member.userId, context.user.id),
           ),
         )
-        .limit(1);
+        .limit(1)
 
       if (row === undefined) {
-        throw new ORPCError("FORBIDDEN", { message: "Not a member of the active organization" });
+        throw new ORPCError("FORBIDDEN", { message: "Not a member of the active organization" })
       }
 
-      return row;
+      return row
     }),
   },
 
@@ -87,13 +87,13 @@ export const appRouter = {
             organizationId: context.organizationId,
             userId: context.user.id,
           })
-          .returning();
+          .returning()
 
         if (created === undefined) {
-          throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Insert returned no row" });
+          throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Insert returned no row" })
         }
 
-        return created;
+        return created
       }),
 
     delete: requirePermission({ post: ["delete"] })
@@ -104,11 +104,11 @@ export const appRouter = {
         // tenant's row by guessing an id.
         await db
           .delete(post)
-          .where(and(eq(post.id, input.id), eq(post.organizationId, context.organizationId)));
+          .where(and(eq(post.id, input.id), eq(post.organizationId, context.organizationId)))
 
-        return { id: input.id };
+        return { id: input.id }
       }),
   },
-};
+}
 
-export type AppRouter = typeof appRouter;
+export type AppRouter = typeof appRouter

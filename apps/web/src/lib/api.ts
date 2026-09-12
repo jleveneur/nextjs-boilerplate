@@ -1,7 +1,7 @@
-import { createRouterClient } from "@orpc/server";
-import { headers } from "next/headers";
+import { createRouterClient } from "@orpc/server"
+import { headers } from "next/headers"
 
-import { appRouter, createContext } from "@repo/api";
+import { appRouter, createContext } from "@repo/api"
 
 /**
  * Server-side caller for Server Components and Route Handlers.
@@ -12,4 +12,4 @@ import { appRouter, createContext } from "@repo/api";
  */
 export const api = createRouterClient(appRouter, {
   context: async () => createContext(await headers()),
-});
+})

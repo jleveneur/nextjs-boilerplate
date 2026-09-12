@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
-import type { RouterClient } from "@orpc/server";
-import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { createORPCClient } from "@orpc/client"
+import { RPCLink } from "@orpc/client/fetch"
+import type { RouterClient } from "@orpc/server"
+import { createTanstackQueryUtils } from "@orpc/tanstack-query"
 
-import type { AppRouter } from "@repo/api/router";
+import type { AppRouter } from "@repo/api/router"
 
 /**
  * Browser oRPC client.
@@ -14,9 +14,9 @@ import type { AppRouter } from "@repo/api/router";
  * every preview deployment and custom domain, and the session cookie rides
  * along because same-origin requests send it by default.
  */
-const link = new RPCLink({ url: "/api/rpc" });
+const link = new RPCLink({ url: "/api/rpc" })
 
-const client: RouterClient<AppRouter> = createORPCClient(link);
+const client: RouterClient<AppRouter> = createORPCClient(link)
 
 /** Typed TanStack Query helpers: `orpc.post.list.queryOptions()`, and so on. */
-export const orpc = createTanstackQueryUtils(client);
+export const orpc = createTanstackQueryUtils(client)

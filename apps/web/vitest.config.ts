@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config"
 
 /**
  * Pure logic only — `.ts`, never `.tsx`.
@@ -13,4 +13,4 @@ export default defineConfig({
     name: "@repo/web",
     include: ["src/**/*.test.ts"],
   },
-});
+})

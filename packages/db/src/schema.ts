@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core"
 
 /**
  * Database schema.
@@ -12,13 +12,13 @@ import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from "dri
  */
 
 const createdAt = () =>
-  timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow();
+  timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow()
 
 const updatedAt = () =>
   timestamp("updated_at", { withTimezone: true, mode: "date" })
     .notNull()
     .defaultNow()
-    .$onUpdate(() => new Date());
+    .$onUpdate(() => new Date())
 
 // --- Better Auth ------------------------------------------------------------
 // The four core tables Better Auth's Drizzle adapter expects. Text ids, because
@@ -41,7 +41,7 @@ export const user = pgTable("user", {
   lastActiveOrganizationId: text("last_active_organization_id"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
-});
+})
 
 export const session = pgTable(
   "session",
@@ -62,7 +62,7 @@ export const session = pgTable(
     updatedAt: updatedAt(),
   },
   (table) => [index("idx_session__user_id").on(table.userId)],
-);
+)
 
 export const account = pgTable(
   "account",
@@ -90,7 +90,7 @@ export const account = pgTable(
     updatedAt: updatedAt(),
   },
   (table) => [index("idx_account__user_id").on(table.userId)],
-);
+)
 
 export const verification = pgTable(
   "verification",
@@ -103,7 +103,7 @@ export const verification = pgTable(
     updatedAt: updatedAt(),
   },
   (table) => [index("idx_verification__identifier").on(table.identifier)],
-);
+)
 
 // --- Better Auth: organization plugin ----------------------------------------
 // Field names and nullability follow the plugin's own schema exactly. Diverging
@@ -117,7 +117,7 @@ export const organization = pgTable("organization", {
   logo: text("logo"),
   metadata: text("metadata"),
   createdAt: createdAt(),
-});
+})
 
 export const member = pgTable(
   "member",
@@ -136,7 +136,7 @@ export const member = pgTable(
     uniqueIndex("uq_member__organization_id_user_id").on(table.organizationId, table.userId),
     index("idx_member__user_id").on(table.userId),
   ],
-);
+)
 
 export const invitation = pgTable(
   "invitation",
@@ -158,7 +158,7 @@ export const invitation = pgTable(
     index("idx_invitation__organization_id").on(table.organizationId),
     index("idx_invitation__email").on(table.email),
   ],
-);
+)
 
 // --- Application ------------------------------------------------------------
 // One example table so the starter has something end to end to show. Delete it
@@ -181,8 +181,8 @@ export const post = pgTable(
     updatedAt: updatedAt(),
   },
   (table) => [index("idx_post__organization_id").on(table.organizationId)],
-);
+)
 
-export type Post = typeof post.$inferSelect;
-export type User = typeof user.$inferSelect;
-export type Organization = typeof organization.$inferSelect;
+export type Post = typeof post.$inferSelect
+export type User = typeof user.$inferSelect
+export type Organization = typeof organization.$inferSelect

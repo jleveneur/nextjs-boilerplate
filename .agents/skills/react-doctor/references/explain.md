@@ -65,7 +65,7 @@ export default {
   rules: { "react-doctor/no-array-index-as-key": "off" },
   categories: { "React Native": "warn" },
   ignore: { tags: ["design"] },
-};
+}
 ```
 
 ## Educating the user

@@ -1,24 +1,24 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import * as z from "zod";
+import { useForm } from "@tanstack/react-form"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import * as z from "zod"
 
-import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui/components/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field";
-import { Input } from "@repo/ui/components/input";
+import { authClient } from "@repo/auth/client"
+import { Button } from "@repo/ui/components/button"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field"
+import { Input } from "@repo/ui/components/input"
 
-import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts"
 
 const schema = z.object({
   email: z.email("Enter a valid email address."),
   password: z.string().min(1, "Enter your password."),
-});
+})
 
 export function SignInForm({ next }: { next: string }) {
-  const router = useRouter();
+  const router = useRouter()
 
   const form = useForm({
     defaultValues: { email: "", password: "" },
@@ -27,20 +27,20 @@ export function SignInForm({ next }: { next: string }) {
       onSubmitAsync: ({ value }) => submitToServer(() => authClient.signIn.email(value)),
     },
     onSubmit: () => {
-      router.push(next);
+      router.push(next)
       // The destination is a Server Component that reads the session, so the
       // router cache has to be dropped for it to see the new cookie.
-      router.refresh();
+      router.refresh()
     },
-  });
+  })
 
   return (
     <form
       noValidate
       className="flex flex-col gap-4"
       onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
+        event.preventDefault()
+        void form.handleSubmit()
       }}
     >
       <FieldGroup>
@@ -57,7 +57,7 @@ export function SignInForm({ next }: { next: string }) {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
-                  field.handleChange(event.target.value);
+                  field.handleChange(event.target.value)
                 }}
               />
               <FieldError errors={field.state.meta.errors} />
@@ -86,7 +86,7 @@ export function SignInForm({ next }: { next: string }) {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
-                  field.handleChange(event.target.value);
+                  field.handleChange(event.target.value)
                 }}
               />
               <FieldError errors={field.state.meta.errors} />
@@ -107,5 +107,5 @@ export function SignInForm({ next }: { next: string }) {
         )}
       </form.Subscribe>
     </form>
-  );
+  )
 }

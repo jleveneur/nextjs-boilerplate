@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { useRouter } from "next/navigation";
-import * as z from "zod";
+import { useForm } from "@tanstack/react-form"
+import { useRouter } from "next/navigation"
+import * as z from "zod"
 
-import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui/components/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field";
-import { Input } from "@repo/ui/components/input";
+import { authClient } from "@repo/auth/client"
+import { Button } from "@repo/ui/components/button"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field"
+import { Input } from "@repo/ui/components/input"
 
-import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts"
 
 const schema = z.object({
   password: z.string().min(8, "Use at least 8 characters."),
-});
+})
 
 export function ResetPasswordForm({ token }: { token: string }) {
-  const router = useRouter();
+  const router = useRouter()
 
   const form = useForm({
     defaultValues: { password: "" },
@@ -29,18 +29,18 @@ export function ResetPasswordForm({ token }: { token: string }) {
       // Resetting does not sign anyone in — the new password still has to be
       // used, which is what proves the person choosing it is the one signing
       // in.
-      router.push("/sign-in?reset=1");
-      router.refresh();
+      router.push("/sign-in?reset=1")
+      router.refresh()
     },
-  });
+  })
 
   return (
     <form
       noValidate
       className="flex flex-col gap-4"
       onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
+        event.preventDefault()
+        void form.handleSubmit()
       }}
     >
       <FieldGroup>
@@ -57,7 +57,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
-                  field.handleChange(event.target.value);
+                  field.handleChange(event.target.value)
                 }}
               />
               <FieldError errors={field.state.meta.errors} />
@@ -78,5 +78,5 @@ export function ResetPasswordForm({ token }: { token: string }) {
         )}
       </form.Subscribe>
     </form>
-  );
+  )
 }

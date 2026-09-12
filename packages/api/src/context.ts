@@ -1,4 +1,4 @@
-import { auth, type Session } from "@repo/auth";
+import { auth, type Session } from "@repo/auth"
 
 /**
  * What every procedure receives.
@@ -10,10 +10,10 @@ import { auth, type Session } from "@repo/auth";
  * take the request, not a user id.
  */
 export type Context = {
-  session: Session | null;
-  headers: Headers;
-};
+  session: Session | null
+  headers: Headers
+}
 
 export async function createContext(headers: Headers): Promise<Context> {
-  return { session: await auth.api.getSession({ headers }), headers };
+  return { session: await auth.api.getSession({ headers }), headers }
 }

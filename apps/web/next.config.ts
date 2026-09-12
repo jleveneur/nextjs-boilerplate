@@ -1,14 +1,14 @@
-import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 // The workspace keeps one `.env` at the repository root, and Next only looks
 // inside the app directory. Node reads the file natively; in CI and production
 // the variables are already set, so it is absent and this is a no-op.
-const rootEnv = fileURLToPath(new URL("../../.env", import.meta.url));
+const rootEnv = fileURLToPath(new URL("../../.env", import.meta.url))
 if (existsSync(rootEnv)) {
-  process.loadEnvFile(rootEnv);
+  process.loadEnvFile(rootEnv)
 }
 
 /**
@@ -31,11 +31,11 @@ const SECURITY_HEADERS = [
     key: "Content-Security-Policy",
     value: ["frame-ancestors 'none'", "base-uri 'self'", "object-src 'none'"].join("; "),
   },
-];
+]
 
 const nextConfig: NextConfig = {
   headers() {
-    return Promise.resolve([{ source: "/:path*", headers: SECURITY_HEADERS }]);
+    return Promise.resolve([{ source: "/:path*", headers: SECURITY_HEADERS }])
   },
 
   // Internal packages ship TypeScript source with no build step, so Next has to
@@ -53,6 +53,6 @@ const nextConfig: NextConfig = {
     // out to the local `tsc` instead of loading it in-process.
     useTypeScriptCli: true,
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

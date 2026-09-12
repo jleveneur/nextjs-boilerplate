@@ -7,8 +7,8 @@
  */
 export function safeRedirect(target: string | undefined, fallback: string): string {
   if (target === undefined || !target.startsWith("/") || target.startsWith("//")) {
-    return fallback;
+    return fallback
   }
 
-  return target;
+  return target
 }

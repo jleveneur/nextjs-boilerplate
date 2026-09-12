@@ -1,14 +1,8 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card"
 
-import { ResetPasswordForm } from "@/components/reset-password-form.tsx";
+import { ResetPasswordForm } from "@/components/reset-password-form.tsx"
 
 /**
  * Better Auth validates the token on its own route and redirects here, adding
@@ -18,10 +12,10 @@ import { ResetPasswordForm } from "@/components/reset-password-form.tsx";
 export default async function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string; error?: string }>;
+  searchParams: Promise<{ token?: string; error?: string }>
 }) {
-  const { token, error } = await searchParams;
-  const usable = error === undefined && token !== undefined && token !== "";
+  const { token, error } = await searchParams
+  const usable = error === undefined && token !== undefined && token !== ""
 
   return (
     <main className="mx-auto flex max-w-sm flex-col justify-center px-6 py-24">
@@ -50,5 +44,5 @@ export default async function ResetPasswordPage({
         </CardContent>
       </Card>
     </main>
-  );
+  )
 }

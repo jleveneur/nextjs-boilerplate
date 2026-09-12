@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test"
 
 /**
  * The form layer owns validation, and says so out loud.
@@ -10,26 +10,26 @@ import { expect, test } from "@playwright/test";
  * button that does nothing.
  */
 test("a malformed address is reported, and never reaches the server", async ({ page }) => {
-  const authCalls: string[] = [];
+  const authCalls: string[] = []
   page.on("request", (request) => {
-    if (request.url().includes("/api/auth/")) authCalls.push(request.url());
-  });
+    if (request.url().includes("/api/auth/")) authCalls.push(request.url())
+  })
 
-  await page.goto("/sign-in");
-  await page.getByLabel("Email").fill("not-an-email");
-  await page.getByLabel("Password").fill("whatever");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.goto("/sign-in")
+  await page.getByLabel("Email").fill("not-an-email")
+  await page.getByLabel("Password").fill("whatever")
+  await page.getByRole("button", { name: "Sign in" }).click()
 
-  await expect(page.locator("main").getByRole("alert").first()).toHaveText(/valid email/i);
-  expect(authCalls).toHaveLength(0);
-});
+  await expect(page.locator("main").getByRole("alert").first()).toHaveText(/valid email/i)
+  expect(authCalls).toHaveLength(0)
+})
 
 test("an empty form reports every missing field at once", async ({ page }) => {
-  await page.goto("/sign-in");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.goto("/sign-in")
+  await page.getByRole("button", { name: "Sign in" }).click()
 
-  const alerts = page.locator("main").getByRole("alert");
-  await expect(alerts).toHaveCount(2);
-  await expect(alerts.first()).toHaveText(/valid email/i);
-  await expect(alerts.last()).toHaveText(/password/i);
-});
+  const alerts = page.locator("main").getByRole("alert")
+  await expect(alerts).toHaveCount(2)
+  await expect(alerts.first()).toHaveText(/valid email/i)
+  await expect(alerts.last()).toHaveText(/password/i)
+})

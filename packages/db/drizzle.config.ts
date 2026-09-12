@@ -1,14 +1,14 @@
-import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 
-import { defineConfig } from "drizzle-kit";
+import { defineConfig } from "drizzle-kit"
 
 // The workspace keeps one `.env` at the repository root. Node reads it natively;
 // in CI and production the variables are already set, so the file is absent and
 // this is a no-op.
-const rootEnv = fileURLToPath(new URL("../../.env", import.meta.url));
+const rootEnv = fileURLToPath(new URL("../../.env", import.meta.url))
 if (existsSync(rootEnv)) {
-  process.loadEnvFile(rootEnv);
+  process.loadEnvFile(rootEnv)
 }
 
 export default defineConfig({
@@ -28,15 +28,15 @@ export default defineConfig({
      * exiting zero the failure hid behind a green check.
      */
     get url(): string {
-      const value = process.env["DATABASE_URL"];
+      const value = process.env["DATABASE_URL"]
 
       if (value === undefined || value === "") {
         throw new Error(
           "DATABASE_URL is required. Copy .env.example to .env at the repository root.",
-        );
+        )
       }
 
-      return value;
+      return value
     },
   },
-});
+})

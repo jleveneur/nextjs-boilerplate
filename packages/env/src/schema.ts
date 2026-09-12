@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 /**
  * Server-side environment variables.
@@ -65,7 +65,7 @@ export const server = {
    * limit nobody can see is a limit nobody tunes when they move behind a proxy.
    */
   AUTH_RATE_LIMIT: z.enum(["on", "off"]).default("on"),
-};
+}
 
 /**
  * Browser environment variables. Every key must start with `NEXT_PUBLIC_` —
@@ -74,4 +74,4 @@ export const server = {
  * Anything added here is inlined into the JavaScript bundle at build time, so
  * a secret placed in this object is published, not configured.
  */
-export const client = {};
+export const client = {}

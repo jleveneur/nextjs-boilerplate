@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as z from "zod";
+import { useForm } from "@tanstack/react-form"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import * as z from "zod"
 
 // Type-only import: `Post` is `typeof post.$inferSelect`, so nothing from
 // `@repo/db` reaches the browser bundle.
-import type { Post } from "@repo/db";
-import { Button } from "@repo/ui/components/button";
-import { Field, FieldError } from "@repo/ui/components/field";
-import { Input } from "@repo/ui/components/input";
+import type { Post } from "@repo/db"
+import { Button } from "@repo/ui/components/button"
+import { Field, FieldError } from "@repo/ui/components/field"
+import { Input } from "@repo/ui/components/input"
 
-import { orpc } from "@/lib/orpc.ts";
-import { serverError } from "@/lib/submit-to-server.ts";
+import { orpc } from "@/lib/orpc.ts"
+import { serverError } from "@/lib/submit-to-server.ts"
 
 const schema = z.object({
   title: z.string().min(1, "Write something first.").max(200, "Keep it under 200 characters."),
-});
+})
 
 /**
  * The example slice, end to end: an oRPC query scoped to the active
@@ -27,14 +27,14 @@ const schema = z.object({
  * authorization — the server checks the same permission on every call.
  */
 export function Posts({ initialPosts, canDelete }: { initialPosts: Post[]; canDelete: boolean }) {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
-  const posts = useQuery(orpc.post.list.queryOptions({ initialData: initialPosts }));
+  const posts = useQuery(orpc.post.list.queryOptions({ initialData: initialPosts }))
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: orpc.post.list.key() });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: orpc.post.list.key() })
 
-  const create = useMutation(orpc.post.create.mutationOptions({ onSuccess: invalidate }));
-  const remove = useMutation(orpc.post.delete.mutationOptions({ onSuccess: invalidate }));
+  const create = useMutation(orpc.post.create.mutationOptions({ onSuccess: invalidate }))
+  const remove = useMutation(orpc.post.delete.mutationOptions({ onSuccess: invalidate }))
 
   const form = useForm({
     defaultValues: { title: "" },
@@ -44,18 +44,18 @@ export function Posts({ initialPosts, canDelete }: { initialPosts: Post[]; canDe
       // of what `submitToServer` normalises — so this one is written out.
       onSubmitAsync: async ({ value }) => {
         try {
-          await create.mutateAsync({ title: value.title });
-          return null;
+          await create.mutateAsync({ title: value.title })
+          return null
         } catch (error) {
-          const message = error instanceof Error ? error.message : "Something went wrong.";
-          return { form: message, fields: {} };
+          const message = error instanceof Error ? error.message : "Something went wrong."
+          return { form: message, fields: {} }
         }
       },
     },
     onSubmit: () => {
-      form.reset();
+      form.reset()
     },
-  });
+  })
 
   return (
     <section className="flex flex-col gap-4">
@@ -63,8 +63,8 @@ export function Posts({ initialPosts, canDelete }: { initialPosts: Post[]; canDe
         noValidate
         className="flex items-start gap-2"
         onSubmit={(event) => {
-          event.preventDefault();
-          void form.handleSubmit();
+          event.preventDefault()
+          void form.handleSubmit()
         }}
       >
         <form.Field name="title">
@@ -78,7 +78,7 @@ export function Posts({ initialPosts, canDelete }: { initialPosts: Post[]; canDe
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
-                  field.handleChange(event.target.value);
+                  field.handleChange(event.target.value)
                 }}
               />
               <FieldError errors={field.state.meta.errors} />
@@ -112,7 +112,7 @@ export function Posts({ initialPosts, canDelete }: { initialPosts: Post[]; canDe
                   size="sm"
                   disabled={remove.isPending}
                   onClick={() => {
-                    remove.mutate({ id: item.id });
+                    remove.mutate({ id: item.id })
                   }}
                 >
                   Delete
@@ -123,5 +123,5 @@ export function Posts({ initialPosts, canDelete }: { initialPosts: Post[]; canDe
         </ul>
       )}
     </section>
-  );
+  )
 }

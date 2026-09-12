@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"
 
-import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui/components/button";
+import { authClient } from "@repo/auth/client"
+import { Button } from "@repo/ui/components/button"
 
 export function SignOutButton() {
-  const router = useRouter();
+  const router = useRouter()
 
   async function signOut() {
-    await authClient.signOut();
-    router.push("/");
-    router.refresh();
+    await authClient.signOut()
+    router.push("/")
+    router.refresh()
   }
 
   return (
     <Button
       variant="outline"
       onClick={() => {
-        void signOut();
+        void signOut()
       }}
     >
       Sign out
     </Button>
-  );
+  )
 }

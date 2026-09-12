@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
-import * as z from "zod";
+import { useForm } from "@tanstack/react-form"
+import { useState } from "react"
+import * as z from "zod"
 
-import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui/components/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field";
-import { Input } from "@repo/ui/components/input";
+import { authClient } from "@repo/auth/client"
+import { Button } from "@repo/ui/components/button"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field"
+import { Input } from "@repo/ui/components/input"
 
-import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts"
 
 const schema = z.object({
   email: z.email("Enter a valid email address."),
-});
+})
 
 export function ForgotPasswordForm() {
-  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: { email: "" },
@@ -33,9 +33,9 @@ export function ForgotPasswordForm() {
         ),
     },
     onSubmit: ({ value }) => {
-      setSentTo(value.email);
+      setSentTo(value.email)
     },
-  });
+  })
 
   if (sentTo !== null) {
     // Deliberately the same message whether or not the address exists: telling
@@ -44,7 +44,7 @@ export function ForgotPasswordForm() {
       <p className="text-sm" role="status">
         If an account exists for {sentTo}, a reset link is on its way.
       </p>
-    );
+    )
   }
 
   return (
@@ -52,8 +52,8 @@ export function ForgotPasswordForm() {
       noValidate
       className="flex flex-col gap-4"
       onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
+        event.preventDefault()
+        void form.handleSubmit()
       }}
     >
       <FieldGroup>
@@ -70,7 +70,7 @@ export function ForgotPasswordForm() {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
-                  field.handleChange(event.target.value);
+                  field.handleChange(event.target.value)
                 }}
               />
               <FieldError errors={field.state.meta.errors} />
@@ -91,5 +91,5 @@ export function ForgotPasswordForm() {
         )}
       </form.Subscribe>
     </form>
-  );
+  )
 }

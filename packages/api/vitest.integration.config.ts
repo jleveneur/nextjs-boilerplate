@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   test: {
@@ -9,4 +9,4 @@ export default defineConfig({
     // Sign-up hashes a password, which is deliberately slow.
     testTimeout: 30_000,
   },
-});
+})

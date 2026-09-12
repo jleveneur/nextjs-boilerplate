@@ -1,16 +1,10 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import Link from "next/link"
+import { redirect } from "next/navigation"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card"
 
-import { AcceptInvitation } from "@/components/accept-invitation.tsx";
-import { getSession } from "@/lib/session.ts";
+import { AcceptInvitation } from "@/components/accept-invitation.tsx"
+import { getSession } from "@/lib/session.ts"
 
 /**
  * Where an invitation link lands.
@@ -23,14 +17,14 @@ import { getSession } from "@/lib/session.ts";
 export default async function AcceptInvitationPage({
   params,
 }: {
-  params: Promise<{ invitationId: string }>;
+  params: Promise<{ invitationId: string }>
 }) {
   // Independent, so they overlap rather than queue.
-  const [{ invitationId }, session] = await Promise.all([params, getSession()]);
+  const [{ invitationId }, session] = await Promise.all([params, getSession()])
 
   if (session === null) {
     // Sign in, then come straight back here rather than to the dashboard.
-    redirect(`/sign-in?next=${encodeURIComponent(`/accept-invitation/${invitationId}`)}`);
+    redirect(`/sign-in?next=${encodeURIComponent(`/accept-invitation/${invitationId}`)}`)
   }
 
   return (
@@ -55,5 +49,5 @@ export default async function AcceptInvitationPage({
         </CardContent>
       </Card>
     </main>
-  );
+  )
 }

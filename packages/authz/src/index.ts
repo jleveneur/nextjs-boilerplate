@@ -1,10 +1,10 @@
-import { createAccessControl } from "better-auth/plugins/access";
+import { createAccessControl } from "better-auth/plugins/access"
 import {
   adminAc,
   defaultStatements,
   memberAc,
   ownerAc,
-} from "better-auth/plugins/organization/access";
+} from "better-auth/plugins/organization/access"
 
 /**
  * Every permission in the product, as `resource: [action, ...]`.
@@ -16,9 +16,9 @@ import {
 export const statement = {
   ...defaultStatements,
   post: ["create", "delete"],
-} as const;
+} as const
 
-export const ac = createAccessControl(statement);
+export const ac = createAccessControl(statement)
 
 /**
  * Roles, from least to most privileged.
@@ -30,23 +30,23 @@ export const ac = createAccessControl(statement);
 export const member = ac.newRole({
   ...memberAc.statements,
   post: ["create"],
-});
+})
 
 export const admin = ac.newRole({
   ...adminAc.statements,
   post: ["create", "delete"],
-});
+})
 
 export const owner = ac.newRole({
   ...ownerAc.statements,
   post: ["create", "delete"],
-});
+})
 
-export const roles = { owner, admin, member };
+export const roles = { owner, admin, member }
 
-export const roleNames = ["owner", "admin", "member"] as const;
+export const roleNames = ["owner", "admin", "member"] as const
 
-export type Role = (typeof roleNames)[number];
+export type Role = (typeof roleNames)[number]
 
 /**
  * Narrows the `role` string stored on a member row.
@@ -55,5 +55,5 @@ export type Role = (typeof roleNames)[number];
  * has to be checked before it is used to look up grants.
  */
 export function isRole(value: string): value is Role {
-  return roleNames.some((role) => role === value);
+  return roleNames.some((role) => role === value)
 }

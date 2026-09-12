@@ -1,6 +1,6 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@repo/ui/components/button"
 
 const stack = [
   "Next.js (App Router)",
@@ -11,7 +11,7 @@ const stack = [
   "Drizzle ORM + PostgreSQL",
   "oRPC",
   "Better Auth",
-];
+]
 
 export default function HomePage() {
   return (
@@ -34,5 +34,5 @@ export default function HomePage() {
         <Button variant="outline" render={<Link href="/sign-in">Sign in</Link>} />
       </div>
     </main>
-  );
+  )
 }

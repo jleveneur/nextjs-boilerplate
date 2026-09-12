@@ -1,21 +1,21 @@
-import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test"
 
 // Same single `.env` the app and drizzle-kit read.
-const rootEnv = fileURLToPath(new URL("../../.env", import.meta.url));
+const rootEnv = fileURLToPath(new URL("../../.env", import.meta.url))
 if (existsSync(rootEnv)) {
-  process.loadEnvFile(rootEnv);
+  process.loadEnvFile(rootEnv)
 }
 
-const PORT = 3111;
-const baseURL = `http://127.0.0.1:${PORT}`;
+const PORT = 3111
+const baseURL = `http://127.0.0.1:${PORT}`
 
 /** Shared by the test process and the server it starts, so both read one outbox. */
-const outboxDirectory = fileURLToPath(new URL("./.mail-e2e", import.meta.url));
+const outboxDirectory = fileURLToPath(new URL("./.mail-e2e", import.meta.url))
 
-export const E2E = { baseURL, outboxDirectory };
+export const E2E = { baseURL, outboxDirectory }
 
 export default defineConfig({
   testDir: "./e2e",
@@ -52,4 +52,4 @@ export default defineConfig({
       AUTH_RATE_LIMIT: "off",
     },
   },
-});
+})

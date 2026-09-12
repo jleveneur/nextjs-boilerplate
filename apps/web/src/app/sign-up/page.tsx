@@ -1,20 +1,14 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import Link from "next/link"
+import { redirect } from "next/navigation"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card"
 
-import { SignUpForm } from "@/components/sign-up-form.tsx";
-import { getSession } from "@/lib/session.ts";
+import { SignUpForm } from "@/components/sign-up-form.tsx"
+import { getSession } from "@/lib/session.ts"
 
 export default async function SignUpPage() {
   if ((await getSession()) !== null) {
-    redirect("/dashboard");
+    redirect("/dashboard")
   }
 
   return (
@@ -35,5 +29,5 @@ export default async function SignUpPage() {
         </CardContent>
       </Card>
     </main>
-  );
+  )
 }

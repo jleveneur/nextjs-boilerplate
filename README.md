@@ -117,7 +117,7 @@ Roles and what they grant live in one file, `packages/authz/src/index.ts`:
 export const statement = {
   ...defaultStatements, // organization, member, invitation
   post: ["create", "delete"], // your resources go here
-} as const;
+} as const
 ```
 
 Procedures compose the guarantee rather than restating it:
@@ -304,7 +304,7 @@ const form = useForm({
     onSubmitAsync: ({ value }) => submitToServer(() => authClient.signIn.email(value)),
   },
   onSubmit: () => router.push("/dashboard"),
-});
+})
 ```
 
 It belongs in `onSubmitAsync` rather than the `onSubmit` handler. Better Auth

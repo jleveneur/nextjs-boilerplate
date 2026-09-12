@@ -1,9 +1,9 @@
-const NETWORK_ERROR = "Could not reach the server. Check your connection and try again.";
+const NETWORK_ERROR = "Could not reach the server. Check your connection and try again."
 
 /** What every `authClient` call resolves to: `{ error }` on failure. */
 type ActionResult = {
-  error?: { message?: string | undefined } | null | undefined;
-};
+  error?: { message?: string | undefined } | null | undefined
+}
 
 /**
  * Runs a server call as a TanStack Form submit validator.
@@ -25,10 +25,10 @@ export async function submitToServer(
   action: () => Promise<ActionResult>,
 ): Promise<{ form: string; fields: Record<string, never> } | null> {
   try {
-    const { error } = await action();
-    return error ? { form: error.message ?? "Something went wrong.", fields: {} } : null;
+    const { error } = await action()
+    return error ? { form: error.message ?? "Something went wrong.", fields: {} } : null
   } catch {
-    return { form: NETWORK_ERROR, fields: {} };
+    return { form: NETWORK_ERROR, fields: {} }
   }
 }
 
@@ -40,5 +40,5 @@ export async function submitToServer(
  * anything that is not a string is deliberately dropped here.
  */
 export function serverError(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
+  return typeof value === "string" ? value : null
 }

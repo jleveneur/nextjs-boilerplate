@@ -1,36 +1,36 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { cn } from "cn";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import * as z from "zod";
+import { useForm } from "@tanstack/react-form"
+import { cn } from "cn"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import * as z from "zod"
 
-import { authClient } from "@repo/auth/client";
-import { roleNames, type Role } from "@repo/authz";
-import { Button } from "@repo/ui/components/button";
-import { Field, FieldError, FieldLabel } from "@repo/ui/components/field";
-import { Input } from "@repo/ui/components/input";
+import { authClient } from "@repo/auth/client"
+import { roleNames, type Role } from "@repo/authz"
+import { Button } from "@repo/ui/components/button"
+import { Field, FieldError, FieldLabel } from "@repo/ui/components/field"
+import { Input } from "@repo/ui/components/input"
 
-import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts"
 
 export type MemberRow = {
-  id: string;
-  role: string;
-  email: string;
-  name: string;
-};
+  id: string
+  role: string
+  email: string
+  name: string
+}
 
 export type InvitationRow = {
-  id: string;
-  email: string;
-  role: string;
-};
+  id: string
+  email: string
+  role: string
+}
 
 const schema = z.object({
   email: z.email("Enter a valid email address."),
   role: z.enum(roleNames),
-});
+})
 
 /**
  * Members of the active organization, and the invite form.
@@ -48,12 +48,12 @@ export function MembersPanel({
   invitations,
   canInvite,
 }: {
-  members: MemberRow[];
-  invitations: InvitationRow[];
-  canInvite: boolean;
+  members: MemberRow[]
+  invitations: InvitationRow[]
+  canInvite: boolean
 }) {
-  const router = useRouter();
-  const [sentTo, setSentTo] = useState<string | null>(null);
+  const router = useRouter()
+  const [sentTo, setSentTo] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: { email: "", role: "member" },
@@ -67,12 +67,12 @@ export function MembersPanel({
         ),
     },
     onSubmit: ({ value }) => {
-      setSentTo(value.email);
+      setSentTo(value.email)
       // Keeps the chosen role, so inviting a second person to it is one field.
-      form.reset({ email: "", role: value.role });
-      router.refresh();
+      form.reset({ email: "", role: value.role })
+      router.refresh()
     },
-  });
+  })
 
   return (
     <section className="flex flex-col gap-4">
@@ -102,9 +102,9 @@ export function MembersPanel({
           noValidate
           className="flex items-end gap-2"
           onSubmit={(event) => {
-            event.preventDefault();
-            setSentTo(null);
-            void form.handleSubmit();
+            event.preventDefault()
+            setSentTo(null)
+            void form.handleSubmit()
           }}
         >
           <form.Field name="email">
@@ -120,7 +120,7 @@ export function MembersPanel({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => {
-                    field.handleChange(event.target.value);
+                    field.handleChange(event.target.value)
                   }}
                 />
                 <FieldError errors={field.state.meta.errors} />
@@ -138,7 +138,7 @@ export function MembersPanel({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => {
-                    field.handleChange(toRole(event.target.value));
+                    field.handleChange(toRole(event.target.value))
                   }}
                   className={cn(
                     "border-input bg-background h-8 rounded-lg border px-2 text-sm",
@@ -175,10 +175,10 @@ export function MembersPanel({
         {(error) => <FieldError>{serverError(error)}</FieldError>}
       </form.Subscribe>
     </section>
-  );
+  )
 }
 
 /** The select can only hold these values, but its `value` is typed as string. */
 function toRole(value: string): Role {
-  return roleNames.find((name) => name === value) ?? "member";
+  return roleNames.find((name) => name === value) ?? "member"
 }

@@ -1,29 +1,23 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import Link from "next/link"
+import { redirect } from "next/navigation"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card"
 
-import { ResendVerificationButton } from "@/components/resend-verification-button.tsx";
-import { getSession } from "@/lib/session.ts";
+import { ResendVerificationButton } from "@/components/resend-verification-button.tsx"
+import { getSession } from "@/lib/session.ts"
 
 export default async function VerifyEmailPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string }>
 }) {
   // Following the link signs the user in, so arriving here with a session
   // means it has already been used.
   if ((await getSession()) !== null) {
-    redirect("/dashboard");
+    redirect("/dashboard")
   }
 
-  const { email } = await searchParams;
+  const { email } = await searchParams
 
   return (
     <main className="mx-auto flex max-w-sm flex-col justify-center px-6 py-24">
@@ -52,5 +46,5 @@ export default async function VerifyEmailPage({
         </CardContent>
       </Card>
     </main>
-  );
+  )
 }

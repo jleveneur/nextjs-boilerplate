@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq } from "drizzle-orm"
 
-import { db, member, organization, user } from "@repo/db";
+import { db, member, organization, user } from "@repo/db"
 
 /**
  * Decides which organization a session should start in.
@@ -21,25 +21,25 @@ export async function resolveActiveOrganization(userId: string): Promise<string>
     .from(user)
     .leftJoin(member, eq(member.userId, user.id))
     .where(eq(user.id, userId))
-    .orderBy(member.createdAt);
+    .orderBy(member.createdAt)
 
-  const first = rows[0];
+  const first = rows[0]
   if (first === undefined) {
-    throw new Error(`Cannot resolve an organization for unknown user ${userId}`);
+    throw new Error(`Cannot resolve an organization for unknown user ${userId}`)
   }
 
   const memberships = rows
     .map((row) => row.organizationId)
-    .filter((id): id is string => id !== null);
+    .filter((id): id is string => id !== null)
 
-  const oldest = memberships[0];
+  const oldest = memberships[0]
   if (oldest === undefined) {
-    return createPersonalOrganization(userId);
+    return createPersonalOrganization(userId)
   }
 
   // The remembered id is only honoured if it is still one of their
   // memberships, which is what makes it safe to store without a foreign key.
-  return memberships.find((id) => id === first.remembered) ?? oldest;
+  return memberships.find((id) => id === first.remembered) ?? oldest
 }
 
 /**
@@ -55,18 +55,18 @@ export async function createPersonalOrganization(userId: string): Promise<string
     .select({ name: user.name, email: user.email })
     .from(user)
     .where(eq(user.id, userId))
-    .limit(1);
+    .limit(1)
 
   if (owner === undefined) {
-    throw new Error(`Cannot create an organization for unknown user ${userId}`);
+    throw new Error(`Cannot create an organization for unknown user ${userId}`)
   }
 
-  const organizationId = crypto.randomUUID();
+  const organizationId = crypto.randomUUID()
   const handle =
     owner.email
       .split("@")[0]
       ?.replaceAll(/[^a-z0-9-]/gi, "-")
-      .toLowerCase() ?? "";
+      .toLowerCase() ?? ""
 
   await db.transaction(async (tx) => {
     await tx.insert(organization).values({
@@ -75,17 +75,17 @@ export async function createPersonalOrganization(userId: string): Promise<string
       // The id suffix is what makes this unique without a round trip to check;
       // the handle is only there to keep it readable.
       slug: `${handle || "workspace"}-${organizationId.slice(0, 8)}`,
-    });
+    })
 
     await tx.insert(member).values({
       id: crypto.randomUUID(),
       organizationId,
       userId,
       role: "owner",
-    });
-  });
+    })
+  })
 
-  return organizationId;
+  return organizationId
 }
 
 /**
@@ -100,8 +100,5 @@ export async function rememberActiveOrganization(
   userId: string,
   organizationId: string,
 ): Promise<void> {
-  await db
-    .update(user)
-    .set({ lastActiveOrganizationId: organizationId })
-    .where(eq(user.id, userId));
+  await db.update(user).set({ lastActiveOrganizationId: organizationId }).where(eq(user.id, userId))
 }

@@ -1,14 +1,14 @@
-import { ORPCError } from "@orpc/server";
+import { ORPCError } from "@orpc/server"
 
-import { auth } from "@repo/auth";
-import type { statement } from "@repo/authz";
+import { auth } from "@repo/auth"
+import type { statement } from "@repo/authz"
 
-import { orgProcedure } from "./procedures.ts";
+import { orgProcedure } from "./procedures.ts"
 
 /** A permission request, e.g. `{ post: ["delete"] }`. Keys come from `@repo/authz`. */
 export type Permissions = Partial<{
-  [K in keyof typeof statement]: (typeof statement)[K][number][];
-}>;
+  [K in keyof typeof statement]: (typeof statement)[K][number][]
+}>
 
 /**
  * Requires the caller's role in the active organization to grant `permissions`.
@@ -22,20 +22,20 @@ export function requirePermission(permissions: Permissions) {
     const allowed = await auth.api.hasPermission({
       headers: context.headers,
       body: { organizationId: context.organizationId, permissions },
-    });
+    })
 
     if (!allowed.success) {
       throw new ORPCError("FORBIDDEN", {
         message: `Your role does not allow ${describe(permissions)}`,
-      });
+      })
     }
 
-    return next();
-  });
+    return next()
+  })
 }
 
 function describe(permissions: Permissions): string {
   return Object.entries(permissions)
     .map(([resource, actions]) => `${actions?.join("/") ?? ""} on ${resource}`)
-    .join(", ");
+    .join(", ")
 }

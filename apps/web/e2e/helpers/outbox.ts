@@ -1,11 +1,11 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 
-import { expect } from "@playwright/test";
+import { expect } from "@playwright/test"
 
-import { OUTBOX_FILE, parseOutbox, type OutboxEntry } from "@repo/email";
+import { OUTBOX_FILE, parseOutbox, type OutboxEntry } from "@repo/email"
 
-import { E2E } from "../../playwright.config.ts";
+import { E2E } from "../../playwright.config.ts"
 
 /**
  * Reads the mail the app would have sent.
@@ -16,10 +16,10 @@ import { E2E } from "../../playwright.config.ts";
  */
 export function readOutbox(): OutboxEntry[] {
   try {
-    return parseOutbox(readFileSync(join(E2E.outboxDirectory, OUTBOX_FILE), "utf8"));
+    return parseOutbox(readFileSync(join(E2E.outboxDirectory, OUTBOX_FILE), "utf8"))
   } catch {
     // Nothing sent yet — the file is created on the first message.
-    return [];
+    return []
   }
 }
 
@@ -30,26 +30,26 @@ export function readOutbox(): OutboxEntry[] {
  * before the server has finished writing it.
  */
 export async function waitForEmailLink(email: string, subject: RegExp): Promise<string> {
-  let found: OutboxEntry | undefined;
+  let found: OutboxEntry | undefined
 
   await expect
     .poll(
       () => {
         // The newest match, not the first: a spec may trigger the same kind of
         // email twice, and the link that matters is the most recent one.
-        found = readOutbox().findLast((entry) => entry.to === email && subject.test(entry.subject));
-        return found !== undefined;
+        found = readOutbox().findLast((entry) => entry.to === email && subject.test(entry.subject))
+        return found !== undefined
       },
       { timeout: 15_000, message: `No email to ${email} matching ${String(subject)}` },
     )
-    .toBe(true);
+    .toBe(true)
 
-  const link = /href="([^"]+)"/.exec(found?.html ?? "")?.[1];
+  const link = /href="([^"]+)"/.exec(found?.html ?? "")?.[1]
 
   if (link === undefined) {
-    throw new Error(`Email to ${email} had no link`);
+    throw new Error(`Email to ${email} had no link`)
   }
 
   // The templates escape the URL for HTML; undo that to get a usable address.
-  return link.replaceAll("&amp;", "&");
+  return link.replaceAll("&amp;", "&")
 }

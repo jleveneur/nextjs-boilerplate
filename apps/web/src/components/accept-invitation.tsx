@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { useRouter } from "next/navigation";
+import { useForm } from "@tanstack/react-form"
+import { useRouter } from "next/navigation"
 
-import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui/components/button";
-import { FieldError } from "@repo/ui/components/field";
+import { authClient } from "@repo/auth/client"
+import { Button } from "@repo/ui/components/button"
+import { FieldError } from "@repo/ui/components/field"
 
-import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts"
 
 /**
  * Accepting has no fields, but it has a pending state and a server error, so it
@@ -17,7 +17,7 @@ import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
  * with nothing in it is a button wearing a costume.
  */
 export function AcceptInvitation({ invitationId }: { invitationId: string }) {
-  const router = useRouter();
+  const router = useRouter()
 
   const form = useForm({
     defaultValues: {},
@@ -29,10 +29,10 @@ export function AcceptInvitation({ invitationId }: { invitationId: string }) {
         submitToServer(() => authClient.organization.acceptInvitation({ invitationId })),
     },
     onSubmit: () => {
-      router.push("/dashboard");
-      router.refresh();
+      router.push("/dashboard")
+      router.refresh()
     },
-  });
+  })
 
   return (
     <div className="flex flex-col gap-4">
@@ -42,7 +42,7 @@ export function AcceptInvitation({ invitationId }: { invitationId: string }) {
             type="button"
             disabled={isSubmitting}
             onClick={() => {
-              void form.handleSubmit();
+              void form.handleSubmit()
             }}
           >
             {isSubmitting ? "Joining…" : "Accept invitation"}
@@ -54,5 +54,5 @@ export function AcceptInvitation({ invitationId }: { invitationId: string }) {
         {(error) => <FieldError>{serverError(error)}</FieldError>}
       </form.Subscribe>
     </div>
-  );
+  )
 }

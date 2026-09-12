@@ -1,14 +1,14 @@
-import { appendFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { appendFileSync, mkdirSync } from "node:fs"
+import { join } from "node:path"
 
 export type OutboxEntry = {
-  to: string;
-  subject: string;
-  html: string;
-  sentAt: string;
-};
+  to: string
+  subject: string
+  html: string
+  sentAt: string
+}
 
-export const OUTBOX_FILE = "outbox.jsonl";
+export const OUTBOX_FILE = "outbox.jsonl"
 
 /**
  * Where mail goes when there is no Resend key.
@@ -20,8 +20,8 @@ export const OUTBOX_FILE = "outbox.jsonl";
  * sees a complete record rather than a half-written one.
  */
 export function writeToOutbox(directory: string, entry: OutboxEntry): void {
-  mkdirSync(directory, { recursive: true });
-  appendFileSync(join(directory, OUTBOX_FILE), `${JSON.stringify(entry)}\n`, "utf8");
+  mkdirSync(directory, { recursive: true })
+  appendFileSync(join(directory, OUTBOX_FILE), `${JSON.stringify(entry)}\n`, "utf8")
 }
 
 /** Parses outbox contents. Exported so tests read it the same way it is written. */
@@ -30,14 +30,14 @@ export function parseOutbox(contents: string): OutboxEntry[] {
     .split("\n")
     .filter((line) => line.trim() !== "")
     .map((line): unknown => JSON.parse(line))
-    .filter((value): value is OutboxEntry => isOutboxEntry(value));
+    .filter((value): value is OutboxEntry => isOutboxEntry(value))
 }
 
 function isOutboxEntry(value: unknown): value is OutboxEntry {
   if (typeof value !== "object" || value === null) {
-    return false;
+    return false
   }
 
-  const entry: Record<string, unknown> = { ...value };
-  return typeof entry["to"] === "string" && typeof entry["html"] === "string";
+  const entry: Record<string, unknown> = { ...value }
+  return typeof entry["to"] === "string" && typeof entry["html"] === "string"
 }

@@ -1,28 +1,22 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import Link from "next/link"
+import { redirect } from "next/navigation"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card"
 
-import { SignInForm } from "@/components/sign-in-form.tsx";
-import { safeRedirect } from "@/lib/safe-redirect.ts";
-import { getSession } from "@/lib/session.ts";
+import { SignInForm } from "@/components/sign-in-form.tsx"
+import { safeRedirect } from "@/lib/safe-redirect.ts"
+import { getSession } from "@/lib/session.ts"
 
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; reset?: string }>;
+  searchParams: Promise<{ next?: string; reset?: string }>
 }) {
-  const { next, reset } = await searchParams;
-  const destination = safeRedirect(next, "/dashboard");
+  const { next, reset } = await searchParams
+  const destination = safeRedirect(next, "/dashboard")
 
   if ((await getSession()) !== null) {
-    redirect(destination);
+    redirect(destination)
   }
 
   return (
@@ -45,5 +39,5 @@ export default async function SignInPage({
         </CardContent>
       </Card>
     </main>
-  );
+  )
 }

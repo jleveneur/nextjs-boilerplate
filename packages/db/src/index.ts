@@ -1,9 +1,9 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
 
-import { env } from "@repo/env";
+import { env } from "@repo/env"
 
-import * as schema from "./schema.ts";
+import * as schema from "./schema.ts"
 
 /**
  * The database handle.
@@ -24,11 +24,11 @@ const client = postgres(env.DATABASE_URL, {
   max: 10,
   idle_timeout: 20,
   connect_timeout: 10,
-});
+})
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(client, { schema })
 
-export type Database = typeof db;
+export type Database = typeof db
 
-export { schema };
-export * from "./schema.ts";
+export { schema }
+export * from "./schema.ts"

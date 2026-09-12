@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { useForm } from "@tanstack/react-form"
+import { useState } from "react"
 
-import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui/components/button";
-import { FieldError } from "@repo/ui/components/field";
+import { authClient } from "@repo/auth/client"
+import { Button } from "@repo/ui/components/button"
+import { FieldError } from "@repo/ui/components/field"
 
-import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts"
 
 /**
  * No fields, but a pending state and a server error, so it is still a
  * `useForm`. No `<form>` element: `handleSubmit` does not need one.
  */
 export function ResendVerificationButton({ email }: { email: string }) {
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState(false)
 
   const form = useForm({
     defaultValues: {},
@@ -25,16 +25,16 @@ export function ResendVerificationButton({ email }: { email: string }) {
         ),
     },
     onSubmit: () => {
-      setSent(true);
+      setSent(true)
     },
-  });
+  })
 
   if (sent) {
     return (
       <p className="text-muted-foreground text-sm" role="status">
         Sent again. It can take a minute to arrive.
       </p>
-    );
+    )
   }
 
   return (
@@ -46,7 +46,7 @@ export function ResendVerificationButton({ email }: { email: string }) {
             variant="outline"
             disabled={isSubmitting}
             onClick={() => {
-              void form.handleSubmit();
+              void form.handleSubmit()
             }}
           >
             {isSubmitting ? "Sending…" : "Send it again"}
@@ -58,5 +58,5 @@ export function ResendVerificationButton({ email }: { email: string }) {
         {(error) => <FieldError>{serverError(error)}</FieldError>}
       </form.Subscribe>
     </div>
-  );
+  )
 }

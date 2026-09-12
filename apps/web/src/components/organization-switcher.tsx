@@ -1,23 +1,23 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { cn } from "cn";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import * as z from "zod";
+import { useForm } from "@tanstack/react-form"
+import { cn } from "cn"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import * as z from "zod"
 
-import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui/components/button";
-import { Field, FieldError } from "@repo/ui/components/field";
-import { Input } from "@repo/ui/components/input";
+import { authClient } from "@repo/auth/client"
+import { Button } from "@repo/ui/components/button"
+import { Field, FieldError } from "@repo/ui/components/field"
+import { Input } from "@repo/ui/components/input"
 
-import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts"
 
-type Organization = { id: string; name: string; slug: string; role: string };
+type Organization = { id: string; name: string; slug: string; role: string }
 
 const schema = z.object({
   name: z.string().refine((value) => toSlug(value) !== "", "Use at least one letter or number."),
-});
+})
 
 /**
  * Switches the active organization, and creates new ones.
@@ -39,11 +39,11 @@ export function OrganizationSwitcher({
   organizations,
   activeId,
 }: {
-  organizations: Organization[];
-  activeId: string;
+  organizations: Organization[]
+  activeId: string
 }) {
-  const router = useRouter();
-  const [creating, setCreating] = useState(false);
+  const router = useRouter()
+  const [creating, setCreating] = useState(false)
 
   const switchForm = useForm({
     defaultValues: { organizationId: activeId },
@@ -56,9 +56,9 @@ export function OrganizationSwitcher({
     // The dashboard is a Server Component that reads the active organization,
     // so the router cache has to be dropped to see the change.
     onSubmit: () => {
-      router.refresh();
+      router.refresh()
     },
-  });
+  })
 
   const createForm = useForm({
     defaultValues: { name: "" },
@@ -70,11 +70,11 @@ export function OrganizationSwitcher({
         ),
     },
     onSubmit: () => {
-      setCreating(false);
-      createForm.reset();
-      router.refresh();
+      setCreating(false)
+      createForm.reset()
+      router.refresh()
     },
-  });
+  })
 
   return (
     <div className="flex flex-col items-end gap-2">
@@ -91,8 +91,8 @@ export function OrganizationSwitcher({
                     value={field.state.value}
                     disabled={isSubmitting}
                     onChange={(event) => {
-                      field.handleChange(event.target.value);
-                      void switchForm.handleSubmit();
+                      field.handleChange(event.target.value)
+                      void switchForm.handleSubmit()
                     }}
                     className={cn(
                       "border-input bg-background h-8 rounded-lg border px-2 text-sm",
@@ -116,7 +116,7 @@ export function OrganizationSwitcher({
           variant="outline"
           size="sm"
           onClick={() => {
-            setCreating((open) => !open);
+            setCreating((open) => !open)
           }}
         >
           {creating ? "Cancel" : "New"}
@@ -128,8 +128,8 @@ export function OrganizationSwitcher({
           noValidate
           className="flex items-start gap-2"
           onSubmit={(event) => {
-            event.preventDefault();
-            void createForm.handleSubmit();
+            event.preventDefault()
+            void createForm.handleSubmit()
           }}
         >
           <createForm.Field name="name">
@@ -143,7 +143,7 @@ export function OrganizationSwitcher({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => {
-                    field.handleChange(event.target.value);
+                    field.handleChange(event.target.value)
                   }}
                 />
                 <FieldError errors={field.state.meta.errors} />
@@ -169,7 +169,7 @@ export function OrganizationSwitcher({
         {(error) => <FieldError>{serverError(error)}</FieldError>}
       </createForm.Subscribe>
     </div>
-  );
+  )
 }
 
 /** Better Auth requires a slug; derive one so the form asks for a name only. */
@@ -178,5 +178,5 @@ function toSlug(value: string): string {
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, "-")
     .replaceAll(/^-+|-+$/g, "")
-    .slice(0, 60);
+    .slice(0, 60)
 }

@@ -1,13 +1,7 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import { Button } from "@repo/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+import { Button } from "@repo/ui/components/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card"
 
 export default function NotFound() {
   return (
@@ -22,5 +16,5 @@ export default function NotFound() {
         </CardContent>
       </Card>
     </main>
-  );
+  )
 }

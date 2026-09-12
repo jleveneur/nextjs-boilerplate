@@ -1,8 +1,8 @@
-import { ORPCError } from "@orpc/server";
-import { RPCHandler } from "@orpc/server/fetch";
+import { ORPCError } from "@orpc/server"
+import { RPCHandler } from "@orpc/server/fetch"
 
-import { appRouter, createContext } from "@repo/api";
-import { logger } from "@repo/logger";
+import { appRouter, createContext } from "@repo/api"
+import { logger } from "@repo/logger"
 
 /**
  * Codes this application throws on purpose.
@@ -11,16 +11,16 @@ import { logger } from "@repo/logger";
  * people to ignore the level that should mean "look at this". Anything not in
  * this set reached the handler unplanned and carries a stack worth keeping.
  */
-const EXPECTED = new Set(["UNAUTHORIZED", "FORBIDDEN", "BAD_REQUEST", "NOT_FOUND", "CONFLICT"]);
+const EXPECTED = new Set(["UNAUTHORIZED", "FORBIDDEN", "BAD_REQUEST", "NOT_FOUND", "CONFLICT"])
 
 /** `ORPCError` is generic over its code, so `instanceof` alone widens it to `any`. */
 function expectedCode(error: unknown): string | null {
   if (!(error instanceof ORPCError)) {
-    return null;
+    return null
   }
 
-  const code: unknown = error.code;
-  return typeof code === "string" && EXPECTED.has(code) ? code : null;
+  const code: unknown = error.code
+  return typeof code === "string" && EXPECTED.has(code) ? code : null
 }
 
 // POST only. Combined with the `SameSite=Lax` session cookie, that is the CSRF
@@ -31,35 +31,35 @@ const handler = new RPCHandler(appRouter, {
   clientInterceptors: [
     async (options) => {
       try {
-        return await options.next();
+        return await options.next()
       } catch (error) {
-        const path = options.path.join(".");
-        const expected = expectedCode(error);
+        const path = options.path.join(".")
+        const expected = expectedCode(error)
 
         if (expected === null) {
-          logger.error({ err: error, path }, "rpc failed");
+          logger.error({ err: error, path }, "rpc failed")
         } else {
-          logger.warn({ path, code: expected }, "rpc rejected");
+          logger.warn({ path, code: expected }, "rpc rejected")
         }
 
-        throw error;
+        throw error
       }
     },
   ],
-});
+})
 
 export async function POST(request: Request): Promise<Response> {
   const { matched, response } = await handler.handle(request, {
     prefix: "/api/rpc",
     context: await createContext(request.headers),
-  });
+  })
 
   if (!matched) {
     // No procedure by that name. Worth a line: it is what a probe or a stale
     // client looks like.
-    logger.warn({ url: request.url }, "rpc route not matched");
-    return new Response("Not found", { status: 404 });
+    logger.warn({ url: request.url }, "rpc route not matched")
+    return new Response("Not found", { status: 404 })
   }
 
-  return response;
+  return response
 }

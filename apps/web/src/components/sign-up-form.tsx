@@ -1,24 +1,24 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { useRouter } from "next/navigation";
-import * as z from "zod";
+import { useForm } from "@tanstack/react-form"
+import { useRouter } from "next/navigation"
+import * as z from "zod"
 
-import { authClient } from "@repo/auth/client";
-import { Button } from "@repo/ui/components/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field";
-import { Input } from "@repo/ui/components/input";
+import { authClient } from "@repo/auth/client"
+import { Button } from "@repo/ui/components/button"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field"
+import { Input } from "@repo/ui/components/input"
 
-import { serverError, submitToServer } from "@/lib/submit-to-server.ts";
+import { serverError, submitToServer } from "@/lib/submit-to-server.ts"
 
 const schema = z.object({
   name: z.string().min(1, "Enter your name."),
   email: z.email("Enter a valid email address."),
   password: z.string().min(8, "Use at least 8 characters."),
-});
+})
 
 export function SignUpForm() {
-  const router = useRouter();
+  const router = useRouter()
 
   const form = useForm({
     defaultValues: { name: "", email: "", password: "" },
@@ -38,17 +38,17 @@ export function SignUpForm() {
     onSubmit: ({ value }) => {
       // Addresses must be verified, so sign-up produces no session. The link
       // in the email is what signs the user in.
-      router.push(`/verify-email?email=${encodeURIComponent(value.email)}`);
+      router.push(`/verify-email?email=${encodeURIComponent(value.email)}`)
     },
-  });
+  })
 
   return (
     <form
       noValidate
       className="flex flex-col gap-4"
       onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
+        event.preventDefault()
+        void form.handleSubmit()
       }}
     >
       <FieldGroup>
@@ -64,7 +64,7 @@ export function SignUpForm() {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
-                  field.handleChange(event.target.value);
+                  field.handleChange(event.target.value)
                 }}
               />
               <FieldError errors={field.state.meta.errors} />
@@ -85,7 +85,7 @@ export function SignUpForm() {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
-                  field.handleChange(event.target.value);
+                  field.handleChange(event.target.value)
                 }}
               />
               <FieldError errors={field.state.meta.errors} />
@@ -106,7 +106,7 @@ export function SignUpForm() {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(event) => {
-                  field.handleChange(event.target.value);
+                  field.handleChange(event.target.value)
                 }}
               />
               <FieldError errors={field.state.meta.errors} />
@@ -127,5 +127,5 @@ export function SignUpForm() {
         )}
       </form.Subscribe>
     </form>
-  );
+  )
 }
