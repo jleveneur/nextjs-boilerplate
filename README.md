@@ -33,6 +33,12 @@ You need a PostgreSQL 13 or newer database reachable at `DATABASE_URL`. How you
 run it — a local install, a container, a hosted instance — is deliberately not
 this repository's business.
 
+One caveat worth knowing before you deploy: the connection pool in
+[packages/db/src/index.ts](packages/db/src/index.ts) is sized for a
+long-running server. On a serverless platform every warm instance keeps its own
+pool, so you want a pooler in front of Postgres — PgBouncer, or the one Neon
+and Supabase provide — with `DATABASE_URL` pointing at it.
+
 You do **not** need nvm or a matching Node installed. `devEngines.runtime` in
 `package.json` pins the version, and `pnpm install` downloads it, records its
 checksum in the lockfile, and runs every script against it. That is why there
