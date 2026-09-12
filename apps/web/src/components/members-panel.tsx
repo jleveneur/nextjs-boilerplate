@@ -130,7 +130,7 @@ export function MembersPanel({
 
           <form.Field name="role">
             {(field) => (
-              <Field>
+              <Field className="w-auto">
                 <select
                   aria-label="Role"
                   id={field.name}
