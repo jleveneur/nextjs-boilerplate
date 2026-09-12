@@ -1,7 +1,10 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { auth } from "@repo/auth";
 import { isRole, roles } from "@repo/authz";
 
+import { MembersPanel } from "@/components/members-panel.tsx";
 import { OrganizationSwitcher } from "@/components/organization-switcher.tsx";
 import { Posts } from "@/components/posts.tsx";
 import { SignOutButton } from "@/components/sign-out-button.tsx";
@@ -16,17 +19,20 @@ export default async function DashboardPage() {
 
   // In-process oRPC calls: the same procedures the browser hits, minus the
   // round trip. The posts seed the client cache so the page renders with data.
-  const [current, organizations, posts] = await Promise.all([
+  // Members come from Better Auth, which owns the organization's own tables.
+  const [current, organizations, posts, full] = await Promise.all([
     api.organization.current(),
     api.organization.list(),
     api.post.list(),
+    auth.api.getFullOrganization({ headers: await headers() }),
   ]);
 
-  // Cosmetic only — it decides whether to render a control the user cannot
-  // use. `post.delete` checks the same permission again on the server, which
-  // is where the decision actually counts.
-  const canDelete =
-    isRole(current.role) && roles[current.role].authorize({ post: ["delete"] }).success;
+  // Cosmetic only — these decide whether to render controls the user cannot
+  // use. The server checks the same permissions again on every call, which is
+  // where the decision actually counts.
+  const role = isRole(current.role) ? roles[current.role] : null;
+  const canDelete = role?.authorize({ post: ["delete"] }).success ?? false;
+  const canInvite = role?.authorize({ invitation: ["create"] }).success ?? false;
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16">
@@ -44,6 +50,21 @@ export default async function DashboardPage() {
       </header>
 
       <Posts initialPosts={posts} canDelete={canDelete} />
+
+      <MembersPanel
+        members={(full?.members ?? []).map((item) => ({
+          id: item.id,
+          role: item.role,
+          name: item.user.name,
+          email: item.user.email,
+        }))}
+        invitations={(full?.invitations ?? []).flatMap((item) =>
+          item.status === "pending"
+            ? [{ id: item.id, email: item.email, role: item.role ?? "member" }]
+            : [],
+        )}
+        canInvite={canInvite}
+      />
     </main>
   );
 }

@@ -1,16 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
 
 import { authClient } from "@repo/auth/client";
 import { Button, Input, Label } from "@repo/ui";
 
-export function SignInForm({ next }: { next: string }) {
-  const router = useRouter();
+export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -20,22 +17,34 @@ export function SignInForm({ next }: { next: string }) {
     setError(null);
 
     try {
-      const result = await authClient.signIn.email({ email, password });
+      const result = await authClient.requestPasswordReset({
+        email,
+        // Better Auth validates the token, then redirects here with it as a
+        // query parameter — or with `?error=INVALID_TOKEN` if it has expired.
+        redirectTo: "/reset-password",
+      });
 
       if (result.error) {
-        setError(result.error.message ?? "Could not sign in.");
+        setError(result.error.message ?? "Could not send the reset link.");
         return;
       }
 
-      router.push(next);
-      // The destination is a Server Component that reads the session, so the
-      // router cache has to be dropped for it to see the new cookie.
-      router.refresh();
+      setSent(true);
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
     } finally {
       setPending(false);
     }
+  }
+
+  if (sent) {
+    // Deliberately the same message whether or not the address exists: telling
+    // the difference is how an attacker enumerates who has an account.
+    return (
+      <p className="text-sm" role="status">
+        If an account exists for {email}, a reset link is on its way.
+      </p>
+    );
   }
 
   return (
@@ -59,28 +68,6 @@ export function SignInForm({ next }: { next: string }) {
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            href="/forgot-password"
-            className="text-muted-foreground text-sm underline underline-offset-4"
-          >
-            Forgot?
-          </Link>
-        </div>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-          }}
-        />
-      </div>
-
       {error === null ? null : (
         <p className="text-destructive text-sm" role="alert">
           {error}
@@ -88,7 +75,7 @@ export function SignInForm({ next }: { next: string }) {
       )}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? "Sending…" : "Send reset link"}
       </Button>
     </form>
   );

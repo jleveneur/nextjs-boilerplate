@@ -1,15 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
 
 import { authClient } from "@repo/auth/client";
 import { Button, Input, Label } from "@repo/ui";
 
-export function SignInForm({ next }: { next: string }) {
+export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -20,16 +18,16 @@ export function SignInForm({ next }: { next: string }) {
     setError(null);
 
     try {
-      const result = await authClient.signIn.email({ email, password });
+      const result = await authClient.resetPassword({ newPassword: password, token });
 
       if (result.error) {
-        setError(result.error.message ?? "Could not sign in.");
+        setError(result.error.message ?? "Could not reset the password.");
         return;
       }
 
-      router.push(next);
-      // The destination is a Server Component that reads the session, so the
-      // router cache has to be dropped for it to see the new cookie.
+      // Resetting does not sign anyone in — the new password still has to be
+      // used, which is what proves the person choosing it is the one signing in.
+      router.push("/sign-in?reset=1");
       router.refresh();
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
@@ -46,33 +44,12 @@ export function SignInForm({ next }: { next: string }) {
       }}
     >
       <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(event) => {
-            setEmail(event.target.value);
-          }}
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            href="/forgot-password"
-            className="text-muted-foreground text-sm underline underline-offset-4"
-          >
-            Forgot?
-          </Link>
-        </div>
+        <Label htmlFor="password">New password</Label>
         <Input
           id="password"
           type="password"
-          autoComplete="current-password"
+          autoComplete="new-password"
+          minLength={8}
           required
           value={password}
           onChange={(event) => {
@@ -88,7 +65,7 @@ export function SignInForm({ next }: { next: string }) {
       )}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? "Saving…" : "Set new password"}
       </Button>
     </form>
   );

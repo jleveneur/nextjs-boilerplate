@@ -10,6 +10,13 @@ build/
 
 # Test output
 coverage/
+test-results/
+playwright-report/
+.playwright/
+
+# Local mail outbox — everything the app would have sent without a Resend key.
+.mail/
+.mail-e2e/
 
 # Environment — inject secrets at deploy time; never commit real values.
 .env

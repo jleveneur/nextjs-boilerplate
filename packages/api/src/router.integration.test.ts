@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { auth } from "@repo/auth";
-import { db, member, post } from "@repo/db";
+import { db, member, post, user } from "@repo/db";
 
 import { createContext } from "./context.ts";
 import { appRouter } from "./router.ts";
@@ -31,17 +31,27 @@ function toRequestHeaders(response: Response): Headers {
   return new Headers({ cookie });
 }
 
+/**
+ * Creates a signed-in user.
+ *
+ * Addresses must be verified, so signing up produces no session — the link in
+ * the email does. Rather than parse that email, this marks the row verified
+ * and signs in. The verification journey itself is covered end to end by the
+ * Playwright suite, where clicking the real link is the point.
+ */
 async function signUp(email: string): Promise<{ headers: Headers; userId: string }> {
-  const response = await auth.api.signUpEmail({
+  await auth.api.signUpEmail({
     body: { name: "Test User", email, password: PASSWORD },
     asResponse: true,
   });
 
-  const headers = toRequestHeaders(response);
+  await db.update(user).set({ emailVerified: true }).where(eq(user.email, email));
+
+  const headers = await signIn(email);
   const session = await auth.api.getSession({ headers });
 
   if (session === null) {
-    throw new Error(`Sign-up did not produce a session for ${email}`);
+    throw new Error(`Could not sign in as ${email}`);
   }
 
   return { headers, userId: session.user.id };
@@ -63,6 +73,15 @@ beforeEach(async () => {
 });
 
 describe("sign-up", () => {
+  it("does not sign in an unverified address", async () => {
+    const response = await auth.api.signUpEmail({
+      body: { name: "Test User", email: "unverified@example.test", password: PASSWORD },
+      asResponse: true,
+    });
+
+    await expect(auth.api.getSession({ headers: toRequestHeaders(response) })).resolves.toBeNull();
+  });
+
   it("puts the new user in an organization they own", async () => {
     const { headers } = await signUp("owner@example.test");
 

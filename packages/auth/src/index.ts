@@ -5,6 +5,7 @@ import { organization } from "better-auth/plugins";
 import { ac, roles } from "@repo/authz";
 import * as schema from "@repo/db";
 import { db } from "@repo/db";
+import { invitationEmail, resetPasswordEmail, sendEmail, verificationEmail } from "@repo/email";
 import { env } from "@repo/env";
 
 import { rememberActiveOrganization, resolveActiveOrganization } from "./active-organization.ts";
@@ -14,10 +15,10 @@ const DAY_IN_SECONDS = 60 * 60 * 24;
 /**
  * The Better Auth instance.
  *
- * Email and password, plus the organization plugin for multi-tenancy. Every
- * other method — OAuth providers, magic links, passkeys — needs configuration
- * or infrastructure that belongs to a product, not to a starter. Adding one is
- * a plugin and a migration.
+ * Email and password with verified addresses, plus the organization plugin for
+ * multi-tenancy and invitations. Every other method — OAuth providers, magic
+ * links, passkeys — needs configuration or infrastructure that belongs to a
+ * product, not to a starter. Adding one is a plugin and a migration.
  * https://www.better-auth.com/docs/authentication/email-password
  */
 export const auth = betterAuth({
@@ -39,9 +40,22 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
-    // Verification would need an email transport, which this starter does not
-    // ship. Turn it on together with `sendVerificationEmail`.
-    requireEmailVerification: false,
+    // An unverified address is an account someone else may own. Sign-up
+    // therefore does not produce a session; the link in the email does.
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({ to: user.email, ...resetPasswordEmail({ name: user.name, url }) });
+    },
+  },
+
+  emailVerification: {
+    sendOnSignUp: true,
+    // The link is proof of the address, so it is also proof enough to sign in.
+    // Without this the user verifies and is then asked to sign in again.
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({ to: user.email, ...verificationEmail({ name: user.name, url }) });
+    },
   },
 
   session: {
@@ -49,6 +63,10 @@ export const auth = betterAuth({
     updateAge: DAY_IN_SECONDS,
     // Signed cookie holding the session, so the common path costs no query.
     cookieCache: { enabled: true, maxAge: 5 * 60 },
+  },
+
+  rateLimit: {
+    enabled: env.AUTH_RATE_LIMIT === "on",
   },
 
   advanced: {
@@ -62,9 +80,18 @@ export const auth = betterAuth({
       ac,
       roles,
       creatorRole: "owner",
-      // The invitation endpoints exist, but nothing in this app uses them:
-      // there is no transport to send the link and no route to accept it.
-      // Adding members is API-only until you build both.
+      sendInvitationEmail: async ({ id, email, inviter, organization: invitedTo }) => {
+        await sendEmail({
+          to: email,
+          ...invitationEmail({
+            organizationName: invitedTo.name,
+            inviterName: inviter.user.name,
+            // The invitation id is the token: Better Auth looks the row up by
+            // it and checks the address on the invitation against the caller.
+            url: `${env.BETTER_AUTH_URL}/accept-invitation/${id}`,
+          }),
+        });
+      },
     }),
   ],
 

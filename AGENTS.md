@@ -18,10 +18,14 @@ pre-existing, confirm that on a clean tree instead of assuming.
 Faster individual loops: `pnpm format`, `pnpm lint`, `pnpm typecheck`,
 `pnpm knip`, `pnpm react-doctor`, `pnpm test`.
 
-`pnpm check` deliberately excludes `pnpm test:integration`, which needs a
-database. Run it — `pnpm db:migrate && pnpm test:integration` — whenever you
-touch the schema, Better Auth's configuration, or a procedure's guards. It is
-the only thing that exercises the adapter and the permission rows together.
+`pnpm check` deliberately excludes the two suites that need a database. Run
+them when the change warrants it:
+
+- `pnpm test:integration` after touching the schema, Better Auth's
+  configuration, or a procedure's guards. It is the only thing that exercises
+  the adapter and the permission rows together.
+- `pnpm test:e2e` after touching a page, a form, or an email. It is the only
+  thing that follows a link out of an email the way a person would.
 
 Lefthook also runs formatting and syntax-only lint on commit, commitlint on the
 message, and affected typecheck and tests on push. They are a convenience, not
@@ -37,16 +41,17 @@ packages/api       oRPC procedures and router
 packages/auth      Better Auth server and client
 packages/authz     Organization roles and the permissions they grant
 packages/db        Drizzle schema, migrations, client
+packages/email     Transactional email, and the local outbox without a key
 packages/env       Zod-validated environment
 packages/ui        shadcn/ui components
 tooling/*          Lint, Tailwind, and tsconfig configuration
 scripts/           Repository setup scripts, run from package.json
 ```
 
-The dependency direction is `env → db → auth → api → web`, with `authz`
-feeding `auth` and `ui` depending on nothing internal. Keep it that way: a
-cycle between packages is a design error, not something to work around with a
-re-export.
+The dependency direction is `env → db → auth → api → web`, with `authz` and
+`email` feeding `auth`, and `ui` depending on nothing internal. Keep it that
+way: a cycle between packages is a design error, not something to work around
+with a re-export.
 
 `authz` is deliberately free of server dependencies — the browser imports the
 same role definitions to hide controls, so it must not pull in the database.
@@ -98,7 +103,8 @@ These fail `pnpm check`, so there is no version of "just for now":
 - Files and directories: `kebab-case`. Types and components: `PascalCase`.
   Functions and variables: `camelCase`.
 - Tests sit beside the code as `*.test.ts`. Anything needing a live service is
-  `*.integration.test.ts` and runs under its own config.
+  `*.integration.test.ts` and runs under its own config. Browser journeys live
+  in `apps/web/e2e/*.spec.ts`.
 - Import internal packages by name (`@repo/db`), never by relative path across
   a package boundary. Inside `apps/web`, use the `@/` alias.
 - Type-only imports use `import type`.

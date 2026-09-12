@@ -96,3 +96,49 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:migrate
       - run: pnpm test:integration
+
+  e2e:
+    name: Browser
+    runs-on: ubuntu-latest
+
+    # The journeys that only exist in a browser: verification, password reset,
+    # and invitation links, each followed the way a person would.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/app
+      BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-characters
+      BETTER_AUTH_URL: http://127.0.0.1:3111
+      # No key on purpose: mail goes to the outbox the tests read.
+      RESEND_API_KEY: ""
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/setup@v2
+        with:
+          cache: true
+          install: false
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - run: pnpm --filter @repo/web test:e2e:install
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

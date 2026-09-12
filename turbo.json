@@ -20,7 +20,15 @@
       // `next build` evaluates route modules, which validate the environment.
       // The values do not end up in the output — no NEXT_PUBLIC_* variable
       // exists — but they must be present for the build to run at all.
-      "env": ["DATABASE_URL", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL"]
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "MAIL_OUTBOX_DIR",
+        "AUTH_RATE_LIMIT"
+      ]
     },
 
     "dev": {
@@ -52,10 +60,38 @@
     // Needs a live database, so it is never part of the default local loop and
     // is never cached — a pass proves the schema and the code agreed at the
     // moment it ran, which is not a property of the inputs alone.
+    //
+    // Turbo filters the environment it hands a task, so anything the code
+    // reads has to be listed here or it silently falls back to a default.
     "test:integration": {
       "dependsOn": [],
       "cache": false,
-      "env": ["DATABASE_URL", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL"]
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "MAIL_OUTBOX_DIR",
+        "AUTH_RATE_LIMIT"
+      ]
+    },
+
+    // Browser journeys against a real build and a real database. Playwright
+    // starts the server itself, so this depends on nothing.
+    "test:e2e": {
+      "dependsOn": [],
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "MAIL_OUTBOX_DIR",
+        "AUTH_RATE_LIMIT",
+        "PLAYWRIGHT_*"
+      ]
     }
   }
 }

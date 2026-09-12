@@ -20,15 +20,24 @@ export function SignUpForm() {
     setError(null);
 
     try {
-      const result = await authClient.signUp.email({ name, email, password });
+      const result = await authClient.signUp.email({
+        name,
+        email,
+        password,
+        // Where the link in the verification email lands. Without it Better
+        // Auth sends the newly confirmed user to `/` — the marketing page —
+        // instead of into the product they just signed up for.
+        callbackURL: "/dashboard",
+      });
 
       if (result.error) {
         setError(result.error.message ?? "Could not create the account.");
         return;
       }
 
-      router.push("/dashboard");
-      router.refresh();
+      // Addresses must be verified, so sign-up produces no session. The link
+      // in the email is what signs the user in.
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
     } finally {

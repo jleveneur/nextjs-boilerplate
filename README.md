@@ -11,8 +11,10 @@ and nothing that only some projects need.
 - **[oRPC](https://orpc.unnoq.com)** for the typed API
 - **[Better Auth](https://better-auth.com)** for email/password sign-in, organizations, and
   role-based permissions
+- **[Resend](https://resend.com)** for verification, password reset, and invitation email
 - **[t3-env](https://env.t3.gg)** + **[Zod](https://zod.dev)** for validated configuration
-- **[Vitest](https://vitest.dev)** and a single GitHub Actions workflow
+- **[Vitest](https://vitest.dev)** and **[Playwright](https://playwright.dev)**, on one GitHub
+  Actions workflow
 - **[Lefthook](https://lefthook.dev)** + **[commitlint](https://commitlint.js.org)** git hooks,
   **[Knip](https://knip.dev)** for dead code, **[React Doctor](https://react.doctor)** for React
   diagnostics, and **[Renovate](https://docs.renovatebot.com)** for dependency updates
@@ -47,6 +49,7 @@ packages/
   authz/          Organization roles and permissions  @repo/authz
   db/             Drizzle schema, migrations, client  @repo/db
   env/            Zod-validated environment           @repo/env
+  email/          Transactional email                 @repo/email
   ui/             shadcn/ui components                @repo/ui
 tooling/
   oxlint/         Shared lint rules
@@ -87,7 +90,9 @@ them through `transpilePackages`; Vitest and `tsc` read them directly.
 | `pnpm typecheck`            | `tsc --noEmit` in every package                   |
 | `pnpm knip`                 | Unused files, exports, and dependencies           |
 | `pnpm react-doctor`         | React and accessibility diagnostics               |
-| `pnpm test`                 | Vitest                                            |
+| `pnpm test`                 | Vitest — pure logic, no services                  |
+| `pnpm test:integration`     | Vitest against a real database                    |
+| `pnpm test:e2e`             | Playwright browser journeys                       |
 | `pnpm db:generate`          | Generate a migration from `schema.ts`             |
 | `pnpm db:migrate`           | Apply pending migrations                          |
 | `pnpm db:studio`            | Drizzle Studio                                    |
@@ -129,16 +134,31 @@ cookie cache keeps serving the previous organization for minutes. A
 session-update hook mirrors the choice onto the user row, so it also survives
 signing out.
 
-**Inviting members is not wired up.** The plugin's invitation endpoints exist
-and the `invitation` table is migrated, but this app has no mail transport to
-send the link and no route to accept it — so a second person cannot currently
-join an organization through the UI. Making that work means adding a transport,
-`sendInvitationEmail`, and an accept page. Until then, organizations are
-single-member in practice.
+Owners and admins can invite people by email from the dashboard. The invitation
+link lands on `/accept-invitation/[id]`, which requires the recipient to be
+signed in as the invited address — Better Auth refuses a link opened by anyone
+else.
+
+## Email
+
+Three messages are wired up: confirm your address, reset your password, and
+join an organization. All go through [Resend](https://resend.com).
+
+**Without `RESEND_API_KEY` nothing is sent.** Each message is appended to
+`.mail/outbox.jsonl` and its link printed to the terminal, so a fresh clone can
+complete every flow before anyone has signed up for an account. That is also
+how the browser tests read a link — a delivered email cannot be opened by a
+test. Set the key, and point `EMAIL_FROM` at a domain you have verified, in any
+environment with real users.
+
+Bodies are plain functions in
+[packages/email/src/templates.ts](packages/email/src/templates.ts) returning
+`{ subject, html }`. Three emails do not justify a renderer and a preview
+server; swap in React Email when the design outgrows them.
 
 ## Testing
 
-Two suites, split by what they need.
+Three suites, split by what they need.
 
 `pnpm test` is pure logic — environment rules, role grants, procedure guards.
 It runs in under a second and needs nothing.
@@ -153,7 +173,19 @@ typechecking sees it. It needs a database with migrations applied:
 pnpm db:migrate && pnpm test:integration
 ```
 
-CI runs it against a Postgres service container.
+`pnpm test:e2e` drives a real browser against a production build: signing up
+and following the confirmation link, resetting a password, inviting someone and
+having them join, and checking that a member sees no controls their role
+forbids — then calling the procedure anyway and being refused. Playwright
+starts the server itself; you supply the database.
+
+```bash
+pnpm --filter @repo/web test:e2e:install   # once, downloads chromium
+pnpm db:migrate && pnpm test:e2e
+```
+
+CI runs both against a Postgres service container. `pnpm check` runs neither —
+a gate that needs a database is a gate people learn to skip.
 
 ## Git hooks
 
@@ -201,13 +233,7 @@ you need them.
 ## What is deliberately missing
 
 No Redis, object storage, payments, queues, analytics, error tracking, feature
-flags, internationalisation, containers, or browser test harness.
-
-**No email transport**, which is the one worth calling out: it means no address
-verification, no password reset, and no invitation emails. Every real product
-needs those on day one. They are absent because the choice of provider is
-yours, not because they are optional — wire a transport, then turn on
-`requireEmailVerification` and `sendInvitationEmail`.
+flags, internationalisation, or containers.
 Each of those is a real decision with real trade-offs, and a starter that makes
 them for you is a starter you spend your first day deleting.
 

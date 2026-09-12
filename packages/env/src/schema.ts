@@ -28,6 +28,37 @@ export const server = {
     protocol: /^https?$/,
     error: "must be an http:// or https:// URL",
   }),
+
+  /**
+   * Resend API key. Optional on purpose: without it, mail is appended to a
+   * local outbox instead of being delivered, so a fresh clone can complete
+   * sign-up, verification, and invitations before anyone has a Resend account.
+   * Set it in every environment that has real users.
+   */
+  RESEND_API_KEY: z.string().min(1).optional(),
+
+  /**
+   * Sender address. The default is Resend's sandbox sender, which only
+   * delivers to the address that owns the account — enough to try the flows,
+   * not enough to ship. Point it at a verified domain before launch.
+   */
+  EMAIL_FROM: z.email().default("onboarding@resend.dev"),
+
+  /** Where the local outbox is written when `RESEND_API_KEY` is unset. */
+  MAIL_OUTBOX_DIR: z.string().min(1).optional(),
+
+  /**
+   * Better Auth's per-IP rate limiting.
+   *
+   * On by default, and it should stay on anywhere real people sign in — it is
+   * what makes credential stuffing expensive. Turned off only for automated
+   * suites, which hammer sign-up and sign-in from a single address and would
+   * otherwise be throttled partway through.
+   *
+   * Better Auth infers this from `NODE_ENV`; it is spelled out here because a
+   * limit nobody can see is a limit nobody tunes when they move behind a proxy.
+   */
+  AUTH_RATE_LIMIT: z.enum(["on", "off"]).default("on"),
 };
 
 /**
