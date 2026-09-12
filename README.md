@@ -24,14 +24,20 @@ and nothing that only some projects need.
 
 ```bash
 pnpm install
-cp .env.example .env      # then edit DATABASE_URL and BETTER_AUTH_SECRET
-pnpm db:migrate           # apply migrations to your database
+cp .env.example .env      # then edit BETTER_AUTH_SECRET
+pnpm db:start             # Postgres in a container
+pnpm db:migrate           # apply migrations
 pnpm dev                  # http://localhost:3000
 ```
 
-You need a PostgreSQL 13 or newer database reachable at `DATABASE_URL`. How you
-run it — a local install, a container, a hosted instance — is deliberately not
-this repository's business.
+All you need is a PostgreSQL 13 or newer database reachable at `DATABASE_URL`.
+[compose.yml](compose.yml) is one way to get one — a single service, on the
+image CI uses, with the credentials already in `.env.example`, so a fresh clone
+runs without edits. A local install or a hosted instance works just as well:
+point `DATABASE_URL` at it and skip `pnpm db:start`.
+
+If another project already holds port 5432, set `POSTGRES_PORT` in `.env` and
+change the port in `DATABASE_URL` to match.
 
 One caveat worth knowing before you deploy: the connection pool in
 [packages/db/src/index.ts](packages/db/src/index.ts) is sized for a
@@ -101,6 +107,7 @@ them through `transpilePackages`; Vitest and `tsc` read them directly.
 | `pnpm test`                 | Vitest — pure logic, no services                  |
 | `pnpm test:integration`     | Vitest against a real database                    |
 | `pnpm test:e2e`             | Playwright browser journeys                       |
+| `pnpm db:start` / `db:stop` | Postgres in a container, via `compose.yml`        |
 | `pnpm db:generate`          | Generate a migration from `schema.ts`             |
 | `pnpm db:migrate`           | Apply pending migrations                          |
 | `pnpm db:studio`            | Drizzle Studio                                    |
@@ -335,9 +342,13 @@ Its free components need nothing; premium blocks need a `REUI_LICENSE_KEY`.
 ## What is deliberately missing
 
 No Redis, object storage, payments, queues, analytics, error tracking, feature
-flags, internationalisation, or containers.
+flags, or internationalisation.
 Each of those is a real decision with real trade-offs, and a starter that makes
 them for you is a starter you spend your first day deleting.
+
+No Dockerfile either. [compose.yml](compose.yml) runs Postgres for local
+development and stops there — how the application itself is built and deployed
+is the same kind of decision, and it belongs to you.
 
 ## Removing the example
 

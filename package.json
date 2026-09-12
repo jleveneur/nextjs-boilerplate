@@ -19,6 +19,8 @@
     "knip": "knip",
     "react-doctor": "react-doctor --no-telemetry --no-supply-chain --yes",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm knip && pnpm react-doctor && pnpm test",
+    "db:start": "docker compose up -d --wait",
+    "db:stop": "docker compose down",
     "db:generate": "pnpm --filter @repo/db db:generate",
     "db:migrate": "pnpm --filter @repo/db db:migrate",
     "db:push": "pnpm --filter @repo/db db:push",

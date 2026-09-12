@@ -134,9 +134,13 @@ The bar is high and deliberate.
 5. Run `pnpm knip`. An unused dependency is a failing check, not a warning.
 
 **This repository is a starter, and its scope is a feature.** Redis, object
-storage, email, payments, queues, analytics, error tracking, feature flags,
-internationalisation, and containers were all removed on purpose. Do not add
-one back because a task seems to want it — say so and ask.
+storage, email, payments, queues, analytics, error tracking, feature flags, and
+internationalisation were all removed on purpose. Do not add one back because a
+task seems to want it — say so and ask.
+
+`compose.yml` runs Postgres for local development and nothing else. Adding a
+service to it is the same decision as adding a dependency, and there is still
+no Dockerfile — the application is not containerised.
 
 ---
 

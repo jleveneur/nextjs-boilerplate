@@ -1,0 +1,42 @@
+# Local development services.
+#
+# There is one, because Postgres is the only thing this repository cannot do
+# without. Email falls back to the `.mail/` outbox when `RESEND_API_KEY` is
+# unset, and there is no Redis, queue, or object storage to stand up.
+#
+#   pnpm db:start     # or: docker compose up -d --wait
+#   pnpm db:migrate
+#
+# This file is for development. It does not containerise the application —
+# deploying is still your choice to make.
+
+services:
+  postgres:
+    # The same tag the CI service container uses, on purpose. A schema that
+    # migrates here and fails there is the class of surprise this avoids.
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      # Local-only, and deliberately the values already in `.env.example`, so a
+      # fresh clone runs with no edits. Nothing here is a secret; anywhere real
+      # sets `DATABASE_URL` to its own.
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    ports:
+      # Defaults to the port in `.env.example`. Another project holding 5432 is
+      # common enough that it is worth a variable: set `POSTGRES_PORT` in `.env`
+      # and point `DATABASE_URL` at the same number. Compose reads that file
+      # itself, so nothing else needs to know.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # What `--wait` blocks on. Without it `pnpm db:migrate` races the
+      # container and fails on a connection refused the first time.
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
