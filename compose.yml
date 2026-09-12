@@ -14,7 +14,7 @@ services:
   postgres:
     # The same tag the CI service container uses, on purpose. A schema that
     # migrates here and fails there is the class of surprise this avoids.
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: postgres
       # Local-only, and deliberately the values already in `.env.example`, so a
