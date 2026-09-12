@@ -5,25 +5,13 @@ import { useState } from "react";
 import { authClient } from "@repo/auth/client";
 import { Button } from "@repo/ui";
 
+import { useSubmit } from "@/lib/use-submit.ts";
+
 export function ResendVerificationButton({ email }: { email: string }) {
-  const [state, setState] = useState<"idle" | "pending" | "sent" | "failed">("idle");
+  const [sent, setSent] = useState(false);
+  const { pending, error, run } = useSubmit();
 
-  async function resend() {
-    setState("pending");
-
-    try {
-      const result = await authClient.sendVerificationEmail({
-        email,
-        callbackURL: "/dashboard",
-      });
-
-      setState(result.error ? "failed" : "sent");
-    } catch {
-      setState("failed");
-    }
-  }
-
-  if (state === "sent") {
+  if (sent) {
     return (
       <p className="text-muted-foreground text-sm" role="status">
         Sent again. It can take a minute to arrive.
@@ -35,19 +23,24 @@ export function ResendVerificationButton({ email }: { email: string }) {
     <div className="flex flex-col gap-2">
       <Button
         variant="outline"
-        disabled={state === "pending"}
+        disabled={pending}
         onClick={() => {
-          void resend();
+          void run(
+            () => authClient.sendVerificationEmail({ email, callbackURL: "/dashboard" }),
+            () => {
+              setSent(true);
+            },
+          );
         }}
       >
-        {state === "pending" ? "Sending…" : "Send it again"}
+        {pending ? "Sending…" : "Send it again"}
       </Button>
 
-      {state === "failed" ? (
+      {error === null ? null : (
         <p className="text-destructive text-sm" role="alert">
-          Could not send the email. Try again in a moment.
+          {error}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }

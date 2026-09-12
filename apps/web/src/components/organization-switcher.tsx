@@ -6,6 +6,8 @@ import { useState, type SubmitEvent } from "react";
 import { authClient } from "@repo/auth/client";
 import { Button, Input, Label, cn } from "@repo/ui";
 
+import { useSubmit } from "@/lib/use-submit.ts";
+
 type Organization = { id: string; name: string; slug: string; role: string };
 
 /**
@@ -31,39 +33,19 @@ export function OrganizationSwitcher({
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { pending, error, run } = useSubmit();
 
-  /** Shape shared by every `authClient` call: `{ data }` or `{ error }`. */
-  type AuthResult = { error?: { message?: string | undefined } | null | undefined };
-
-  async function run(action: () => Promise<AuthResult>) {
-    setPending(true);
-    setError(null);
-
-    try {
-      const result = await action();
-
-      if (result.error) {
-        setError(result.error.message ?? "Something went wrong.");
-        return;
-      }
-
-      setCreating(false);
-      setName("");
-      // The dashboard is a Server Component that reads the active
-      // organization, so the router cache has to be dropped to see the change.
-      router.refresh();
-    } catch {
-      setError("Could not reach the server. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
-  }
+  // The dashboard is a Server Component that reads the active organization, so
+  // the router cache has to be dropped to see the change.
+  const refresh = () => {
+    setCreating(false);
+    setName("");
+    router.refresh();
+  };
 
   function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    void run(() => authClient.organization.create({ name, slug: toSlug(name) }));
+    void run(() => authClient.organization.create({ name, slug: toSlug(name) }), refresh);
   }
 
   return (
@@ -78,7 +60,7 @@ export function OrganizationSwitcher({
           disabled={pending}
           onChange={(event) => {
             const organizationId = event.target.value;
-            void run(() => authClient.organization.setActive({ organizationId }));
+            void run(() => authClient.organization.setActive({ organizationId }), refresh);
           }}
           className={cn(
             "border-input bg-background h-8 rounded-lg border px-2 text-sm",

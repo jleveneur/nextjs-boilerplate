@@ -7,44 +7,30 @@ import { useState, type SubmitEvent } from "react";
 import { authClient } from "@repo/auth/client";
 import { Button, Input, Label } from "@repo/ui";
 
+import { useSubmit } from "@/lib/use-submit.ts";
+
 export function SignInForm({ next }: { next: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const { pending, error, run } = useSubmit();
 
-  async function submit(event: SubmitEvent<HTMLFormElement>) {
+  function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPending(true);
-    setError(null);
 
-    try {
-      const result = await authClient.signIn.email({ email, password });
-
-      if (result.error) {
-        setError(result.error.message ?? "Could not sign in.");
-        return;
-      }
-
-      router.push(next);
-      // The destination is a Server Component that reads the session, so the
-      // router cache has to be dropped for it to see the new cookie.
-      router.refresh();
-    } catch {
-      setError("Could not reach the server. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    void run(
+      () => authClient.signIn.email({ email, password }),
+      () => {
+        router.push(next);
+        // The destination is a Server Component that reads the session, so the
+        // router cache has to be dropped for it to see the new cookie.
+        router.refresh();
+      },
+    );
   }
 
   return (
-    <form
-      className="flex flex-col gap-4"
-      onSubmit={(event) => {
-        void submit(event);
-      }}
-    >
+    <form className="flex flex-col gap-4" onSubmit={submit}>
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
         <Input

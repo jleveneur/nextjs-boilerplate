@@ -35,9 +35,9 @@ export async function waitForEmailLink(email: string, subject: RegExp): Promise<
   await expect
     .poll(
       () => {
-        found = readOutbox()
-          .filter((entry) => entry.to === email && subject.test(entry.subject))
-          .at(-1);
+        // The newest match, not the first: a spec may trigger the same kind of
+        // email twice, and the link that matters is the most recent one.
+        found = readOutbox().findLast((entry) => entry.to === email && subject.test(entry.subject));
         return found !== undefined;
       },
       { timeout: 15_000, message: `No email to ${email} matching ${String(subject)}` },

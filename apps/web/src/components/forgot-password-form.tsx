@@ -5,36 +5,28 @@ import { useState, type SubmitEvent } from "react";
 import { authClient } from "@repo/auth/client";
 import { Button, Input, Label } from "@repo/ui";
 
+import { useSubmit } from "@/lib/use-submit.ts";
+
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const { pending, error, run } = useSubmit();
 
-  async function submit(event: SubmitEvent<HTMLFormElement>) {
+  function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPending(true);
-    setError(null);
 
-    try {
-      const result = await authClient.requestPasswordReset({
-        email,
-        // Better Auth validates the token, then redirects here with it as a
-        // query parameter — or with `?error=INVALID_TOKEN` if it has expired.
-        redirectTo: "/reset-password",
-      });
-
-      if (result.error) {
-        setError(result.error.message ?? "Could not send the reset link.");
-        return;
-      }
-
-      setSent(true);
-    } catch {
-      setError("Could not reach the server. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    void run(
+      () =>
+        authClient.requestPasswordReset({
+          email,
+          // Better Auth validates the token, then redirects here with it as a
+          // query parameter — or with `?error=INVALID_TOKEN` if it has expired.
+          redirectTo: "/reset-password",
+        }),
+      () => {
+        setSent(true);
+      },
+    );
   }
 
   if (sent) {
@@ -48,12 +40,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form
-      className="flex flex-col gap-4"
-      onSubmit={(event) => {
-        void submit(event);
-      }}
-    >
+    <form className="flex flex-col gap-4" onSubmit={submit}>
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
         <Input

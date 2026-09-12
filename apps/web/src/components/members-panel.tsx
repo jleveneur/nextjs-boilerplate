@@ -7,6 +7,8 @@ import { authClient } from "@repo/auth/client";
 import { roleNames, type Role } from "@repo/authz";
 import { Button, Input, Label, cn } from "@repo/ui";
 
+import { useSubmit } from "@/lib/use-submit.ts";
+
 export type MemberRow = {
   id: string;
   role: string;
@@ -43,32 +45,21 @@ export function MembersPanel({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("member");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const { pending, error, run } = useSubmit();
 
-  async function submit(event: SubmitEvent<HTMLFormElement>) {
+  function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPending(true);
-    setError(null);
     setSentTo(null);
 
-    try {
-      const result = await authClient.organization.inviteMember({ email, role });
-
-      if (result.error) {
-        setError(result.error.message ?? "Could not send the invitation.");
-        return;
-      }
-
-      setSentTo(email);
-      setEmail("");
-      router.refresh();
-    } catch {
-      setError("Could not reach the server. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    void run(
+      () => authClient.organization.inviteMember({ email, role }),
+      () => {
+        setSentTo(email);
+        setEmail("");
+        router.refresh();
+      },
+    );
   }
 
   return (
@@ -95,12 +86,7 @@ export function MembersPanel({
       </ul>
 
       {canInvite ? (
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(event) => {
-            void submit(event);
-          }}
-        >
+        <form className="flex items-end gap-2" onSubmit={submit}>
           <div className="flex flex-1 flex-col gap-2">
             <Label htmlFor="invite-email">Invite by email</Label>
             <Input
