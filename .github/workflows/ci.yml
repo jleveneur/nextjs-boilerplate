@@ -23,7 +23,7 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # Installs pnpm (from `packageManager`) and Node (from
       # `devEngines.runtime`) in one step, and caches the store.
@@ -86,7 +86,7 @@ jobs:
       BETTER_AUTH_URL: http://localhost:3000
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - uses: pnpm/setup@v2
         with:
@@ -124,7 +124,7 @@ jobs:
       RESEND_API_KEY: ""
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - uses: pnpm/setup@v2
         with:
