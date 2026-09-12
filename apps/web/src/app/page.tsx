@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { Button } from "@repo/ui/components/button"
+import { buttonVariants } from "@repo/ui/components/button"
 
 const stack = [
   "Next.js (App Router)",
@@ -29,9 +29,17 @@ export default function HomePage() {
         ))}
       </ul>
 
+      {/* Styled as buttons, but they navigate, so they stay links. Putting them
+          through `Button` would hand Base UI an anchor it expects to be a
+          `<button>` — and telling it otherwise makes it add `role="button"`,
+          which announces a link as a button. */}
       <div className="flex gap-3">
-        <Button render={<Link href="/sign-up">Create an account</Link>} />
-        <Button variant="outline" render={<Link href="/sign-in">Sign in</Link>} />
+        <Link href="/sign-up" className={buttonVariants()}>
+          Create an account
+        </Link>
+        <Link href="/sign-in" className={buttonVariants({ variant: "outline" })}>
+          Sign in
+        </Link>
       </div>
     </main>
   )

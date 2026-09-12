@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { Button } from "@repo/ui/components/button"
+import { buttonVariants } from "@repo/ui/components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card"
 
 export default function NotFound() {
@@ -12,7 +12,10 @@ export default function NotFound() {
           <CardDescription>That address does not lead anywhere.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button render={<Link href="/">Back to the start</Link>} />
+          {/* A link, so it stays an anchor — see the note on the home page. */}
+          <Link href="/" className={buttonVariants()}>
+            Back to the start
+          </Link>
         </CardContent>
       </Card>
     </main>
